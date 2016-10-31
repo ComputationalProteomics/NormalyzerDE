@@ -194,7 +194,7 @@ generatePlots <- function(normalizeddata, name, currentjob, filterrawdata, metho
     print("DEBUG: Plotting started")
     
     pdf(file=paste(jobdir, "/Norm_report-", currentjob[1], ".pdf", sep=""), paper="a4r", width=0, height=0)    
-    la=grid.layout(nrow=5, ncol=6, heights=c(0.1,1,1,1,0.1), widths=c(0.1,1,1,1,1,0.1), default.units=c('null','null'))
+    currentLayout=grid.layout(nrow=5, ncol=6, heights=c(0.1,1,1,1,0.1), widths=c(0.1,1,1,1,1,0.1), default.units=c('null','null'))
     theme_norm<-theme_set(theme_bw())
     theme_norm<-theme_update(panel.grid.minor=element_blank(), axis.text=element_text(size=7), axis.title=element_text(size=8), 
                              plot.title=element_text(size=8), plot.margin=unit(c(1,1,1,1), "mm"))
@@ -246,7 +246,7 @@ generatePlots <- function(normalizeddata, name, currentjob, filterrawdata, metho
         y <- fit$points[,2]
         plot(x, y, type="n", main="Log2-MDS plot", xlab="", ylab="")
         text((fit$points[,1]), (fit$points[,2]), col=filterED, labels=filterED)
-        pushViewport(viewport(layout=la))
+        pushViewport(viewport(layout=currentLayout))
         printMeta("Data Summary - Outlier detection", pageno, currentjob[2])
         pageno <- pageno + 1
     }
@@ -264,7 +264,7 @@ generatePlots <- function(normalizeddata, name, currentjob, filterrawdata, metho
         stripchart(as.data.frame(avgmadmem),vertical=T,cex=0.4,las=2,pch=20,add=T,col="darkgray")
         boxplot(avgvarmem,main="PEV - Intragroup",names=c(methodnames),border="red",density=20,cex=0.3,cex.axis=0.9,las=2,frame.plot=F)
         stripchart(as.data.frame(avgvarmem),vertical=T,cex=0.4,las=2,pch=20,add=T,col="darkgray")
-        pushViewport(viewport(layout=la))
+        pushViewport(viewport(layout=currentLayout))
         printMeta("Replicate variation",pageno,currentjob[2])
         pageno=pageno+1  
     }
@@ -300,7 +300,7 @@ generatePlots <- function(normalizeddata, name, currentjob, filterrawdata, metho
                 plot(avgcvmempdiff,nonsiganfdrlistcvpdiff,pch=18,main="Stable variables plot",xlab="PCV (Intragroup) compared to Log2",ylab="% Global CV of stable variables compared to Log2")
                 showLabels(avgcvmempdiff,nonsiganfdrlistcvpdiff,labels=methodnames,id.method="mahal",id.cex=0.7,id.col="black")
             }}
-        pushViewport(viewport(layout=la))
+        pushViewport(viewport(layout=currentLayout))
         printMeta("Replicate variation (Relative to Log2)",pageno,currentjob[2])
         pageno=pageno+1
     }
@@ -338,7 +338,7 @@ generatePlots <- function(normalizeddata, name, currentjob, filterrawdata, metho
         {
             plot(tempavgmat1[,i],tempcvmat1[,i],main=methodnames[i],xlab="Raw intensity",ylab="CV",cex=0.3,ylim=c(0,maxtempcv))
         }
-        pushViewport(viewport(layout=la))
+        pushViewport(viewport(layout=currentLayout))
         printMeta("CV vs Raw Intensity plots",pageno,currentjob[2])
         pageno=pageno+1
     }
@@ -359,7 +359,7 @@ generatePlots <- function(normalizeddata, name, currentjob, filterrawdata, metho
             Malist[[i]]<-ggplot(df, aes(avg,fc)) + geom_point(color="darkgray",size=0.7)+labs(x=("Replicate group mean"),y=("Replicate-1 Fold Change"),title=(paste(tempcolname[1],methodnames[i])))+ stat_smooth(method="loess",se=F,colour="red") + geom_abline(intercept=0,slope=0,size=0.3)
         } 
         grid.newpage()
-        pushViewport(viewport(layout=la))
+        pushViewport(viewport(layout=currentLayout))
         printPlots(Malist,"MA plots",pageno,currentjob[2])
         pageno=pageno+1
         
@@ -380,7 +380,7 @@ generatePlots <- function(normalizeddata, name, currentjob, filterrawdata, metho
             
             legend("topleft",bty="n",legend=paste("R2 ",format(summary(fit)$adj.r.squared,digits=2)),cex=0.7)
         }
-        pushViewport(viewport(layout=la))
+        pushViewport(viewport(layout=currentLayout))
         printMeta("Scatterplots",pageno,currentjob[2])
         pageno=pageno+1
     }
@@ -397,7 +397,7 @@ generatePlots <- function(normalizeddata, name, currentjob, filterrawdata, metho
             qqlist[[i]]<-qplot(sample=datastore[,1],stat="qq")+labs(x=(""),y=(""),title=(paste(tempcolname[1],methodnames[i])))
         }
         grid.newpage()
-        pushViewport(viewport(layout=la))
+        pushViewport(viewport(layout=currentLayout))
         printPlots(qqlist,"Q-Q plots",pageno,currentjob[2])
         pageno=pageno+1
     }
@@ -429,7 +429,7 @@ generatePlots <- function(normalizeddata, name, currentjob, filterrawdata, metho
             boxplot(methodlist[[i]],cex=0.1,cex.axis=0.7,las=2,main=methodnames[i],col=(filterED),outcol="lightgray",ylim=c((mindata-1),(maxdata+1)),names=substr(colnames(methodlist[[i]]),1,10))
         }
         #grid.newpage()
-        pushViewport(viewport(layout=la))
+        pushViewport(viewport(layout=currentLayout))
         printMeta("Boxplots",pageno,currentjob[2])
         pageno=pageno+1
     }
@@ -445,7 +445,7 @@ generatePlots <- function(normalizeddata, name, currentjob, filterrawdata, metho
         deviations = methodlist[[i]] - rowMedians(methodlist[[i]],na.rm=T)
         boxplot(deviations,outcol="lightgray",cex=0.1,cex.axis=0.7,las=2,main=methodnames[i],col=(filterED),names=substr(colnames(methodlist[[i]]),1,6))
     }
-    pushViewport(viewport(layout=la))
+    pushViewport(viewport(layout=currentLayout))
     printMeta("Relative Log Expression (RLE) plots",pageno,currentjob[2])
     pageno=pageno+1
     
@@ -466,7 +466,7 @@ generatePlots <- function(normalizeddata, name, currentjob, filterrawdata, metho
                 lines(density(datastore[,j],na.rm=T),,lty=2,lwd=1,col="darkgray")
             }
         } 
-        pushViewport(viewport(layout=la))
+        pushViewport(viewport(layout=currentLayout))
         printMeta("Density plots",pageno,currentjob[2])
         pageno=pageno+1    
     }
@@ -486,7 +486,7 @@ generatePlots <- function(normalizeddata, name, currentjob, filterrawdata, metho
         plot(x,y,type="n", main=methodnames[i],xlab="",ylab="")
         text((fit$points[,1]),(fit$points[,2]),col=filterED,labels=filterED)
     }
-    pushViewport(viewport(layout=la))
+    pushViewport(viewport(layout=currentLayout))
     printMeta(paste("MDS plots - Built from", ncol(d), "variables with non-missing data", sep=" "), pageno,currentjob[2])
     pageno=pageno+1
     
@@ -511,7 +511,7 @@ generatePlots <- function(normalizeddata, name, currentjob, filterrawdata, metho
         print("After meanSdPlot")
     }
     
-    pushViewport(viewport(layout=la))
+    pushViewport(viewport(layout=currentLayout))
     printMeta("MeanSDplots",pageno,currentjob[2])
     pageno=pageno+1
     
@@ -559,61 +559,57 @@ generatePlots <- function(normalizeddata, name, currentjob, filterrawdata, metho
         spedf<-data.frame(matrix(unlist(avgspecorsum), nrow=as.numeric(max(summary(avgspecorsum)[1])), byrow=T))
         abc<-boxplot(spedf,main="Spearman correlation - Intragroup",names=c(methodnames),border="red",density=20,cex=0.3,cex.axis=0.9,las=2)
         stripchart(as.data.frame(spedf),vertical=T,cex=0.4,las=2,pch=20,add=T,col="darkgreen")
-        pushViewport(viewport(layout=la))
+        pushViewport(viewport(layout=currentLayout))
         printMeta("Correlation plots",pageno,currentjob[2])
         pageno=pageno+1    
         
     }
     
-    
-    print("DEBUG: Plotting page 16")
-
     #dendrograms
-    plotDendrograms(methodlist, methodnames, filterED, la, pageno, currentjob)
+    print("DEBUG: Plotting page 16")
+    plotDendrograms(methodlist, methodnames, filterED, currentLayout, pageno, currentjob)
     pageno=pageno+1
 
-    print("DEBUG: Plotting page 17")
     #DE plots
-    {
-        tout <- rbind(c(1,2,3), c(4))
-        layout(tout)
-        par(mar=c(2,2,2,1), oma=c(2,2,3,2), xpd=NA)
-        
-        str(methodnames)
-        str(anfdr)
-        str(kwfdr)
-        
-        print("Before colSum1")
-        
-        barplot(colSums(anfdr<0.05), main="ANOVA", names=c(methodnames), border="red", density=20, cex=0.5, cex.axis=0.9, las=2,
-                ylab="No. of Variables with FDR<0.05")
-
-        
-        print("Before colSum2")
-        barplot(colSums(kwfdr<0.05), main="Kruskal Wallis", names=c(methodnames), border="red", density=20, cex=0.5, cex.axis=0.9, 
-                las=2, ylab="No. of Variables with FDR<0.05")
-
-        print("After colSum3")
-        pushViewport(viewport(layout=la))
-        printMeta("Differential Expression", pageno, currentjob[2])
-    }
+    print("DEBUG: Plotting page 17")
+    plotDEPlots(methodnames, anfdr, kwfdr, currentLayout, pageno, currentjob)
     
     dev.off()
 }
 
-plotDendrograms <- function(methodlist, methodnames, filterED, la, pageno, currentjob) {
-    tout<-rbind(c(1,2,3,4),c(5,6,7,8),c(9,10,11,12))
+plotDendrograms <- function(methodlist, methodnames, filterED, currentLayout, pageno, currentjob) {
+    
+    tout <- rbind(c(1,2,3,4), c(5,6,7,8), c(9,10,11,12))
     layout(tout)
-    par(mar=c(2,2,2,1),oma=c(2,2,3,2),xpd=NA)
+    par(mar=c(2,2,2,1), oma=c(2,2,3,2), xpd=NA)
     colt<-(c("red","green","blue","orange","darkgray","blueviolet","darkslateblue","darkviolet","gray","bisque4","brown","cadetblue4","darkgreen","darkcyan","darkmagenta","darkgoldenrod4","coral1"))
     for(j in 1:length(methodlist))
     {
-        temp<-scale(t(na.omit(methodlist[[j]])),center=TRUE,scale=TRUE)
-        hc<-hclust(dist(temp),"ave")
-        plot(as.phylo(hc),main=methodnames[j],cex=0.5,tip.color=colt[filterED])
+        temp <- scale(t(na.omit(methodlist[[j]])), center=TRUE, scale=TRUE)
+        hc <- hclust(dist(temp), "ave")
+        plot(as.phylo(hc), main=methodnames[j], cex=0.5, tip.color=colt[filterED])
         axisPhylo(side=1)
     }
-    pushViewport(viewport(layout=la))
-    printMeta(paste("Dendrograms - Built from",ncol(temp),"variables containing non-missing data",sep=" "),pageno,currentjob[2])
+    pushViewport(viewport(layout=currentLayout))
+    printMeta(paste("Dendrograms - Built from", ncol(temp), "variables containing non-missing data", sep=" "), pageno, currentjob[2])
+}
+
+plotDEPlots <- function(methodnames, anfdr, kwfdr, currentLayout, pageno, currentjob) {
+    tout <- rbind(c(1,2,3), c(4))
+    layout(tout)
+    par(mar=c(2,2,2,1), oma=c(2,2,3,2), xpd=NA)
+    
+    print("Before colSum1")
+    
+    barplot(colSums(anfdr<0.05), main="ANOVA", names=c(methodnames), border="red", density=20, cex=0.5, cex.axis=0.9, las=2,
+            ylab="No. of Variables with FDR<0.05")
+    
+    print("Before colSum2")
+    barplot(colSums(kwfdr<0.05), main="Kruskal Wallis", names=c(methodnames), border="red", density=20, cex=0.5, cex.axis=0.9, 
+            las=2, ylab="No. of Variables with FDR<0.05")
+    
+    print("After colSum3")
+    pushViewport(viewport(layout=currentLayout))
+    printMeta("Differential Expression", pageno, currentjob[2])
 }
 
