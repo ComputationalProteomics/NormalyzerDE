@@ -490,29 +490,9 @@ generatePlots <- function(normalizeddata, name, currentjob, filterrawdata, metho
     printMeta(paste("MDS plots - Built from", ncol(d), "variables with non-missing data", sep=" "), pageno,currentjob[2])
     pageno=pageno+1
     
-    
-    print("DEBUG: Plotting page 13")
-    
     #meanSDplot
-    tout <- rbind(c(1,2,3,4), c(5,6,7,8), c(9,10,11,12))
-    layout(tout)
-    par(mar=c(2,2,2,1), oma=c(3,2,3,2), xpd=NA)
-    
-    for (i in 1:length(methodlist))
-    {  
-        datastore <- (methodlist[[i]])
-        # TODO: Investigate this line
-        
-        print(paste("Feeding method name: ", methodnames[i]))
-        
-        meanSdPlot(datastore, xlab="", ylab="")
-        # meanSdPlot(datastore, xlab="", ylab="", main=methodnames[i])
-        
-        print("After meanSdPlot")
-    }
-    
-    pushViewport(viewport(layout=currentLayout))
-    printMeta("MeanSDplots", pageno, currentjob[2])
+    print("DEBUG: Plotting page 13")
+    plotMeanSD(methodlist, methodnames, currentLayout, pageno, currentjob)
     pageno <- pageno + 1
     
     # Calculate correlation
@@ -535,6 +515,29 @@ generatePlots <- function(normalizeddata, name, currentjob, filterrawdata, metho
     plotDEPlots(methodnames, anfdr, kwfdr, currentLayout, pageno, currentjob)
     
     dev.off()
+}
+
+plotMeanSD <- function(methodlist, methodnames, currentLayout, pageno, currentjob) {
+    
+    tout <- rbind(c(1,2,3,4), c(5,6,7,8), c(9,10,11,12))
+    layout(tout)
+    par(mar=c(2,2,2,1), oma=c(3,2,3,2), xpd=NA)
+    
+    for (i in 1:length(methodlist))
+    {  
+        datastore <- (methodlist[[i]])
+        print(paste("Feeding method name: ", methodnames[i]))
+        
+        meanSdPlot(datastore, xlab="", ylab="")
+        # TODO: The main=methodnames[i] seemed to cause crash here // Jakob
+        # meanSdPlot(datastore, xlab="", ylab="", main=methodnames[i])
+        
+        print("After meanSdPlot")
+    }
+    
+    pushViewport(viewport(layout=currentLayout))
+    printMeta("MeanSDplots", pageno, currentjob[2])
+    
 }
 
 calculateCorrelations <- function(methodlist, filterED) {
