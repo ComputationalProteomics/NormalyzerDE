@@ -515,56 +515,39 @@ generatePlots <- function(normalizeddata, name, currentjob, filterrawdata, metho
     printMeta("MeanSDplots",pageno,currentjob[2])
     pageno=pageno+1
     
-    print("DEBUG: Plotting page 14")
-    #check correlation
-    {
-        par(mfrow=c(1,1))
+    # Calculate correlation
+    par(mfrow=c(1,1))
+    avgpercorsum <- list()
+    avgspecorsum <- list()
+    corsum <- vector()
+    for(i in 1:length(methodlist)) {
+        percorsum <- vector()
+        specorsum <- vector()
         
-        avgpercorsum<-list()
-        avgspecorsum<-list()
-        corsum<-vector()
-        for(i in 1:length(methodlist))
+        flag1 <- 1
+        datastore <- as.matrix(methodlist[[i]])
+        un <- unique(filterED)
+        for(uq in 1:length(un))
         {
-            percorsum<-vector()
-            specorsum<-vector()
+            dt <- as.matrix(datastore[,which(filterED==un[uq])])
+            class(dt) <- "numeric"
+            percor <- cor(dt, use="pairwise.complete.obs", method="pearson")
+            spercor <- cor(dt, use="pairwise.complete.obs", method="spearman")
             
-            flag1<-1
-            datastore<-as.matrix(methodlist[[i]])
-            un<-unique(filterED)
-            for(uq in 1:length(un))
-            {
-                dt<-as.matrix(datastore[,which(filterED==un[uq])])
-                class(dt)<-"numeric"
-                percor<-cor(dt,use="pairwise.complete.obs",method="pearson")
-                spercor<-cor(dt,use="pairwise.complete.obs",method="spearman")
-                
-                for(rn in 1:(ncol(dt)-1)){
-                    percorsum<-c(percorsum,percor[rn,-(1:rn)])
-                    specorsum<-c(specorsum,spercor[rn,-(1:rn)])
-                }
-                
+            for(rn in 1:(ncol(dt)-1)){
+                percorsum <- c(percorsum,percor[rn,-(1:rn)])
+                specorsum <- c(specorsum,spercor[rn,-(1:rn)])
             }
-            avgpercorsum[[i]]<-percorsum
-            avgspecorsum[[i]]<-specorsum
-            
         }
-        
-        print("DEBUG: Plotting page 15")
-        tout<-rbind(c(1,2),c(3))
-        layout(tout)
-        par(mar=c(2,2,2,1),oma=c(2,2,3,2),xpd=NA)
-        perdf<-data.frame(matrix(unlist(avgpercorsum), nrow=as.numeric(max(summary(avgpercorsum)[1])), byrow=T))
-        abc<-boxplot(perdf,main="Pearson correlation - Intragroup",names=c(methodnames),border="red",density=20,cex=0.3,cex.axis=0.9,las=2)
-        stripchart(as.data.frame(perdf),vertical=T,cex=0.4,las=2,pch=20,add=T,col="darkgreen")
-        spedf<-data.frame(matrix(unlist(avgspecorsum), nrow=as.numeric(max(summary(avgspecorsum)[1])), byrow=T))
-        abc<-boxplot(spedf,main="Spearman correlation - Intragroup",names=c(methodnames),border="red",density=20,cex=0.3,cex.axis=0.9,las=2)
-        stripchart(as.data.frame(spedf),vertical=T,cex=0.4,las=2,pch=20,add=T,col="darkgreen")
-        pushViewport(viewport(layout=currentLayout))
-        printMeta("Correlation plots",pageno,currentjob[2])
-        pageno=pageno+1    
-        
+        avgpercorsum[[i]] <- percorsum
+        avgspecorsum[[i]] <- specorsum
     }
     
+    # Correlation
+    print("DEBUG: Plotting page 15")
+    plotCorrelation(methodnames, avgpercorsum, avgspecorsum, currentLayout, pageno, currentjob)
+    pageno=pageno+1
+
     #dendrograms
     print("DEBUG: Plotting page 16")
     plotDendrograms(methodlist, methodnames, filterED, currentLayout, pageno, currentjob)
@@ -575,6 +558,21 @@ generatePlots <- function(normalizeddata, name, currentjob, filterrawdata, metho
     plotDEPlots(methodnames, anfdr, kwfdr, currentLayout, pageno, currentjob)
     
     dev.off()
+}
+
+plotCorrelation <- function(methodnames, avgpercorsum, avgspecorsum, currentLayout, pageno, currentjob) {
+    
+    tout <- rbind(c(1,2), c(3))
+    layout(tout)
+    par(mar=c(2,2,2,1), oma=c(2,2,3,2), xpd=NA)
+    perdf <- data.frame(matrix(unlist(avgpercorsum), nrow=as.numeric(max(summary(avgpercorsum)[1])), byrow=T))
+    abc <- boxplot(perdf, main="Pearson correlation - Intragroup", names=c(methodnames), border="red", density=20, cex=0.3, cex.axis=0.9, las=2)
+    stripchart(as.data.frame(perdf), vertical=T, cex=0.4, las=2, pch=20, add=T, col="darkgreen")
+    spedf<-data.frame(matrix(unlist(avgspecorsum), nrow=as.numeric(max(summary(avgspecorsum)[1])), byrow=T))
+    abc<-boxplot(spedf,main="Spearman correlation - Intragroup",names=c(methodnames), border="red", density=20, cex=0.3, cex.axis=0.9, las=2)
+    stripchart(as.data.frame(spedf), vertical=T, cex=0.4, las=2, pch=20, add=T, col="darkgreen")
+    pushViewport(viewport(layout=currentLayout))
+    printMeta("Correlation plots", pageno,currentjob[2])
 }
 
 plotDendrograms <- function(methodlist, methodnames, filterED, currentLayout, pageno, currentjob) {
