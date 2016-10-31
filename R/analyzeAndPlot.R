@@ -471,24 +471,10 @@ generatePlots <- function(normalizeddata, name, currentjob, filterrawdata, metho
         pageno=pageno+1    
     }
     
-    print("DEBUG: Plotting page 12")
     #mds PLOT
-    tout<-rbind(c(1,2,3,4),c(5,6,7,8),c(9,10,11,12))
-    layout(tout)
-    par(mar=c(2,2,2,1),oma=c(3,2,3,2),xpd=NA)
-    for(i in 1:length(methodlist))
-    {  
-        datastore<-(methodlist[[i]])
-        d<-dist(scale(t(na.omit(datastore)),center=TRUE,scale=TRUE))
-        fit<-cmdscale(d,eig=TRUE,k=2)
-        x<-fit$points[,1]
-        y<-fit$points[,2]
-        plot(x,y,type="n", main=methodnames[i],xlab="",ylab="")
-        text((fit$points[,1]),(fit$points[,2]),col=filterED,labels=filterED)
-    }
-    pushViewport(viewport(layout=currentLayout))
-    printMeta(paste("MDS plots - Built from", ncol(d), "variables with non-missing data", sep=" "), pageno,currentjob[2])
-    pageno=pageno+1
+    print("DEBUG: Plotting page 12")
+    plotMDS(methodlist, methodnames, filterED, currentLayout, pageno, currentjob)
+    pageno <- pageno + 1
     
     #meanSDplot
     print("DEBUG: Plotting page 13")
@@ -515,6 +501,25 @@ generatePlots <- function(normalizeddata, name, currentjob, filterrawdata, metho
     plotDEPlots(methodnames, anfdr, kwfdr, currentLayout, pageno, currentjob)
     
     dev.off()
+}
+
+plotMDS <- function(methodlist, methodnames, filterED, currentLayout, pageno, currentjob) {
+    
+    tout<-rbind(c(1,2,3,4), c(5,6,7,8), c(9,10,11,12))
+    layout(tout)
+    par(mar=c(2,2,2,1), oma=c(3,2,3,2), xpd=NA)
+
+    for(i in 1:length(methodlist)) {
+        datastore <- (methodlist[[i]])
+        d <- dist(scale(t(na.omit(datastore)),center=TRUE,scale=TRUE))
+        fit <- cmdscale(d,eig=TRUE,k=2)
+        x <- fit$points[,1]
+        y <- fit$points[,2]
+        plot(x, y, type="n", main=methodnames[i], xlab="", ylab="")
+        text((fit$points[,1]), (fit$points[,2]), col=filterED, labels=filterED)
+    }
+    pushViewport(viewport(layout=currentLayout))
+    printMeta(paste("MDS plots - Built from", ncol(d), "variables with non-missing data", sep=" "), pageno, currentjob[2])
 }
 
 plotMeanSD <- function(methodlist, methodnames, currentLayout, pageno, currentjob) {
