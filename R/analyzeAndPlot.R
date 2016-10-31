@@ -437,46 +437,28 @@ generatePlots <- function(normalizeddata, name, currentjob, filterrawdata, metho
     
     print("DEBUG: Plotting page 10")
     #RLEplots
-    tout<-rbind(c(1,2,3,4),c(5,6,7,8),c(9,10,11,12))
+    tout<-rbind(c(1,2,3,4), c(5,6,7,8), c(9,10,11,12))
     layout(tout)
-    par(mar=c(2,2,2,1),oma=c(3,2,3,2),xpd=NA)
-    for(i in 1:length(methodlist))
-    {  
-        deviations = methodlist[[i]] - rowMedians(methodlist[[i]],na.rm=T)
-        boxplot(deviations,outcol="lightgray",cex=0.1,cex.axis=0.7,las=2,main=methodnames[i],col=(filterED),names=substr(colnames(methodlist[[i]]),1,6))
+    par(mar=c(2,2,2,1), oma=c(3,2,3,2), xpd=NA)
+    for(i in 1:length(methodlist)) {  
+        deviations = methodlist[[i]] - rowMedians(methodlist[[i]], na.rm=T)
+        boxplot(deviations, outcol="lightgray", cex=0.1, cex.axis=0.7, las=2, main=methodnames[i], col=(filterED), names=substr(colnames(methodlist[[i]]), 1, 6))
     }
     pushViewport(viewport(layout=currentLayout))
     printMeta("Relative Log Expression (RLE) plots",pageno,currentjob[2])
     pageno=pageno+1
     
-    
+    # Density plots
     print("DEBUG: Plotting page 11")
-    #density plots
-    {
-        tout<-rbind(c(1,2,3,4),c(5,6,7,8),c(9,10,11,12))
-        layout(tout)
-        par(mar=c(3,2,3,1),oma=c(3,2,3,2),xpd=NA)
-        for(i in 1:length(methodlist))
-        {  
-            datastore<-(methodlist[[i]])
-            tempd<-density(datastore[,1],na.rm=T)
-            plot(density(datastore[,1],na.rm=T),xlab="",ylab="",ylim=c(min(tempd$y),max(tempd$y)*1.5),main=methodnames[i],lty=2,lwd=1,col="darkgray")
-            for(j in 2:ncol(datastore))
-            {
-                lines(density(datastore[,j],na.rm=T),,lty=2,lwd=1,col="darkgray")
-            }
-        } 
-        pushViewport(viewport(layout=currentLayout))
-        printMeta("Density plots",pageno,currentjob[2])
-        pageno=pageno+1    
-    }
-    
-    #mds PLOT
+    plotDensity(methodlist, methodnames, currentLayout, pageno, currentjob)
+    pageno <- pageno + 1
+
+    # MDS plot
     print("DEBUG: Plotting page 12")
     plotMDS(methodlist, methodnames, filterED, currentLayout, pageno, currentjob)
     pageno <- pageno + 1
     
-    #meanSDplot
+    # meanSDplot
     print("DEBUG: Plotting page 13")
     plotMeanSD(methodlist, methodnames, currentLayout, pageno, currentjob)
     pageno <- pageno + 1
@@ -491,16 +473,35 @@ generatePlots <- function(normalizeddata, name, currentjob, filterrawdata, metho
     plotCorrelation(methodnames, avgpercorsum, avgspecorsum, currentLayout, pageno, currentjob)
     pageno <- pageno + 1
 
-    #dendrograms
+    # Dendrograms
     print("DEBUG: Plotting page 16")
     plotDendrograms(methodlist, methodnames, filterED, currentLayout, pageno, currentjob)
     pageno <- pageno + 1
 
-    #DE plots
+    # DE plots
     print("DEBUG: Plotting page 17")
     plotDEPlots(methodnames, anfdr, kwfdr, currentLayout, pageno, currentjob)
     
     dev.off()
+}
+
+plotDensity <- function(methodlist, methodnames, currentLayout, pageno, currentjob) {
+    
+    tout <- rbind(c(1,2,3,4), c(5,6,7,8), c(9,10,11,12))
+    layout(tout)
+    par(mar=c(3,2,3,1), oma=c(3,2,3,2), xpd=NA)
+    for (i in 1:length(methodlist))
+    {  
+        datastore <- (methodlist[[i]])
+        tempd <- density(datastore[,1], na.rm=T)
+        plot(density(datastore[,1], na.rm=T), xlab="", ylab="", ylim=c(min(tempd$y), max(tempd$y)*1.5), main=methodnames[i], lty=2, lwd=1, col="darkgray")
+        for (j in 2:ncol(datastore))
+        {
+            lines(density(datastore[,j], na.rm=T), , lty=2, lwd=1, col="darkgray")
+        }
+    } 
+    pushViewport(viewport(layout=currentLayout))
+    printMeta("Density plots", pageno, currentjob[2])
 }
 
 plotMDS <- function(methodlist, methodnames, filterED, currentLayout, pageno, currentjob) {
