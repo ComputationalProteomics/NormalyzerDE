@@ -17,19 +17,27 @@ normalyzer<-function(datafile,getjob){
     require(gridExtra)
     require(ggplot2)
     
-    print("Normalizing data....")
-    try.result<-try(normalizeddata<-normMethods(datafile,getjob))
+    require(grid)
     
-    if (inherits(try.result,"try-error")) {
+    source("analyzeAndPlot.R")
+    source("normfinder-pipeline.R")
+    source("normMethods.R")
+    source("printMeta.R")
+    source("printPlots.R")
+    
+    print("Normalizing data....")
+    try.result <- try(normalizeddata <- normMethods(datafile, getjob))
+    
+    if (inherits(try.result, "try-error")) {
         return(try.result)
     }
     
     print("Finished Normalization")
     print("Analyzing data....")
     
-    try.result <- try(analyzeAndPlot(normalizeddata,getjob))
+    try.result <- try(analyzeAndPlot(normalizeddata, getjob))
     
-    if(inherits(try.result,"try-error")){
+    if(inherits(try.result, "try-error")){
         return(try.result)
     }
     
