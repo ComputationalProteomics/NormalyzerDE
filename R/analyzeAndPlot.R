@@ -1,11 +1,20 @@
 #analysis 
+
 analyzeAndPlot<-function(normalizeddata,name)
 {
+  
+  print("DEBUG: analyzeAndPlot entered")
+  
+  
+  
 {
   #Analysis takes too long, rewriting needed
-  currentjob<-name
+  currentjob <- name
   
-  if(is.na(currentjob[2])){currentjob[2]=currentjob[1]}
+  if (is.na(currentjob[2]))
+  {
+    currentjob[2]=currentjob[1]
+  }
   
   methodlist<-normalizeddata[[1]]
   methodnames<-normalizeddata[[2]]
@@ -26,23 +35,23 @@ analyzeAndPlot<-function(normalizeddata,name)
   datamadpeptmem<-matrix(nrow=nrow(filterrawdata),ncol=length(methodlist),byrow=T)
   
   
-  anpvalue<-anfdr<-kwpvalue<-kwfdr<-vector()
-  for(meti in 1:length(methodlist))
+  anpvalue <- anfdr <- kwpvalue <- kwfdr <- vector()
+  for (meti in 1:length(methodlist))
   {
-    datastore<-(methodlist[[meti]])
+    datastore <- (methodlist[[meti]])
     
-    templabel<-methodnames[meti]
+    templabel <- methodnames[meti]
     
-    datamadsamples<-NA
-    datamadpeptides<-NA
-    pooledvar<-NA
-    dataskew<-NA
-    datacv<-NA
-    tempcv<-NA
-    tempskew<-NA
-    datakurt<-NA
-    pvobj1<-0
-    pvobj2<-0
+    datamadsamples <- NA
+    datamadpeptides <- NA
+    pooledvar <- NA
+    dataskew <- NA
+    datacv <- NA
+    tempcv <- NA
+    tempskew <- NA
+    datakurt <- NA
+    pvobj1 <- 0
+    pvobj2 <- 0
     
     
     datalabels<-c(datalabels,templabel)
@@ -60,23 +69,23 @@ analyzeAndPlot<-function(normalizeddata,name)
     nonmissingmat<-vector()
     
     
-    for(i in 1:length(filterED))
+    for (i in 1:length(filterED))
     {
-      if(x!=filterED[i] || i==length(filterED))
+      if (x!=filterED[i] || i==length(filterED))
       {
         y<-i-1
-        if(i==length(filterED))
+        if (i==length(filterED))
         {
           y<-i
         }
-        if(flag==1)
+        if (flag==1)
         {
           count<-count+1
           madmem[,count]<-apply(datastore[,z:y],1,function(x) {mad(x,na.rm=T)})
           nonmissingmat<-(apply(datastore[,z:y],1,function(x) {((sum(!is.na(x))))}))-1
           tempvar<-nonmissingmat*apply(datastore[,z:y],1,function(x) {var(x,na.rm=TRUE)})
         }
-        if(flag==2)
+        if (flag==2)
         {  
           count<-count+1
           madmem[,count]<-apply(datastore[,z:y],1,function(x) {mad(x,na.rm=T)})  
@@ -95,7 +104,7 @@ analyzeAndPlot<-function(normalizeddata,name)
     
     tempcvmat<-matrix(nrow=nrow(datastore),ncol=length(levels(as.factor(unlist(filterED)))),byrow=T)
     
-    for(i in 1:nrow(datastore))
+    for (i in 1:nrow(datastore))
     {
       
       tempcv<-numSummary(datastore[i,],statistics=c("cv"),groups=unlist(filterED))
@@ -145,10 +154,19 @@ analyzeAndPlot<-function(normalizeddata,name)
 }
 print("Finished analysis, preparing plots and report....")
 
+
+
 #plotting
 {
   palette(c("red","green","blue","orange","darkgray","blueviolet","darkslateblue","darkviolet","gray","bisque4","brown","cadetblue4","darkgreen","darkcyan","darkmagenta","darkgoldenrod4","coral1"))
-  jobdir<-paste(getwd(),"/",currentjob[1],sep="")
+  
+  jobdir <- paste(getwd(),"/",currentjob[1],sep="")
+
+  # print(paste("Current jobdir: ", jobdir))
+  # dir.create(paste(jobdir, "/", "Norm_report-data"))
+  
+  print("DEBUG: Plotting started")
+  
   pdf(file=paste(jobdir,"/Norm_report-",currentjob[1],".pdf",sep=""),paper="a4r",width=0,height=0)    
   la=grid.layout(nrow=5,ncol=6,heights=c(0.1,1,1,1,0.1),widths=c(0.1,1,1,1,1,0.1),default.units=c('null','null'))
   theme_norm<-theme_set(theme_bw())
@@ -175,6 +193,9 @@ print("Finished analysis, preparing plots and report....")
   
   grid.text("Documentation for analyzing this report can be found at http://quantitativeproteomics.org/normalyzer/help.php",vp=viewport(layout.pos.row=7),just=c("center","center"),gp=gpar(fontsize=10,fontfamily="Helvetica",col="black"))
   
+  print("DEBUG: Plotting page 2")
+  
+  
   pageno=2
    #TI
 {
@@ -197,6 +218,8 @@ print("Finished analysis, preparing plots and report....")
   pageno=pageno+1
 }
   
+  print("DEBUG: Plotting page 3")
+  
   #CV
 {
   tout<-rbind(c(1,2,3),c(4))
@@ -212,6 +235,8 @@ print("Finished analysis, preparing plots and report....")
   printMeta("Replicate variation",pageno,currentjob[2])
   pageno=pageno+1  
 }
+  
+  print("DEBUG: Plotting page 4")
   
   #CV in percent difference
 {
@@ -248,6 +273,8 @@ print("Finished analysis, preparing plots and report....")
 }
   
   
+  print("DEBUG: Plotting page 5")
+  
   #CVvsintensityplot 
 {
   datastore<-methodlist[[1]]
@@ -283,7 +310,7 @@ print("Finished analysis, preparing plots and report....")
   pageno=pageno+1
 }
   
-  
+  print("DEBUG: Plotting page 6")
   #MA plots
 {
   Malist<-list()
@@ -303,7 +330,10 @@ print("Finished analysis, preparing plots and report....")
   printPlots(Malist,"MA plots",pageno,currentjob[2])
   pageno=pageno+1
   
-}
+  }
+  
+  print("DEBUG: Plotting page 7")
+  
   #Scatterplots
 {
   tout<-rbind(c(1,2,3,4),c(5,6,7,8),c(9,10,11,12))
@@ -321,7 +351,8 @@ print("Finished analysis, preparing plots and report....")
   printMeta("Scatterplots",pageno,currentjob[2])
   pageno=pageno+1
 }
-  
+ 
+  print("DEBUG: Plotting page 8")
   #qqplot
 {
   qqlist<-list()
@@ -338,6 +369,7 @@ print("Finished analysis, preparing plots and report....")
   pageno=pageno+1
 }
   
+  print("DEBUG: Plotting page 9")
   #boxplot
 {
   tout<-rbind(c(1,2,3,4),c(5,6,7,8),c(9,10,11,12))
@@ -369,6 +401,8 @@ print("Finished analysis, preparing plots and report....")
   pageno=pageno+1
 }
   
+
+  print("DEBUG: Plotting page 10")
   #RLEplots
   tout<-rbind(c(1,2,3,4),c(5,6,7,8),c(9,10,11,12))
   layout(tout)
@@ -382,6 +416,8 @@ print("Finished analysis, preparing plots and report....")
   printMeta("Relative Log Expression (RLE) plots",pageno,currentjob[2])
   pageno=pageno+1
   
+  
+  print("DEBUG: Plotting page 11")
   #density plots
 {
   tout<-rbind(c(1,2,3,4),c(5,6,7,8),c(9,10,11,12))
@@ -402,6 +438,7 @@ print("Finished analysis, preparing plots and report....")
   pageno=pageno+1    
 }
 
+  print("DEBUG: Plotting page 12")
   #mds PLOT
   tout<-rbind(c(1,2,3,4),c(5,6,7,8),c(9,10,11,12))
   layout(tout)
@@ -417,22 +454,35 @@ print("Finished analysis, preparing plots and report....")
     text((fit$points[,1]),(fit$points[,2]),col=filterED,labels=filterED)
   }
   pushViewport(viewport(layout=la))
-  printMeta(paste("MDS plots - Built from",ncol(d),"variables with non-missing data",sep=" "),pageno,currentjob[2])
+  printMeta(paste("MDS plots - Built from", ncol(d), "variables with non-missing data", sep=" "), pageno,currentjob[2])
   pageno=pageno+1
+
+    
+  print("DEBUG: Plotting page 13")
   
   #meanSDplot
-  tout<-rbind(c(1,2,3,4),c(5,6,7,8),c(9,10,11,12))
+  tout <- rbind(c(1,2,3,4), c(5,6,7,8), c(9,10,11,12))
   layout(tout)
-  par(mar=c(2,2,2,1),oma=c(3,2,3,2),xpd=NA)
-  for(i in 1:length(methodlist))
+  par(mar=c(2,2,2,1), oma=c(3,2,3,2), xpd=NA)
+  
+  for (i in 1:length(methodlist))
   {  
-    datastore<-(methodlist[[i]])
-    meanSdPlot(datastore,xlab="",ylab="",main=methodnames[i])
+    datastore <- (methodlist[[i]])
+    # TODO: Investigate this line
+    
+    print(paste("Feeding method name: ", methodnames[i]))
+    
+    meanSdPlot(datastore, xlab="", ylab="")
+    # meanSdPlot(datastore, xlab="", ylab="", main=methodnames[i])
+    
+    print("After meanSdPlot")
   }
+  
   pushViewport(viewport(layout=la))
   printMeta("MeanSDplots",pageno,currentjob[2])
   pageno=pageno+1
   
+  print("DEBUG: Plotting page 14")
   #check correlation
 {
   par(mfrow=c(1,1))
@@ -465,6 +515,8 @@ print("Finished analysis, preparing plots and report....")
     avgspecorsum[[i]]<-specorsum
       
   }
+
+  print("DEBUG: Plotting page 15")
   tout<-rbind(c(1,2),c(3))
   layout(tout)
   par(mar=c(2,2,2,1),oma=c(2,2,3,2),xpd=NA)
@@ -479,6 +531,9 @@ print("Finished analysis, preparing plots and report....")
   pageno=pageno+1    
   
 }
+
+  
+  print("DEBUG: Plotting page 16")
   #dendrograms
 {
   tout<-rbind(c(1,2,3,4),c(5,6,7,8),c(9,10,11,12))
@@ -497,6 +552,7 @@ print("Finished analysis, preparing plots and report....")
   pageno=pageno+1    
 }
   
+  print("DEBUG: Plotting page 17")
   #DE plots
 {
   tout<-rbind(c(1,2,3),c(4))

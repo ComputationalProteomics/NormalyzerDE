@@ -1,37 +1,50 @@
 
 normMethods<-function(datafile,currentjob)
 {
-  if(class(datafile) == "character")
+  
+  print("DEBUG: normMethods entered")
+  
+  if (class(datafile) == "character") 
   {
     getrawdata<-as.matrix((read.table(datafile,header=F,sep="\t",stringsAsFactors=F,quote="")))    
-  }else if(class(datafile)=="data.frame")
+  } 
+  else if (class(datafile)=="data.frame")
   {
     getrawdata<-as.matrix(datafile)
-  }else if(class(datafile)=="matrix")
+  } 
+  else if (class(datafile)=="matrix")
   {
     getrawdata<-datafile  
   }
+  
   jobdir<-paste(getwd(),"/",currentjob[1],sep="")
+  
   if(file.exists(jobdir))
   {
     abc<-"Directory already exists"
    class(abc)="try-error"
    if(inherits(abc,"try-error")){return(abc)}
     stop("Directory already exists")
-  }else{
-  dir.create(jobdir)}
-   #Sort the uploaded data based on replicates
-  b<-NULL
-  b<-as.factor(getrawdata[1,])
-  l<-levels(b)
-  b<-NULL
-  for(i in 1:length(l)){
+  } 
+  else 
+  {
+    dir.create(jobdir)
+  }
+  
+  #Sort the uploaded data based on replicates
+  b <- NULL
+  b <- as.factor(getrawdata[1,])
+  l <- levels(b)
+  b <- NULL
+  
+  for (i in 1:length(l)) {
     b<-cbind(b,getrawdata[,which(getrawdata[1,]==l[as.numeric(i)])])
   }
-  getrawdata<-b
   
+  getrawdata <- b
+
   #Parse data for errors
- 
+
   checkrep<-getrawdata[1,]
   repunique<-unique(checkrep)
   for(i in 1:length(repunique))
@@ -74,7 +87,7 @@ normMethods<-function(datafile,currentjob)
   colnames(filterrawdata)<-getrawdata[2,-(1:(length(getEDdata)-length(filterED)))]
   filterrawdata<-(as.matrix((filterrawdata[-(1:2),])))
   class(filterrawdata)<-"numeric"
-  
+    
   
   #CONVERT TO LOG2
   data2log2<-log2((filterrawdata))
