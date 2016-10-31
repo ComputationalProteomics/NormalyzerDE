@@ -14,23 +14,20 @@ analyzeAndPlot<-function(normalizedData, name) {
     filterRawData <- analyzeOutputs[[2]]
     methodList <- analyzeOutputs[[3]]
     filterED <- analyzeOutputs[[4]]
-    avgcvmem <- analyzeOutputs[[5]]
-    methodnames <- analyzeOutputs[[6]]
-    avgmadmem <- analyzeOutputs[[7]]
-    avgvarmem <- analyzeOutputs[[8]]
-    avgcvmempdiff <- analyzeOutputs[[9]]
-    avgmadmempdiff <- analyzeOutputs[[10]]
-    avgvarmempdiff <- analyzeOutputs[[11]]
-    nonsiganfdrlist <- analyzeOutputs[[12]]
-    nonsiganfdrlistcvpdiff <- analyzeOutputs[[13]]
+    avgCVMem <- analyzeOutputs[[5]]
+    methodNames <- analyzeOutputs[[6]]
+    avgMadMem <- analyzeOutputs[[7]]
+    avgVarMem <- analyzeOutputs[[8]]
+    avgCvMemPdiff <- analyzeOutputs[[9]]
+    avgMadMemPdiff <- analyzeOutputs[[10]]
+    avgVarMemPdiff <- analyzeOutputs[[11]]
+    nonSigAnFDRList <- analyzeOutputs[[12]]
+    nonSigAnFDRListCvPdiff <- analyzeOutputs[[13]]
     anfdr <- analyzeOutputs[[14]]
     kwfdr <- analyzeOutputs[[15]]
     
-    # print(paste("currentJob", currentJob))
-    # print(paste("filterRawData", filterRawData))
-    
-    generatePlots(normalizedData, name, currentJob, filterRawData, methodList, filterED, avgcvmem, methodnames, avgmadmem, avgvarmem, 
-                  avgcvmempdiff, avgmadmempdiff, avgvarmempdiff, nonsiganfdrlist, nonsiganfdrlistcvpdiff, anfdr, kwfdr)
+    generatePlots(normalizedData, name, currentJob, filterRawData, methodList, filterED, avgCVMem, methodNames, avgMadMem, avgVarMem, 
+                  avgCvMemPdiff, avgMadMemPdiff, avgVarMemPdiff, nonSigAnFDRList, nonSigAnFDRListCvPdiff, anfdr, kwfdr)
 }
 
 analyze <- function(normalizeddata, name) {
@@ -196,31 +193,38 @@ generatePlots <- function(normalizeddata, name, currentjob, filterrawdata, metho
     
     print("DEBUG: Plotting started")
     
-    pdf(file=paste(jobdir,"/Norm_report-",currentjob[1],".pdf",sep=""),paper="a4r",width=0,height=0)    
-    la=grid.layout(nrow=5,ncol=6,heights=c(0.1,1,1,1,0.1),widths=c(0.1,1,1,1,1,0.1),default.units=c('null','null'))
+    pdf(file=paste(jobdir, "/Norm_report-", currentjob[1], ".pdf", sep=""), paper="a4r", width=0, height=0)    
+    la=grid.layout(nrow=5, ncol=6, heights=c(0.1,1,1,1,0.1), widths=c(0.1,1,1,1,1,0.1), default.units=c('null','null'))
     theme_norm<-theme_set(theme_bw())
-    theme_norm<-theme_update(panel.grid.minor=element_blank(),axis.text=element_text(size=7),axis.title=element_text(size=8),plot.title=element_text(size=8),plot.margin=unit(c(1,1,1,1),"mm"))
+    theme_norm<-theme_update(panel.grid.minor=element_blank(), axis.text=element_text(size=7), axis.title=element_text(size=8), 
+                             plot.title=element_text(size=8), plot.margin=unit(c(1,1,1,1), "mm"))
     
     def.par<-par(no.readonly=T)
     
     par(mfrow=c(4,1))
     data(data4pdftitle)
-    plot(1,type="n",axes=F,xlab="",ylab="")
-    boxplot(data4pdftitle,axes=F,col=c("green","green","red","red"))
-    la1<-grid.layout(nrow=7,ncol=1,heights=c(0.2,1,0.1,0.2,0.1,0.2,0.2),default.units=c('null','null'))
-    gpfill=gpar(fill="gray90",lwd=0,lty=0)
+    plot(1, type="n", axes=F, xlab="", ylab="")
+    boxplot(data4pdftitle, axes=F, col=c("green","green","red","red"))
+    la1<-grid.layout(nrow=7, ncol=1, heights=c(0.2,1,0.1,0.2,0.1,0.2,0.2), default.units=c('null','null'))
+    gpfill=gpar(fill="gray90", lwd=0, lty=0)
     pushViewport(viewport(layout=la1))
-    grid.rect(vp=viewport(layout.pos.row=1),gp=gpfill)
-    grid.rect(vp=viewport(layout.pos.row=7),gp=gpfill)
+    grid.rect(vp=viewport(layout.pos.row=1), gp=gpfill)
+    grid.rect(vp=viewport(layout.pos.row=7), gp=gpfill)
     
-    grid.text(paste("Project Name: ",currentjob[2],sep=""),vp=viewport(layout.pos.row=3),just=c("center","center"),gp=gpar(fontsize=12,fontfamily="Helvetica",col="black"))
-    grid.text(paste("Normalyzer (ver 1.1.1)"),vp=viewport(layout.pos.row=4),just=c("center","center"),gp=gpar(fontface="bold",fontsize=32,fontfamily="Helvetica",col="darkblue"))
+    currentFont <- "Helvetica"
     
-    grid.text(paste("Report created on: ",Sys.Date(),sep=""),vp=viewport(layout.pos.row=5),just=c("center","center"),gp=gpar(fontsize=12,fontfamily="Helvetica",col="black"))
+    grid.text(paste("Project Name: ", currentjob[2], sep=""), vp=viewport(layout.pos.row=3), just=c("center","center"), 
+              gp=gpar(fontsize=12, fontfamily=currentFont, col="black"))
+    grid.text(paste("Normalyzer (ver 1.1.1)"), vp=viewport(layout.pos.row=4), just=c("center", "center"), 
+              gp=gpar(fontface="bold", fontsize=32, fontfamily=currentFont, col="darkblue"))
+    
+    grid.text(paste("Report created on: ", Sys.Date(), sep=""), vp=viewport(layout.pos.row=5), just=c("center","center"),
+              gp=gpar(fontsize=12, fontfamily=currentFont, col="black"))
     grid.text("Citation: Chawade, A., Alexandersson, E., Levander, F. (2014). Normalyzer: a tool for rapid evaluation of normalization methods for omics data sets. J Proteome Res.,13 (6)
               ",vp=viewport(layout.pos.row=6),just=c("center","center"),gp=gpar(fontsize=10,fontfamily="Helvetica",col="black"))
     
-    grid.text("Documentation for analyzing this report can be found at http://quantitativeproteomics.org/normalyzer/help.php",vp=viewport(layout.pos.row=7),just=c("center","center"),gp=gpar(fontsize=10,fontfamily="Helvetica",col="black"))
+    grid.text("Documentation for analyzing this report can be found at http://quantitativeproteomics.org/normalyzer/help.php",
+              vp=viewport(layout.pos.row=7), just=c("center","center"), gp=gpar(fontsize=10, fontfamily="Helvetica", col="black"))
     
     print("DEBUG: Plotting page 2")
     
@@ -228,32 +232,32 @@ generatePlots <- function(normalizeddata, name, currentjob, filterrawdata, metho
     pageno=2
     #TI
     {
-        tout<-rbind(c(1,2),c(3,4))
+        tout <- rbind(c(1,2), c(3,4))
         layout(tout)
-        par(mar=c(4,4,2,1),oma=c(2,2,3,2),xpd=NA)
-        datacoltotal<-apply(filterrawdata,2,function(x){sum(x,na.rm=T)})
-        barplot(datacoltotal,las=2,main="Total intensity",cex.names=0.5,names.arg=substr(names(datacoltotal),1,10))
-        datamissingcol<-apply(filterrawdata,2,function(x){sum(is.na(x))})
-        barplot(datamissingcol,las=2,main="Total missing",cex.names=0.5,names.arg=substr(names(datamissingcol),1,10))
-        datastore<-(methodlist[[1]])
-        d<-dist(scale(t(na.omit(datastore)),center=TRUE,scale=TRUE))
-        fit<-cmdscale(d,eig=TRUE,k=2)
-        x<-fit$points[,1]
-        y<-fit$points[,2]
-        plot(x,y,type="n", main="Log2-MDS plot",xlab="",ylab="")
-        text((fit$points[,1]),(fit$points[,2]),col=filterED,labels=filterED)
+        par(mar=c(4,4,2,1), oma=c(2,2,3,2), xpd=NA)
+        datacoltotal <- apply(filterrawdata, 2, function(x){ sum(x, na.rm=T) })
+        barplot(datacoltotal, las=2, main="Total intensity", cex.names=0.5, names.arg=substr(names(datacoltotal), 1, 10))
+        datamissingcol <- apply(filterrawdata, 2, function(x){ sum(is.na(x)) })
+        barplot(datamissingcol, las=2, main="Total missing", cex.names=0.5, names.arg=substr(names(datamissingcol), 1, 10))
+        datastore <- (methodlist[[1]])
+        d <- dist(scale(t(na.omit(datastore)),center=TRUE,scale=TRUE))
+        fit <- cmdscale(d,eig=TRUE,k=2)
+        x <- fit$points[,1]
+        y <- fit$points[,2]
+        plot(x, y, type="n", main="Log2-MDS plot", xlab="", ylab="")
+        text((fit$points[,1]), (fit$points[,2]), col=filterED, labels=filterED)
         pushViewport(viewport(layout=la))
-        printMeta("Data Summary - Outlier detection",pageno,currentjob[2])
-        pageno=pageno+1
+        printMeta("Data Summary - Outlier detection", pageno, currentjob[2])
+        pageno <- pageno + 1
     }
     
     print("DEBUG: Plotting page 3")
     
     #CV
     {
-        tout<-rbind(c(1,2,3),c(4))
+        tout<-rbind(c(1,2,3), c(4))
         layout(tout)
-        par(mar=c(2,2,2,1),oma=c(2,2,3,2),xpd=NA)
+        par(mar=c(2,2,2,1), oma=c(2,2,3,2), xpd=NA)
         boxplot(avgcvmem,main="PCV - Intragroup",names=c(methodnames),border="red",density=20,cex=0.3,cex.axis=0.9,las=2,frame.plot=F)
         stripchart(as.data.frame(avgcvmem),vertical=T,cex=0.4,las=2,pch=20,add=T,col="darkgray")
         boxplot(avgmadmem,main="PMAD - Intragroup",names=c(methodnames),border="red",density=20,cex=0.3,cex.axis=0.9,las=2,frame.plot=F)
@@ -563,24 +567,11 @@ generatePlots <- function(normalizeddata, name, currentjob, filterrawdata, metho
     
     
     print("DEBUG: Plotting page 16")
+
     #dendrograms
-    {
-        tout<-rbind(c(1,2,3,4),c(5,6,7,8),c(9,10,11,12))
-        layout(tout)
-        par(mar=c(2,2,2,1),oma=c(2,2,3,2),xpd=NA)
-        colt<-(c("red","green","blue","orange","darkgray","blueviolet","darkslateblue","darkviolet","gray","bisque4","brown","cadetblue4","darkgreen","darkcyan","darkmagenta","darkgoldenrod4","coral1"))
-        for(j in 1:length(methodlist))
-        {
-            temp<-scale(t(na.omit(methodlist[[j]])),center=TRUE,scale=TRUE)
-            hc<-hclust(dist(temp),"ave")
-            plot(as.phylo(hc),main=methodnames[j],cex=0.5,tip.color=colt[filterED])
-            axisPhylo(side=1)
-        }
-        pushViewport(viewport(layout=la))
-        printMeta(paste("Dendrograms - Built from",ncol(temp),"variables containing non-missing data",sep=" "),pageno,currentjob[2])
-        pageno=pageno+1    
-    }
-    
+    plotDendrograms(methodlist, methodnames, filterED, la, pageno, currentjob)
+    pageno=pageno+1
+
     print("DEBUG: Plotting page 17")
     #DE plots
     {
@@ -608,5 +599,21 @@ generatePlots <- function(normalizeddata, name, currentjob, filterrawdata, metho
     }
     
     dev.off()
-    
 }
+
+plotDendrograms <- function(methodlist, methodnames, filterED, la, pageno, currentjob) {
+    tout<-rbind(c(1,2,3,4),c(5,6,7,8),c(9,10,11,12))
+    layout(tout)
+    par(mar=c(2,2,2,1),oma=c(2,2,3,2),xpd=NA)
+    colt<-(c("red","green","blue","orange","darkgray","blueviolet","darkslateblue","darkviolet","gray","bisque4","brown","cadetblue4","darkgreen","darkcyan","darkmagenta","darkgoldenrod4","coral1"))
+    for(j in 1:length(methodlist))
+    {
+        temp<-scale(t(na.omit(methodlist[[j]])),center=TRUE,scale=TRUE)
+        hc<-hclust(dist(temp),"ave")
+        plot(as.phylo(hc),main=methodnames[j],cex=0.5,tip.color=colt[filterED])
+        axisPhylo(side=1)
+    }
+    pushViewport(viewport(layout=la))
+    printMeta(paste("Dendrograms - Built from",ncol(temp),"variables containing non-missing data",sep=" "),pageno,currentjob[2])
+}
+
