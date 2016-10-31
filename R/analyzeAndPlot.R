@@ -512,10 +512,33 @@ generatePlots <- function(normalizeddata, name, currentjob, filterrawdata, metho
     }
     
     pushViewport(viewport(layout=currentLayout))
-    printMeta("MeanSDplots",pageno,currentjob[2])
-    pageno=pageno+1
+    printMeta("MeanSDplots", pageno, currentjob[2])
+    pageno <- pageno + 1
     
     # Calculate correlation
+    correlationOutput <- calculateCorrelations(methodlist, filterED)
+    avgpercorsum <- correlationOutput[[1]]
+    avgspecorsum <- correlationOutput[[2]]
+    
+    # Correlation
+    print("DEBUG: Plotting page 15")
+    plotCorrelation(methodnames, avgpercorsum, avgspecorsum, currentLayout, pageno, currentjob)
+    pageno <- pageno + 1
+
+    #dendrograms
+    print("DEBUG: Plotting page 16")
+    plotDendrograms(methodlist, methodnames, filterED, currentLayout, pageno, currentjob)
+    pageno <- pageno + 1
+
+    #DE plots
+    print("DEBUG: Plotting page 17")
+    plotDEPlots(methodnames, anfdr, kwfdr, currentLayout, pageno, currentjob)
+    
+    dev.off()
+}
+
+calculateCorrelations <- function(methodlist, filterED) {
+    
     par(mfrow=c(1,1))
     avgpercorsum <- list()
     avgspecorsum <- list()
@@ -543,21 +566,7 @@ generatePlots <- function(normalizeddata, name, currentjob, filterrawdata, metho
         avgspecorsum[[i]] <- specorsum
     }
     
-    # Correlation
-    print("DEBUG: Plotting page 15")
-    plotCorrelation(methodnames, avgpercorsum, avgspecorsum, currentLayout, pageno, currentjob)
-    pageno=pageno+1
-
-    #dendrograms
-    print("DEBUG: Plotting page 16")
-    plotDendrograms(methodlist, methodnames, filterED, currentLayout, pageno, currentjob)
-    pageno=pageno+1
-
-    #DE plots
-    print("DEBUG: Plotting page 17")
-    plotDEPlots(methodnames, anfdr, kwfdr, currentLayout, pageno, currentjob)
-    
-    dev.off()
+    return list(avgpercorsum, avgspecorsum)
 }
 
 plotCorrelation <- function(methodnames, avgpercorsum, avgspecorsum, currentLayout, pageno, currentjob) {
