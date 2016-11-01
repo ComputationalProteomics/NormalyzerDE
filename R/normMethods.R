@@ -1,10 +1,7 @@
 
-normMethods<-function(datafile,currentjob) {
-    
-    print("DEBUG: normMethods entered")
-    
+retrieveRawData <- function(datafile) {
     if (class(datafile) == "character") {
-        getrawdata <- as.matrix((read.table(datafile,header=F,sep="\t",stringsAsFactors=F,quote="")))    
+        getrawdata <- as.matrix((read.table(datafile, header=F, sep="\t", stringsAsFactors=F, quote="")))    
     } 
     else if (class(datafile) == "data.frame") {
         getrawdata <- as.matrix(datafile)
@@ -12,9 +9,11 @@ normMethods<-function(datafile,currentjob) {
     else if (class(datafile) == "matrix") {
         getrawdata <- datafile  
     }
-    
-    jobdir <- paste(getwd(), "/", currentjob[1], sep="")
-    
+    getrawdata
+}
+
+setupJobDir <- function(jobdir) {
+
     if (file.exists(jobdir)) {
         abc <- "Directory already exists"
         class(abc) <- "try-error"
@@ -26,26 +25,30 @@ normMethods<-function(datafile,currentjob) {
     else {
         dir.create(jobdir)
     }
-    
-    #Sort the uploaded data based on replicates
+}
+
+getReplicateSortedData <- function(getrawdata) {
     b <- NULL
     b <- as.factor(getrawdata[1,])
     l <- levels(b)
     b <- NULL
-    
     for (i in 1:length(l)) {
-        b<-cbind(b,getrawdata[, which(getrawdata[1,] == l[as.numeric(i)])])
+        b <- cbind(b, getrawdata[, which(getrawdata[1,] == l[as.numeric(i)])])
     }
-    
     getrawdata <- b
-    
-    #Parse data for errors
+    getrawdata
+}
+
+## Evaluate whether the input format is in correct format
+## Abort processing if this isn't the case
+parseDataForErrors <- function(getrawdata) {
     
     checkrep <- getrawdata[1,]
     repunique <- unique(checkrep)
+    
     for (i in 1:length(repunique)) {
-        if(repunique[i] != 0) {
-            if(length(grep(repunique[i],checkrep)) < 2) {
+        if (repunique[i] != 0) {
+            if (length(grep(repunique[i],checkrep)) < 2) {
                 abc <- paste("Number of replicates are less than 2 for the group ", repunique[i],sep="")
                 class(abc) <- "try-error"
                 if (inherits(abc,"try-error")) {
@@ -55,12 +58,43 @@ normMethods<-function(datafile,currentjob) {
             }
         }
     }
+    checkrep
+}
+
+## Replaces zeroes with NAs
+preprocessData <- function(getrawdata) {
     
-    #replace 0 with NA
     rep0 <- getrawdata[-1,]
     rep0[which(rep0==0)] <- NA
     getrawdata <- rbind(getrawdata[1,], rep0)
     
+    getrawdata
+}
+
+setupFilterRawData <- function(getrawdata, getEDdata, filterED) {
+    
+    filterrawdata <- getrawdata[, -(1:(length(getEDdata) - length(filterED)))]
+    colnames(filterrawdata) <- getrawdata[2, -(1:(length(getEDdata) - length(filterED)))]
+    filterrawdata <- (as.matrix((filterrawdata[-(1:2), ])))
+    class(filterrawdata) <- "numeric"
+    
+    filterrawdata
+}
+
+normMethods <- function(datafile, currentjob) {
+
+    print("DEBUG: normMethods entered !!")
+
+    getrawdata <- retrieveRawData(datafile)
+    jobdir <- paste(getwd(), "/", currentjob[1], sep="")
+
+    ## Setup steps
+    setupJobDir(jobdir)
+    getrawdata <- getReplicateSortedData(getrawdata)
+    checkrep <- parseDataForErrors(getrawdata)
+    getrawdata <- preprocessData(getrawdata)
+    
+    ## TODO: Collect much of this in S4 class
     HKflag <- T
     getEDdata <- ((getrawdata[1,]))
     filterrawdata1 <- getrawdata
@@ -68,23 +102,20 @@ normMethods<-function(datafile,currentjob) {
     filterrawdata1 <- filterrawdata1[countna >= (1 * ncol(filterrawdata1[, which(checkrep>0)])), ]
     filterED <- as.numeric(getEDdata[-which(getEDdata < 1)])
 
-    if(nrow(filterrawdata1) < 1000) {
+    if (nrow(filterrawdata1) < 1000) {
         #wont work without replicates
-        Hkvar<-normfinder(filterrawdata1,getEDdata)
+        Hkvar <- normfinder(filterrawdata1,getEDdata)
     } 
     else {
-        HKflag=F 
+        HKflag <- F 
     }
     
     filterED <- as.numeric(getEDdata[-which(getEDdata < 1)])
-    filterrawdata <- getrawdata[, -(1:(length(getEDdata) - length(filterED)))]
-    colnames(filterrawdata) <- getrawdata[2, -(1:(length(getEDdata) - length(filterED)))]
-    filterrawdata <- (as.matrix((filterrawdata[-(1:2), ])))
-    class(filterrawdata) <- "numeric"
+    filterrawdata <- setupFilterRawData(getrawdata, getEDdata, filterED)
     
-    #CONVERT TO LOG2
-    data2log2 <- log2((filterrawdata))
-    #Total intensity normalization
+    # CONVERT TO LOG2
+    data2log2 <- log2(filterrawdata)
+    # Total intensity normalization
     data2GI <- matrix(nrow=nrow(filterrawdata), ncol=ncol(filterrawdata), byrow=T)
     data2ctr <- matrix(nrow=nrow(filterrawdata), ncol=ncol(filterrawdata), byrow=T)
     data2med <- matrix(nrow=nrow(filterrawdata), ncol=ncol(filterrawdata), byrow=T) 
@@ -94,7 +125,7 @@ normMethods<-function(datafile,currentjob) {
     medofdata <- apply(filterrawdata, 2, FUN="median", na.rm=T)  
     meanofdata <- apply(filterrawdata, 2, FUN="mean", na.rm=T) 
 
-    if (HKflag == T) {
+    if (HKflag) {
         Hkvartemp <- as.matrix(Hkvar[, -(1:(length(getEDdata) - length(filterED)))])
         class(Hkvartemp) <- "numeric"
         colmedianctr <- apply(Hkvartemp, 2, FUN="mean")
@@ -134,6 +165,7 @@ normMethods<-function(datafile,currentjob) {
     
     #Perform other norm. if the dataset is not small  
     if(nrow(filterrawdata) > 100) {
+        
         #VSN NORMALIZATION
         sink(sinkfile, type="output")
         cat("\n###Warning messages for VSN-G###\n")
@@ -185,13 +217,15 @@ normMethods<-function(datafile,currentjob) {
             data2limloess1 <- NULL
             for (i in 1:length(filterED)) {
                 if (x!=filterED[i] || i==length(filterED)) {
+                    
                     y <- i-1
                     if (i == length(filterED)) {
                         y <- i
                     }
+                    
                     if(flag == 1) {
-                        #median based LR normalization
                         
+                        #median based LR normalization
                         mediandata <- apply(data2log2[, z:y], 1, "median", na.rm=T)
                         for(j in z:y) {
                             LRfit <- rlm(as.matrix(data2log2[,j]) ~mediandata,na.action=na.exclude)
@@ -245,8 +279,8 @@ normMethods<-function(datafile,currentjob) {
             methodnames <- c("Log2", "Loess-R", "RLR-R", "VSN-R", "Loess-G", "RLR-G", "VSN-G", "TI-G", "MedI-G", "AI-G", "Quantile")
         }
     }
-    #Create tmp dir for the current job
     
+    #Create tmp dir for the current job
     for (i in 1:length(methodlist)) {
         write.table(file=paste(jobdir, "/", methodnames[i], "-normalized.txt", sep=""), 
                     cbind(getrawdata[-(1:2), (1:(length(getEDdata) - length(filterED)))], methodlist[[i]]), sep="\t", row.names=F,col.names=getrawdata[2,],quote=F)

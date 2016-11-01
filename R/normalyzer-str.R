@@ -29,6 +29,7 @@ normalyzer<-function(datafile,getjob){
     try.result <- try(normalizeddata <- normMethods(datafile, getjob))
     
     if (inherits(try.result, "try-error")) {
+        traceback()
         return(try.result)
     }
     
