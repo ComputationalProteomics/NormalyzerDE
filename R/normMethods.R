@@ -81,11 +81,42 @@ setupFilterRawData <- function(getrawdata, getEDdata, filterED) {
     filterrawdata
 }
 
+initializeNormObject <- function(normObj, filterrawdata) {
+    
+    normObj@data2log2 <- log2(filterrawdata)
+    normObj@data2GI <- matrix(nrow=nrow(filterrawdata), ncol=ncol(filterrawdata), byrow=T)
+    normObj@data2ctr <- matrix(nrow=nrow(filterrawdata), ncol=ncol(filterrawdata), byrow=T)
+    normObj@data2med <- matrix(nrow=nrow(filterrawdata), ncol=ncol(filterrawdata), byrow=T) 
+    normObj@data2mean <- matrix(nrow=nrow(filterrawdata), ncol=ncol(filterrawdata), byrow=T)
+    
+    normObj
+}
+
+calculateHKdataForNormObj <- function(normObj, getEDdata, filterED, Hkvar, filterrawdata) {
+    
+    Hkvartemp <- as.matrix(Hkvar[, -(1:(length(getEDdata) - length(filterED)))])
+    class(Hkvartemp) <- "numeric"
+    colmedianctr <- apply(Hkvartemp, 2, FUN="mean")
+    
+    for(i in 1:nrow(filterrawdata)) {
+        normObj@data2ctr[i,] <- unlist(sapply(1:ncol(filterrawdata), 
+                                              function(zd) {(filterrawdata[i, zd] / colmedianctr[zd]) * (mean(colmedianctr))}))
+    }
+    normObj@data2ctrlog <- log2(normObj@data2ctr)
+    colnames(normObj@data2ctrlog) <- colnames(normObj@data2log2)
+    
+    normObj
+}
+
 normMethods <- function(datafile, currentjob) {
 
     print("DEBUG: normMethods entered !!")
 
     getrawdata <- retrieveRawData(datafile)
+    
+    print(getwd())
+    print(currentjob)
+    
     jobdir <- paste(getwd(), "/", currentjob[1], sep="")
 
     ## Setup steps
@@ -98,13 +129,13 @@ normMethods <- function(datafile, currentjob) {
     HKflag <- T
     getEDdata <- ((getrawdata[1,]))
     filterrawdata1 <- getrawdata
-    countna <- rowSums(!is.na(filterrawdata1[,which(checkrep > 0)]))
+    countna <- rowSums(!is.na(filterrawdata1[, which(checkrep > 0)]))
     filterrawdata1 <- filterrawdata1[countna >= (1 * ncol(filterrawdata1[, which(checkrep>0)])), ]
     filterED <- as.numeric(getEDdata[-which(getEDdata < 1)])
 
     if (nrow(filterrawdata1) < 1000) {
-        #wont work without replicates
-        Hkvar <- normfinder(filterrawdata1,getEDdata)
+        # won't work without replicates
+        Hkvar <- normfinder(filterrawdata1, getEDdata)
     } 
     else {
         HKflag <- F 
@@ -114,96 +145,96 @@ normMethods <- function(datafile, currentjob) {
     filterrawdata <- setupFilterRawData(getrawdata, getEDdata, filterED)
     
     # CONVERT TO LOG2
-    data2log2 <- log2(filterrawdata)
     # Total intensity normalization
-    data2GI <- matrix(nrow=nrow(filterrawdata), ncol=ncol(filterrawdata), byrow=T)
-    data2ctr <- matrix(nrow=nrow(filterrawdata), ncol=ncol(filterrawdata), byrow=T)
-    data2med <- matrix(nrow=nrow(filterrawdata), ncol=ncol(filterrawdata), byrow=T) 
-    data2mean <- matrix(nrow=nrow(filterrawdata), ncol=ncol(filterrawdata), byrow=T)  
+    normObj <- NormalyzerObject()
+    normObj <- initializeNormObject(normObj, filterrawdata)
     
     colsum <- colSums(filterrawdata, na.rm=T)
     medofdata <- apply(filterrawdata, 2, FUN="median", na.rm=T)  
     meanofdata <- apply(filterrawdata, 2, FUN="mean", na.rm=T) 
 
     if (HKflag) {
-        Hkvartemp <- as.matrix(Hkvar[, -(1:(length(getEDdata) - length(filterED)))])
-        class(Hkvartemp) <- "numeric"
-        colmedianctr <- apply(Hkvartemp, 2, FUN="mean")
+        # Hkvartemp <- as.matrix(Hkvar[, -(1:(length(getEDdata) - length(filterED)))])
+        # class(Hkvartemp) <- "numeric"
+        # colmedianctr <- apply(Hkvartemp, 2, FUN="mean")
+        # 
+        # for(i in 1:nrow(filterrawdata)) {
+        #     normObj@data2ctr[i,] <- unlist(sapply(1:ncol(filterrawdata), 
+        #                                    function(zd) {(filterrawdata[i, zd] / colmedianctr[zd]) * (mean(colmedianctr))}))
+        # }
+        # normObj@data2ctrlog <- log2(normObj@data2ctr)
+        # colnames(normObj@data2ctrlog) <- colnames(normObj@data2log2)
         
-        for(i in 1:nrow(filterrawdata)) {
-            data2ctr[i,] <- unlist(sapply(1:ncol(filterrawdata), function(zd) {(filterrawdata[i, zd] / colmedianctr[zd]) * (mean(colmedianctr))}))
-        }
-        data2ctrlog <- log2(data2ctr)
-        colnames(data2ctrlog) <- colnames(data2log2)
+        normObj <- calculateHKdataForNormObj(normObj, getEDdata, filterED, Hkvar, filterrawdata)
     }
     
     avgcolsum <- median(colsum)  
     for(i in 1:nrow(filterrawdata)) {
-        data2GI[i,] <- unlist(sapply(1:ncol(filterrawdata), function(zd) {(filterrawdata[i,zd] / colsum[zd]) * (avgcolsum)}))
-        data2med[i,] <- unlist(sapply(1:ncol(filterrawdata), function(zd) {(filterrawdata[i,zd] / medofdata[zd]) * mean(medofdata)}))
-        data2mean[i,] <- unlist(sapply(1:ncol(filterrawdata), function(zd) {(filterrawdata[i,zd] / meanofdata[zd]) * mean(meanofdata)}))
+        normObj@data2GI[i,] <- unlist(sapply(1:ncol(filterrawdata), function(zd) {(filterrawdata[i,zd] / colsum[zd]) * (avgcolsum)}))
+        normObj@data2med[i,] <- unlist(sapply(1:ncol(filterrawdata), function(zd) {(filterrawdata[i,zd] / medofdata[zd]) * mean(medofdata)}))
+        normObj@data2mean[i,] <- unlist(sapply(1:ncol(filterrawdata), function(zd) {(filterrawdata[i,zd] / meanofdata[zd]) * mean(meanofdata)}))
     } 
     
-    data2GI <- log2(data2GI)
-    data2med <- log2(data2med)
-    data2mean <- log2(data2mean)
-    colnames(data2GI) <- colnames(data2log2)
-    colnames(data2med) <- colnames(data2log2)
-    colnames(data2mean) <- colnames(data2log2)
+    normObj@data2GI <- log2(normObj@data2GI)
+    normObj@data2med <- log2(normObj@data2med)
+    normObj@data2mean <- log2(normObj@data2mean)
+    colnames(normObj@data2GI) <- colnames(normObj@data2log2)
+    colnames(normObj@data2med) <- colnames(normObj@data2log2)
+    colnames(normObj@data2mean) <- colnames(normObj@data2log2)
     
     if (HKflag == T) {
-        methodlist <- list(data2log2, data2GI, data2med, data2mean, data2ctrlog)
+        methodlist <- list(normObj@data2log2, normObj@data2GI, normObj@data2med, normObj@data2mean, normObj@data2ctrlog)
         methodnames <- c("Log2", "TI-G", "MedI-G", "AI-G", "NF-G")
     }
     else {
-        methodlist <- list(data2log2, data2GI, data2med, data2mean)
+        methodlist <- list(normObj@data2log2, normObj@data2GI, normObj@data2med, normObj@data2mean)
         methodnames <- c("Log2", "TI-G", "MedI-G", "AI-G")
     }
     
     sinkfile <- file(paste(jobdir, "/warnings-generated.txt", sep=""), open="wt")
     sink(sinkfile, type="message", append=F)
     
-    #Perform other norm. if the dataset is not small  
+    # Perform other norm. if the dataset is not small  
     if(nrow(filterrawdata) > 100) {
         
-        #VSN NORMALIZATION
+        # VSN NORMALIZATION
         sink(sinkfile, type="output")
         cat("\n###Warning messages for VSN-G###\n")
         sink(sinkfile, type="message")
-        data2vsn <- justvsn((filterrawdata))
+        normObj@data2vsn <- justvsn((filterrawdata))
         
-        #QUANTILE NORMALIZATION
-        data2quantile <- normalize.quantiles((data2log2), copy=T)
+        # QUANTILE NORMALIZATION
+        normObj@data2quantile <- normalize.quantiles((normObj@data2log2), copy=T)
         
-        #SMAD normalization
-        mediandata <- apply(data2log2, 2, "median", na.rm=T)
-        maddata <- apply(data2log2, 2, function(x) mad(x, na.rm=T))
-        data2mad <- t(apply(data2log2, 1, function(x) ((x - mediandata) / maddata)))
-        data2mad <- data2mad + mean(mediandata)
+        # SMAD normalization
+        mediandata <- apply(normObj@data2log2, 2, "median", na.rm=T)
+        maddata <- apply(normObj@data2log2, 2, function(x) mad(x, na.rm=T))
+        normObj@data2mad <- t(apply(normObj@data2log2, 1, function(x) ((x - mediandata) / maddata)))
+        normObj@data2mad <- normObj@data2mad + mean(mediandata)
         
-        #Global loess
-        data2loess <- normalizeCyclicLoess(data2log2, method="fast")
+        # Global loess
+        normObj@data2loess <- normalizeCyclicLoess(normObj@data2log2, method="fast")
         
-        #Global RLR
-        mediandata <- apply(data2log2, 1, "median", na.rm=T)
+        # Global RLR
+        mediandata <- apply(normObj@data2log2, 1, "median", na.rm=T)
         flag1 <- 1
         
-        for (j in 1:ncol(data2log2)) {
-            LRfit <- rlm(as.matrix(data2log2[, j]) ~mediandata, na.action=na.exclude)
+        for (j in 1:ncol(normObj@data2log2)) {
+            LRfit <- rlm(as.matrix(normObj@data2log2[, j])~mediandata, na.action=na.exclude)
             Coeffs <- LRfit$coefficients
             a<-Coeffs[2]
             b<-Coeffs[1]
-            if(flag1 == 1) {
-                globalfittedRLR <- (data2log2[,j]-b) / a
+            if (flag1 == 1) {
+                globalfittedRLR <- (normObj@data2log2[,j]-b) / a
                 flag1 <- 2
             }
             else {
-                globalfittedRLR <- cbind(globalfittedRLR, (data2log2[, j] - b) / a)
+                globalfittedRLR <- cbind(globalfittedRLR, (normObj@data2log2[, j] - b) / a)
             }
         }
-        colnames(globalfittedRLR) <- colnames(data2log2)
+        colnames(globalfittedRLR) <- colnames(normObj@data2log2)
         
-        #NORMALIZATION within REPLICATES RLR, VSN and  Loess
+        # NORMALIZATION within REPLICATES RLR, VSN and Loess
         {
             sink(sinkfile, type="output")
             cat("\n###Warning messages for VSN-R###\n")
@@ -223,39 +254,39 @@ normMethods <- function(datafile, currentjob) {
                         y <- i
                     }
                     
-                    if(flag == 1) {
+                    if (flag == 1) {
                         
-                        #median based LR normalization
-                        mediandata <- apply(data2log2[, z:y], 1, "median", na.rm=T)
-                        for(j in z:y) {
-                            LRfit <- rlm(as.matrix(data2log2[,j]) ~mediandata,na.action=na.exclude)
+                        # median based LR normalization
+                        mediandata <- apply(normObj@data2log2[, z:y], 1, "median", na.rm=T)
+                        for (j in z:y) {
+                            LRfit <- rlm(as.matrix(normObj@data2log2[,j]) ~mediandata,na.action=na.exclude)
                             Coeffs <- LRfit$coefficients
                             a <- Coeffs[2]
                             b <- Coeffs[1]
-                            if(flag1 == 1) {
-                                fittedLR <- (data2log2[, j] - b) / a
+                            if (flag1 == 1) {
+                                fittedLR <- (normObj@data2log2[, j] - b) / a
                                 flag1 <- 2
                             }
                             else {
-                                fittedLR <- cbind(fittedLR, (data2log2[, j] - b) / a)
+                                fittedLR <- cbind(fittedLR, (normObj@data2log2[, j] - b) / a)
                             }
                         }
-                        data2vsnrep <- justvsn(as.matrix(filterrawdata[, z:y]))
+                        normObj@data2vsnrep <- justvsn(as.matrix(filterrawdata[, z:y]))
                         
-                        data2limloess <- normalizeCyclicLoess(data2log2[, z:y], method="fast")
+                        normObj@data2limloess <- normalizeCyclicLoess(normObj@data2log2[, z:y], method="fast")
                     }
                     if (flag == 2) {  
-                        #median based LR normalization
-                        mediandata <- apply(data2log2[, z:y], 1, "median", na.rm=T)
-                        for(j in z:y) {
-                            LRfit <- rlm(as.matrix(data2log2[,j]) ~mediandata, na.action=na.exclude)
+                        # median based LR normalization
+                        mediandata <- apply(normObj@data2log2[, z:y], 1, "median", na.rm=T)
+                        for (j in z:y) {
+                            LRfit <- rlm(as.matrix(normObj@data2log2[, j]) ~mediandata, na.action=na.exclude)
                             Coeffs <- LRfit$coefficients
                             a <- Coeffs[2]
                             b <- Coeffs[1]
-                            fittedLR <- cbind(fittedLR, (data2log2[, j]-b) / a)
+                            fittedLR <- cbind(fittedLR, (normObj@data2log2[, j] - b) / a)
                         }
-                        data2limloess <- cbind(data2limloess, normalizeCyclicLoess(data2log2[, z:y], method="fast"))
-                        data2vsnrep <- cbind(data2vsnrep, justvsn(as.matrix(filterrawdata[, z:y])))
+                        normObj@data2limloess <- cbind(normObj@data2limloess, normalizeCyclicLoess(normObj@data2log2[, z:y], method="fast"))
+                        normObj@data2vsnrep <- cbind(normObj@data2vsnrep, justvsn(as.matrix(filterrawdata[, z:y])))
                     }
                     z <- i
                     x <- filterED[i]
@@ -266,19 +297,27 @@ normMethods <- function(datafile, currentjob) {
         
         #sink(sinkfile,type="output")
         closeAllConnections()
-        colnames(fittedLR)<-colnames(data2log2)
-        colnames(data2quantile)<-colnames(data2log2)
+        colnames(fittedLR)<-colnames(normObj@data2log2)
+        colnames(normObj@data2quantile)<-colnames(normObj@data2log2)
         
-        if (HKflag == T) {
-            methodlist <- list(data2log2, data2limloess, fittedLR, data2vsnrep, data2loess, globalfittedRLR, data2vsn, 
-                               data2GI, data2med, data2mean, data2ctrlog, data2quantile)
+        if (HKflag) {
+            methodlist <- list(normObj@data2log2, normObj@data2limloess, fittedLR, normObj@data2vsnrep, normObj@data2loess, globalfittedRLR, normObj@data2vsn,
+                               normObj@data2GI, normObj@data2med, normObj@data2mean, normObj@data2ctrlog, normObj@data2quantile)
             methodnames <- c("Log2", "Loess-R", "RLR-R", "VSN-R", "Loess-G", "RLR-G", "VSN-G", "TI-G", "MedI-G", "AI-G", "NF-G", "Quantile")
         } 
         else {
-            methodlist <- list(data2log2, data2limloess, fittedLR, data2vsnrep, data2loess, globalfittedRLR, data2vsn, data2GI, data2med, data2mean, data2quantile)
+            methodlist <- list(normObj@data2log2, normObj@data2limloess, fittedLR, normObj@data2vsnrep, normObj@data2loess, globalfittedRLR, normObj@data2vsn, normObj@data2GI, normObj@data2med, normObj@data2mean, normObj@data2quantile)
             methodnames <- c("Log2", "Loess-R", "RLR-R", "VSN-R", "Loess-G", "RLR-G", "VSN-G", "TI-G", "MedI-G", "AI-G", "Quantile")
         }
     }
+    
+    # --- TODO: Remove ---
+    # print(typeof(data2log2)) # Double matrix
+    # print(typeof(data2GI)) # Logical matrix 
+    # print(typeof(data2ctr)) # Logical matrix
+    # print(typeof(data2med)) # Logical matrix
+    # print(typeof(data2mean)) # Logical matrix
+    # --- end ---
     
     #Create tmp dir for the current job
     for (i in 1:length(methodlist)) {
@@ -286,7 +325,7 @@ normMethods <- function(datafile, currentjob) {
                     cbind(getrawdata[-(1:2), (1:(length(getEDdata) - length(filterED)))], methodlist[[i]]), sep="\t", row.names=F,col.names=getrawdata[2,],quote=F)
     }
 
-    if(HKflag == T) {
+    if (HKflag) {
         write.table(file=paste(jobdir, "/housekeeping-variables.txt", sep=""), Hkvar, sep="\t", row.names=F, col.names=getrawdata[2,], quote=F)
     }
     

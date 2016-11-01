@@ -1,7 +1,9 @@
 
 
 
-normalyzer<-function(datafile,getjob){
+normalyzer <- function(datafile, getjob){
+    
+    print('start')
     
     require(Rcmdr)
     require(PerformanceAnalytics)
@@ -16,20 +18,21 @@ normalyzer<-function(datafile,getjob){
     require(car)
     require(gridExtra)
     require(ggplot2)
-    
+
     require(grid)
-    
+
     source("analyzeAndPlot.R")
     source("normfinder-pipeline.R")
     source("normMethods.R")
     source("printMeta.R")
     source("printPlots.R")
-    
+
+    source("NormalyzerObject.R")
+        
     print("Normalizing data....")
     try.result <- try(normalizeddata <- normMethods(datafile, getjob))
     
     if (inherits(try.result, "try-error")) {
-        traceback()
         return(try.result)
     }
     
