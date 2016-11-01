@@ -108,6 +108,71 @@ calculateHKdataForNormObj <- function(normObj, getEDdata, filterED, Hkvar, filte
     normObj
 }
 
+## TODO: Understand this better. Really.
+furtherNormalizationsForNormObject <- function(normObj, filterrawdata, colsum, medofdata, meanofdata) {
+    
+    avgcolsum <- median(colsum)
+    for(i in 1:nrow(filterrawdata)) {
+        normObj@data2GI[i,] <- unlist(sapply(1:ncol(filterrawdata), function(zd) {(filterrawdata[i,zd] / colsum[zd]) * (avgcolsum)}))
+        normObj@data2med[i,] <- unlist(sapply(1:ncol(filterrawdata), function(zd) {(filterrawdata[i,zd] / medofdata[zd]) * mean(medofdata)}))
+        normObj@data2mean[i,] <- unlist(sapply(1:ncol(filterrawdata), function(zd) {(filterrawdata[i,zd] / meanofdata[zd]) * mean(meanofdata)}))
+    } 
+    
+    normObj@data2GI <- log2(normObj@data2GI)
+    normObj@data2med <- log2(normObj@data2med)
+    normObj@data2mean <- log2(normObj@data2mean)
+    colnames(normObj@data2GI) <- colnames(normObj@data2log2)
+    colnames(normObj@data2med) <- colnames(normObj@data2log2)
+    colnames(normObj@data2mean) <- colnames(normObj@data2log2)
+    
+    normObj
+}
+
+getMethodList <- function(HKflag, normObj) {
+    
+    if (HKflag) {
+        methodlist <- list(normObj@data2log2, normObj@data2GI, normObj@data2med, normObj@data2mean, normObj@data2ctrlog)
+    }
+    else {
+        methodlist <- list(normObj@data2log2, normObj@data2GI, normObj@data2med, normObj@data2mean)
+    }
+    methodlist
+}
+
+getMethodNames <- function(HKflag) {
+    
+    if (HKflag) {
+        methodnames <- c("Log2", "TI-G", "MedI-G", "AI-G", "NF-G")
+    }
+    else {
+        methodnames <- c("Log2", "TI-G", "MedI-G", "AI-G")
+    }
+    methodnames
+}
+
+performVSNNormalization <- function(normObj) {
+    
+    sink(sinkfile, type="output")
+    cat("\n###Warning messages for VSN-G###\n")
+    sink(sinkfile, type="message")
+    normObj@data2vsn <- justvsn((filterrawdata))
+    
+    normObj
+}
+
+performQuantileNormalization <- function(normObj) {
+    normObj@data2quantile <- normalize.quantiles((normObj@data2log2), copy=T)
+    normObj
+}
+
+performSMADNormalization <- function(normObj) {
+    mediandata <- apply(normObj@data2log2, 2, "median", na.rm=T)
+    maddata <- apply(normObj@data2log2, 2, function(x) mad(x, na.rm=T))
+    normObj@data2mad <- t(apply(normObj@data2log2, 1, function(x) ((x - mediandata) / maddata)))
+    normObj@data2mad <- normObj@data2mad + mean(mediandata)
+    normObj
+}
+
 normMethods <- function(datafile, currentjob) {
 
     print("DEBUG: normMethods entered !!")
@@ -144,73 +209,42 @@ normMethods <- function(datafile, currentjob) {
     filterED <- as.numeric(getEDdata[-which(getEDdata < 1)])
     filterrawdata <- setupFilterRawData(getrawdata, getEDdata, filterED)
     
-    # CONVERT TO LOG2
-    # Total intensity normalization
     normObj <- NormalyzerObject()
+
+    # CONVERT TO LOG2 - Total intensity normalization
     normObj <- initializeNormObject(normObj, filterrawdata)
+    
     
     colsum <- colSums(filterrawdata, na.rm=T)
     medofdata <- apply(filterrawdata, 2, FUN="median", na.rm=T)  
     meanofdata <- apply(filterrawdata, 2, FUN="mean", na.rm=T) 
 
     if (HKflag) {
-        # Hkvartemp <- as.matrix(Hkvar[, -(1:(length(getEDdata) - length(filterED)))])
-        # class(Hkvartemp) <- "numeric"
-        # colmedianctr <- apply(Hkvartemp, 2, FUN="mean")
-        # 
-        # for(i in 1:nrow(filterrawdata)) {
-        #     normObj@data2ctr[i,] <- unlist(sapply(1:ncol(filterrawdata), 
-        #                                    function(zd) {(filterrawdata[i, zd] / colmedianctr[zd]) * (mean(colmedianctr))}))
-        # }
-        # normObj@data2ctrlog <- log2(normObj@data2ctr)
-        # colnames(normObj@data2ctrlog) <- colnames(normObj@data2log2)
-        
         normObj <- calculateHKdataForNormObj(normObj, getEDdata, filterED, Hkvar, filterrawdata)
     }
-    
-    avgcolsum <- median(colsum)  
-    for(i in 1:nrow(filterrawdata)) {
-        normObj@data2GI[i,] <- unlist(sapply(1:ncol(filterrawdata), function(zd) {(filterrawdata[i,zd] / colsum[zd]) * (avgcolsum)}))
-        normObj@data2med[i,] <- unlist(sapply(1:ncol(filterrawdata), function(zd) {(filterrawdata[i,zd] / medofdata[zd]) * mean(medofdata)}))
-        normObj@data2mean[i,] <- unlist(sapply(1:ncol(filterrawdata), function(zd) {(filterrawdata[i,zd] / meanofdata[zd]) * mean(meanofdata)}))
-    } 
-    
-    normObj@data2GI <- log2(normObj@data2GI)
-    normObj@data2med <- log2(normObj@data2med)
-    normObj@data2mean <- log2(normObj@data2mean)
-    colnames(normObj@data2GI) <- colnames(normObj@data2log2)
-    colnames(normObj@data2med) <- colnames(normObj@data2log2)
-    colnames(normObj@data2mean) <- colnames(normObj@data2log2)
-    
-    if (HKflag == T) {
-        methodlist <- list(normObj@data2log2, normObj@data2GI, normObj@data2med, normObj@data2mean, normObj@data2ctrlog)
-        methodnames <- c("Log2", "TI-G", "MedI-G", "AI-G", "NF-G")
-    }
-    else {
-        methodlist <- list(normObj@data2log2, normObj@data2GI, normObj@data2med, normObj@data2mean)
-        methodnames <- c("Log2", "TI-G", "MedI-G", "AI-G")
-    }
-    
+
+    normObj <- furtherNormalizationsForNormObject(normObj, filterrawdata, colsum, medofdata, meanofdata)
+
+    methodlist <- getMethodList(HKflag, normObj)
+    methodnames <- getMethodNames(HKflag)
+
     sinkfile <- file(paste(jobdir, "/warnings-generated.txt", sep=""), open="wt")
     sink(sinkfile, type="message", append=F)
     
+    print(paste("DEBUG: Number of rows of filtered raw data"), nrow(filterrawdata))
+    
     # Perform other norm. if the dataset is not small  
-    if(nrow(filterrawdata) > 100) {
+    if (nrow(filterrawdata) > 100) {
         
-        # VSN NORMALIZATION
-        sink(sinkfile, type="output")
-        cat("\n###Warning messages for VSN-G###\n")
-        sink(sinkfile, type="message")
-        normObj@data2vsn <- justvsn((filterrawdata))
-        
-        # QUANTILE NORMALIZATION
-        normObj@data2quantile <- normalize.quantiles((normObj@data2log2), copy=T)
-        
+        normObj <- performVSNNormalization(normObj, filterrawdata)
+        normObj <- performQuantileNormalization(normObj)
+        normObj <- performSMADNormalization(normObj)
+
         # SMAD normalization
-        mediandata <- apply(normObj@data2log2, 2, "median", na.rm=T)
-        maddata <- apply(normObj@data2log2, 2, function(x) mad(x, na.rm=T))
-        normObj@data2mad <- t(apply(normObj@data2log2, 1, function(x) ((x - mediandata) / maddata)))
-        normObj@data2mad <- normObj@data2mad + mean(mediandata)
+        # mediandata <- apply(normObj@data2log2, 2, "median", na.rm=T)
+        # maddata <- apply(normObj@data2log2, 2, function(x) mad(x, na.rm=T))
+        # normObj@data2mad <- t(apply(normObj@data2log2, 1, function(x) ((x - mediandata) / maddata)))
+        # normObj@data2mad <- normObj@data2mad + mean(mediandata)
         
         # Global loess
         normObj@data2loess <- normalizeCyclicLoess(normObj@data2log2, method="fast")
@@ -310,14 +344,6 @@ normMethods <- function(datafile, currentjob) {
             methodnames <- c("Log2", "Loess-R", "RLR-R", "VSN-R", "Loess-G", "RLR-G", "VSN-G", "TI-G", "MedI-G", "AI-G", "Quantile")
         }
     }
-    
-    # --- TODO: Remove ---
-    # print(typeof(data2log2)) # Double matrix
-    # print(typeof(data2GI)) # Logical matrix 
-    # print(typeof(data2ctr)) # Logical matrix
-    # print(typeof(data2med)) # Logical matrix
-    # print(typeof(data2mean)) # Logical matrix
-    # --- end ---
     
     #Create tmp dir for the current job
     for (i in 1:length(methodlist)) {

@@ -31,6 +31,7 @@ normalyzer <- function(datafile, getjob){
         
     print("Normalizing data....")
     try.result <- try(normalizeddata <- normMethods(datafile, getjob))
+    # normalizeddata <- normMethods(datafile, getjob)
     
     if (inherits(try.result, "try-error")) {
         return(try.result)
