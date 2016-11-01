@@ -12,4 +12,7 @@ NormalyzerObject <- setClass("NormalyzerObject",
                                        data2mad = "matrix",
                                        data2loess = "matrix",
                                        data2vsnrep = "matrix",
-                                       data2limloess = "matrix"))
+                                       data2limloess = "matrix",
+                                       
+                                       globalfittedRLR = "matrix",
+                                       fittedLR = "matrix"))

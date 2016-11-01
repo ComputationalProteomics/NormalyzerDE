@@ -1,5 +1,5 @@
 
-
+print('sourced')
 
 normalyzer <- function(datafile, getjob){
     

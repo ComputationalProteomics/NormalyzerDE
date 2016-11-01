@@ -35,7 +35,7 @@ analyzeNormalizations <- function(normalizeddata, name) {
     
     print("DEBUG: analyzeAndPlot entered")
     
-    #Analysis takes too long, rewriting needed
+    # Analysis takes too long, rewriting needed
     currentjob <- name
     
     if (is.na(currentjob[2])) {
@@ -55,11 +55,10 @@ analyzeNormalizations <- function(normalizeddata, name) {
     datamadsamplesmem <- vector()
     datalabels <- vector()
     
-    avgcvmem <- matrix(nrow=length(levels(as.factor(unlist(filterED)))),ncol=length(methodlist),byrow=T)
-    avgmadmem <- matrix(nrow=length(levels(as.factor(unlist(filterED)))),ncol=length(methodlist),byrow=T)
-    avgvarmem <- matrix(nrow=length(levels(as.factor(unlist(filterED)))),ncol=length(methodlist),byrow=T)
-    datamadpeptmem <- matrix(nrow=nrow(filterrawdata),ncol=length(methodlist),byrow=T)
-    
+    avgcvmem <- matrix(nrow=length(levels(as.factor(unlist(filterED)))), ncol=length(methodlist), byrow=T)
+    avgmadmem <- matrix(nrow=length(levels(as.factor(unlist(filterED)))), ncol=length(methodlist), byrow=T)
+    avgvarmem <- matrix(nrow=length(levels(as.factor(unlist(filterED)))), ncol=length(methodlist), byrow=T)
+    datamadpeptmem <- matrix(nrow=nrow(filterrawdata),ncol=length(methodlist), byrow=T)
     
     anpvalue <- anfdr <- kwpvalue <- kwfdr <- vector()
     for (meti in 1:length(methodlist))
@@ -224,7 +223,7 @@ generatePlots <- function(normalizeddata, name, currentjob, filterrawdata, metho
     plotCVvsIntensity(methodlist, methodnames, filterED, filterrawdata, currentLayout, pageno, currentjob)
 
     #MA plots
-    print("DEBUG: Plotting page 6")
+    print("DEBUG: Plotting page 6!")
     pageno <- pageno + 1
     plotMA(methodlist, methodnames, filterED, currentLayout, pageno, currentjob)
     
@@ -424,27 +423,43 @@ plotCVvsIntensity <- function(methodlist, methodnames, filterED, filterrawdata, 
 }
 
 plotMA <- function(methodlist, methodnames, filterED, currentLayout, pageno, currentjob) {
+    
+    print("in plotMA")
+    
     Malist <- list()
     for(i in 1:length(methodlist)) {
+        
         datastore <- as.matrix(methodlist[[i]])
         tempcolname <- colnames(datastore)
-        datastore <- datastore[,1:sum(filterED==1)]
-        datastore1 <- datastore[!is.na(datastore[,1]),]
+        datastore <- datastore[, 1:sum(filterED==1)]
+        datastore1 <- datastore[!is.na(datastore[,1]), ]
         avg <- rowMeans(datastore1)
-        fc <- apply(cbind(datastore1[,1],avg),1,function(x) x[1]-x[2])
+        fc <- apply(cbind(datastore1[,1], avg), 1, function(x) x[1] - x[2])
         df <- as.data.frame(cbind(avg, fc))
+        
         Malist[[i]] <- ggplot(df, aes(avg, fc)) + 
             geom_point(color="darkgray", size=0.7) + 
-            labs(x=("Replicate group mean"), y=("Replicate-1 Fold Change"), title=(paste(tempcolname[1], methodnames[i]))) + 
+            labs(x=("Replicate group mean"), y=("Replicate-1 Fold Change"), 
+                 title=(paste(tempcolname[1], methodnames[i]))) + 
             stat_smooth(method="loess", se=F, colour="red") + 
             geom_abline(intercept=0, slope=0, size=0.3)
     } 
+    
+    print("after loop in plotMA")
+    
     grid.newpage()
     pushViewport(viewport(layout=currentLayout))
+    
+    print("before print plots")
+    # print(str(Malist))
+    
     printPlots(Malist, "MA plots", pageno, currentjob[2])
+    
+    print("returning from plotMA")
 }
 
 plotScatter <- function(methodlist, methodnames, currentLayout, pageno, currentjob) {
+    
     tout<-rbind(c(1,2,3,4), c(5,6,7,8), c(9,10,11,12))
     layout(tout)
     par(mar=c(2,2,2,1), oma=c(3,2,3,2), xpd=NA)

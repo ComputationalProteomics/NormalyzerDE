@@ -150,12 +150,12 @@ getMethodNames <- function(HKflag) {
     methodnames
 }
 
-performVSNNormalization <- function(normObj) {
+performVSNNormalization <- function(normObj, filterrawdata) {
     
-    sink(sinkfile, type="output")
+    # sink(sinkfile, type="output")
     cat("\n###Warning messages for VSN-G###\n")
-    sink(sinkfile, type="message")
-    normObj@data2vsn <- justvsn((filterrawdata))
+    # sink(sinkfile, type="message")
+    normObj@data2vsn <- justvsn(filterrawdata)
     
     normObj
 }
@@ -173,8 +173,43 @@ performSMADNormalization <- function(normObj) {
     normObj
 }
 
+performCyclicLoessNormalization <- function(normObj) {
+    normObj@data2loess <- normalizeCyclicLoess(normObj@data2log2, method="fast")
+    normObj
+}
+
+performGlobalRLRNormalization <- function(normObj) {
+    
+    mediandata <- apply(normObj@data2log2, 1, "median", na.rm=T)
+    isFirstSample <- TRUE
+
+    for (j in 1:ncol(normObj@data2log2)) {
+
+        LRfit <- rlm(as.matrix(normObj@data2log2[, j])~mediandata, na.action=na.exclude)
+        Coeffs <- LRfit$coefficients
+        coeffs2 <- Coeffs[2]
+        coeffs1 <- Coeffs[1]
+
+        if (isFirstSample) {
+            value_to_assign <- (normObj@data2log2[, j] - coeffs1) / coeffs2
+            globalfittedRLR <- (normObj@data2log2[, j] - coeffs1) / coeffs2
+            isFirstSample <- FALSE
+        }
+        else {
+            globalfittedRLR <- cbind(globalfittedRLR, (normObj@data2log2[, j] - coeffs1) / coeffs2)
+        }
+    }
+
+    normObj@globalfittedRLR <- globalfittedRLR
+    colnames(normObj@globalfittedRLR) <- colnames(normObj@data2log2)
+
+    normObj
+}
+
 normMethods <- function(datafile, currentjob) {
 
+    IGNORE_NORMFINDER = F  # Leads to downstreams crash for now
+    
     print("DEBUG: normMethods entered !!")
 
     getrawdata <- retrieveRawData(datafile)
@@ -185,35 +220,39 @@ normMethods <- function(datafile, currentjob) {
     jobdir <- paste(getwd(), "/", currentjob[1], sep="")
 
     ## Setup steps
+    print("DEBUG: normMethods setup")
     setupJobDir(jobdir)
     getrawdata <- getReplicateSortedData(getrawdata)
     checkrep <- parseDataForErrors(getrawdata)
     getrawdata <- preprocessData(getrawdata)
     
     ## TODO: Collect much of this in S4 class
-    HKflag <- T
+    print("DEBUG: normMethods house keeping")
     getEDdata <- ((getrawdata[1,]))
     filterrawdata1 <- getrawdata
     countna <- rowSums(!is.na(filterrawdata1[, which(checkrep > 0)]))
     filterrawdata1 <- filterrawdata1[countna >= (1 * ncol(filterrawdata1[, which(checkrep>0)])), ]
     filterED <- as.numeric(getEDdata[-which(getEDdata < 1)])
 
-    if (nrow(filterrawdata1) < 1000) {
+    if (nrow(filterrawdata1) < 1000 && !IGNORE_NORMFINDER) {
         # won't work without replicates
+
         Hkvar <- normfinder(filterrawdata1, getEDdata)
+        HKflag <- TRUE
     } 
     else {
-        HKflag <- F 
+        HKflag <- FALSE
     }
-    
+
+    print("DEBUG: normMethods after house keeping")
+        
     filterED <- as.numeric(getEDdata[-which(getEDdata < 1)])
     filterrawdata <- setupFilterRawData(getrawdata, getEDdata, filterED)
-    
+
     normObj <- NormalyzerObject()
 
     # CONVERT TO LOG2 - Total intensity normalization
     normObj <- initializeNormObject(normObj, filterrawdata)
-    
     
     colsum <- colSums(filterrawdata, na.rm=T)
     medofdata <- apply(filterrawdata, 2, FUN="median", na.rm=T)  
@@ -228,134 +267,141 @@ normMethods <- function(datafile, currentjob) {
     methodlist <- getMethodList(HKflag, normObj)
     methodnames <- getMethodNames(HKflag)
 
-    sinkfile <- file(paste(jobdir, "/warnings-generated.txt", sep=""), open="wt")
-    sink(sinkfile, type="message", append=F)
+    print("DEBUG: normMethods before sinkfile")
     
-    print(paste("DEBUG: Number of rows of filtered raw data"), nrow(filterrawdata))
+    # sinkfile <- file(paste(jobdir, "/warnings-generated.txt", sep=""), open="wt")
+    # sink(sinkfile, type="message", append=F)
+    
+    print("DEBUG: normMethods after pre-existing sinkfile")
+
     
     # Perform other norm. if the dataset is not small  
-    if (nrow(filterrawdata) > 100) {
-        
-        normObj <- performVSNNormalization(normObj, filterrawdata)
-        normObj <- performQuantileNormalization(normObj)
-        normObj <- performSMADNormalization(normObj)
+    if (nrow(filterrawdata) > 50) {
 
-        # SMAD normalization
-        # mediandata <- apply(normObj@data2log2, 2, "median", na.rm=T)
-        # maddata <- apply(normObj@data2log2, 2, function(x) mad(x, na.rm=T))
-        # normObj@data2mad <- t(apply(normObj@data2log2, 1, function(x) ((x - mediandata) / maddata)))
-        # normObj@data2mad <- normObj@data2mad + mean(mediandata)
-        
-        # Global loess
-        normObj@data2loess <- normalizeCyclicLoess(normObj@data2log2, method="fast")
-        
-        # Global RLR
-        mediandata <- apply(normObj@data2log2, 1, "median", na.rm=T)
-        flag1 <- 1
-        
-        for (j in 1:ncol(normObj@data2log2)) {
-            LRfit <- rlm(as.matrix(normObj@data2log2[, j])~mediandata, na.action=na.exclude)
-            Coeffs <- LRfit$coefficients
-            a<-Coeffs[2]
-            b<-Coeffs[1]
-            if (flag1 == 1) {
-                globalfittedRLR <- (normObj@data2log2[,j]-b) / a
-                flag1 <- 2
-            }
-            else {
-                globalfittedRLR <- cbind(globalfittedRLR, (normObj@data2log2[, j] - b) / a)
-            }
-        }
-        colnames(globalfittedRLR) <- colnames(normObj@data2log2)
-        
+        print("DEBUG: vsn")        
+        normObj <- performVSNNormalization(normObj, filterrawdata)
+        print("DEBUG: Quantile")
+        normObj <- performQuantileNormalization(normObj)
+        print("DEBUG: SMAD")
+        normObj <- performSMADNormalization(normObj)
+        print("DEBUG: Cyclic Loess")
+        normObj <- performCyclicLoessNormalization(normObj)
+        print("DEBUG: Global RLR")
+        normObj <- performGlobalRLRNormalization(normObj)
+
         # NORMALIZATION within REPLICATES RLR, VSN and Loess
-        {
-            sink(sinkfile, type="output")
-            cat("\n###Warning messages for VSN-R###\n")
-            sink(sinkfile, type="message")
-            warn <- NULL
-            x <- 1
-            z <- 1
-            y <- 1
-            flag <- 1
-            flag1 <- 1
-            data2limloess1 <- NULL
-            for (i in 1:length(filterED)) {
-                if (x!=filterED[i] || i==length(filterED)) {
-                    
-                    y <- i-1
-                    if (i == length(filterED)) {
-                        y <- i
-                    }
-                    
-                    if (flag == 1) {
-                        
-                        # median based LR normalization
-                        mediandata <- apply(normObj@data2log2[, z:y], 1, "median", na.rm=T)
-                        for (j in z:y) {
-                            LRfit <- rlm(as.matrix(normObj@data2log2[,j]) ~mediandata,na.action=na.exclude)
-                            Coeffs <- LRfit$coefficients
-                            a <- Coeffs[2]
-                            b <- Coeffs[1]
-                            if (flag1 == 1) {
-                                fittedLR <- (normObj@data2log2[, j] - b) / a
-                                flag1 <- 2
-                            }
-                            else {
-                                fittedLR <- cbind(fittedLR, (normObj@data2log2[, j] - b) / a)
-                            }
-                        }
-                        normObj@data2vsnrep <- justvsn(as.matrix(filterrawdata[, z:y]))
-                        
-                        normObj@data2limloess <- normalizeCyclicLoess(normObj@data2log2[, z:y], method="fast")
-                    }
-                    if (flag == 2) {  
-                        # median based LR normalization
-                        mediandata <- apply(normObj@data2log2[, z:y], 1, "median", na.rm=T)
-                        for (j in z:y) {
-                            LRfit <- rlm(as.matrix(normObj@data2log2[, j]) ~mediandata, na.action=na.exclude)
-                            Coeffs <- LRfit$coefficients
-                            a <- Coeffs[2]
-                            b <- Coeffs[1]
-                            fittedLR <- cbind(fittedLR, (normObj@data2log2[, j] - b) / a)
-                        }
-                        normObj@data2limloess <- cbind(normObj@data2limloess, normalizeCyclicLoess(normObj@data2log2[, z:y], method="fast"))
-                        normObj@data2vsnrep <- cbind(normObj@data2vsnrep, justvsn(as.matrix(filterrawdata[, z:y])))
-                    }
-                    z <- i
-                    x <- filterED[i]
-                    flag <- 2
+        # sink(sinkfile, type="output")
+        cat("\n### Warning messages for VSN-R ###\n")
+        # sink(sinkfile, type="warning")
+        warn <- NULL
+        currentReplicateGroup <- 1
+        startColIndex <- 1  # Used to slice columns, start column
+        endColIndex <- 1  # Used to slice columns, end column
+        isFirstSample <- TRUE
+        isFirstFittedLR <- TRUE
+        data2limloess1 <- NULL
+        
+        print("DEBUG: Before loop")
+        
+        # Iterate over each sample
+        for (sampleIndex in 1:length(filterED)) {
+            
+            # What are you after here?
+            if (currentReplicateGroup != filterED[sampleIndex] || sampleIndex == length(filterED)) {
+                
+                endColIndex <- sampleIndex - 1
+                if (sampleIndex == length(filterED)) {
+                    endColIndex <- sampleIndex
                 }
+                
+                if (isFirstSample) {
+                    
+                    # Median based LR normalization
+                    mediandata <- apply(normObj@data2log2[, startColIndex:endColIndex], 1, "median", na.rm=T)
+                    for (currentCol in startColIndex:endColIndex) {
+                        
+                        LRfit <- rlm(as.matrix(normObj@data2log2[,currentCol])~mediandata, na.action=na.exclude)
+                        Coeffs <- LRfit$coefficients
+                        LRcoeff2 <- Coeffs[2]
+                        LRcoeff1 <- Coeffs[1]
+                        
+                        if (isFirstFittedLR) {
+                            fittedLRlocalVar <- (normObj@data2log2[, currentCol] - LRcoeff1) / LRcoeff2
+                            isFirstFittedLR <- FALSE
+                        }
+                        else {
+                            fittedLRlocalVar <- cbind(fittedLRlocalVar, (normObj@data2log2[, currentCol] - LRcoeff1) / LRcoeff2)
+                        }
+                    }
+                    
+                    normObj@fittedLR <- fittedLRlocalVar
+                    
+                    normObj@data2limloess <- normalizeCyclicLoess(normObj@data2log2[, startColIndex:endColIndex], method="fast")
+                    normObj@data2vsnrep <- justvsn(as.matrix(filterrawdata[, startColIndex:endColIndex]))
+                }
+                
+                if (!isFirstSample) {
+                    
+                    # Median based LR normalization
+                    mediandata <- apply(normObj@data2log2[, startColIndex:endColIndex], 1, "median", na.rm=T)
+                    for (currentCol in startColIndex:endColIndex) {
+                        
+                        LRfit <- rlm(as.matrix(normObj@data2log2[, currentCol]) ~mediandata, na.action=na.exclude)
+                        Coeffs <- LRfit$coefficients
+                        LRcoeff2 <- Coeffs[2]
+                        LRcoeff1 <- Coeffs[1]
+                        normObj@fittedLR <- cbind(normObj@fittedLR, (normObj@data2log2[, currentCol] - LRcoeff1) / LRcoeff2)
+                        
+                    }
+                    
+                    normObj@data2limloess <- cbind(normObj@data2limloess, normalizeCyclicLoess(normObj@data2log2[, startColIndex:endColIndex], method="fast"))
+                    normObj@data2vsnrep <- cbind(normObj@data2vsnrep, justvsn(as.matrix(filterrawdata[, startColIndex:endColIndex])))
+                }
+                
+                startColIndex <- sampleIndex
+                currentReplicateGroup <- filterED[sampleIndex]
+                
+                print(paste("x: ", currentReplicateGroup))
+                
+                isFirstSample <- FALSE
             }
         }
         
+        print("DEBUG: After loop")
+
         #sink(sinkfile,type="output")
         closeAllConnections()
-        colnames(fittedLR)<-colnames(normObj@data2log2)
-        colnames(normObj@data2quantile)<-colnames(normObj@data2log2)
+        colnames(normObj@fittedLR) <- colnames(normObj@data2log2)
+        colnames(normObj@data2quantile) <- colnames(normObj@data2log2)
         
         if (HKflag) {
-            methodlist <- list(normObj@data2log2, normObj@data2limloess, fittedLR, normObj@data2vsnrep, normObj@data2loess, globalfittedRLR, normObj@data2vsn,
-                               normObj@data2GI, normObj@data2med, normObj@data2mean, normObj@data2ctrlog, normObj@data2quantile)
+            methodlist <- list(normObj@data2log2, normObj@data2limloess, normObj@fittedLR, normObj@data2vsnrep, normObj@data2loess, 
+                               normObj@globalfittedRLR, normObj@data2vsn, normObj@data2GI, normObj@data2med, normObj@data2mean, 
+                               normObj@data2ctrlog, normObj@data2quantile)
             methodnames <- c("Log2", "Loess-R", "RLR-R", "VSN-R", "Loess-G", "RLR-G", "VSN-G", "TI-G", "MedI-G", "AI-G", "NF-G", "Quantile")
         } 
         else {
-            methodlist <- list(normObj@data2log2, normObj@data2limloess, fittedLR, normObj@data2vsnrep, normObj@data2loess, globalfittedRLR, normObj@data2vsn, normObj@data2GI, normObj@data2med, normObj@data2mean, normObj@data2quantile)
+            methodlist <- list(normObj@data2log2, normObj@data2limloess, normObj@fittedLR, normObj@data2vsnrep, normObj@data2loess, 
+                               normObj@globalfittedRLR, normObj@data2vsn, normObj@data2GI, normObj@data2med, normObj@data2mean, normObj@data2quantile)
             methodnames <- c("Log2", "Loess-R", "RLR-R", "VSN-R", "Loess-G", "RLR-G", "VSN-G", "TI-G", "MedI-G", "AI-G", "Quantile")
         }
+        
+        print("METHODLISTLENGTH: ")
+        print(length(methodlist))
     }
     
     #Create tmp dir for the current job
-    for (i in 1:length(methodlist)) {
-        write.table(file=paste(jobdir, "/", methodnames[i], "-normalized.txt", sep=""), 
-                    cbind(getrawdata[-(1:2), (1:(length(getEDdata) - length(filterED)))], methodlist[[i]]), sep="\t", row.names=F,col.names=getrawdata[2,],quote=F)
+    for (sampleIndex in 1:length(methodlist)) {
+        write.table(file=paste(jobdir, "/", methodnames[sampleIndex], "-normalized.txt", sep=""), 
+                    cbind(getrawdata[-(1:2), (1:(length(getEDdata) - length(filterED)))], methodlist[[sampleIndex]]), sep="\t", row.names=F, col.names=getrawdata[2,], quote=F)
     }
 
     if (HKflag) {
         write.table(file=paste(jobdir, "/housekeeping-variables.txt", sep=""), Hkvar, sep="\t", row.names=F, col.names=getrawdata[2,], quote=F)
     }
     
-    write.table(file=paste(jobdir, "/submitted_rawdata.txt", sep=""), cbind(getrawdata[-(1:2), (1:(length(getEDdata) - length(filterED)))], filterrawdata), sep="\t", row.names=F,
+    write.table(file=paste(jobdir, "/submitted_rawdata.txt", sep=""), 
+                cbind(getrawdata[-(1:2), (1:(length(getEDdata) - length(filterED)))], filterrawdata), sep="\t", row.names=F,
                 col.names=getrawdata[2,], quote=F)
     methodlist <- list(methodlist, methodnames, getrawdata, filterrawdata, filterED, HKflag)
     return(methodlist)
