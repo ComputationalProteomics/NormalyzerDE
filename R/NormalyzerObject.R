@@ -16,3 +16,4 @@ NormalyzerObject <- setClass("NormalyzerObject",
                                        
                                        globalfittedRLR = "matrix",
                                        fittedLR = "matrix"))
+

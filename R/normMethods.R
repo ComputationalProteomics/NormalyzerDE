@@ -264,6 +264,8 @@ normMethods <- function(datafile, currentjob) {
     ## TODO: Collect much of this in S4 class
     print("DEBUG: normMethods house keeping")
     getEDdata <- ((getrawdata[1,]))
+    
+    # TODO: Get rid of filterrawdata1, meaning compared to filterrawdata?
     filterrawdata1 <- getrawdata
     countna <- rowSums(!is.na(filterrawdata1[, which(checkrep > 0)]))
     filterrawdata1 <- filterrawdata1[countna >= (1 * ncol(filterrawdata1[, which(checkrep>0)])), ]
@@ -333,10 +335,9 @@ normMethods <- function(datafile, currentjob) {
         cat("\n### Warning messages for VSN-R ###\n")
         # sink(sinkfile, type="warning")
         warn <- NULL
-        currentReplicateGroup <- 1
+        # currentReplicateGroup <- 1
         startColIndex <- 1  # Used to slice columns, start column
-        endColIndex <- 1  # Used to slice columns, end column
-        isFirstSample <- TRUE
+        endColIndex <- 1    # Used to slice columns, end column
         isFirstFittedLR <- TRUE
         data2limloess1 <- NULL
         
@@ -347,82 +348,46 @@ normMethods <- function(datafile, currentjob) {
         firstIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=F)
         lastIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=T)
         stopifnot(length(firstIndices) == length(lastIndices))
+
+        normObj@fittedLR <- matrix(, nrow=nrow(filterrawdata), ncol=0)
+        normObj@data2limloess <- matrix(, nrow=nrow(filterrawdata), ncol=0)
+        normObj@data2vsnrep <- matrix(, nrow=nrow(filterrawdata), ncol=0)
         
-        # Iterate over each sample index
-        # TODO: Extract target index generation to separate function
-        # for (sampleIndex in 1:length(sampleReplicateGroups)) {
         for (sampleIndex in 1:length(firstIndices)) {
             
             print(paste("DEBUG: Current sampleIndex:", sampleIndex))
-            
-            # Check if current replicate group variable is different from actual current replicate group
-            # Check whether end sample is reached
-            # if (currentReplicateGroup != sampleReplicateGroups[sampleIndex] || sampleIndex == length(sampleReplicateGroups)) {
-                
             print(paste("DEBUG: Inner IF statement executed for index: ", sampleIndex))
 
-            # Just to compensate that the loop will end up on 4,6 instead of 3,6 if data: 111222?
-            # After here, 'endColIndex' is the key index
-            # endColIndex <- sampleIndex - 1
-            # if (sampleIndex == length(sampleReplicateGroups)) {
-            #     endColIndex <- sampleIndex
-            # }
-            
             startColIndex <- firstIndices[sampleIndex]
             endColIndex <- lastIndices[sampleIndex]
 
             # Median based LR normalization
             mediandata <- apply(normObj@data2log2[, startColIndex:endColIndex], 1, "median", na.rm=T)
-                            
-            if (isFirstSample) {
+
+            for (currentCol in startColIndex:endColIndex) {
                 
-                for (currentCol in startColIndex:endColIndex) {
-                    
-                    LRfit <- rlm(as.matrix(normObj@data2log2[,currentCol])~mediandata, na.action=na.exclude)
-                    Coeffs <- LRfit$coefficients
-                    LRcoeff2 <- Coeffs[2]
-                    LRcoeff1 <- Coeffs[1]
-                    
-                    if (isFirstFittedLR) {
-                        fittedLRlocalVar <- (normObj@data2log2[, currentCol] - LRcoeff1) / LRcoeff2
-                        isFirstFittedLR <- FALSE
-                    }
-                    else {
-                        fittedLRlocalVar <- cbind(fittedLRlocalVar, (normObj@data2log2[, currentCol] - LRcoeff1) / LRcoeff2)
-                    }
-                }
-                
-                normObj@fittedLR <- fittedLRlocalVar
-                
-                normObj@data2limloess <- normalizeCyclicLoess(normObj@data2log2[, startColIndex:endColIndex], method="fast")
-                normObj@data2vsnrep <- justvsn(as.matrix(filterrawdata[, startColIndex:endColIndex]))
+                LRfit <- rlm(as.matrix(normObj@data2log2[, currentCol])~mediandata, na.action=na.exclude)
+                Coeffs <- LRfit$coefficients
+                LRcoeff2 <- Coeffs[2]
+                LRcoeff1 <- Coeffs[1]
+                normObj@fittedLR <- cbind(normObj@fittedLR, (normObj@data2log2[, currentCol] - LRcoeff1) / LRcoeff2)
             }
-            else {
-
-                for (currentCol in startColIndex:endColIndex) {
-                    
-                    LRfit <- rlm(as.matrix(normObj@data2log2[, currentCol]) ~mediandata, na.action=na.exclude)
-                    Coeffs <- LRfit$coefficients
-                    LRcoeff2 <- Coeffs[2]
-                    LRcoeff1 <- Coeffs[1]
-                    normObj@fittedLR <- cbind(normObj@fittedLR, (normObj@data2log2[, currentCol] - LRcoeff1) / LRcoeff2)
-                }
-
-                normObj@data2limloess <- cbind(normObj@data2limloess, normalizeCyclicLoess(normObj@data2log2[, startColIndex:endColIndex], method="fast"))
-                normObj@data2vsnrep <- cbind(normObj@data2vsnrep, justvsn(as.matrix(filterrawdata[, startColIndex:endColIndex])))
-            }
-
-            startColIndex <- sampleIndex
-            currentReplicateGroup <- sampleReplicateGroups[sampleIndex]
-
-            print(paste("x: ", currentReplicateGroup))
-
-            isFirstSample <- FALSE
-            # }
+            
+            normObj@data2limloess <- cbind(normObj@data2limloess, normalizeCyclicLoess(normObj@data2log2[, startColIndex:endColIndex], method="fast"))
+            normObj@data2vsnrep <- cbind(normObj@data2vsnrep, justvsn(as.matrix(filterrawdata[, startColIndex:endColIndex])))
         }
 
         print("DEBUG: After loop")
+        
+        print(sprintf("DEBUG: filterrawdata lines: %i", nrow(filterrawdata)))
+        print(sprintf("DEBUG: normObj@data2log2 lines: %i", nrow(normObj@data2log2)))
+        
+        print(sprintf("DEBUG: normObj@data2limloess lines: %i", nrow(normObj@data2limloess)))
+        print(sprintf("DEBUG: normObj@fittedLR lines: %i", nrow(normObj@fittedLR)))
+        print(sprintf("DEBUG: normObj@data2vsnrep lines: %i", nrow(normObj@data2vsnrep)))
 
+        print("DEBUG: ------- AFTER SPRINTF STATEMENTS")
+                
         #sink(sinkfile,type="output")
         closeAllConnections()
         colnames(normObj@fittedLR) <- colnames(normObj@data2log2)
