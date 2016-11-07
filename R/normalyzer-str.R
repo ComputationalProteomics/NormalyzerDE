@@ -5,7 +5,7 @@ normalyzer <- function(datafile, getjob){
     
     print('start')
     
-    # require(Rcmdr)
+    require(Rcmdr)
     require(PerformanceAnalytics)
     require(vsn)
     require(preprocessCore)
@@ -28,26 +28,28 @@ normalyzer <- function(datafile, getjob){
     source("printPlots.R")
 
     source("NormalyzerObject.R")
-        
-    print("Normalizing data....")
-    try.result <- try(normalizeddata <- normMethods(datafile, getjob))
-    # normalizeddata <- normMethods(datafile, getjob)
+
+    # stopFunction()
     
-    if (inherits(try.result, "try-error")) {
-        return(try.result)
-    }
+    print("Normalizing data....")
+    # try.result <- try(normalizeddata <- normMethods(datafile, getjob))
+    normalizeddata <- normMethods(datafile, getjob)
+    
+    # if (inherits(try.result, "try-error")) {
+    #     return(try.result)
+    # }
     
     print("Finished Normalization")
     print("Analyzing data....")
     
-    try.result <- try(analyzeAndPlot(normalizeddata, getjob))
+    # try.result <- try(analyzeAndPlot(normalizeddata, getjob))
+    analyzeAndPlot(normalizeddata, getjob)
     
-    if(inherits(try.result, "try-error")){
-        return(try.result)
-    }
+    # if(inherits(try.result, "try-error")){
+    #     return(try.result)
+    # }
     
     print("Done! Results are stored in the working directory")
-}  
-
+}
 
 

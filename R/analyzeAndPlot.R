@@ -60,11 +60,13 @@ analyzeNormalizations <- function(normalizeddata, name) {
     avgvarmem <- matrix(nrow=length(levels(as.factor(unlist(filterED)))), ncol=length(methodlist), byrow=T)
     datamadpeptmem <- matrix(nrow=nrow(filterrawdata),ncol=length(methodlist), byrow=T)
     
-    anpvalue <- anfdr <- kwpvalue <- kwfdr <- vector()
-    for (meti in 1:length(methodlist))
-    {
-        datastore <- (methodlist[[meti]])
+    anpvalue <- vector()
+    anfdr <- vector()
+    kwpvalue <- vector()
+    kwfdr <- vector()
+    for (meti in 1:length(methodlist)) {
         
+        datastore <- (methodlist[[meti]])
         templabel <- methodnames[meti]
         
         datamadsamples <- NA
@@ -79,48 +81,46 @@ analyzeNormalizations <- function(normalizeddata, name) {
         pvobj2 <- 0
         
         
-        datalabels<-c(datalabels,templabel)
+        datalabels <- c(datalabels,templabel)
         #MAD rows
-        x<-1
-        z<-1
-        y<-1
-        flag<-1
-        flag1<-1
-        count<-0
-        madmem<-matrix(nrow=nrow(datastore),ncol=length(levels(as.factor(unlist(filterED)))),byrow=T)
-        tempcv<-vector()
-        varmem<-vector()
-        tempvar<-vector()
-        nonmissingmat<-vector()
+        x <- 1
+        z <- 1
+        y <- 1
+        flag <- 1
+        flag1 <- 1
+        count <- 0
+        madmem <- matrix(nrow=nrow(datastore), ncol=length(levels(as.factor(unlist(filterED)))), byrow=T)
+        tempcv <- vector()
+        varmem <- vector()
+        tempvar <- vector()
+        nonmissingmat <- vector()
         
         
         for (i in 1:length(filterED))
         {
-            if (x!=filterED[i] || i==length(filterED))
+            if (x != filterED[i] || i == length(filterED))
             {
-                y<-i-1
-                if (i==length(filterED))
-                {
+                y <- i-1
+                if (i == length(filterED)) {
                     y<-i
                 }
-                if (flag==1)
-                {
-                    count<-count+1
-                    madmem[,count]<-apply(datastore[,z:y],1,function(x) {mad(x,na.rm=T)})
-                    nonmissingmat<-(apply(datastore[,z:y],1,function(x) {((sum(!is.na(x))))}))-1
-                    tempvar<-nonmissingmat*apply(datastore[,z:y],1,function(x) {var(x,na.rm=TRUE)})
+                if (flag == 1) {
+                    count <- count + 1
+                    madmem[,count] <- apply(datastore[, z:y], 1, function(x) { mad(x,na.rm=T) })
+                    nonmissingmat <- (apply(datastore[, z:y], 1, function(x) { ((sum(!is.na(x)))) })) - 1
+                    tempvar <- nonmissingmat*apply(datastore[, z:y], 1, function(x) { var(x,na.rm=TRUE) })
                 }
-                if (flag==2)
-                {  
-                    count<-count+1
-                    madmem[,count]<-apply(datastore[,z:y],1,function(x) {mad(x,na.rm=T)})  
-                    nonmissingmat<-(apply(datastore[,z:y],1,function(x) {((sum(!is.na(x))))}))-1
-                    tempvar<-nonmissingmat*apply(datastore[,z:y],1,function(x) {var(x,na.rm=TRUE)})
+                if (flag == 2) {  
+                    count <- count + 1
+                    madmem[,count] <- apply(datastore[,z:y], 1, function(x) { mad(x,na.rm=T) })  
+                    nonmissingmat <- (apply(datastore[,z:y], 1, function(x) { ((sum(!is.na(x)))) }))-1
+                    tempvar <- nonmissingmat*apply(datastore[,z:y], 1, function(x) { var(x,na.rm=TRUE) })
                 }
-                varmem<-c(varmem,((sum(tempvar,na.rm=T))/(sum(nonmissingmat,na.rm=T))))
-                z<-i
-                x<-filterED[i]
-                flag=2;
+                
+                varmem <- c(varmem, ((sum(tempvar, na.rm=T)) / (sum(nonmissingmat, na.rm=T))))
+                z <- i
+                x <- filterED[i]
+                flag <- 2
             }
         }
         avgvarmem[,meti]<-varmem
@@ -129,11 +129,10 @@ analyzeNormalizations <- function(normalizeddata, name) {
         
         tempcvmat<-matrix(nrow=nrow(datastore),ncol=length(levels(as.factor(unlist(filterED)))),byrow=T)
         
-        for (i in 1:nrow(datastore))
-        {
+        for (i in 1:nrow(datastore)) {
             
-            tempcv<-numSummary(datastore[i,],statistics=c("cv"),groups=unlist(filterED))
-            tempcvmat[i,]<-tempcv$table
+            tempcv <- numSummary(datastore[i, ], statistics=c("cv"), groups=unlist(filterED))
+            tempcvmat[i,] <- tempcv$table
         }
         
         temcvmatsum<-apply(tempcvmat,2,mean,na.rm=T)
