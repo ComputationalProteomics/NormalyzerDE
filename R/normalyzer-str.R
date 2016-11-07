@@ -5,7 +5,7 @@ normalyzer <- function(datafile, getjob){
     
     print('start')
     
-    require(Rcmdr)
+    # require(Rcmdr)
     require(PerformanceAnalytics)
     require(vsn)
     require(preprocessCore)
@@ -46,7 +46,7 @@ normalyzer <- function(datafile, getjob){
         return(try.result)
     }
     
-    print("Done .. Results are stored in the working directory")
+    print("Done! Results are stored in the working directory")
 }  
 
 
