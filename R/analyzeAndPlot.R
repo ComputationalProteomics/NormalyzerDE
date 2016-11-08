@@ -2,7 +2,7 @@
 
 # Master method for stats calculations for normalizations
 # as well as generation of full set of visualizations
-analyzeAndPlot<-function(normalizedData, name) {
+analyzeAndPlot <- function(normalizedData, name, outputDir=NULL) {
     
     analyzeOutputs <- analyzeNormalizations(normalizedData, name)   
     
@@ -24,11 +24,18 @@ analyzeAndPlot<-function(normalizedData, name) {
     nonSigAnFDRListCvPdiff <- analyzeOutputs[[13]]
     anfdr <- analyzeOutputs[[14]]
     kwfdr <- analyzeOutputs[[15]]
-    
+
+    if (is.null(outputDir)) {
+        jobdir <- paste(getwd(), "/", currentJob[1], sep="")
+    }
+    else {
+        jobdir <- paste(outputDir, "/", currentJob[1], sep="")
+    }
+        
     print("DEBUG: Calling generatePlots...")
     
     generatePlots(normalizedData, name, currentJob, filterRawData, methodList, filterED, avgCVMem, methodNames, avgMadMem, avgVarMem, 
-                  avgCvMemPdiff, avgMadMemPdiff, avgVarMemPdiff, nonSigAnFDRList, nonSigAnFDRListCvPdiff, anfdr, kwfdr)
+                  avgCvMemPdiff, avgMadMemPdiff, avgVarMemPdiff, nonSigAnFDRList, nonSigAnFDRListCvPdiff, anfdr, kwfdr, jobdir)
 }
 
 analyzeNormalizations <- function(normalizeddata, name) {
@@ -66,7 +73,8 @@ analyzeNormalizations <- function(normalizeddata, name) {
     kwfdr <- vector()
     for (meti in 1:length(methodlist)) {
         
-        print(paste("Processing: ", methodlist[[meti]]))
+        # print(paste("Processing: ", methodlist[[meti]]))
+        print(paste("Processing methodlist index: ", meti))
         
         datastore <- (methodlist[[meti]])
         templabel <- methodnames[meti]
@@ -181,7 +189,7 @@ analyzeNormalizations <- function(normalizeddata, name) {
     }
     
     nonsiganfdrlistcvpdiff <- sapply(1:length(nonsiganfdrlistcv), function(x) (nonsiganfdrlistcv[x] * 100) / nonsiganfdrlistcv[1])
-    print("Finished analysis, preparing plots and report....")
+    print("Finished analysis, preparing plots and report...")
     
     list(currentjob, filterrawdata, methodlist, filterED, avgcvmem, methodnames, avgmadmem, avgvarmem, 
          avgcvmempdiff, avgmadmempdiff, avgvarmempdiff, nonsiganfdrlist, nonsiganfdrlistcvpdiff, anfdr, kwfdr)
@@ -209,13 +217,13 @@ filterLinesWithEmptySamples <- function(dataMatrix, replicateHeader) {
 }
 
 generatePlots <- function(normalizeddata, name, currentjob, filterrawdata, methodlist, filterED, avgcvmem, methodnames, avgmadmem, avgvarmem, 
-                          avgcvmempdiff, avgmadmempdiff, avgvarmempdiff, nonsiganfdrlist, nonsiganfdrlistcvpdiff, anfdr, kwfdr) {
+                          avgcvmempdiff, avgmadmempdiff, avgvarmempdiff, nonsiganfdrlist, nonsiganfdrlistcvpdiff, anfdr, kwfdr, jobdir) {
 
     # Setup    
     palette(c("red", "green", "blue", "orange", "darkgray", "blueviolet", "darkslateblue", "darkviolet", "gray", "bisque4",
               "brown", "cadetblue4", "darkgreen", "darkcyan", "darkmagenta", "darkgoldenrod4", "coral1"))
     
-    jobdir <- paste(getwd(), "/", currentjob[1], sep="")
+    # jobdir <- paste(getwd(), "/", currentjob[1], sep="")
     
     pdf(file=paste(jobdir, "/Norm_report-", currentjob[1], ".pdf", sep=""), paper="a4r", width=0, height=0)    
     currentLayout <- grid.layout(nrow=5, ncol=6, heights=c(0.1, 1, 1, 1, 0.1), widths=c(0.1, 1, 1, 1, 1, 0.1), default.units=c('null','null'))

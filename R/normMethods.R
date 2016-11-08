@@ -1,11 +1,18 @@
 DEBUG_PRINTS_ON = T
 
-normMethods <- function(datafile, currentjob) {
+normMethods <- function(datafile, currentjob, outputDir=NULL) {
     
     print("DEBUG: normMethods entered !!")
     
     rawData <- retrieveRawData(datafile)
-    jobdir <- paste(getwd(), "/", currentjob[1], sep="")
+    
+    if (is.null(outputDir)) {
+        jobdir <- paste(getwd(), "/", currentjob[1], sep="")
+    }
+    else {
+        jobdir <- paste(outputDir, "/", currentjob[1], sep="")
+    }
+    
     setupJobDir(jobdir)
     rawData <- getReplicateSortedData(rawData)
     verifySampleReplication(rawData)
@@ -15,7 +22,7 @@ normMethods <- function(datafile, currentjob) {
     sampleReplicateGroups <- as.numeric(inputHeaderValues[-which(inputHeaderValues < 1)])
     filterrawdata <- setupFilterRawData(rawData, inputHeaderValues, sampleReplicateGroups)
 
-    print(paste("nrow filterrawdata", nrow(filterrawdata)))
+    # print(paste("nrow filterrawdata", nrow(filterrawdata)))
     
     # If one of columns are zero here, are errors propagated?
     colsum <- colSums(filterrawdata, na.rm=T)
@@ -138,7 +145,7 @@ verifySampleReplication <- function(getrawdata) {
     
     checkrep <- getrawdata[1,]
     
-    print(paste("Inside parseforerrors, checkrep: ", checkrep))
+    # print(paste("Inside parseforerrors, checkrep: ", checkrep))
     
     repunique <- unique(checkrep)
     
@@ -184,7 +191,7 @@ setupNormfinderFilterRawData <- function(rawData, fullSampleHeader) {
     
     countna <- rowSums(!is.na(rawData[, which(fullSampleHeader > 0)]))
     
-    print(countna)
+    # print(countna)
     
     filterRawDataNormfinder <- rawData[countna >= (1 * ncol(rawData[, which(fullSampleHeader > 0)])), ]
     
@@ -234,9 +241,9 @@ basicMetricNormalizations <- function(normObj, filterrawdata, colsum, medofdata,
         normObj@data2mean[i, ] <- unlist(sapply(1:ncol(filterrawdata), function(zd) { (filterrawdata[i, zd] / meanofdata[zd]) * mean(meanofdata) }))
     } 
 
-    print(head(normObj@data2GI))
-    print(head(normObj@data2med))
-    print(head(normObj@data2mean))
+    # print(head(normObj@data2GI))
+    # print(head(normObj@data2med))
+    # print(head(normObj@data2mean))
     
     normObj@data2GI <- log2(normObj@data2GI)
     normObj@data2med <- log2(normObj@data2med)
@@ -316,7 +323,7 @@ performGlobalRLRNormalization <- function(normObj) {
 
     for (j in 1:ncol(normObj@data2log2)) {
 
-        print(sprintf("Index: %i", j))
+        # print(sprintf("Index: %i", j))
 
         LRfit <- rlm(as.matrix(normObj@data2log2[, j])~mediandata, na.action=na.exclude)
         Coeffs <- LRfit$coefficients

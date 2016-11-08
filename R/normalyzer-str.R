@@ -1,7 +1,7 @@
 
-print('sourced')
+print('Normalyzer sourced')
 
-normalyzer <- function(datafile, getjob){
+normalyzer <- function(datafile, getjob, outputDir=NULL){
     
     print('start')
     
@@ -28,12 +28,13 @@ normalyzer <- function(datafile, getjob){
     source("printPlots.R")
 
     source("NormalyzerObject.R")
+    source("utils.R")
 
     # stopFunction()
     
     print("Normalizing data....")
     # try.result <- try(normalizeddata <- normMethods(datafile, getjob))
-    normalizeddata <- normMethods(datafile, getjob)
+    normalizeddata <- normMethods(datafile, getjob, outputDir=outputDir)
     
     # if (inherits(try.result, "try-error")) {
     #     return(try.result)
@@ -43,7 +44,7 @@ normalyzer <- function(datafile, getjob){
     print("Analyzing data....")
     
     # try.result <- try(analyzeAndPlot(normalizeddata, getjob))
-    analyzeAndPlot(normalizeddata, getjob)
+    analyzeAndPlot(normalizeddata, getjob, outputDir=outputDir)
     
     # if(inherits(try.result, "try-error")){
     #     return(try.result)
@@ -52,23 +53,4 @@ normalyzer <- function(datafile, getjob){
     print("Done! Results are stored in the working directory")
 }
 
-myprint <- function(..., debug=T) {
-    if (debug) {
-        print(paste("DEBUG: ", ...))
-    }
-    else {
-        print(paste(...))
-    }
-}
-
-varprint <- function(variable, debug=T) {
-    varName <- deparse(substitute(variable))
-    
-    if (debug) {
-        cat(varName, variable, sprintf("[%s]", typeof(variable)), sprintf("[%s elements]", length(variable)), "\n")
-    }
-    else {
-        cat("DEBUG: ", varName, variable, sprintf("[%s]", typeof(variable)), sprintf("[%s elements]", length(variable)), "\n")
-    }
-}
 
