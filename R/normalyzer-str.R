@@ -52,4 +52,23 @@ normalyzer <- function(datafile, getjob){
     print("Done! Results are stored in the working directory")
 }
 
+myprint <- function(..., debug=T) {
+    if (debug) {
+        print(paste("DEBUG: ", ...))
+    }
+    else {
+        print(paste(...))
+    }
+}
+
+varprint <- function(variable, debug=T) {
+    varName <- deparse(substitute(variable))
+    
+    if (debug) {
+        cat(varName, variable, sprintf("[%s]", typeof(variable)), sprintf("[%s elements]", length(variable)), "\n")
+    }
+    else {
+        cat("DEBUG: ", varName, variable, sprintf("[%s]", typeof(variable)), sprintf("[%s elements]", length(variable)), "\n")
+    }
+}
 

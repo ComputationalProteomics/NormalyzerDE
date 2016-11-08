@@ -1,3 +1,5 @@
+DEBUG_PRINTS_ON = T
+
 normMethods <- function(datafile, currentjob) {
     
     print("DEBUG: normMethods entered !!")
@@ -6,21 +8,27 @@ normMethods <- function(datafile, currentjob) {
     jobdir <- paste(getwd(), "/", currentjob[1], sep="")
     setupJobDir(jobdir)
     rawData <- getReplicateSortedData(rawData)
-    checkrep <- parseDataForErrors(rawData)
+    verifySampleReplication(rawData)
+
     rawData <- preprocessData(rawData)
     inputHeaderValues <- rawData[1, ]
     sampleReplicateGroups <- as.numeric(inputHeaderValues[-which(inputHeaderValues < 1)])
     filterrawdata <- setupFilterRawData(rawData, inputHeaderValues, sampleReplicateGroups)
 
+    print(paste("nrow filterrawdata", nrow(filterrawdata)))
+    
+    # If one of columns are zero here, are errors propagated?
     colsum <- colSums(filterrawdata, na.rm=T)
+
     medofdata <- apply(filterrawdata, 2, FUN="median", na.rm=T)  
     meanofdata <- apply(filterrawdata, 2, FUN="mean", na.rm=T) 
     
     normObj <- NormalyzerObject()
-    filterRawDataNormfinder <- setupNormfinderFilterRawData(rawData, checkrep)
-    houseKeepingFlag <- (nrow(filterRawDataNormfinder) < 1000)
+    filterRawDataNormfinder <- setupNormfinderFilterRawData(rawData, inputHeaderValues)
+    # filterRawDataNormfinder <- setupNormfinderFilterRawData(rawData, checkrep)
 
     normObj <- performBasicNormalizations(normObj, filterrawdata)
+    houseKeepingFlag <- (nrow(filterRawDataNormfinder) < 1000)
     if (houseKeepingFlag) {
         Hkvar <- normfinder(filterRawDataNormfinder, inputHeaderValues)
         normObj <- calculateHKdataForNormObj(normObj, inputHeaderValues, sampleReplicateGroups, Hkvar, filterrawdata)
@@ -28,13 +36,6 @@ normMethods <- function(datafile, currentjob) {
     normObj <- basicMetricNormalizations(normObj, filterrawdata, colsum, medofdata, meanofdata)
     methodlist <- getMethodList(houseKeepingFlag, normObj)
     methodnames <- getMethodNames(houseKeepingFlag)
-    
-    print("DEBUG: normMethods before sinkfile")
-    
-    # sinkfile <- file(paste(jobdir, "/warnings-generated.txt", sep=""), open="wt")
-    # sink(sinkfile, type="message", append=F)
-    
-    print("DEBUG: normMethods after pre-existing sinkfile")
     
     # Perform other norm. if the dataset is not small  
     if (nrow(filterrawdata) > 50) {
@@ -86,6 +87,8 @@ normMethods <- function(datafile, currentjob) {
 
 
 retrieveRawData <- function(datafile) {
+    if (DEBUG_PRINTS_ON) { print("Function: retrieveRawData") }
+    
     if (class(datafile) == "character") {
         getrawdata <- as.matrix((read.table(datafile, header=F, sep="\t", stringsAsFactors=F, quote="")))    
     } 
@@ -99,7 +102,8 @@ retrieveRawData <- function(datafile) {
 }
 
 setupJobDir <- function(jobdir) {
-
+    if (DEBUG_PRINTS_ON) { print("Function: setupJobDir") }
+    
     if (file.exists(jobdir)) {
         abc <- "Directory already exists"
         class(abc) <- "try-error"
@@ -114,6 +118,8 @@ setupJobDir <- function(jobdir) {
 }
 
 getReplicateSortedData <- function(getrawdata) {
+    if (DEBUG_PRINTS_ON) { print("Function: getReplicateSortedData") }
+    
     b <- NULL
     b <- as.factor(getrawdata[1,])
     l <- levels(b)
@@ -127,17 +133,21 @@ getReplicateSortedData <- function(getrawdata) {
 
 ## Evaluate whether the input format is in correct format
 ## Abort processing if this isn't the case
-parseDataForErrors <- function(getrawdata) {
+verifySampleReplication <- function(getrawdata) {
+    if (DEBUG_PRINTS_ON) { print("Function: parseDataForErrors") }
     
     checkrep <- getrawdata[1,]
+    
+    print(paste("Inside parseforerrors, checkrep: ", checkrep))
+    
     repunique <- unique(checkrep)
     
     for (i in 1:length(repunique)) {
         if (repunique[i] != 0) {
-            if (length(grep(repunique[i],checkrep)) < 2) {
+            if (length(grep(repunique[i], checkrep)) < 2) {
                 abc <- paste("Number of replicates are less than 2 for the group ", repunique[i], sep="")
                 class(abc) <- "try-error"
-                if (inherits(abc,"try-error")) {
+                if (inherits(abc, "try-error")) {
                     return(abc)
                 }
                 stop(paste("Number of replicates are less than 2 for the group ", repunique[i], sep=""))
@@ -149,6 +159,7 @@ parseDataForErrors <- function(getrawdata) {
 
 ## Replaces zeroes with NAs
 preprocessData <- function(getrawdata) {
+    if (DEBUG_PRINTS_ON) { print("Function: preprocessData") }
     
     rep0 <- getrawdata[-1,]
     rep0[which(rep0==0)] <- NA
@@ -157,25 +168,34 @@ preprocessData <- function(getrawdata) {
     getrawdata
 }
 
-setupFilterRawData <- function(getrawdata, getEDdata, filterED) {
+setupFilterRawData <- function(rawData, fullSampleHeader, filteredSampleHeader) {
+    if (DEBUG_PRINTS_ON) { print("Function: setupFilterRawData") }
     
-    filterrawdata <- getrawdata[, -(1:(length(getEDdata) - length(filterED)))]
-    colnames(filterrawdata) <- getrawdata[2, -(1:(length(getEDdata) - length(filterED)))]
+    filterrawdata <- rawData[, -(1:(length(fullSampleHeader) - length(filteredSampleHeader)))]
+    colnames(filterrawdata) <- rawData[2, -(1:(length(fullSampleHeader) - length(filteredSampleHeader)))]
     filterrawdata <- (as.matrix((filterrawdata[-(1:2), ])))
     class(filterrawdata) <- "numeric"
     
     filterrawdata
 }
 
-setupNormfinderFilterRawData <- function(rawData, checkrep) {
+setupNormfinderFilterRawData <- function(rawData, fullSampleHeader) {
+    if (DEBUG_PRINTS_ON) { print("Function: setupNormFinderRawData") }
     
-    countna <- rowSums(!is.na(rawData[, which(checkrep > 0)]))
-    filterRawDataNormfinder <- rawData[countna >= (1 * ncol(rawData[, which(checkrep>0)])), ]
+    countna <- rowSums(!is.na(rawData[, which(fullSampleHeader > 0)]))
+    
+    print(countna)
+    
+    filterRawDataNormfinder <- rawData[countna >= (1 * ncol(rawData[, which(fullSampleHeader > 0)])), ]
+    
+    # print(filterRawDataNormfinder)
+    # print(nrow(filterRawDataNormfinder))
     
     filterRawDataNormfinder
 }
 
 performBasicNormalizations <- function(normObj, filterrawdata) {
+    if (DEBUG_PRINTS_ON) { print("Function: performBasicNormalizations") }
     
     normObj@data2log2 <- log2(filterrawdata)
     normObj@data2GI <- matrix(nrow=nrow(filterrawdata), ncol=ncol(filterrawdata), byrow=T)
@@ -187,7 +207,8 @@ performBasicNormalizations <- function(normObj, filterrawdata) {
 }
 
 calculateHKdataForNormObj <- function(normObj, getEDdata, filterED, Hkvar, filterrawdata) {
-        
+    if (DEBUG_PRINTS_ON) { print("Function: calculateHKdataForNormObj") }
+    
     Hkvartemp <- as.matrix(Hkvar[, -(1:(length(getEDdata) - length(filterED)))])
     class(Hkvartemp) <- "numeric"
     colmedianctr <- apply(Hkvartemp, 2, FUN="mean")
@@ -204,12 +225,7 @@ calculateHKdataForNormObj <- function(normObj, getEDdata, filterED, Hkvar, filte
 
 ## Normalizing using average sample sum, sample mean and sample median
 basicMetricNormalizations <- function(normObj, filterrawdata, colsum, medofdata, meanofdata) {
-
-    print(str(meanofdata))
-    print(str(medofdata))
-    
-    print(mean(meanofdata))
-    print(mean(medofdata))
+    if (DEBUG_PRINTS_ON) { print("Function: basicMetricNormalizations") }
     
     avgcolsum <- median(colsum)
     for (i in 1:nrow(filterrawdata)) {
@@ -233,6 +249,7 @@ basicMetricNormalizations <- function(normObj, filterrawdata, colsum, medofdata,
 }
 
 getMethodList <- function(HKflag, normObj) {
+    if (DEBUG_PRINTS_ON) { print("Function: getMethodList") }
     
     if (HKflag) {
         methodlist <- list(normObj@data2log2, normObj@data2GI, normObj@data2med, normObj@data2mean, normObj@data2ctrlog)
@@ -244,6 +261,7 @@ getMethodList <- function(HKflag, normObj) {
 }
 
 getMethodNames <- function(houseKeepingFlag) {
+    if (DEBUG_PRINTS_ON) { print("Function: getMethodNames") }
     
     if (houseKeepingFlag) {
         methodnames <- c("Log2", "TI-G", "MedI-G", "AI-G", "NF-G")
@@ -255,9 +273,10 @@ getMethodNames <- function(houseKeepingFlag) {
 }
 
 performVSNNormalization <- function(normObj, filterrawdata) {
+    if (DEBUG_PRINTS_ON) { print("Function: performVSNNormalization") }
     
     # sink(sinkfile, type="output")
-    cat("\n###Warning messages for VSN-G###\n")
+    # cat("\n###Warning messages for VSN-G###\n")
     # sink(sinkfile, type="message")
     normObj@data2vsn <- justvsn(filterrawdata)
     
@@ -265,11 +284,15 @@ performVSNNormalization <- function(normObj, filterrawdata) {
 }
 
 performQuantileNormalization <- function(normObj) {
+    if (DEBUG_PRINTS_ON) { print("Function: performQuantileNormalization") }
+    
     normObj@data2quantile <- normalize.quantiles((normObj@data2log2), copy=T)
     normObj
 }
 
 performSMADNormalization <- function(normObj) {
+    if (DEBUG_PRINTS_ON) { print("Function: performSMADNormalization") }
+    
     mediandata <- apply(normObj@data2log2, 2, "median", na.rm=T)
     maddata <- apply(normObj@data2log2, 2, function(x) mad(x, na.rm=T))
     normObj@data2mad <- t(apply(normObj@data2log2, 1, function(x) ((x - mediandata) / maddata)))
@@ -278,16 +301,22 @@ performSMADNormalization <- function(normObj) {
 }
 
 performCyclicLoessNormalization <- function(normObj) {
+    if (DEBUG_PRINTS_ON) { print("Function: performCyclicLoessNormalization") }
+    
     normObj@data2loess <- normalizeCyclicLoess(normObj@data2log2, method="fast")
     normObj
 }
 
 performGlobalRLRNormalization <- function(normObj) {
+    if (DEBUG_PRINTS_ON) { print("Function: performGlobalLRLNormalization") }
     
+
     mediandata <- apply(normObj@data2log2, 1, "median", na.rm=T)
     isFirstSample <- TRUE
 
     for (j in 1:ncol(normObj@data2log2)) {
+
+        print(sprintf("Index: %i", j))
 
         LRfit <- rlm(as.matrix(normObj@data2log2[, j])~mediandata, na.action=na.exclude)
         Coeffs <- LRfit$coefficients
@@ -311,6 +340,7 @@ performGlobalRLRNormalization <- function(normObj) {
 }
 
 performReplicateBasedNormalizations <- function(normObj, sampleReplicateGroups, filterrawdata) {
+    if (DEBUG_PRINTS_ON) { print("Function: performReplicateBasedNormalizations") }
     
     firstIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=F)
     lastIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=T)
