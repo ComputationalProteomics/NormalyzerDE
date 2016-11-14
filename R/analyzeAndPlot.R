@@ -71,6 +71,7 @@ analyzeNormalizations <- function(normalizeddata, name) {
     anfdr <- vector()
     kwpvalue <- vector()
     kwfdr <- vector()
+    
     for (meti in 1:length(methodlist)) {
         
         # print(paste("Processing: ", methodlist[[meti]]))
@@ -153,12 +154,13 @@ analyzeNormalizations <- function(normalizeddata, name) {
         
         # Retrieving lines where at least half is non-NAs
         datastoretmp <- datastore[nbsNAperLine < (ncol(datastore) / 2), ]
+        dataStoreReplicateNAFiltered <- filterLinesWithEmptySamples(datastoretmp, filterED)
         
-        anpvalue <- cbind(anpvalue, apply(datastoretmp, 1, function(x) summary(aov(unlist(x)~filterED))[[1]][[5]][1]))
+        anpvalue <- cbind(anpvalue, apply(dataStoreReplicateNAFiltered, 1, function(x) summary(aov(unlist(x)~filterED))[[1]][[5]][1]))
+        # anpvalue <- cbind(anpvalue, apply(datastoretmp, 1, function(x) summary(aov(unlist(x)~filterED))[[1]][[5]][1]))
         anfdr <- cbind(anfdr, p.adjust(anpvalue[, meti], method="BH"))
         
         # Kruskal Wallis
-        dataStoreReplicateNAFiltered <- filterLinesWithEmptySamples(datastore, filterED)
         kwpvalue <- cbind(kwpvalue, apply(dataStoreReplicateNAFiltered, 1, function(x) kruskal.test(unlist(x)~filterED, na.action="na.exclude")[[3]][1]))
         # kwpvalue <- cbind(kwpvalue, apply(datastoretmp, 1, function(x) kruskal.test(unlist(x)~filterED, na.action="na.exclude")[[3]][1]))
         kwfdr <- cbind(kwfdr, p.adjust(kwpvalue[, meti], method="BH")) 
@@ -168,6 +170,8 @@ analyzeNormalizations <- function(normalizeddata, name) {
     avgcvmempdiff <- sapply(1:ncol(avgcvmem), function (x) (mean(avgcvmem[, x]) * 100) / mean(avgcvmem[, 1]))
     avgmadmempdiff <- sapply(1:ncol(avgmadmem), function (x) (mean(avgmadmem[, x]) * 100) / mean(avgmadmem[, 1]))
     avgvarmempdiff <- sapply(1:ncol(avgvarmem), function (x) (mean(avgvarmem[, x]) * 100) / mean(avgvarmem[, 1]))
+    
+    print(anfdr)
     
     # finds top 5% of least DE variables in log2 data based on ANOVA
     # generates error if it doesnt find leastDE peptides
