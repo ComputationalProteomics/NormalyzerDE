@@ -1,7 +1,14 @@
 
 
 NormalyzerObject <- setClass("NormalyzerObject",
-                             slots = c(data2log2 = "matrix",
+                             slots = c(rawData = "matrix",
+                                       filterrawdata = "matrix",
+                                       normfinderFilterRawData = "matrix",
+                                       
+                                       inputHeaderValues = "vector",
+                                       sampleReplicateGroups = "vector",
+                                       
+                                       data2log2 = "matrix",
                                        data2GI = "matrix",
                                        data2ctr = "matrix",
                                        data2med = "matrix",
@@ -17,3 +24,27 @@ NormalyzerObject <- setClass("NormalyzerObject",
                                        globalfittedRLR = "matrix",
                                        fittedLR = "matrix"))
 
+## TestShow
+## Template experimental method
+setGeneric(name="testshow", def=function(object){})
+setMethod(f="testshow", signature="NormalyzerObject",
+    definition=function(object) {
+        cat("This is a class-method testprint!")
+    }
+)
+
+
+
+
+
+
+# This can be used by running:
+# > testshow(obj)
+
+setClass("BMI", representation(weight="numeric", size="numeric"))
+
+setMethod("show", "BMI",
+    function(object) {
+        cat("BMI=", object@weight / (object@size ^ 2), " \n ")
+    }          
+)

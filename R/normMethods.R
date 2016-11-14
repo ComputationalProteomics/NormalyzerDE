@@ -1,60 +1,68 @@
 DEBUG_PRINTS_ON = T
 
-normMethods <- function(datafile, currentjob, outputDir=NULL) {
-    
+normMethods <- function(normObj, currentjob, jobdir) {
+# normMethods <- function(datafile, currentjob, outputDir=NULL) {
+        
     print("DEBUG: normMethods entered !!")
     
-    rawData <- retrieveRawData(datafile)
+    varprint(currentjob)
+    varprint(jobdir)
     
-    if (is.null(outputDir)) {
-        jobdir <- paste(getwd(), "/", currentjob[1], sep="")
-    }
-    else {
-        jobdir <- paste(outputDir, "/", currentjob[1], sep="")
-    }
-    
-    setupJobDir(jobdir)
-    rawData <- getReplicateSortedData(rawData)
-    verifySampleReplication(rawData)
+    # rawData <- retrieveRawData(datafile)
+    # 
+    # if (is.null(outputDir)) {
+    #     jobdir <- paste(getwd(), "/", currentjob[1], sep="")
+    # }
+    # else {
+    #     jobdir <- paste(outputDir, "/", currentjob[1], sep="")
+    # }
+    # 
+    # setupJobDir(jobdir)
+    # rawData <- getReplicateSortedData(rawData)
+    # verifySampleReplication(rawData)
+    # 
+    # rawData <- preprocessData(rawData)
+    # inputHeaderValues <- rawData[1, ]
+    # sampleReplicateGroups <- as.numeric(inputHeaderValues[-which(inputHeaderValues < 1)])
+    # filterrawdata <- setupFilterRawData(rawData, inputHeaderValues, sampleReplicateGroups)
 
-    rawData <- preprocessData(rawData)
-    inputHeaderValues <- rawData[1, ]
-    sampleReplicateGroups <- as.numeric(inputHeaderValues[-which(inputHeaderValues < 1)])
-    filterrawdata <- setupFilterRawData(rawData, inputHeaderValues, sampleReplicateGroups)
 
-    # print(paste("nrow filterrawdata", nrow(filterrawdata)))
     
     # If one of columns are zero here, are errors propagated?
-    colsum <- colSums(filterrawdata, na.rm=T)
+    colsum <- colSums(normObj@filterrawdata, na.rm=T)
 
-    medofdata <- apply(filterrawdata, 2, FUN="median", na.rm=T)  
-    meanofdata <- apply(filterrawdata, 2, FUN="mean", na.rm=T) 
+    medofdata <- apply(normObj@filterrawdata, 2, FUN="median", na.rm=T)  
+    meanofdata <- apply(normObj@filterrawdata, 2, FUN="mean", na.rm=T) 
     
-    normObj <- NormalyzerObject()
-    filterRawDataNormfinder <- setupNormfinderFilterRawData(rawData, inputHeaderValues)
+    # normObj <- NormalyzerObject()
+    # filterRawDataNormfinder <- setupNormfinderFilterRawData(rawData, inputHeaderValues)
     # filterRawDataNormfinder <- setupNormfinderFilterRawData(rawData, checkrep)
 
-    normObj <- performBasicNormalizations(normObj, filterrawdata)
-    houseKeepingFlag <- (nrow(filterRawDataNormfinder) < 1000)
+    
+    normObj <- performBasicNormalizations(normObj, normObj@filterrawdata)
+    houseKeepingFlag <- (nrow(normObj@normfinderFilterRawData) < 1000)
+    # houseKeepingFlag <- (nrow(normObj@filterRawDataNormfinder) < 1000)
+    
     if (houseKeepingFlag) {
-        Hkvar <- normfinder(filterRawDataNormfinder, inputHeaderValues)
-        normObj <- calculateHKdataForNormObj(normObj, inputHeaderValues, sampleReplicateGroups, Hkvar, filterrawdata)
+        Hkvar <- normfinder(normObj@normfinderFilterRawData, normObj@inputHeaderValues)
+        # Hkvar <- normfinder(normObj@filterRawDataNormfinder, normObj@inputHeaderValues)
+        normObj <- calculateHKdataForNormObj(normObj, normObj@inputHeaderValues, normObj@sampleReplicateGroups, Hkvar, normObj@filterrawdata)
     }
-    normObj <- basicMetricNormalizations(normObj, filterrawdata, colsum, medofdata, meanofdata)
+    normObj <- basicMetricNormalizations(normObj, normObj@filterrawdata, colsum, medofdata, meanofdata)
     methodlist <- getMethodList(houseKeepingFlag, normObj)
     methodnames <- getMethodNames(houseKeepingFlag)
     
     # Perform other norm. if the dataset is not small  
-    if (nrow(filterrawdata) > 50) {
+    if (nrow(normObj@filterrawdata) > 50) {
         
-        normObj <- performVSNNormalization(normObj, filterrawdata)
+        normObj <- performVSNNormalization(normObj, normObj@filterrawdata)
         normObj <- performQuantileNormalization(normObj)
         normObj <- performSMADNormalization(normObj)
         normObj <- performCyclicLoessNormalization(normObj)
         normObj <- performGlobalRLRNormalization(normObj)
         
         ## NORMALIZATION within REPLICATES RLR, VSN and Loess
-        normObj <- performReplicateBasedNormalizations(normObj, sampleReplicateGroups, filterrawdata)
+        normObj <- performReplicateBasedNormalizations(normObj, normObj@sampleReplicateGroups, normObj@filterrawdata)
         
         colnames(normObj@fittedLR) <- colnames(normObj@data2log2)
         colnames(normObj@data2quantile) <- colnames(normObj@data2log2)
@@ -75,17 +83,18 @@ normMethods <- function(datafile, currentjob, outputDir=NULL) {
     # Create tmp dir for the current job
     for (sampleIndex in 1:length(methodlist)) {
         write.table(file=paste(jobdir, "/", methodnames[sampleIndex], "-normalized.txt", sep=""), 
-                    cbind(rawData[-(1:2), (1:(length(inputHeaderValues) - length(sampleReplicateGroups)))], methodlist[[sampleIndex]]), sep="\t", row.names=F, col.names=rawData[2,], quote=F)
+                    cbind(normObj@rawData[-(1:2), (1:(length(normObj@inputHeaderValues) - length(normObj@sampleReplicateGroups)))], 
+                          methodlist[[sampleIndex]]), sep="\t", row.names=F, col.names=normObj@rawData[2,], quote=F)
     }
     
     if (houseKeepingFlag) {
-        write.table(file=paste(jobdir, "/housekeeping-variables.txt", sep=""), Hkvar, sep="\t", row.names=F, col.names=rawData[2,], quote=F)
+        write.table(file=paste(jobdir, "/housekeeping-variables.txt", sep=""), Hkvar, sep="\t", row.names=F, col.names=normObj@rawData[2,], quote=F)
     }
     
     write.table(file=paste(jobdir, "/submitted_rawdata.txt", sep=""), 
-                cbind(rawData[-(1:2), (1:(length(inputHeaderValues) - length(sampleReplicateGroups)))], filterrawdata), sep="\t", row.names=F,
-                col.names=rawData[2,], quote=F)
-    methodlist <- list(methodlist, methodnames, rawData, filterrawdata, sampleReplicateGroups, houseKeepingFlag)
+                cbind(normObj@rawData[-(1:2), (1:(length(normObj@inputHeaderValues) - length(normObj@sampleReplicateGroups)))], normObj@filterrawdata), sep="\t", row.names=F,
+                col.names=normObj@rawData[2,], quote=F)
+    methodlist <- list(methodlist, methodnames, normObj@rawData, normObj@filterrawdata, normObj@sampleReplicateGroups, houseKeepingFlag)
     
     # sink(NULL)
     
@@ -108,21 +117,21 @@ retrieveRawData <- function(datafile) {
     getrawdata
 }
 
-setupJobDir <- function(jobdir) {
-    if (DEBUG_PRINTS_ON) { print("Function: setupJobDir") }
-    
-    if (file.exists(jobdir)) {
-        abc <- "Directory already exists"
-        class(abc) <- "try-error"
-        if (inherits(abc, "try-error")) {
-            return(abc)
-        }
-        stop("Directory already exists")
-    } 
-    else {
-        dir.create(jobdir)
-    }
-}
+# setupJobDir <- function(jobdir) {
+#     if (DEBUG_PRINTS_ON) { print("Function: setupJobDir") }
+#     
+#     if (file.exists(jobdir)) {
+#         abc <- "Directory already exists"
+#         class(abc) <- "try-error"
+#         if (inherits(abc, "try-error")) {
+#             return(abc)
+#         }
+#         stop("Directory already exists")
+#     } 
+#     else {
+#         dir.create(jobdir)
+#     }
+# }
 
 getReplicateSortedData <- function(getrawdata) {
     if (DEBUG_PRINTS_ON) { print("Function: getReplicateSortedData") }
@@ -194,12 +203,14 @@ setupNormfinderFilterRawData <- function(rawData, fullSampleHeader) {
     # print(countna)
     
     filterRawDataNormfinder <- rawData[countna >= (1 * ncol(rawData[, which(fullSampleHeader > 0)])), ]
-    
+
     # print(filterRawDataNormfinder)
     # print(nrow(filterRawDataNormfinder))
     
     filterRawDataNormfinder
 }
+
+## ------------------- NORMALIZATION STARTS HERE -------------------------- ##
 
 performBasicNormalizations <- function(normObj, filterrawdata) {
     if (DEBUG_PRINTS_ON) { print("Function: performBasicNormalizations") }

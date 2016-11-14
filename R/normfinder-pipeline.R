@@ -26,9 +26,6 @@
 
 normfinder <- function(filterrawdata1, getEDdata) {
     
-    varprint(filterrawdata1)
-    varprint(getEDdata)
-    
     gr <- getEDdata[-which(getEDdata < 1)]
     
     filnavn <- filterrawdata1[, -(1:(length(getEDdata) - length(gr)))]
@@ -130,17 +127,11 @@ normfinder <- function(filterrawdata1, getEDdata) {
         }
     }
      
-    varprint(vargroupall)
-    
     va <- vargroupall
     for (j in 1:m) {
         va[j,] <- va[j,] / ngr[j]}
     
     tau <- -1
-    
-    varprint(dif)
-    varprint(m)
-    varprint(k)
     
     tau <- sum(dif * dif) / ((m-1) * (k-1)) - mean(va)
 

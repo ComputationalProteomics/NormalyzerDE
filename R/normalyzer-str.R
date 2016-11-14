@@ -1,7 +1,43 @@
 
 print('Normalyzer sourced')
 
-normalyzer <- function(datafile, getjob, outputDir=NULL){
+setupJobDir <- function(jobName, outputDir) {
+    
+    print("DEBUG: Setup job dir called")
+    
+    varprint(jobName)
+    varprint(outputDir)
+    
+    if (is.null(outputDir)) {
+        jobDir <- paste(getwd(), "/", jobName[1], sep="")
+    }
+    else {
+        jobDir <- paste(outputDir, "/", jobName[1], sep="")
+    }
+    createDirectory(jobDir)
+    
+    varprint(jobDir)
+    
+    jobDir
+}
+
+createDirectory <- function(targetPath) {
+    
+    if (file.exists(targetPath)) {
+        abc <- "Directory already exists"
+        class(abc) <- "try-error"
+        if (inherits(abc, "try-error")) {
+            return(abc)
+        }
+        stop("Directory already exists")
+    } 
+    else {
+        dir.create(targetPath)
+    }
+}
+
+
+normalyzer <- function(datafile, getjob, outputDir=NULL) {
     
     print('start')
     
@@ -29,12 +65,22 @@ normalyzer <- function(datafile, getjob, outputDir=NULL){
 
     source("NormalyzerObject.R")
     source("utils.R")
-
+    source("inputVerification.R")
+    
     # stopFunction()
     
+    normObj <- getVerifiedNormalyzerObjectFromFile(datafile)
+
+    varprint(getjob)
+    varprint(outputDir)
+    
+    jobDir <- setupJobDir(getjob, outputDir)
+        
     print("Normalizing data....")
     # try.result <- try(normalizeddata <- normMethods(datafile, getjob))
-    normalizeddata <- normMethods(datafile, getjob, outputDir=outputDir)
+    
+    # normalizeddata <- normMethods(datafile, getjob, outputDir=outputDir)
+    normalizeddata <- normMethods(normObj, getjob, jobDir)
     
     # if (inherits(try.result, "try-error")) {
     #     return(try.result)
