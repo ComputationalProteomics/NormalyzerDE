@@ -3,70 +3,62 @@
 ## Output: Initialized normalization object
 ## Performs verification steps on input data, and provides informative error
 ## messages if failed to 
-getVerifiedNormalyzerObjectFromFile <- function(inputFile) {
+getVerifiedNormalyzerObjectFromFile <- function(inputFile, jobName) {
 
     rawData <- retrieveRawData(inputFile)
-    
-    
     
     rawData <- getReplicateSortedData(rawData)
     verifySampleReplication(rawData)  # This is the way to do it!
     rawData <- preprocessData(rawData)
     
-    normObj <- generateNormalyzerDataset(rawData)
+    nds <- generateNormalyzerDataset(rawData, jobName)
+
+    # Verification step: Check whether all colsum values are > 0
     
-    normObj <- setupFilterRawData(normObj, rawData, normObj@inputHeaderValues, normObj@sampleReplicateGroups)
-    normObj <- setupNormfinderFilterRawData(normObj, rawData, normObj@inputHeaderValues)
-
-    print(normObj)
-
-    normObj
+    nds
 }
 
-generateNormalyzerDataset <- function(rawData) {
+generateNormalyzerDataset <- function(rawData, jobName) {
 
-    normObj <- NormalyzerDataset()
-    normObj@rawData <- rawData
-    normObj <- setupValues(normObj)
+    nds <- NormalyzerDataset(jobName=jobName, rawData=rawData)
+    nds <- setupValues(nds)
+    # nds <- setupFilterRawData(nds)
     
-
-    normObj
+    nds
 }
 
 retrieveRawData <- function(datafile) {
 
     if (class(datafile) == "character") {
-        getrawdata <- as.matrix((read.table(datafile, header=F, sep="\t", stringsAsFactors=F, quote="")))    
+        rawData <- as.matrix((read.table(datafile, header=F, sep="\t", stringsAsFactors=F, quote="")))    
     } 
     else if (class(datafile) == "data.frame") {
-        getrawdata <- as.matrix(datafile)
+        rawData <- as.matrix(datafile)
     } 
     else if (class(datafile) == "matrix") {
-        getrawdata <- datafile  
+        rawData <- datafile  
     }
-    getrawdata
+    rawData
 }
 
-getReplicateSortedData <- function(getrawdata) {
+getReplicateSortedData <- function(rawData) {
 
     b <- NULL
-    b <- as.factor(getrawdata[1,])
+    b <- as.factor(rawData[1,])
     l <- levels(b)
     b <- NULL
     for (i in 1:length(l)) {
-        b <- cbind(b, getrawdata[, which(getrawdata[1,] == l[as.numeric(i)])])
+        b <- cbind(b, rawData[, which(rawData[1,] == l[as.numeric(i)])])
     }
-    getrawdata <- b
-    getrawdata
+    rawData <- b
+    rawData
 }
 
 ## Evaluate whether the input format is in correct format
 ## Abort processing if this isn't the case
-verifySampleReplication <- function(getrawdata) {
+verifySampleReplication <- function(rawData) {
 
-    checkrep <- getrawdata[1,]
-    
-    # print(paste("Inside parseforerrors, checkrep: ", checkrep))
+    checkrep <- rawData[1,]
     
     repunique <- unique(checkrep)
     
@@ -86,30 +78,14 @@ verifySampleReplication <- function(getrawdata) {
 }
 
 ## Replaces zeroes with NAs
-preprocessData <- function(getrawdata) {
+preprocessData <- function(rawData) {
 
-    rep0 <- getrawdata[-1,]
+    rep0 <- rawData[-1,]
     rep0[which(rep0==0)] <- NA
-    getrawdata <- rbind(getrawdata[1,], rep0)
+    rawData <- rbind(rawData[1,], rep0)
     
-    getrawdata
+    rawData
 }
 
-setupFilterRawData <- function(normObj, rawData, fullSampleHeader, filteredSampleHeader) {
 
-    filterrawdata <- rawData[, -(1:(length(fullSampleHeader) - length(filteredSampleHeader)))]
-    colnames(filterrawdata) <- rawData[2, -(1:(length(fullSampleHeader) - length(filteredSampleHeader)))]
-    filterrawdata <- (as.matrix((filterrawdata[-(1:2), ])))
-    class(filterrawdata) <- "numeric"
-    
-    normObj@filterrawdata <- filterrawdata
-    
-    normObj
-}
 
-setupNormfinderFilterRawData <- function(normObj, rawData, fullSampleHeader) {
-
-    countna <- rowSums(!is.na(rawData[, which(fullSampleHeader > 0)]))
-    normObj@normfinderFilterRawData <- rawData[countna >= (1 * ncol(rawData[, which(fullSampleHeader > 0)])), ]
-    normObj
-}

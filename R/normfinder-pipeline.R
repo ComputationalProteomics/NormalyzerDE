@@ -24,7 +24,10 @@
 #THIS SCRIPT FOR NORMFINDER IS MODIFIED FOR USE IN NORMALYZER. BY USING NORMALYZER YOU AGREE TO ACCEPT THE ORIGINAL TERMS OF USE FOR NORMFINDER. 
 #TERMS AND CONDITIONS OF USE FOR NORMFINDER CAN BE FOUND IN THIS LINK: http://moma.dk/normfinder-software
 
-normfinder <- function(filterrawdata1, getEDdata) {
+normfinder <- function(nds) {
+
+    filterrawdata1 <- nds@normfinderFilterRawData
+    getEDdata <- nds@inputHeaderValues
     
     gr <- getEDdata[-which(getEDdata < 1)]
     

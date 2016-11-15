@@ -11,3 +11,4 @@ source("../R/printPlots.R")
 source("../R/NormalyzerObject.R")
 
 test_dir("testthat", reporter = "Summary")
+

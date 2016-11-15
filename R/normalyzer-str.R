@@ -36,7 +36,7 @@ createDirectory <- function(targetPath) {
     }
 }
 
-normalyzer <- function(datafile, getjob, outputDir=NULL) {
+normalyzer <- function(datafile, jobName, outputDir=NULL) {
     
     print('start')
     
@@ -56,6 +56,14 @@ normalyzer <- function(datafile, getjob, outputDir=NULL) {
 
     require(grid)
 
+    
+    
+    
+    
+    
+    
+    
+    
     source("analyzeAndPlot.R")
     source("normfinder-pipeline.R")
     source("normMethods.R")
@@ -70,15 +78,15 @@ normalyzer <- function(datafile, getjob, outputDir=NULL) {
     
     # stopFunction()
     
-    normObj <- getVerifiedNormalyzerObjectFromFile(datafile)
+    normObj <- getVerifiedNormalyzerObjectFromFile(datafile, jobName)
 
-    jobDir <- setupJobDir(getjob, outputDir)
+    jobDir <- setupJobDir(jobName, outputDir)
         
     print("Normalizing data....")
     # try.result <- try(normalizeddata <- normMethods(datafile, getjob))
     
     # normalizeddata <- normMethods(datafile, getjob, outputDir=outputDir)
-    normalizeddata <- normMethods(normObj, getjob, jobDir)
+    normalizeddata <- normMethods(normObj, jobName, jobDir)
     
     # if (inherits(try.result, "try-error")) {
     #     return(try.result)
@@ -88,7 +96,7 @@ normalyzer <- function(datafile, getjob, outputDir=NULL) {
     print("Analyzing data....")
     
     # try.result <- try(analyzeAndPlot(normalizeddata, getjob))
-    analyzeAndPlot(normalizeddata, getjob, outputDir=outputDir)
+    analyzeAndPlot(normalizeddata, jobName, outputDir=outputDir)
     
     # if(inherits(try.result, "try-error")){
     #     return(try.result)

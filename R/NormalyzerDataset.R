@@ -1,11 +1,17 @@
 NormalyzerDataset <- setClass("NormalyzerDataset",
                              slots = c(
+                                 jobName = "character",
+                                 
                                  rawData = "matrix",
                                  filterrawdata = "matrix",
                                  normfinderFilterRawData = "matrix",
 
                                  inputHeaderValues = "character",
                                  sampleReplicateGroups = "numeric",
+                                 
+                                 colsum = "numeric",
+                                 medofdata = "numeric",
+                                 meanofdata = "numeric",
 
                                  data2log2 = "matrix",
                                  data2GI = "matrix",
@@ -23,16 +29,58 @@ NormalyzerDataset <- setClass("NormalyzerDataset",
                                  globalfittedRLR = "matrix",
                                  fittedLR = "matrix"
                              ),
-                             prototype=prototype())
+                             prototype=prototype(jobName=NULL, rawData=NULL))
 
-setGeneric(name="setupValues", function(x) standardGeneric("setupValues"))
+setGeneric(name="setupValues", function(nds) standardGeneric("setupValues"))
 setMethod("setupValues", "NormalyzerDataset",
-          function(x) {
-              x@inputHeaderValues <- x@rawData[1,]
-              x@sampleReplicateGroups <- as.numeric(x@inputHeaderValues[-which(x@inputHeaderValues < 1)])
-              x
+          function(nds) {
+              nds@inputHeaderValues <- nds@rawData[1,]
+              nds@sampleReplicateGroups <- as.numeric(nds@inputHeaderValues[-which(nds@inputHeaderValues < 1)])
+              
+              nds <- setupFilterRawData(nds)
+              nds <- setupNormfinderFilterRawData(nds)
+              
+              nds@colsum <- colSums(nds@filterrawdata, na.rm=T)
+              nds@medofdata <- apply(nds@filterrawdata, 2, FUN="median", na.rm=T)
+              nds@meanofdata <- apply(nds@filterrawdata, 2, FUN="mean", na.rm=T)
+              
+              nds
           })
 
+setGeneric(name="setupFilterRawData", function(nds) standardGeneric("setupFilterRawData"))
+setMethod("setupFilterRawData", "NormalyzerDataset",
+          function(nds) {
+            print("DEBUG: setupFilterRawData")
+
+            stopifnot(!is.null(nds@rawData))
+
+            fullSampleHeader <- nds@inputHeaderValues
+            filteredSampleHeader <- nds@sampleReplicateGroups
+            
+            filterrawdata <- nds@rawData[, -(1:(length(fullSampleHeader) - length(filteredSampleHeader)))]
+            colnames(filterrawdata) <- nds@rawData[2, -(1:(length(fullSampleHeader) - length(filteredSampleHeader)))]
+            filterrawdata <- (as.matrix((filterrawdata[-(1:2), ])))
+            class(filterrawdata) <- "numeric"
+
+            nds@filterrawdata <- filterrawdata
+
+            nds
+        })
+
+setGeneric(name="setupNormfinderFilterRawData", function(nds) standardGeneric("setupNormfinderFilterRawData"))
+setMethod("setupNormfinderFilterRawData", "NormalyzerDataset",
+          function(nds) {
+
+              stopifnot(!is.null(nds@rawData))
+
+              fullSampleHeader <- nds@inputHeaderValues
+              filteredSampleHeader <- nds@sampleReplicateGroups
+
+              countna <- rowSums(!is.na(nds@rawData[, which(fullSampleHeader > 0)]))
+              nds@normfinderFilterRawData <- nds@rawData[countna >= (1 * ncol(nds@rawData[, which(fullSampleHeader > 0)])), ]
+
+              nds
+          })
 
 
 ## --- Templates --- ##
