@@ -36,7 +36,6 @@ createDirectory <- function(targetPath) {
     }
 }
 
-
 normalyzer <- function(datafile, getjob, outputDir=NULL) {
     
     print('start')
@@ -63,7 +62,9 @@ normalyzer <- function(datafile, getjob, outputDir=NULL) {
     source("printMeta.R")
     source("printPlots.R")
 
-    source("NormalyzerObject.R")
+    source("NormalyzerDataset.R")
+    source("NormalyzerResults.R")
+    
     source("utils.R")
     source("inputVerification.R")
     
@@ -71,9 +72,6 @@ normalyzer <- function(datafile, getjob, outputDir=NULL) {
     
     normObj <- getVerifiedNormalyzerObjectFromFile(datafile)
 
-    varprint(getjob)
-    varprint(outputDir)
-    
     jobDir <- setupJobDir(getjob, outputDir)
         
     print("Normalizing data....")

@@ -533,6 +533,7 @@ plotBoxPlot <- function(methodlist, methodnames, filterED, currentLayout, pageno
     par(mar=c(2,2,2,1), oma=c(3,2,3,2), xpd=NA)
     mindata <- 1000
     maxdata <- 0
+    
     for(i in 1:length(methodlist)) { 
         tempmin <- min(methodlist[[i]], na.rm=T)
         tempmax <- max(methodlist[[i]], na.rm=T)
@@ -548,6 +549,7 @@ plotBoxPlot <- function(methodlist, methodnames, filterED, currentLayout, pageno
         boxplot(methodlist[[i]], cex=0.1, cex.axis=0.7, las=2, main=methodnames[i], col=(filterED), outcol="lightgray", 
                 ylim=c((mindata-1), (maxdata+1)), names=substr(colnames(methodlist[[i]]), 1, 10))
     }
+    
     pushViewport(viewport(layout=currentLayout))
     printMeta("Boxplots", pageno, currentjob[2])
 }

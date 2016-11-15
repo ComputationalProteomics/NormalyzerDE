@@ -1,4 +1,4 @@
-printMeta <- function(plotname, pageno, jobname){
+printMeta <- function(plotname, pageno, jobname) {
     
     gp=gpar(fontsize=11, fontfamily="Helvetica", col="black", fontface="bold")
     gpfill=gpar(fill="gray90", lwd=0, lty=0)

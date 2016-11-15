@@ -5,39 +5,11 @@ normMethods <- function(normObj, currentjob, jobdir) {
         
     print("DEBUG: normMethods entered !!")
     
-    varprint(currentjob)
-    varprint(jobdir)
-    
-    # rawData <- retrieveRawData(datafile)
-    # 
-    # if (is.null(outputDir)) {
-    #     jobdir <- paste(getwd(), "/", currentjob[1], sep="")
-    # }
-    # else {
-    #     jobdir <- paste(outputDir, "/", currentjob[1], sep="")
-    # }
-    # 
-    # setupJobDir(jobdir)
-    # rawData <- getReplicateSortedData(rawData)
-    # verifySampleReplication(rawData)
-    # 
-    # rawData <- preprocessData(rawData)
-    # inputHeaderValues <- rawData[1, ]
-    # sampleReplicateGroups <- as.numeric(inputHeaderValues[-which(inputHeaderValues < 1)])
-    # filterrawdata <- setupFilterRawData(rawData, inputHeaderValues, sampleReplicateGroups)
-
-
-    
     # If one of columns are zero here, are errors propagated?
     colsum <- colSums(normObj@filterrawdata, na.rm=T)
 
     medofdata <- apply(normObj@filterrawdata, 2, FUN="median", na.rm=T)  
     meanofdata <- apply(normObj@filterrawdata, 2, FUN="mean", na.rm=T) 
-    
-    # normObj <- NormalyzerObject()
-    # filterRawDataNormfinder <- setupNormfinderFilterRawData(rawData, inputHeaderValues)
-    # filterRawDataNormfinder <- setupNormfinderFilterRawData(rawData, checkrep)
-
     
     normObj <- performBasicNormalizations(normObj, normObj@filterrawdata)
     houseKeepingFlag <- (nrow(normObj@normfinderFilterRawData) < 1000)
@@ -100,117 +72,6 @@ normMethods <- function(normObj, currentjob, jobdir) {
     
     return(methodlist)
 }
-
-
-retrieveRawData <- function(datafile) {
-    if (DEBUG_PRINTS_ON) { print("Function: retrieveRawData") }
-    
-    if (class(datafile) == "character") {
-        getrawdata <- as.matrix((read.table(datafile, header=F, sep="\t", stringsAsFactors=F, quote="")))    
-    } 
-    else if (class(datafile) == "data.frame") {
-        getrawdata <- as.matrix(datafile)
-    } 
-    else if (class(datafile) == "matrix") {
-        getrawdata <- datafile  
-    }
-    getrawdata
-}
-
-# setupJobDir <- function(jobdir) {
-#     if (DEBUG_PRINTS_ON) { print("Function: setupJobDir") }
-#     
-#     if (file.exists(jobdir)) {
-#         abc <- "Directory already exists"
-#         class(abc) <- "try-error"
-#         if (inherits(abc, "try-error")) {
-#             return(abc)
-#         }
-#         stop("Directory already exists")
-#     } 
-#     else {
-#         dir.create(jobdir)
-#     }
-# }
-
-getReplicateSortedData <- function(getrawdata) {
-    if (DEBUG_PRINTS_ON) { print("Function: getReplicateSortedData") }
-    
-    b <- NULL
-    b <- as.factor(getrawdata[1,])
-    l <- levels(b)
-    b <- NULL
-    for (i in 1:length(l)) {
-        b <- cbind(b, getrawdata[, which(getrawdata[1,] == l[as.numeric(i)])])
-    }
-    getrawdata <- b
-    getrawdata
-}
-
-## Evaluate whether the input format is in correct format
-## Abort processing if this isn't the case
-verifySampleReplication <- function(getrawdata) {
-    if (DEBUG_PRINTS_ON) { print("Function: parseDataForErrors") }
-    
-    checkrep <- getrawdata[1,]
-    
-    # print(paste("Inside parseforerrors, checkrep: ", checkrep))
-    
-    repunique <- unique(checkrep)
-    
-    for (i in 1:length(repunique)) {
-        if (repunique[i] != 0) {
-            if (length(grep(repunique[i], checkrep)) < 2) {
-                abc <- paste("Number of replicates are less than 2 for the group ", repunique[i], sep="")
-                class(abc) <- "try-error"
-                if (inherits(abc, "try-error")) {
-                    return(abc)
-                }
-                stop(paste("Number of replicates are less than 2 for the group ", repunique[i], sep=""))
-            }
-        }
-    }
-    checkrep
-}
-
-## Replaces zeroes with NAs
-preprocessData <- function(getrawdata) {
-    if (DEBUG_PRINTS_ON) { print("Function: preprocessData") }
-    
-    rep0 <- getrawdata[-1,]
-    rep0[which(rep0==0)] <- NA
-    getrawdata <- rbind(getrawdata[1,], rep0)
-    
-    getrawdata
-}
-
-setupFilterRawData <- function(rawData, fullSampleHeader, filteredSampleHeader) {
-    if (DEBUG_PRINTS_ON) { print("Function: setupFilterRawData") }
-    
-    filterrawdata <- rawData[, -(1:(length(fullSampleHeader) - length(filteredSampleHeader)))]
-    colnames(filterrawdata) <- rawData[2, -(1:(length(fullSampleHeader) - length(filteredSampleHeader)))]
-    filterrawdata <- (as.matrix((filterrawdata[-(1:2), ])))
-    class(filterrawdata) <- "numeric"
-    
-    filterrawdata
-}
-
-setupNormfinderFilterRawData <- function(rawData, fullSampleHeader) {
-    if (DEBUG_PRINTS_ON) { print("Function: setupNormFinderRawData") }
-    
-    countna <- rowSums(!is.na(rawData[, which(fullSampleHeader > 0)]))
-    
-    # print(countna)
-    
-    filterRawDataNormfinder <- rawData[countna >= (1 * ncol(rawData[, which(fullSampleHeader > 0)])), ]
-
-    # print(filterRawDataNormfinder)
-    # print(nrow(filterRawDataNormfinder))
-    
-    filterRawDataNormfinder
-}
-
-## ------------------- NORMALIZATION STARTS HERE -------------------------- ##
 
 performBasicNormalizations <- function(normObj, filterrawdata) {
     if (DEBUG_PRINTS_ON) { print("Function: performBasicNormalizations") }

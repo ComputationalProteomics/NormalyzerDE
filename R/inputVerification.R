@@ -6,28 +6,30 @@
 getVerifiedNormalyzerObjectFromFile <- function(inputFile) {
 
     rawData <- retrieveRawData(inputFile)
-    # jobDir <- setupJobDir(outputDir, jobName)
-
-    rawData <- getReplicateSortedData(rawData)
-    verifySampleReplication(rawData)
     
+    
+    
+    rawData <- getReplicateSortedData(rawData)
+    verifySampleReplication(rawData)  # This is the way to do it!
     rawData <- preprocessData(rawData)
     
-    normObj <- NormalyzerObject()
-    inputHeaderValues <- rawData[1,]
+    normObj <- generateNormalyzerDataset(rawData)
+    
+    normObj <- setupFilterRawData(normObj, rawData, normObj@inputHeaderValues, normObj@sampleReplicateGroups)
+    normObj <- setupNormfinderFilterRawData(normObj, rawData, normObj@inputHeaderValues)
 
+    print(normObj)
+
+    normObj
+}
+
+generateNormalyzerDataset <- function(rawData) {
+
+    normObj <- NormalyzerDataset()
     normObj@rawData <- rawData
+    normObj <- setupValues(normObj)
     
-    sampleReplicateGroups <- as.numeric(inputHeaderValues[-which(inputHeaderValues < 1)])
-    normObj <- setupFilterRawData(normObj, rawData, inputHeaderValues, sampleReplicateGroups)
-    
-    normObj <- setupNormfinderFilterRawData(normObj, rawData, inputHeaderValues)
-    
-    normObj@inputHeaderValues <- inputHeaderValues
-    normObj@sampleReplicateGroups <- sampleReplicateGroups
-    
-    # TODO: Implement empty column checking
-    
+
     normObj
 }
 
@@ -44,33 +46,6 @@ retrieveRawData <- function(datafile) {
     }
     getrawdata
 }
-
-# setupJobDir <- function(outputDir, jobName) {
-#     
-#     if (is.null(outputDir)) {
-#         jobDir <- paste(getwd(), "/", jobName[1], sep="")
-#     }
-#     else {
-#         jobDir <- paste(outputDir, "/", jobName[1], sep="")
-#     }
-#     createDirectory(jobDir)
-#     jobDir
-# }
-
-# createDirectory <- function(targetPath) {
-# 
-#     if (file.exists(targetPath)) {
-#         abc <- "Directory already exists"
-#         class(abc) <- "try-error"
-#         if (inherits(abc, "try-error")) {
-#             return(abc)
-#         }
-#         stop("Directory already exists")
-#     } 
-#     else {
-#         dir.create(targetPath)
-#     }
-# }
 
 getReplicateSortedData <- function(getrawdata) {
 
