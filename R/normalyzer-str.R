@@ -55,14 +55,6 @@ normalyzer <- function(datafile, jobName, outputDir=NULL) {
     require(ggplot2)
 
     require(grid)
-
-    
-    
-    
-    
-    
-    
-    
     
     source("analyzeAndPlot.R")
     source("normfinder-pipeline.R")

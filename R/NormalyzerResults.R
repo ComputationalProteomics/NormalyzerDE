@@ -1,3 +1,29 @@
+slotNames <- c("data2log2",
+                   "data2limloess",
+                   "fittedLR",
+                   "data2vsnrep",
+                   "data2loess",
+                   "globalfittedRLR",
+                   "data2vsn",
+                   "data2GI",
+                   "data2med",
+                   "data2mean",
+                   "data2ctrlog",
+                   "data2quantile")
+
+outputNames <- c("Log2",
+                 "Loess-R",
+                 "RLR-R",
+                 "VSN-R", 
+                 "Loess-G",
+                 "RLR-G",
+                 "VSN-G",
+                 "TI-G",
+                 "MedI-G",
+                 "AI-G",
+                 "NF-G",
+                 "Quantile")
+
 NormalyzerResults <- setClass("NormalyzerResults",
                               slots=c(
                                   nds = "NormalyzerDataset",
@@ -9,20 +35,21 @@ NormalyzerResults <- setClass("NormalyzerResults",
                                   houseKeepingVars="matrix",
                                   
                                   data2log2 = "matrix",
+                                  data2limloess = "matrix",
+                                  fittedLR = "matrix",
+                                  data2vsnrep = "matrix",
+                                  data2loess = "matrix",
+                                  globalfittedRLR = "matrix",
+                                  data2vsn = "matrix",
                                   data2GI = "matrix",
-                                  data2ctr = "matrix",
                                   data2med = "matrix",
                                   data2mean = "matrix",
                                   data2ctrlog = "matrix",
-                                  data2vsn = "matrix",
                                   data2quantile = "matrix",
-                                  data2mad = "matrix",
-                                  data2loess = "matrix",
-                                  data2vsnrep = "matrix",
-                                  data2limloess = "matrix",
                                   
-                                  globalfittedRLR = "matrix",
-                                  fittedLR = "matrix"
+                                  data2ctr = "matrix",
+                                  data2mad = "matrix"
+
                               ),
                               prototype=prototype(nds=NULL, normfinderMaxThreshold=1000, furtherNormalizationMinThreshold=50))
 
@@ -45,6 +72,10 @@ setGeneric(name="performSMADNormalization", function(nr) standardGeneric("perfor
 setGeneric(name="performCyclicLoessNormalization", function(nr) standardGeneric("performCyclicLoessNormalization"))
 setGeneric(name="performGlobalRLRNormalization", function(nr) standardGeneric("performGlobalRLRNormalization"))
 setGeneric(name="performReplicateBasedNormalizations", function(nr) standardGeneric("performReplicateBasedNormalizations"))
+
+setGeneric(name="getMethodNames", function(nr) standardGeneric("getMethodNames"))
+setGeneric(name="getSlotNameList", function(nr) standardGeneric("getSlotNameList"))
+
 
 
 setMethod("initializeResultsObject", "NormalyzerResults",
@@ -235,4 +266,40 @@ setMethod("performReplicateBasedNormalizations", "NormalyzerResults",
               
               nr
           })
+
+setMethod("getMethodNames", "NormalyzerResults",
+          function(nr) {
+              
+              usedMethodNames <- c()
+              
+              for (i in 1:length(slotNames)) {
+                  slotName <- slotNames[i]
+                  fieldValue <- slot(nr, slotName)
+                  
+                  if (!all(is.na(fieldValue))) {
+                      outputName <- outputNames[i]
+                      usedMethodNames <- c(usedMethodNames, outputName)
+                  }
+              }
+
+              usedMethodNames
+          })
+
+setMethod("getSlotNameList", "NormalyzerResults",
+          function(nr) {
+              methodDataList <- c()
+              
+              for (i in 1:length(slotNames)) {
+                  slotName <- slotNames[i]
+                  fieldValue <- slot(nr, slotName)
+                  
+                  if (!all(is.na(fieldValue))) {
+                      methodDataList <- c(methodDataList, slotName)
+                  }
+              }
+              
+              methodDataList
+          })
+
+
 
