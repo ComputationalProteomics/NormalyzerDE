@@ -7,55 +7,23 @@ normMethods <- function(nds, currentjob, jobdir) {
     
     methodnames <- getMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
-        
-    # Perform other norm. if the dataset is not small  
-    # if (nrow(nds@filterrawdata) > 50) {
-    #     
-    #     # --- This entire part should be automated as part of result object and removed
-    #     if (!is.null(nr@houseKeepingVars)) {
-    #         methodlist <- list(nr@data2log2, nr@data2limloess, nr@fittedLR, nr@data2vsnrep, nr@data2loess, 
-    #                            nr@globalfittedRLR, nr@data2vsn, nr@data2GI, nr@data2med, nr@data2mean, 
-    #                            nr@data2ctrlog, nr@data2quantile)
-    #         methodnames <- c("Log2", "Loess-R", "RLR-R", "VSN-R", "Loess-G", "RLR-G", "VSN-G", "TI-G", "MedI-G", "AI-G", "NF-G", "Quantile")
-    #     } 
-    #     else {
-    #         methodlist <- list(nr@data2log2, nr@data2limloess, nr@fittedLR, nr@data2vsnrep, nr@data2loess, 
-    #                            nr@globalfittedRLR, nr@data2vsn, nr@data2GI, nr@data2med, nr@data2mean, nr@data2quantile)
-    #         methodnames <- c("Log2", "Loess-R", "RLR-R", "VSN-R", "Loess-G", "RLR-G", "VSN-G", "TI-G", "MedI-G", "AI-G", "Quantile")
-    #     }
-    #     # -----------------
-    #     
-    # }
 
     for (sampleIndex in 1:length(methodnames)) {
         
         write.table(file=paste(jobdir, "/", methodnames[sampleIndex], "-normalized.txt", sep=""),
                     cbind(nds@rawData[-(1:2), (1:(length(nds@inputHeaderValues) - length(nds@sampleReplicateGroups)))],
                           methodlist[[sampleIndex]]), sep="\t", row.names=F, col.names=nds@rawData[2,], quote=F)
-        
-        # write.table(file=paste(jobdir, "/", methodnames[sampleIndex], "-normalized.txt", sep=""),
-        #             cbind(nds@rawData[-(1:2), (1:(length(nds@inputHeaderValues) - length(nds@sampleReplicateGroups)))],
-        #                   slot(nr, slotNameList[[sampleIndex]]), sep="\t", row.names=F, col.names=nds@rawData[2,], quote=F))
     }
-    
-    print("b")
     
     if (!all(is.na(nr@houseKeepingVars))) {
         write.table(file=paste(jobdir, "/housekeeping-variables.txt", sep=""), nr@houseKeepingVars, sep="\t", row.names=F, col.names=nds@rawData[2,], quote=F)
     }
     
-    print("c")
-    
     write.table(file=paste(jobdir, "/submitted_rawdata.txt", sep=""), 
                 cbind(nds@rawData[-(1:2), (1:(length(nds@inputHeaderValues) - length(nds@sampleReplicateGroups)))], nds@filterrawdata), sep="\t", row.names=F,
                 col.names=nds@rawData[2,], quote=F)
 
-    print("d")
-  
     return(nr)
-      
-    # methodlist <- list(methodlist, methodnames, nds@rawData, nds@filterrawdata, nds@sampleReplicateGroups, !is.null(nr@houseKeepingVars))
-    # return(methodlist)
 }
 
 generateNormalyzerResultsObject <- function(nds) {

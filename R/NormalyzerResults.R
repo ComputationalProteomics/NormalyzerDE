@@ -63,15 +63,7 @@ NormalyzerResults <- setClass("NormalyzerResults",
                                   kwfdr = "matrix"
 
                               ),
-                              prototype=prototype(nds=NULL, normfinderMaxThreshold=50, furtherNormalizationMinThreshold=50))
-
-# setGeneric(name="", function(nr) standardGeneric(""))
-# setMethod("", "NormalyzerResults",
-#           function(nr) {
-#               nds <- nr@nds
-# 
-#               nr
-#           })
+                              prototype=prototype(nds=NULL, normfinderMaxThreshold=1000, furtherNormalizationMinThreshold=50))
 
 setGeneric(name="initializeResultsObject", function(nr) standardGeneric("initializeResultsObject"))
 setGeneric(name="performNormalizations", function(nr) standardGeneric("performNormalizations"))
