@@ -11,8 +11,8 @@ normMethods <- function(nds, currentjob, jobdir) {
     # methodnames <- getMethodNames(!is.null(nr@houseKeepingVars))
 
     methodnames <- getMethodNames(nr)
-    slotNameList <- getSlotNameList(nr)
-    
+    methodlist <- getNormalizationMatrices(nr)
+        
     # print(methodnames)
     # print(methodlist)
     # 
@@ -41,13 +41,13 @@ normMethods <- function(nds, currentjob, jobdir) {
     
     for (sampleIndex in 1:length(methodnames)) {
         
-        # write.table(file=paste(jobdir, "/", methodnames[sampleIndex], "-normalized.txt", sep=""), 
-        #             cbind(nds@rawData[-(1:2), (1:(length(nds@inputHeaderValues) - length(nds@sampleReplicateGroups)))], 
-        #                   methodlist[[sampleIndex]]), sep="\t", row.names=F, col.names=nds@rawData[2,], quote=F)
-        
         write.table(file=paste(jobdir, "/", methodnames[sampleIndex], "-normalized.txt", sep=""),
                     cbind(nds@rawData[-(1:2), (1:(length(nds@inputHeaderValues) - length(nds@sampleReplicateGroups)))],
-                          slot(nr, slotNameList[[sampleIndex]]), sep="\t", row.names=F, col.names=nds@rawData[2,], quote=F))
+                          methodlist[[sampleIndex]]), sep="\t", row.names=F, col.names=nds@rawData[2,], quote=F)
+        
+        # write.table(file=paste(jobdir, "/", methodnames[sampleIndex], "-normalized.txt", sep=""),
+        #             cbind(nds@rawData[-(1:2), (1:(length(nds@inputHeaderValues) - length(nds@sampleReplicateGroups)))],
+        #                   slot(nr, slotNameList[[sampleIndex]]), sep="\t", row.names=F, col.names=nds@rawData[2,], quote=F))
     }
     
     print("b")
