@@ -2,28 +2,53 @@
 
 # Master method for stats calculations for normalizations
 # as well as generation of full set of visualizations
-analyzeAndPlot <- function(normalizedData, name, outputDir=NULL) {
+analyzeAndPlot <- function(nr, name, outputDir=NULL) {
+    # analyzeAndPlot <- function(normalizedData, name, outputDir=NULL) {
+
+
+    nr <- analyzeNormalizations(nr, name)   
+    # analyzeOutputs <- analyzeNormalizations(normalizedData, name)   
     
-    analyzeOutputs <- analyzeNormalizations(normalizedData, name)   
     
-    # print(paste("analyzeOutputs", analyzeOutputs))
+    # list(currentjob, filterrawdata, methodlist, filterED, avgcvmem, methodnames, avgmadmem, avgvarmem, 
+    #      avgcvmempdiff, avgmadmempdiff, avgvarmempdiff, nonsiganfdrlist, nonsiganfdrlistcvpdiff, anfdr, kwfdr)
+
+    nds <- nr@nds
     
     # Temporary intermediate step
-    currentJob <- analyzeOutputs[[1]]
-    filterRawData <- analyzeOutputs[[2]]
-    methodList <- analyzeOutputs[[3]]
-    filterED <- analyzeOutputs[[4]]
-    avgCVMem <- analyzeOutputs[[5]]
-    methodNames <- analyzeOutputs[[6]]
-    avgMadMem <- analyzeOutputs[[7]]
-    avgVarMem <- analyzeOutputs[[8]]
-    avgCvMemPdiff <- analyzeOutputs[[9]]
-    avgMadMemPdiff <- analyzeOutputs[[10]]
-    avgVarMemPdiff <- analyzeOutputs[[11]]
-    nonSigAnFDRList <- analyzeOutputs[[12]]
-    nonSigAnFDRListCvPdiff <- analyzeOutputs[[13]]
-    anfdr <- analyzeOutputs[[14]]
-    kwfdr <- analyzeOutputs[[15]]
+    currentJob <- nds@jobName
+    filterRawData <- nds@filterrawdata
+    methodList <- getNormalizationMatrices(nr)  # <- Approach this? getMethodList(nr) ?
+    filterED <- nds@sampleReplicateGroups
+    avgCVMem <- nr@avgcvmem
+    methodNames <- getMethodNames(nr)
+    avgMadMem <- nr@avgmadmem
+    avgVarMem <- nr@avgvarmem
+    avgCvMemPdiff <- nr@avgcvmempdiff
+    avgMadMemPdiff <- nr@avgmadmempdiff
+    avgVarMemPdiff <- nr@avgvarmempdiff
+    nonSigAnFDRList <- nr@nonsiganfdrlist
+    nonSigAnFDRListCvPdiff <- nr@nonsiganfdrlistcvpdiff
+    anfdr <- nr@anfdr
+    kwfdr <- nr@kwfdr
+    
+    varprint(methodNames)
+    
+    # currentJob <- analyzeOutputs[[1]]
+    # filterRawData <- analyzeOutputs[[2]]
+    # methodList <- analyzeOutputs[[3]]
+    # filterED <- analyzeOutputs[[4]]
+    # avgCVMem <- analyzeOutputs[[5]]
+    # methodNames <- analyzeOutputs[[6]]
+    # avgMadMem <- analyzeOutputs[[7]]
+    # avgVarMem <- analyzeOutputs[[8]]
+    # avgCvMemPdiff <- analyzeOutputs[[9]]
+    # avgMadMemPdiff <- analyzeOutputs[[10]]
+    # avgVarMemPdiff <- analyzeOutputs[[11]]
+    # nonSigAnFDRList <- analyzeOutputs[[12]]
+    # nonSigAnFDRListCvPdiff <- analyzeOutputs[[13]]
+    # anfdr <- analyzeOutputs[[14]]
+    # kwfdr <- analyzeOutputs[[15]]
 
     if (is.null(outputDir)) {
         jobdir <- paste(getwd(), "/", currentJob[1], sep="")
@@ -34,50 +59,74 @@ analyzeAndPlot <- function(normalizedData, name, outputDir=NULL) {
         
     print("DEBUG: Calling generatePlots...")
     
+    # Don't go in and refactor here until things are working fine up to this point
     generatePlots(normalizedData, name, currentJob, filterRawData, methodList, filterED, avgCVMem, methodNames, avgMadMem, avgVarMem, 
                   avgCvMemPdiff, avgMadMemPdiff, avgVarMemPdiff, nonSigAnFDRList, nonSigAnFDRListCvPdiff, anfdr, kwfdr, jobdir)
 }
 
-analyzeNormalizations <- function(normalizeddata, name) {
-    
+analyzeNormalizations <- function(nr, name) {
+    # analyzeNormalizations <- function(normalizeddata, name) {
+        
     print("DEBUG: analyzeAndPlot entered")
     
     # Analysis takes too long, rewriting needed
     currentjob <- name
     
+    # What is this?
     if (is.na(currentjob[2])) {
         currentjob[2] <- currentjob[1]
     }
     
-    methodlist <- normalizeddata[[1]]
-    methodnames <- normalizeddata[[2]]
-    getrawdata <- normalizeddata[[3]]
-    filterrawdata <- normalizeddata[[4]]
-    filterED <- normalizeddata[[5]]
-    getEDdata <- ((getrawdata[1,]))
-    HKflag <- normalizeddata[[6]]
+    # methodlist <- normalizeddata[[1]]
+    # methodnames <- normalizeddata[[2]]
+    # getrawdata <- normalizeddata[[3]]
+    # filterrawdata <- normalizeddata[[4]]
+    # filterED <- normalizeddata[[5]]
+    # getEDdata <- ((getrawdata[1,]))
+    # HKflag <- normalizeddata[[6]]
+    
+    nds <- nr@nds
+    
+    # methodlist <- normalizeddata[[1]]
+    slotNameList <- getSlotNameList(nr)
+    methodnames <- getMethodNames(nr)
+    getrawdata <- nds@rawData
+    filterrawdata <- nds@filterrawdata
+    filterED <- nds@sampleReplicateGroups
+    getEDdata <- nds@inputHeaderValues
+    HKflag <- !is.null(nr@houseKeepingVars)
+    
+    methodCount <- length(methodnames)
     
     pooledvarmem <- vector()
     Medianofsamples <- vector()
     datamadsamplesmem <- vector()
     datalabels <- vector()
+
+    rowCount <- length(levels(as.factor(unlist(filterED))))
+        
+    avgcvmem <- matrix(nrow=rowCount, ncol=methodCount, byrow=T)
+    avgmadmem <- matrix(nrow=rowCount, ncol=methodCount, byrow=T)
+    avgvarmem <- matrix(nrow=rowCount, ncol=methodCount, byrow=T)
+    datamadpeptmem <- matrix(nrow=nrow(filterrawdata), ncol=methodCount, byrow=T)
     
-    avgcvmem <- matrix(nrow=length(levels(as.factor(unlist(filterED)))), ncol=length(methodlist), byrow=T)
-    avgmadmem <- matrix(nrow=length(levels(as.factor(unlist(filterED)))), ncol=length(methodlist), byrow=T)
-    avgvarmem <- matrix(nrow=length(levels(as.factor(unlist(filterED)))), ncol=length(methodlist), byrow=T)
-    datamadpeptmem <- matrix(nrow=nrow(filterrawdata), ncol=length(methodlist), byrow=T)
+    # avgcvmem <- matrix(nrow=length(levels(as.factor(unlist(filterED)))), ncol=methodCount, byrow=T)
+    # avgmadmem <- matrix(nrow=length(levels(as.factor(unlist(filterED)))), ncol=methodCount, byrow=T)
+    # avgvarmem <- matrix(nrow=length(levels(as.factor(unlist(filterED)))), ncol=methodCount, byrow=T)
+    # datamadpeptmem <- matrix(nrow=nrow(filterrawdata), ncol=length(methodlist), byrow=T)
     
     anpvalue <- vector()
     anfdr <- vector()
     kwpvalue <- vector()
     kwfdr <- vector()
     
-    for (meti in 1:length(methodlist)) {
+    for (meti in 1:methodCount) {
         
         # print(paste("Processing: ", methodlist[[meti]]))
         print(paste("Processing methodlist index: ", meti))
         
-        datastore <- (methodlist[[meti]])
+        datastore <- slot(nr, slotNameList[[meti]])
+        # datastore <- methodlist[[meti]]
         templabel <- methodnames[meti]
         
         datamadsamples <- NA
@@ -110,7 +159,7 @@ analyzeNormalizations <- function(normalizeddata, name) {
                 
                 y <- i-1
                 if (i == length(filterED)) {
-                    y<-i
+                    y <- i
                 }
                 
                 if (flag == 1) {
@@ -122,9 +171,9 @@ analyzeNormalizations <- function(normalizeddata, name) {
                 
                 if (flag == 2) {  
                     count <- count + 1
-                    madmem[, count] <- apply(datastore[, z:y], 1, function(x) { mad(x,na.rm=T) })  
+                    madmem[, count] <- apply(datastore[, z:y], 1, function(x) { mad(x, na.rm=T) })  
                     nonmissingmat <- (apply(datastore[, z:y], 1, function(x) { ((sum(!is.na(x)))) })) - 1
-                    tempvar <- nonmissingmat * apply(datastore[, z:y], 1, function(x) { var(x,na.rm=TRUE) })
+                    tempvar <- nonmissingmat * apply(datastore[, z:y], 1, function(x) { var(x, na.rm=TRUE) })
                 }
                 
                 varmem <- c(varmem, ((sum(tempvar, na.rm=T)) / (sum(nonmissingmat, na.rm=T))))
@@ -171,7 +220,7 @@ analyzeNormalizations <- function(normalizeddata, name) {
     avgmadmempdiff <- sapply(1:ncol(avgmadmem), function (x) (mean(avgmadmem[, x]) * 100) / mean(avgmadmem[, 1]))
     avgvarmempdiff <- sapply(1:ncol(avgvarmem), function (x) (mean(avgvarmem[, x]) * 100) / mean(avgvarmem[, 1]))
     
-    print(anfdr)
+    # print(anfdr)
     
     # finds top 5% of least DE variables in log2 data based on ANOVA
     # generates error if it doesnt find leastDE peptides
@@ -187,16 +236,47 @@ analyzeNormalizations <- function(normalizeddata, name) {
     # }
     
     nonsiganfdrlistcv <- vector()
-    for (mlist in 1:length(methodlist)) {
-        tmpdata <- (methodlist[[mlist]][nonsiganfdrlist, ])
+    for (mlist in 1:methodCount) {
+        
+        datastore <- slot(nr, slotNameList[[meti]])
+        tmpdata <- datastore[nonsiganfdrlist, ]
+        # datastore <- methodlist[[meti]]
+        
+        # tmpdata <- methodlist[[mlist]][nonsiganfdrlist, ]
+        # tmpdata <- methodlist[[mlist]][nonsiganfdrlist, ]
         nonsiganfdrlistcv[mlist] <- mean(apply(tmpdata, 1, function(x) cv(x, na.rm=T)), na.rm=T)
     }
     
     nonsiganfdrlistcvpdiff <- sapply(1:length(nonsiganfdrlistcv), function(x) (nonsiganfdrlistcv[x] * 100) / nonsiganfdrlistcv[1])
     print("Finished analysis, preparing plots and report...")
+
+    # varprint(avgmadmem)
+    # varprint(avgvarmem)
+    # varprint(avgcvmempdiff)
+    # varprint(avgmadmempdiff)
+    # varprint(avgvarmempdiff)
+    # varprint(nonsiganfdrlist)
+    # varprint(nonsiganfdrlistcvpdiff)
+    # varprint(anfdr)
+    # varprint(kwfdr)
     
-    list(currentjob, filterrawdata, methodlist, filterED, avgcvmem, methodnames, avgmadmem, avgvarmem, 
-         avgcvmempdiff, avgmadmempdiff, avgvarmempdiff, nonsiganfdrlist, nonsiganfdrlistcvpdiff, anfdr, kwfdr)
+    # varprint(avgcvmem)
+    
+    nr@avgcvmem <- avgcvmem
+    nr@avgmadmem <- avgmadmem
+    nr@avgvarmem <- avgvarmem
+    nr@avgcvmempdiff <- avgcvmempdiff
+    nr@avgmadmempdiff <- avgmadmempdiff
+    nr@avgvarmempdiff <- avgvarmempdiff
+    nr@nonsiganfdrlist <- nonsiganfdrlist
+    nr@nonsiganfdrlistcvpdiff <- nonsiganfdrlistcvpdiff
+    nr@anfdr <- anfdr
+    nr@kwfdr <- kwfdr
+
+    nr
+            
+    # list(currentjob, filterrawdata, methodlist, filterED, avgcvmem, methodnames, avgmadmem, avgvarmem, 
+    #      avgcvmempdiff, avgmadmempdiff, avgvarmempdiff, nonsiganfdrlist, nonsiganfdrlistcvpdiff, anfdr, kwfdr)
 }
 
 ## Removes rows from dataMatrix where not every replicate is represented by at least one TRUE value
@@ -376,36 +456,44 @@ plotCV <- function(methodnames, avgcvmem, avgmadmem, avgvarmem, currentLayout, p
     tout <- rbind(c(1,2,3), c(4))
     layout(tout)
     par(mar=c(2,2,2,1), oma=c(2,2,3,2), xpd=NA)
+    
+    varprint(avgcvmem)
+    
     boxplot(avgcvmem, main="PCV - Intragroup", names=c(methodnames), border="red", density=20, cex=0.3, cex.axis=0.9, las=2, frame.plot=F)
     stripchart(as.data.frame(avgcvmem), vertical=T, cex=0.4, las=2, pch=20, add=T, col="darkgray")
     boxplot(avgmadmem, main="PMAD - Intragroup", names=c(methodnames), border="red", density=20, cex=0.3, cex.axis=0.9, las=2, frame.plot=F)
     stripchart(as.data.frame(avgmadmem), vertical=T, cex=0.4, las=2, pch=20, add=T, col="darkgray")
     boxplot(avgvarmem,main="PEV - Intragroup", names=c(methodnames), border="red", density=20, cex=0.3, cex.axis=0.9, las=2, frame.plot=F)
     stripchart(as.data.frame(avgvarmem), vertical=T, cex=0.4, las=2, pch=20, add=T, col="darkgray")
+    
     pushViewport(viewport(layout=currentLayout))
     printMeta("Replicate variation", pageno, currentjob[2])
 }
 
 # Replicate variation is plotted in percentage difference
 plotReplicateVarAndStableVariables <- function(methodlist, methodnames, currentLayout, pageno, currentjob, nonsiganfdrlistcvpdiff, 
-                                avgcvmempdiff, avgmadmempdiff, avgvarmempdiff) {
+                                               avgcvmempdiff, avgmadmempdiff, avgvarmempdiff) {
 
-    tout <- rbind(c(1,2,3), c(4,5,5))
+    
+    print(methodnames)
+    print(c(methodnames))
+    
+    tout <- rbind(c(1, 2, 3), c(4, 5, 5))
     layout(tout)
-    par(mar=c(6,6,3,1), oma=c(2,3,3,2), xpd=NA)
+    par(mar=c(6, 6, 3, 1), oma=c(2, 3, 3, 2), xpd=NA)
     abc <- barplot(avgcvmempdiff, main="PCV compared to log2 ", names.arg=c(methodnames), border="red", 
-                   ylim=c(min(avgcvmempdiff)-10, (max(avgmadmempdiff))+5), density=20, cex=0.9, cex.axis=0.7, las=2, xpd=F)
-    axis(1, at=c(0.2, (max(abc)+0.5)), labels=F, lwd.ticks=0)
+                   ylim=c(min(avgcvmempdiff) - 10, (max(avgmadmempdiff)) + 5), density=20, cex=0.9, cex.axis=0.7, las=2, xpd=F)
+    axis(1, at=c(0.2, (max(abc) + 0.5)), labels=F, lwd.ticks=0)
     axis(1, at=abc, labels=F, lwd=0, lwd.ticks=1)
     text(abc,avgcvmempdiff, labels=round(avgcvmempdiff, digits=0), pos=3, las=2)  
     abc<-barplot(avgmadmempdiff, main="PMAD compared to log2", names.arg=c(methodnames), border="red", 
                  ylim=c(min(avgmadmempdiff)-10, (max(avgmadmempdiff))+5), density=20, cex=0.9, cex.axis=0.7, las=2, xpd=F)
-    axis(1, at=c(0.2,(max(abc)+0.5)), labels=F, lwd.ticks=0)
+    axis(1, at=c(0.2, (max(abc) + 0.5)), labels=F, lwd.ticks=0)
     axis(1, at=abc, labels=F, lwd=0, lwd.ticks=1)
     text(abc, avgmadmempdiff, labels=round(avgmadmempdiff, digits=0), pos=3, las=2)
     abc <- barplot(avgvarmempdiff, main="%PEV - compared to log2", names.arg=c(methodnames), border="red", 
-                   ylim=c(min(avgvarmempdiff)-10, (max(avgmadmempdiff))+5), density=20, cex=0.9, cex.axis=0.7, las=2, xpd=F)
-    axis(1, at=c(0.2, (max(abc)+0.5)), labels=F, lwd.ticks=0)
+                   ylim=c(min(avgvarmempdiff) - 10, (max(avgmadmempdiff)) + 5), density=20, cex=0.9, cex.axis=0.7, las=2, xpd=F)
+    axis(1, at=c(0.2, (max(abc) + 0.5)), labels=F, lwd.ticks=0)
     axis(1, at=abc, labels=F, lwd=0, lwd.ticks=1)
     text(abc, avgvarmempdiff, labels=round(avgvarmempdiff, digits=0), pos=3, las=2)
     
@@ -419,6 +507,7 @@ plotReplicateVarAndStableVariables <- function(methodlist, methodnames, currentL
             showLabels(avgcvmempdiff, nonsiganfdrlistcvpdiff, labels=methodnames, id.method="mahal", id.cex=0.7, id.col="black")
         }
     }
+    
     pushViewport(viewport(layout=currentLayout))
     printMeta("Replicate variation (Relative to Log2)", pageno, currentjob[2])
 }

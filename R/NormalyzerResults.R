@@ -33,7 +33,7 @@ NormalyzerResults <- setClass("NormalyzerResults",
                                   furtherNormalizationMinThreshold="numeric",
                                   
                                   houseKeepingVars="matrix",
-                                  
+
                                   data2log2 = "matrix",
                                   data2limloess = "matrix",
                                   fittedLR = "matrix",
@@ -48,7 +48,19 @@ NormalyzerResults <- setClass("NormalyzerResults",
                                   data2quantile = "matrix",
                                   
                                   data2ctr = "matrix",
-                                  data2mad = "matrix"
+                                  data2mad = "matrix",
+                                  
+                                  # Evaluation measures
+                                  avgcvmem = "matrix",
+                                  avgmadmem = "matrix",
+                                  avgvarmem = "matrix",
+                                  avgcvmempdiff = "numeric",
+                                  avgmadmempdiff = "numeric",
+                                  avgvarmempdiff = "numeric",
+                                  nonsiganfdrlist = "numeric",
+                                  nonsiganfdrlistcvpdiff = "numeric",
+                                  anfdr = "matrix",
+                                  kwfdr = "matrix"
 
                               ),
                               prototype=prototype(nds=NULL, normfinderMaxThreshold=1000, furtherNormalizationMinThreshold=50))
@@ -75,6 +87,7 @@ setGeneric(name="performReplicateBasedNormalizations", function(nr) standardGene
 
 setGeneric(name="getMethodNames", function(nr) standardGeneric("getMethodNames"))
 setGeneric(name="getSlotNameList", function(nr) standardGeneric("getSlotNameList"))
+setGeneric(name="getNormalizationMatrices", function(nr) standardGeneric("getNormalizationMatrices"))
 
 
 
@@ -300,6 +313,27 @@ setMethod("getSlotNameList", "NormalyzerResults",
               
               methodDataList
           })
+
+setMethod("getNormalizationMatrices", "NormalyzerResults",
+          function(nr) {
+              methodDataList <- list()
+              
+              listCounter <- 1
+              for (i in 1:length(slotNames)) {
+                  slotName <- slotNames[i]
+                  fieldValue <- slot(nr, slotName)
+                  
+                  if (!all(is.na(fieldValue))) {
+                      methodDataList[[listCounter]] <- fieldValue
+                      listCounter <- listCounter + 1
+                  }
+              }
+              
+              methodDataList
+          })
+
+
+
 
 
 

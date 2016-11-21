@@ -78,7 +78,8 @@ normalyzer <- function(datafile, jobName, outputDir=NULL) {
     # try.result <- try(normalizeddata <- normMethods(datafile, getjob))
     
     # normalizeddata <- normMethods(datafile, getjob, outputDir=outputDir)
-    normalizeddata <- normMethods(normObj, jobName, jobDir)
+    # normalizeddata <- normMethods(normObj, jobName, jobDir)
+    normalyzerResultsObject <- normMethods(normObj, jobName, jobDir)
     
     # if (inherits(try.result, "try-error")) {
     #     return(try.result)
@@ -88,8 +89,11 @@ normalyzer <- function(datafile, jobName, outputDir=NULL) {
     print("Analyzing data....")
     
     # try.result <- try(analyzeAndPlot(normalizeddata, getjob))
-    analyzeAndPlot(normalizeddata, jobName, outputDir=outputDir)
+    # analyzeAndPlot(normalizeddata, jobName, outputDir=outputDir)
+    analyzeAndPlot(normalyzerResultsObject, jobName, outputDir=outputDir)
     
+    
+        
     # if(inherits(try.result, "try-error")){
     #     return(try.result)
     # }

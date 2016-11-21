@@ -37,10 +37,9 @@ normMethods <- function(nds, currentjob, jobdir) {
     #     
     # }
 
+    print("a")
+    
     for (sampleIndex in 1:length(methodnames)) {
-        
-        print(slotNameList)
-        print(slotNameList[[sampleIndex]])
         
         # write.table(file=paste(jobdir, "/", methodnames[sampleIndex], "-normalized.txt", sep=""), 
         #             cbind(nds@rawData[-(1:2), (1:(length(nds@inputHeaderValues) - length(nds@sampleReplicateGroups)))], 
@@ -51,16 +50,24 @@ normMethods <- function(nds, currentjob, jobdir) {
                           slot(nr, slotNameList[[sampleIndex]]), sep="\t", row.names=F, col.names=nds@rawData[2,], quote=F))
     }
     
+    print("b")
+    
     if (!all(is.null(nr@houseKeepingVars))) {
         write.table(file=paste(jobdir, "/housekeeping-variables.txt", sep=""), nr@houseKeepingVars, sep="\t", row.names=F, col.names=nds@rawData[2,], quote=F)
     }
     
+    print("c")
+    
     write.table(file=paste(jobdir, "/submitted_rawdata.txt", sep=""), 
                 cbind(nds@rawData[-(1:2), (1:(length(nds@inputHeaderValues) - length(nds@sampleReplicateGroups)))], nds@filterrawdata), sep="\t", row.names=F,
                 col.names=nds@rawData[2,], quote=F)
-    methodlist <- list(methodlist, methodnames, nds@rawData, nds@filterrawdata, nds@sampleReplicateGroups, !is.null(nr@houseKeepingVars))
-    
-    return(methodlist)
+
+    print("d")
+  
+    return(nr)
+      
+    # methodlist <- list(methodlist, methodnames, nds@rawData, nds@filterrawdata, nds@sampleReplicateGroups, !is.null(nr@houseKeepingVars))
+    # return(methodlist)
 }
 
 generateNormalyzerResultsObject <- function(nds) {
