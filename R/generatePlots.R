@@ -154,7 +154,14 @@ plotFrontPage <- function(currentjob, currentFont) {
               vp=viewport(layout.pos.row=7), just=c("center","center"), gp=gpar(fontsize=10, fontfamily=currentFont, col="black"))
 }
 
-plotTI <- function(methodlist, filterED, filterrawdata, currentLayout, pageno, currentjob) {
+plotTI <- function(nr, currentLayout, pageno) {
+    # plotTI <- function(methodlist, filterED, filterrawdata, currentLayout, pageno, currentjob) {
+        
+    nds <- nr@nds
+    methodlist <- getNormalizationMatrices(nr)
+    filterED <- nds@sampleReplicateGroups
+    filterrawdata <- nds@filterrawdata
+    currentjob <- nds@jobName
     
     tout <- rbind(c(1,2), c(3,4))
     layout(tout)
@@ -174,13 +181,21 @@ plotTI <- function(methodlist, filterED, filterrawdata, currentLayout, pageno, c
     printMeta("Data Summary - Outlier detection", pageno, currentjob[2])
 }
 
-plotCV <- function(methodnames, avgcvmem, avgmadmem, avgvarmem, currentLayout, pageno, currentjob) {
+plotCV <- function(nr, currentLayout, pageno) {
+    # plotCV <- function(methodnames, avgcvmem, avgmadmem, avgvarmem, currentLayout, pageno, currentjob) {
+        
+    nds <- nr@nds
+    methodnames <- getMethodNames(nr)
+    currentjob <- nds@jobName
+    
+    ner <- nr@ner
+    avgcvmem <- ner@avgcvmem
+    avgmadmem <- ner@avgmadmem
+    avgvarmem <- ner@avgvarmem
     
     tout <- rbind(c(1, 2, 3), c(4))
     layout(tout)
     par(mar=c(2, 2, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
-    
-    varprint(avgcvmem)
     
     boxplot(avgcvmem, main="PCV - Intragroup", names=c(methodnames), border="red", density=20, cex=0.3, cex.axis=0.9, las=2, frame.plot=F)
     stripchart(as.data.frame(avgcvmem), vertical=T, cex=0.4, las=2, pch=20, add=T, col="darkgray")
@@ -194,9 +209,10 @@ plotCV <- function(methodnames, avgcvmem, avgmadmem, avgvarmem, currentLayout, p
 }
 
 # Replicate variation is plotted in percentage difference
-plotReplicateVarAndStableVariables <- function(methodlist, methodnames, currentLayout, pageno, currentjob, nonsiganfdrlistcvpdiff, 
-                                               avgcvmempdiff, avgmadmempdiff, avgvarmempdiff) {
-
+plotReplicateVarAndStableVariables <- function(nr, currentLayout, pageno) {
+    # plotReplicateVarAndStableVariables <- function(methodlist, methodnames, currentLayout, pageno, currentjob, nonsiganfdrlistcvpdiff, 
+    #                                                avgcvmempdiff, avgmadmempdiff, avgvarmempdiff) {
+        
     
     print(methodnames)
     print(c(methodnames))
@@ -238,8 +254,9 @@ plotReplicateVarAndStableVariables <- function(methodlist, methodnames, currentL
     printMeta("Replicate variation (Relative to Log2)", pageno, currentjob[2])
 }
 
-plotCVvsIntensity <- function(methodlist, methodnames, filterED, filterrawdata, currentLayout, pageno, currentjob) {
-    
+plotCVvsIntensity <- function(nr, currentLayout, pageno) {
+    # plotCVvsIntensity <- function(methodlist, methodnames, filterED, filterrawdata, currentLayout, pageno, currentjob) {
+        
     datastore <- methodlist[[1]]
     tempcvmat1 <- matrix(nrow=nrow(datastore), ncol=length(methodlist), byrow=T)
     tempavgmat1 <- matrix(nrow=nrow(datastore), ncol=length(methodlist), byrow=T)
@@ -275,8 +292,9 @@ plotCVvsIntensity <- function(methodlist, methodnames, filterED, filterrawdata, 
     printMeta("CV vs Raw Intensity plots", pageno, currentjob[2])
 }
 
-plotMA <- function(methodlist, methodnames, filterED, currentLayout, pageno, currentjob) {
-    
+plotMA <- function(nr, currentLayout, pageno) {
+    # plotMA <- function(methodlist, methodnames, filterED, currentLayout, pageno, currentjob) {
+        
     print("in plotMA")
     
     Malist <- list()
@@ -311,8 +329,9 @@ plotMA <- function(methodlist, methodnames, filterED, currentLayout, pageno, cur
     print("returning from plotMA")
 }
 
-plotScatter <- function(methodlist, methodnames, currentLayout, pageno, currentjob) {
-    
+plotScatter <- function(nr, currentLayout, pageno) {
+    # plotScatter <- function(methodlist, methodnames, currentLayout, pageno, currentjob) {
+        
     tout<-rbind(c(1,2,3,4), c(5,6,7,8), c(9,10,11,12))
     layout(tout)
     par(mar=c(2,2,2,1), oma=c(3,2,3,2), xpd=NA)
@@ -327,39 +346,44 @@ plotScatter <- function(methodlist, methodnames, currentLayout, pageno, currentj
     printMeta("Scatterplots", pageno, currentjob[2])
 }
 
-plotQQ <- function(methodlist, methodnames, currentLayout, pageno, currentjob) {
-    
+plotQQ <- function(nr, currentLayout, pageno) {
+    # plotQQ <- function(methodlist, methodnames, currentLayout, pageno, currentjob) {
+        
     qqlist <- list()
+    
     for(i in 1:length(methodlist)) {  
         datastore <- (methodlist[[i]])
         tempcolname <- colnames(datastore)
         #qqnorm(datastore[,1],main=paste(tempcolname[1],methodnames[i]),xlab="",ylab="")
         qqlist[[i]] <- qplot(sample=datastore[,1], stat="qq") + labs(x=(""), y=(""), title=(paste(tempcolname[1], methodnames[i])))
     }
+    
     grid.newpage()
     pushViewport(viewport(layout=currentLayout))
     printPlots(qqlist, "Q-Q plots", pageno, currentjob[2])
 }
 
-plotBoxPlot <- function(methodlist, methodnames, filterED, currentLayout, pageno, currentjob) {
-    
+plotBoxPlot <- function(nr, currentLayout, pageno) {
+    # plotBoxPlot <- function(methodlist, methodnames, filterED, currentLayout, pageno, currentjob) {
+        
     tout<-rbind(c(1,2,3,4), c(5,6,7,8), c(9,10,11,12))
     layout(tout)
     par(mar=c(2,2,2,1), oma=c(3,2,3,2), xpd=NA)
     mindata <- 1000
     maxdata <- 0
     
-    for(i in 1:length(methodlist)) { 
+    for (i in 1:length(methodlist)) { 
         tempmin <- min(methodlist[[i]], na.rm=T)
         tempmax <- max(methodlist[[i]], na.rm=T)
-        if(tempmin < mindata) {
+        if (tempmin < mindata) {
             mindata <- tempmin
         }
-        if(tempmax > maxdata) {
+        if (tempmax > maxdata) {
             maxdata <- tempmax
         }
     }
-    for(i in 1:length(methodlist)) {   
+    
+    for (i in 1:length(methodlist)) {   
         par(mar=c(5,1,1,1))
         boxplot(methodlist[[i]], cex=0.1, cex.axis=0.7, las=2, main=methodnames[i], col=(filterED), outcol="lightgray", 
                 ylim=c((mindata-1), (maxdata+1)), names=substr(colnames(methodlist[[i]]), 1, 10))
@@ -370,45 +394,51 @@ plotBoxPlot <- function(methodlist, methodnames, filterED, currentLayout, pageno
 }
 
 # Visualize Relative Log Expression (RLE)
-plotRLE <- function(methodlist, methodnames, filterED, currentLayout, pageno, currentjob) {
-    
+plotRLE <- function(nr, currentLayout, pageno) {
+    # plotRLE <- function(methodlist, methodnames, filterED, currentLayout, pageno, currentjob) {
+        
     tout<-rbind(c(1,2,3,4), c(5,6,7,8), c(9,10,11,12))
     layout(tout)
     par(mar=c(2,2,2,1), oma=c(3,2,3,2), xpd=NA)
-    for(i in 1:length(methodlist)) {  
+    
+    for (i in 1:length(methodlist)) {
         deviations = methodlist[[i]] - rowMedians(methodlist[[i]], na.rm=T)
         boxplot(deviations, outcol="lightgray", cex=0.1, cex.axis=0.7, las=2, main=methodnames[i], col=(filterED), names=substr(colnames(methodlist[[i]]), 1, 6))
     }
+    
     pushViewport(viewport(layout=currentLayout))
     printMeta("Relative Log Expression (RLE) plots", pageno, currentjob[2])
 }
 
-plotDensity <- function(methodlist, methodnames, currentLayout, pageno, currentjob) {
-    
+plotDensity <- function(nr, currentLayout, pageno) {
+    # plotDensity <- function(methodlist, methodnames, currentLayout, pageno, currentjob) {
+        
     tout <- rbind(c(1,2,3,4), c(5,6,7,8), c(9,10,11,12))
     layout(tout)
     par(mar=c(3,2,3,1), oma=c(3,2,3,2), xpd=NA)
-    for (i in 1:length(methodlist))
-    {  
+    
+    for (i in 1:length(methodlist)) {
         datastore <- (methodlist[[i]])
         tempd <- density(datastore[,1], na.rm=T)
         plot(density(datastore[,1], na.rm=T), xlab="", ylab="", ylim=c(min(tempd$y), max(tempd$y)*1.5), main=methodnames[i], lty=2, lwd=1, col="darkgray")
-        for (j in 2:ncol(datastore))
-        {
+        
+        for (j in 2:ncol(datastore)) {
             lines(density(datastore[,j], na.rm=T), , lty=2, lwd=1, col="darkgray")
         }
-    } 
+    }
+    
     pushViewport(viewport(layout=currentLayout))
     printMeta("Density plots", pageno, currentjob[2])
 }
 
-plotMDS <- function(methodlist, methodnames, filterED, currentLayout, pageno, currentjob) {
-    
+plotMDS <- function(nr, currentLayout, pageno) {
+    # plotMDS <- function(methodlist, methodnames, filterED, currentLayout, pageno, currentjob) {
+        
     tout<-rbind(c(1,2,3,4), c(5,6,7,8), c(9,10,11,12))
     layout(tout)
     par(mar=c(2,2,2,1), oma=c(3,2,3,2), xpd=NA)
 
-    for(i in 1:length(methodlist)) {
+    for (i in 1:length(methodlist)) {
         datastore <- (methodlist[[i]])
         d <- dist(scale(t(na.omit(datastore)),center=TRUE,scale=TRUE))
         fit <- cmdscale(d,eig=TRUE,k=2)
@@ -417,18 +447,19 @@ plotMDS <- function(methodlist, methodnames, filterED, currentLayout, pageno, cu
         plot(x, y, type="n", main=methodnames[i], xlab="", ylab="")
         text((fit$points[,1]), (fit$points[,2]), col=filterED, labels=filterED)
     }
+    
     pushViewport(viewport(layout=currentLayout))
     printMeta(paste("MDS plots - Built from", ncol(d), "variables with non-missing data", sep=" "), pageno, currentjob[2])
 }
 
-plotMeanSD <- function(methodlist, methodnames, currentLayout, pageno, currentjob) {
-    
+plotMeanSD <- function(nr, currentLayout, pageno) {
+    # plotMeanSD <- function(methodlist, methodnames, currentLayout, pageno, currentjob) {
+        
     tout <- rbind(c(1,2,3,4), c(5,6,7,8), c(9,10,11,12))
     layout(tout)
     par(mar=c(2,2,2,1), oma=c(3,2,3,2), xpd=NA)
     
-    for (i in 1:length(methodlist))
-    {  
+    for (i in 1:length(methodlist)) {  
         datastore <- (methodlist[[i]])
         print(paste("Feeding method name: ", methodnames[i]))
         
@@ -450,15 +481,16 @@ calculateCorrelations <- function(methodlist, filterED) {
     avgpercorsum <- list()
     avgspecorsum <- list()
     corsum <- vector()
-    for(i in 1:length(methodlist)) {
+    
+    for (i in 1:length(methodlist)) {
         percorsum <- vector()
         specorsum <- vector()
         
         flag1 <- 1
         datastore <- as.matrix(methodlist[[i]])
         un <- unique(filterED)
-        for(uq in 1:length(un))
-        {
+        
+        for (uq in 1:length(un)) {
             dt <- as.matrix(datastore[,which(filterED==un[uq])])
             class(dt) <- "numeric"
             percor <- cor(dt, use="pairwise.complete.obs", method="pearson")
@@ -469,6 +501,7 @@ calculateCorrelations <- function(methodlist, filterED) {
                 specorsum <- c(specorsum,spercor[rn,-(1:rn)])
             }
         }
+        
         avgpercorsum[[i]] <- percorsum
         avgspecorsum[[i]] <- specorsum
     }
@@ -476,8 +509,9 @@ calculateCorrelations <- function(methodlist, filterED) {
     list(avgpercorsum, avgspecorsum)
 }
 
-plotCorrelation <- function(methodnames, avgpercorsum, avgspecorsum, currentLayout, pageno, currentjob) {
-    
+plotCorrelation <- function(nr, currentLayout, pageno) {
+    # plotCorrelation <- function(methodnames, avgpercorsum, avgspecorsum, currentLayout, pageno, currentjob) {
+        
     tout <- rbind(c(1,2), c(3))
     layout(tout)
     par(mar=c(2,2,2,1), oma=c(2,2,3,2), xpd=NA)
@@ -491,24 +525,28 @@ plotCorrelation <- function(methodnames, avgpercorsum, avgspecorsum, currentLayo
     printMeta("Correlation plots", pageno,currentjob[2])
 }
 
-plotDendrograms <- function(methodlist, methodnames, filterED, currentLayout, pageno, currentjob) {
-    
+plotDendrograms <- function(nr, currentLayout, pageno) {
+    # plotDendrograms <- function(methodlist, methodnames, filterED, currentLayout, pageno, currentjob) {
+        
     tout <- rbind(c(1,2,3,4), c(5,6,7,8), c(9,10,11,12))
     layout(tout)
     par(mar=c(2,2,2,1), oma=c(2,2,3,2), xpd=NA)
     colt<-(c("red","green","blue","orange","darkgray","blueviolet","darkslateblue","darkviolet","gray","bisque4","brown","cadetblue4","darkgreen","darkcyan","darkmagenta","darkgoldenrod4","coral1"))
-    for(j in 1:length(methodlist))
-    {
+    
+    for (j in 1:length(methodlist)) {
         temp <- scale(t(na.omit(methodlist[[j]])), center=TRUE, scale=TRUE)
         hc <- hclust(dist(temp), "ave")
         plot(as.phylo(hc), main=methodnames[j], cex=0.5, tip.color=colt[filterED])
         axisPhylo(side=1)
     }
+    
     pushViewport(viewport(layout=currentLayout))
     printMeta(paste("Dendrograms - Built from", ncol(temp), "variables containing non-missing data", sep=" "), pageno, currentjob[2])
 }
 
-plotDEPlots <- function(methodnames, anfdr, kwfdr, currentLayout, pageno, currentjob) {
+plotDEPlots <- function(nr, currentLayout, pageno) {
+    # plotDEPlots <- function(methodnames, anfdr, kwfdr, currentLayout, pageno, currentjob) {
+        
     tout <- rbind(c(1,2,3), c(4))
     layout(tout)
     par(mar=c(2,2,2,1), oma=c(2,2,3,2), xpd=NA)

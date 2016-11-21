@@ -47,7 +47,7 @@ normalyzer <- function(datafile, jobName, outputDir=NULL) {
     
     print("Generating plots...")
     generatePlots(normalyzerResultsObject, jobDir)
-
+    
     print(paste("Done! Results are stored in ", jobDir))
 }
 
