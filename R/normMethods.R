@@ -5,19 +5,9 @@ normMethods <- function(nds, currentjob, jobdir) {
     nr <- generateNormalyzerResultsObject(nds)
     nr <- performNormalizations(nr)
     
-    
-    
-    # methodlist <- getMethodList(!is.null(nr@houseKeepingVars), nds)
-    # methodnames <- getMethodNames(!is.null(nr@houseKeepingVars))
-
     methodnames <- getMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
         
-    # print(methodnames)
-    # print(methodlist)
-    # 
-    # stop("")
-    
     # Perform other norm. if the dataset is not small  
     # if (nrow(nds@filterrawdata) > 50) {
     #     
@@ -37,8 +27,6 @@ normMethods <- function(nds, currentjob, jobdir) {
     #     
     # }
 
-    print("a")
-    
     for (sampleIndex in 1:length(methodnames)) {
         
         write.table(file=paste(jobdir, "/", methodnames[sampleIndex], "-normalized.txt", sep=""),
@@ -52,7 +40,7 @@ normMethods <- function(nds, currentjob, jobdir) {
     
     print("b")
     
-    if (!all(is.null(nr@houseKeepingVars))) {
+    if (!all(is.na(nr@houseKeepingVars))) {
         write.table(file=paste(jobdir, "/housekeeping-variables.txt", sep=""), nr@houseKeepingVars, sep="\t", row.names=F, col.names=nds@rawData[2,], quote=F)
     }
     
