@@ -64,6 +64,7 @@ normalyzer <- function(datafile, jobName, outputDir=NULL) {
 
     source("NormalyzerDataset.R")
     source("NormalyzerResults.R")
+    source("NormalizationEvaluationResults.R")
     
     source("utils.R")
     source("inputVerification.R")

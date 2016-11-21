@@ -159,16 +159,20 @@ analyzeNormalizations <- function(nr, name) {
     nonsiganfdrlistcvpdiff <- sapply(1:length(nonsiganfdrlistcv), function(x) (nonsiganfdrlistcv[x] * 100) / nonsiganfdrlistcv[1])
     print("Finished analysis, preparing plots and report...")
     
-    nr@avgcvmem <- avgcvmem
-    nr@avgmadmem <- avgmadmem
-    nr@avgvarmem <- avgvarmem
-    nr@avgcvmempdiff <- avgcvmempdiff
-    nr@avgmadmempdiff <- avgmadmempdiff
-    nr@avgvarmempdiff <- avgvarmempdiff
-    nr@nonsiganfdrlist <- nonsiganfdrlist
-    nr@nonsiganfdrlistcvpdiff <- nonsiganfdrlistcvpdiff
-    nr@anfdr <- anfdr
-    nr@kwfdr <- kwfdr
+    ner <- NormalizationEvaluationResults()
+    
+    ner@avgcvmem <- avgcvmem
+    ner@avgmadmem <- avgmadmem
+    ner@avgvarmem <- avgvarmem
+    ner@avgcvmempdiff <- avgcvmempdiff
+    ner@avgmadmempdiff <- avgmadmempdiff
+    ner@avgvarmempdiff <- avgvarmempdiff
+    ner@nonsiganfdrlist <- nonsiganfdrlist
+    ner@nonsiganfdrlistcvpdiff <- nonsiganfdrlistcvpdiff
+    ner@anfdr <- anfdr
+    ner@kwfdr <- kwfdr
+    
+    nr@ner <- ner
     
     nr
 }

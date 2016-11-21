@@ -1,23 +1,25 @@
 generatePlots <- function(nr, jobdir) {
     
     nds <- nr@nds
+    ner <- nr@ner
     
     name <- nds@jobName
     currentjob <- nds@jobName
     filterrawdata <- nds@filterrawdata
     methodlist <- getNormalizationMatrices(nr)
     filterED <- nds@sampleReplicateGroups
-    avgcvmem <- nr@avgcvmem
     methodnames <- getMethodNames(nr)
-    avgmadmem <- nr@avgmadmem
-    avgvarmem <- nr@avgvarmem
-    avgcvmempdiff <- nr@avgcvmempdiff
-    avgmadmempdiff <- nr@avgmadmempdiff
-    avgvarmempdiff <- nr@avgvarmempdiff
-    nonsiganfdrlist <- nr@nonsiganfdrlist
-    nonsiganfdrlistcvpdiff <- nr@nonsiganfdrlistcvpdiff
-    anfdr <- nr@anfdr
-    kwfdr <- nr@kwfdr
+    
+    avgcvmem <- ner@avgcvmem
+    avgmadmem <- ner@avgmadmem
+    avgvarmem <- ner@avgvarmem
+    avgcvmempdiff <- ner@avgcvmempdiff
+    avgmadmempdiff <- ner@avgmadmempdiff
+    avgvarmempdiff <- ner@avgvarmempdiff
+    nonsiganfdrlist <- ner@nonsiganfdrlist
+    nonsiganfdrlistcvpdiff <- ner@nonsiganfdrlistcvpdiff
+    anfdr <- ner@anfdr
+    kwfdr <- ner@kwfdr
     
     # Setup    
     palette(c("red", "green", "blue", "orange", "darkgray", "blueviolet", "darkslateblue", "darkviolet", "gray", "bisque4",

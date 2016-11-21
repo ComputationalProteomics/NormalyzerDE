@@ -27,6 +27,7 @@ outputNames <- c("Log2",
 NormalyzerResults <- setClass("NormalyzerResults",
                               slots=c(
                                   nds = "NormalyzerDataset",
+                                  ner = "NormalizationEvaluationResults",
                                   
                                   methodnames = "character",
                                   normfinderMaxThreshold="numeric",
@@ -48,20 +49,7 @@ NormalyzerResults <- setClass("NormalyzerResults",
                                   data2quantile = "matrix",
                                   
                                   data2ctr = "matrix",
-                                  data2mad = "matrix",
-                                  
-                                  # Evaluation measures
-                                  avgcvmem = "matrix",
-                                  avgmadmem = "matrix",
-                                  avgvarmem = "matrix",
-                                  avgcvmempdiff = "numeric",
-                                  avgmadmempdiff = "numeric",
-                                  avgvarmempdiff = "numeric",
-                                  nonsiganfdrlist = "numeric",
-                                  nonsiganfdrlistcvpdiff = "numeric",
-                                  anfdr = "matrix",
-                                  kwfdr = "matrix"
-
+                                  data2mad = "matrix"
                               ),
                               prototype=prototype(nds=NULL, normfinderMaxThreshold=1000, furtherNormalizationMinThreshold=50))
 
