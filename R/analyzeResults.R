@@ -138,20 +138,12 @@ analyzeNormalizations <- function(nr, name) {
     
     # finds top 5% of least DE variables in log2 data based on ANOVA
     # generates error if it doesnt find leastDE peptides
-    if(sum(anfdr[, 1] >= min(head(rev(sort(anfdr[, 1])), n=(5 * nrow(anfdr) / 100)))) > 0) {
+    if (sum(anfdr[, 1] >= min(head(rev(sort(anfdr[, 1])), n=(5 * nrow(anfdr) / 100)))) > 0) {
         nonsiganfdrlist <- which(anfdr[, 1] >= min(head(rev(sort(anfdr[, 1])), n=(5 * nrow(anfdr) / 100))))
-    } # else if
-    
-    # (sum(anfdr[,1] > min(head(rev(sort(anfdr[, 1])), n=(5 * nrow(anfdr) / 100)))) > 0) {
-    # nonsiganfdrlist <- which(anfdr[, 1] > min(head(rev(sort(anfdr[,1])), n=(10 * nrow(anfdr) / 100))))
-    # } 
-    # else {
-    #   nonsiganfdrlist <- which(anfdr[, 1] > min(head(rev(sort(anfdr[,1])), n=(20 * nrow(anfdr) / 100))))
-    # }
+    }
     
     nonsiganfdrlistcv <- vector()
     for (mlist in 1:methodCount) {
-        
         tmpdata <- methodlist[[mlist]][nonsiganfdrlist, ]
         nonsiganfdrlistcv[mlist] <- mean(apply(tmpdata, 1, function(x) cv(x, na.rm=T)), na.rm=T)
     }

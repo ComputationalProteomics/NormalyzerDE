@@ -1,40 +1,4 @@
-
 print('Normalyzer sourced')
-
-setupJobDir <- function(jobName, outputDir) {
-    
-    print("DEBUG: Setup job dir called")
-    
-    varprint(jobName)
-    varprint(outputDir)
-    
-    if (is.null(outputDir)) {
-        jobDir <- paste(getwd(), "/", jobName[1], sep="")
-    }
-    else {
-        jobDir <- paste(outputDir, "/", jobName[1], sep="")
-    }
-    createDirectory(jobDir)
-    
-    varprint(jobDir)
-    
-    jobDir
-}
-
-createDirectory <- function(targetPath) {
-    
-    if (file.exists(targetPath)) {
-        abc <- "Directory already exists"
-        class(abc) <- "try-error"
-        if (inherits(abc, "try-error")) {
-            return(abc)
-        }
-        stop("Directory already exists")
-    } 
-    else {
-        dir.create(targetPath)
-    }
-}
 
 normalyzer <- function(datafile, jobName, outputDir=NULL) {
     
@@ -84,7 +48,7 @@ normalyzer <- function(datafile, jobName, outputDir=NULL) {
     print("Generating plots...")
     generatePlots(normalyzerResultsObject, jobDir)
 
-    print("Done! Results are stored in the working directory")
+    print(paste("Done! Results are stored in ", jobDir))
 }
 
 

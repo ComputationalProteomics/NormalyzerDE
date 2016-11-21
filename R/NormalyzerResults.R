@@ -70,7 +70,6 @@ setGeneric(name="getSlotNameList", function(nr) standardGeneric("getSlotNameList
 setGeneric(name="getNormalizationMatrices", function(nr) standardGeneric("getNormalizationMatrices"))
 
 
-
 setMethod("initializeResultsObject", "NormalyzerResults",
           function(nr) {
               
@@ -89,7 +88,6 @@ setMethod("performNormalizations", "NormalyzerResults",
           function(nr) {
               
               nds <- nr@nds
-              
               nr <- basicMetricNormalizations(nr)
               
               if (nrow(nds@normfinderFilterRawData) < nr@normfinderMaxThreshold) {

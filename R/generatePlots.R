@@ -21,20 +21,10 @@ generatePlots <- function(nr, jobdir) {
     anfdr <- ner@anfdr
     kwfdr <- ner@kwfdr
     
-    # Setup    
-    palette(c("red", "green", "blue", "orange", "darkgray", "blueviolet", "darkslateblue", "darkviolet", "gray", "bisque4",
-              "brown", "cadetblue4", "darkgreen", "darkcyan", "darkmagenta", "darkgoldenrod4", "coral1"))
-    
-    # jobdir <- paste(getwd(), "/", currentjob[1], sep="")
-    
-    pdf(file=paste(jobdir, "/Norm_report-", currentjob[1], ".pdf", sep=""), paper="a4r", width=0, height=0)    
-    currentLayout <- grid.layout(nrow=5, ncol=6, heights=c(0.1, 1, 1, 1, 0.1), widths=c(0.1, 1, 1, 1, 1, 0.1), default.units=c('null','null'))
-    theme_norm <- theme_set(theme_bw())
-    theme_norm <- theme_update(panel.grid.minor=element_blank(), axis.text=element_text(size=7), axis.title=element_text(size=8), 
-                             plot.title=element_text(size=8), plot.margin=unit(c(1,1,1,1), "mm"))
+    currentLayout <- grid.layout(nrow=5, ncol=6, heights=c(0.1, 1, 1, 1, 0.1), widths=c(0.1, 1, 1, 1, 1, 0.1), default.units=c('null', 'null'))
     currentFont <- "Helvetica"
-    def.par <- par(no.readonly=T)
-    
+
+    setupPlotting(currentjob, jobdir)
     plotFrontPage(currentjob, currentFont)
     
     # TI
@@ -51,7 +41,7 @@ generatePlots <- function(nr, jobdir) {
     print("DEBUG: Plotting page 4")
     pageno <- pageno + 1
     plotReplicateVarAndStableVariables(methodlist, methodnames, currentLayout, pageno, currentjob, nonsiganfdrlistcvpdiff, 
-                        avgcvmempdiff, avgmadmempdiff, avgvarmempdiff)
+                                       avgcvmempdiff, avgmadmempdiff, avgvarmempdiff)
 
     # CVvsintensityplot 
     print("DEBUG: Plotting page 5")
@@ -121,6 +111,18 @@ generatePlots <- function(nr, jobdir) {
     dev.off()
 }
 
+setupPlotting <- function(currentjob, jobdir) {
+
+    palette(c("red", "green", "blue", "orange", "darkgray", "blueviolet", "darkslateblue", "darkviolet", "gray", "bisque4",
+              "brown", "cadetblue4", "darkgreen", "darkcyan", "darkmagenta", "darkgoldenrod4", "coral1"))
+    
+    pdf(file=paste(jobdir, "/Norm_report-", currentjob, ".pdf", sep=""), paper="a4r", width=0, height=0)    
+    theme_norm <- theme_set(theme_bw())
+    theme_norm <- theme_update(panel.grid.minor=element_blank(), axis.text=element_text(size=7), axis.title=element_text(size=8), 
+                               plot.title=element_text(size=8), plot.margin=unit(c(1, 1, 1, 1), "mm"))
+    def.par <- par(no.readonly=T)
+}
+
 plotFrontPage <- function(currentjob, currentFont) {
     
     par(mfrow=c(4,1))
@@ -130,39 +132,42 @@ plotFrontPage <- function(currentjob, currentFont) {
     
     # TODO: Re-insert nice illustration (figure?)
     # boxplot(data4pdftitle, axes=F, col=c("green","green","red","red"))
-    la1<-grid.layout(nrow=7, ncol=1, heights=c(0.2,1,0.1,0.2,0.1,0.2,0.2), default.units=c('null','null'))
+    la1<-grid.layout(nrow=7, ncol=1, heights=c(0.2, 1, 0.1, 0.2, 0.1, 0.2, 0.2), default.units=c('null','null'))
     gpfill=gpar(fill="gray90", lwd=0, lty=0)
     pushViewport(viewport(layout=la1))
     grid.rect(vp=viewport(layout.pos.row=1), gp=gpfill)
     grid.rect(vp=viewport(layout.pos.row=7), gp=gpfill)
     
-    grid.text(paste("Project Name: ", currentjob[2], sep=""), vp=viewport(layout.pos.row=3), just=c("center","center"), 
+    grid.text(paste("Project Name: ", currentjob, sep=""), vp=viewport(layout.pos.row=3), just=c("center","center"), 
               gp=gpar(fontsize=12, fontfamily=currentFont, col="black"))
     grid.text(paste("Normalyzer (ver 1.1.1)"), vp=viewport(layout.pos.row=4), just=c("center", "center"), 
               gp=gpar(fontface="bold", fontsize=32, fontfamily=currentFont, col="darkblue"))
     
     grid.text(paste("Report created on: ", Sys.Date(), sep=""), vp=viewport(layout.pos.row=5), just=c("center","center"),
               gp=gpar(fontsize=12, fontfamily=currentFont, col="black"))
-    grid.text("Citation: Chawade, A., Alexandersson, E., Levander, F. (2014). Normalyzer: a tool for rapid evaluation of normalization methods for omics data sets. J Proteome Res.,13 (6)
-              ",vp=viewport(layout.pos.row=6),just=c("center","center"),gp=gpar(fontsize=10,fontfamily=currentFont,col="black"))
+    
+    citationText <- "Citation: Chawade, A., Alexandersson, E., Levander, F. (2014). Normalyzer: a tool for rapid evaluation of normalization methods for omics data sets. J Proteome Res.,13 (6)"
+    
+    grid.text(citationText, vp=viewport(layout.pos.row=6), just=c("center","center"), gp=gpar(fontsize=10, fontfamily=currentFont, col="black"))
     
     grid.text("Documentation for analyzing this report can be found at http://quantitativeproteomics.org/normalyzer/help.php",
               vp=viewport(layout.pos.row=7), just=c("center","center"), gp=gpar(fontsize=10, fontfamily=currentFont, col="black"))
 }
 
 plotTI <- function(methodlist, filterED, filterrawdata, currentLayout, pageno, currentjob) {
+    
     tout <- rbind(c(1,2), c(3,4))
     layout(tout)
     par(mar=c(4,4,2,1), oma=c(2,2,3,2), xpd=NA)
-    datacoltotal <- apply(filterrawdata, 2, function(x){ sum(x, na.rm=T) })
+    datacoltotal <- apply(filterrawdata, 2, function(x) { sum(x, na.rm=T) })
     barplot(datacoltotal, las=2, main="Total intensity", cex.names=0.5, names.arg=substr(names(datacoltotal), 1, 10))
-    datamissingcol <- apply(filterrawdata, 2, function(x){ sum(is.na(x)) })
+    datamissingcol <- apply(filterrawdata, 2, function(x) { sum(is.na(x)) })
     barplot(datamissingcol, las=2, main="Total missing", cex.names=0.5, names.arg=substr(names(datamissingcol), 1, 10))
     datastore <- (methodlist[[1]])
-    d <- dist(scale(t(na.omit(datastore)),center=TRUE,scale=TRUE))
-    fit <- cmdscale(d,eig=TRUE,k=2)
-    x <- fit$points[,1]
-    y <- fit$points[,2]
+    d <- dist(scale(t(na.omit(datastore)), center=TRUE, scale=TRUE))
+    fit <- cmdscale(d, eig=TRUE, k=2)
+    x <- fit$points[, 1]
+    y <- fit$points[, 2]
     plot(x, y, type="n", main="Log2-MDS plot", xlab="", ylab="")
     text((fit$points[,1]), (fit$points[,2]), col=filterED, labels=filterED)
     pushViewport(viewport(layout=currentLayout))
@@ -171,9 +176,9 @@ plotTI <- function(methodlist, filterED, filterrawdata, currentLayout, pageno, c
 
 plotCV <- function(methodnames, avgcvmem, avgmadmem, avgvarmem, currentLayout, pageno, currentjob) {
     
-    tout <- rbind(c(1,2,3), c(4))
+    tout <- rbind(c(1, 2, 3), c(4))
     layout(tout)
-    par(mar=c(2,2,2,1), oma=c(2,2,3,2), xpd=NA)
+    par(mar=c(2, 2, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
     
     varprint(avgcvmem)
     
@@ -211,17 +216,20 @@ plotReplicateVarAndStableVariables <- function(methodlist, methodnames, currentL
     text(abc, avgmadmempdiff, labels=round(avgmadmempdiff, digits=0), pos=3, las=2)
     abc <- barplot(avgvarmempdiff, main="%PEV - compared to log2", names.arg=c(methodnames), border="red", 
                    ylim=c(min(avgvarmempdiff) - 10, (max(avgmadmempdiff)) + 5), density=20, cex=0.9, cex.axis=0.7, las=2, xpd=F)
-    axis(1, at=c(0.2, (max(abc) + 0.5)), labels=F, lwd.ticks=0)
+    axis(1, at=c(0.2, max(abc) + 0.5), labels=F, lwd.ticks=0)
     axis(1, at=abc, labels=F, lwd=0, lwd.ticks=1)
     text(abc, avgvarmempdiff, labels=round(avgvarmempdiff, digits=0), pos=3, las=2)
     
     if (!is.na(nonsiganfdrlistcvpdiff)) {
-        if ((min(avgcvmempdiff) < 0) || (max(avgcvmempdiff) > 100) || (min(nonsiganfdrlistcvpdiff) < 0) || (max(nonsiganfdrlistcvpdiff) > 100)) {
-            plot(avgcvmempdiff, nonsiganfdrlistcvpdiff, pch=18, xlim=c(0,100), ylim=c(0,100), main="Stable variables plot", xlab="PCV (intragroup) compared to Log2", ylab="% Global CV of stable variables compared to Log2")
+        
+        if (min(avgcvmempdiff) < 0 || max(avgcvmempdiff) > 100 || min(nonsiganfdrlistcvpdiff) < 0 || max(nonsiganfdrlistcvpdiff) > 100) {
+            plot(avgcvmempdiff, nonsiganfdrlistcvpdiff, pch=18, xlim=c(0,100), ylim=c(0,100), main="Stable variables plot", 
+                 xlab="PCV (intragroup) compared to Log2", ylab="% Global CV of stable variables compared to Log2")
             showLabels(avgcvmempdiff, nonsiganfdrlistcvpdiff, labels=methodnames, id.method="mahal", id.cex=0.7, id.col="black")
         }
         else {
-            plot(avgcvmempdiff, nonsiganfdrlistcvpdiff, pch=18, main="Stable variables plot", xlab="PCV (Intragroup) compared to Log2", ylab="% Global CV of stable variables compared to Log2")
+            plot(avgcvmempdiff, nonsiganfdrlistcvpdiff, pch=18, main="Stable variables plot", 
+                 xlab="PCV (Intragroup) compared to Log2", ylab="% Global CV of stable variables compared to Log2")
             showLabels(avgcvmempdiff, nonsiganfdrlistcvpdiff, labels=methodnames, id.method="mahal", id.cex=0.7, id.col="black")
         }
     }
@@ -246,7 +254,7 @@ plotCVvsIntensity <- function(methodlist, methodnames, filterED, filterrawdata, 
             
             tempcv <- numSummary(datastore[i,], statistics=c("cv"))
             tempavg <- numSummary(filterrawdata[i,], statistics=c("mean"))
-            tempcvmat1[i,j] <- 100*tempcv$table
+            tempcvmat1[i,j] <- 100 * tempcv$table
             tempavgmat1[i,j] <- tempavg$table 
         }
         

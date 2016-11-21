@@ -1,5 +1,3 @@
-DEBUG_PRINTS_ON = T
-
 normMethods <- function(nds, currentjob, jobdir) {
 
     nr <- generateNormalyzerResultsObject(nds)
@@ -33,8 +31,7 @@ generateNormalyzerResultsObject <- function(nds) {
 }
 
 getMethodList <- function(HKflag, normObj) {
-    if (DEBUG_PRINTS_ON) { print("Function: getMethodList") }
-    
+
     if (HKflag) {
         methodlist <- list(normObj@data2log2, normObj@data2GI, normObj@data2med, normObj@data2mean, normObj@data2ctrlog)
     }
@@ -45,8 +42,7 @@ getMethodList <- function(HKflag, normObj) {
 }
 
 getMethodNames <- function(houseKeepingFlag) {
-    if (DEBUG_PRINTS_ON) { print("Function: getMethodNames") }
-    
+
     if (houseKeepingFlag) {
         methodnames <- c("Log2", "TI-G", "MedI-G", "AI-G", "NF-G")
     }
