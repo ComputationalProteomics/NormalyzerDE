@@ -56,7 +56,7 @@ normalyzer <- function(datafile, jobName, outputDir=NULL) {
 
     require(grid)
     
-    source("analyzeAndPlot.R")
+    source("generatePlots.R")
     source("normfinder-pipeline.R")
     source("normMethods.R")
     source("printMeta.R")
@@ -67,37 +67,22 @@ normalyzer <- function(datafile, jobName, outputDir=NULL) {
     
     source("utils.R")
     source("inputVerification.R")
-    
-    # stopFunction()
+    source("analyzeResults.R")
     
     normObj <- getVerifiedNormalyzerObjectFromFile(datafile, jobName)
-
     jobDir <- setupJobDir(jobName, outputDir)
         
     print("Normalizing data....")
-    # try.result <- try(normalizeddata <- normMethods(datafile, getjob))
-    
-    # normalizeddata <- normMethods(datafile, getjob, outputDir=outputDir)
-    # normalizeddata <- normMethods(normObj, jobName, jobDir)
     normalyzerResultsObject <- normMethods(normObj, jobName, jobDir)
-    
-    # if (inherits(try.result, "try-error")) {
-    #     return(try.result)
-    # }
-    
     print("Finished Normalization")
-    print("Analyzing data....")
     
-    # try.result <- try(analyzeAndPlot(normalizeddata, getjob))
-    # analyzeAndPlot(normalizeddata, jobName, outputDir=outputDir)
-    analyzeAndPlot(normalyzerResultsObject, jobName, outputDir=outputDir)
+    print("Analyzing results...")
+    normalyzerResultsObject <- analyzeNormalizations(normalyzerResultsObject, jobName)
+    print("Finished analysing results")
     
-    
-        
-    # if(inherits(try.result, "try-error")){
-    #     return(try.result)
-    # }
-    
+    print("Generating plots...")
+    generatePlots(normalyzerResultsObject, jobDir)
+
     print("Done! Results are stored in the working directory")
 }
 
