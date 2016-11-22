@@ -3,7 +3,9 @@ generatePlots <- function(nr, jobdir) {
     nds <- nr@nds
     currentjob <- nds@jobName
 
-    currentLayout <- grid.layout(nrow=5, ncol=6, heights=c(0.1, 1, 1, 1, 0.1), widths=c(0.1, 1, 1, 1, 1, 0.1), default.units=c('null', 'null'))
+    currentLayout <- grid.layout(nrow=5, ncol=6, heights=c(0.1, 1, 1, 1, 0.1), 
+                                 widths=c(0.1, 1, 1, 1, 1, 0.1), 
+                                 default.units=c('null', 'null'))
     currentFont <- "Helvetica"
 
     setupPlotting(currentjob, jobdir)
@@ -11,7 +13,7 @@ generatePlots <- function(nr, jobdir) {
     
     # TI
     print("DEBUG: Plotting page 2")
-    pageno=2
+    pageno <- 2
     plotTI(nr, currentLayout, pageno)
     
     # CV
@@ -354,7 +356,6 @@ plotQQ <- function(nr, currentLayout, pageno) {
 }
 
 plotBoxPlot <- function(nr, currentLayout, pageno) {
-    # plotBoxPlot <- function(methodlist, methodnames, filterED, currentLayout, pageno, currentjob) {
 
     nds <- nr@nds
     methodnames <- getMethodNames(nr)
@@ -472,7 +473,8 @@ plotMeanSD <- function(nr, currentLayout, pageno) {
 
     sdPlots <- list()
     
-    for (i in 1:length(methodlist)) {  
+    for (i in 1:length(methodlist)) {
+        
         datastore <- methodlist[[i]]
         print(paste("Feeding method name: ", methodnames[i]))
         
@@ -488,7 +490,6 @@ plotMeanSD <- function(nr, currentLayout, pageno) {
 
     
     do.call("grid.arrange", c(sdPlots, nrow=3, ncol=4, padding=1, top=1))
-      
 
     pushViewport(viewport(layout=currentLayout))
     printMeta("MeanSDplots", pageno, currentjob)
@@ -510,18 +511,32 @@ plotCorrelation <- function(nr, currentLayout, pageno) {
     tout <- rbind(c(1, 2), c(3))
     layout(tout)
     par(mar=c(2, 2, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
-    perdf <- data.frame(matrix(unlist(avgpercorsum), nrow=as.numeric(max(summary(avgpercorsum)[1])), byrow=T))
-    abc <- boxplot(perdf, main="Pearson correlation - Intragroup", names=c(methodnames), border="red", density=20, cex=0.3, cex.axis=0.9, las=2)
+    
+    perdf <- data.frame(matrix(unlist(avgpercorsum), 
+                               nrow=as.numeric(max(summary(avgpercorsum)[1])), 
+                               byrow=T))
+    
+    abc <- boxplot(perdf, main="Pearson correlation - Intragroup", 
+                   names=c(methodnames), border="red", 
+                   density=20, cex=0.3, cex.axis=0.9, las=2)
+    
     stripchart(as.data.frame(perdf), vertical=T, cex=0.4, las=2, pch=20, add=T, col="darkgreen")
-    spedf <- data.frame(matrix(unlist(avgspecorsum), nrow=as.numeric(max(summary(avgspecorsum)[1])), byrow=T))
-    abc <- boxplot(spedf, main="Spearman correlation - Intragroup", names=c(methodnames), border="red", density=20, cex=0.3, cex.axis=0.9, las=2)
-    stripchart(as.data.frame(spedf), vertical=T, cex=0.4, las=2, pch=20, add=T, col="darkgreen")
+    
+    spedf <- data.frame(matrix(unlist(avgspecorsum), 
+                               nrow=as.numeric(max(summary(avgspecorsum)[1])), 
+                               byrow=T))
+    
+    abc <- boxplot(spedf, main="Spearman correlation - Intragroup", 
+                   names=c(methodnames), border="red", 
+                   density=20, cex=0.3, cex.axis=0.9, las=2)
+    
+    stripchart(as.data.frame(spedf), 
+               vertical=T, cex=0.4, las=2, pch=20, add=T, col="darkgreen")
     pushViewport(viewport(layout=currentLayout))
     printMeta("Correlation plots", pageno, currentjob)
 }
 
 plotDendrograms <- function(nr, currentLayout, pageno) {
-    # plotDendrograms <- function(methodlist, methodnames, filterED, currentLayout, pageno, currentjob) {
 
     nds <- nr@nds
     methodnames <- getMethodNames(nr)
@@ -529,22 +544,31 @@ plotDendrograms <- function(nr, currentLayout, pageno) {
     currentjob <- nds@jobName
     filterED <- nds@sampleReplicateGroups
 
+    print(length(methodnames))
+    print(length(filterED))
+    
     tout <- rbind(c(1, 2, 3, 4), c(5, 6, 7, 8), c(9, 10, 11, 12))
     layout(tout)
     par(mar=c(2, 2, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
-    colt<-(c("red", "green", "blue", "orange", "darkgray", "blueviolet", "darkslateblue",
-             "darkviolet", "gray", "bisque4", "brown", "cadetblue4", "darkgreen",
-             "darkcyan", "darkmagenta", "darkgoldenrod4", "coral1"))
+    colt<-(c("red", "green", "blue", "orange", "darkgray", "blueviolet", 
+             "darkslateblue", "darkviolet", "gray", "bisque4", "brown", 
+             "cadetblue4", "darkgreen", "darkcyan", "darkmagenta", 
+             "darkgoldenrod4", "coral1"))
     
     for (j in 1:length(methodlist)) {
-        temp <- scale(t(na.omit(methodlist[[j]])), center=TRUE, scale=TRUE)
-        hc <- hclust(dist(temp), "ave")
+        
+        scaledTransposedMatrix <- scale(t(na.omit(methodlist[[j]])), center=TRUE, scale=TRUE)
+        
+        hc <- hclust(dist(scaledTransposedMatrix), "ave")
+        
         plot(as.phylo(hc), main=methodnames[j], cex=0.5, tip.color=colt[filterED])
         axisPhylo(side=1)
     }
     
     pushViewport(viewport(layout=currentLayout))
-    printMeta(paste("Dendrograms - Built from", ncol(temp), "variables containing non-missing data", sep=" "), pageno, currentjob)
+    printMeta(paste("Dendrograms - Built from", ncol(scaledTransposedMatrix), 
+                    "variables containing non-missing data", sep=" "), 
+              pageno, currentjob)
 }
 
 plotDEPlots <- function(nr, currentLayout, pageno) {
@@ -562,11 +586,13 @@ plotDEPlots <- function(nr, currentLayout, pageno) {
     layout(tout)
     par(mar=c(2, 2, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
     
-    barplot(colSums(anfdr < 0.05), main="ANOVA", names=c(methodnames), border="red", density=20, cex=0.5, cex.axis=0.9, las=2,
-            ylab="No. of Variables with FDR<0.05")
+    barplot(colSums(anfdr < 0.05), main="ANOVA", names=c(methodnames), 
+            border="red", density=20, cex=0.5, cex.axis=0.9, las=2,
+            ylab="No. of Variables with FDR < 0.05")
     
-    barplot(colSums(kwfdr < 0.05), main="Kruskal Wallis", names=c(methodnames), border="red", density=20, cex=0.5, cex.axis=0.9, 
-            las=2, ylab="No. of Variables with FDR<0.05")
+    barplot(colSums(kwfdr < 0.05), main="Kruskal Wallis", names=c(methodnames), 
+            border="red", density=20, cex=0.5, cex.axis=0.9, 
+            las=2, ylab="No. of Variables with FDR < 0.05")
     
     pushViewport(viewport(layout=currentLayout))
     printMeta("Differential Expression", pageno, currentjob)
