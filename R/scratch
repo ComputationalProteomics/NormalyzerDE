@@ -33,4 +33,3 @@ plotCorrelation(methodnames, avgpercorsum, avgspecorsum, currentLayout, pageno, 
 plotDendrograms(methodlist, methodnames, filterED, currentLayout, pageno, currentjob)
 
 plotDEPlots(methodnames, anfdr, kwfdr, currentLayout, pageno, currentjob)
-    

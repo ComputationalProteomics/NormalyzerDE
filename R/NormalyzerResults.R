@@ -51,7 +51,7 @@ NormalyzerResults <- setClass("NormalyzerResults",
                                   data2ctr = "matrix",
                                   data2mad = "matrix"
                               ),
-                              prototype=prototype(nds=NULL, normfinderMaxThreshold=1000, furtherNormalizationMinThreshold=50))
+                              prototype=prototype(nds=NULL, normfinderMaxThreshold=1000, furtherNormalizationMinThreshold=100))
 
 setGeneric(name="initializeResultsObject", function(nr) standardGeneric("initializeResultsObject"))
 setGeneric(name="performNormalizations", function(nr) standardGeneric("performNormalizations"))

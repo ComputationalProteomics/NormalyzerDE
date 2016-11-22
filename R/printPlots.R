@@ -26,7 +26,7 @@ printPlots <- function(plotlist, plotname, pageno, jobname) {
     grid.text("Normalyzer Report", 
               vp=viewport(layout.pos.row=1, layout.pos.col=6),
               just=c("right", "center"), gp=gp)
-    grid.text(paste("Page ",pageno,sep=""), 
+    grid.text(paste("Page ", pageno,sep=""), 
               vp=viewport(layout.pos.row=5, layout.pos.col=6), just=c("right", "center"), gp=gp)
     grid.text(paste("Project: ", jobname, sep=""),
               vp=viewport(layout.pos.row=5, layout.pos.col=1), just=c("left", "center"), gp=gp)
