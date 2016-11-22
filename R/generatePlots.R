@@ -1,25 +1,25 @@
 generatePlots <- function(nr, jobdir) {
     
     nds <- nr@nds
-    ner <- nr@ner
+    # ner <- nr@ner
     
-    name <- nds@jobName
+    # name <- nds@jobName
     currentjob <- nds@jobName
-    filterrawdata <- nds@filterrawdata
-    methodlist <- getNormalizationMatrices(nr)
-    filterED <- nds@sampleReplicateGroups
-    methodnames <- getMethodNames(nr)
+    # filterrawdata <- nds@filterrawdata
+    # methodlist <- getNormalizationMatrices(nr)
+    # filterED <- nds@sampleReplicateGroups
+    # methodnames <- getMethodNames(nr)
     
-    avgcvmem <- ner@avgcvmem
-    avgmadmem <- ner@avgmadmem
-    avgvarmem <- ner@avgvarmem
-    avgcvmempdiff <- ner@avgcvmempdiff
-    avgmadmempdiff <- ner@avgmadmempdiff
-    avgvarmempdiff <- ner@avgvarmempdiff
-    nonsiganfdrlist <- ner@nonsiganfdrlist
-    nonsiganfdrlistcvpdiff <- ner@nonsiganfdrlistcvpdiff
-    anfdr <- ner@anfdr
-    kwfdr <- ner@kwfdr
+    # avgcvmem <- ner@avgcvmem
+    # avgmadmem <- ner@avgmadmem
+    # avgvarmem <- ner@avgvarmem
+    # avgcvmempdiff <- ner@avgcvmempdiff
+    # avgmadmempdiff <- ner@avgmadmempdiff
+    # avgvarmempdiff <- ner@avgvarmempdiff
+    # nonsiganfdrlist <- ner@nonsiganfdrlist
+    # nonsiganfdrlistcvpdiff <- ner@nonsiganfdrlistcvpdiff
+    # anfdr <- ner@anfdr
+    # kwfdr <- ner@kwfdr
     
     currentLayout <- grid.layout(nrow=5, ncol=6, heights=c(0.1, 1, 1, 1, 0.1), widths=c(0.1, 1, 1, 1, 1, 0.1), default.units=c('null', 'null'))
     currentFont <- "Helvetica"
@@ -30,83 +30,82 @@ generatePlots <- function(nr, jobdir) {
     # TI
     print("DEBUG: Plotting page 2")
     pageno=2
-    plotTI(methodlist, filterED, filterrawdata, currentLayout, pageno, currentjob)
-
+    plotTI(nr, currentLayout, pageno)
+    
     # CV
     print("DEBUG: Plotting page 3")
     pageno <- pageno + 1
-    plotCV(methodnames, avgcvmem, avgmadmem, avgvarmem, currentLayout, pageno, currentjob)
+    plotCV(nr, currentLayout, pageno)
 
     # Stable variables plot and CV in percent difference
     print("DEBUG: Plotting page 4")
     pageno <- pageno + 1
-    plotReplicateVarAndStableVariables(methodlist, methodnames, currentLayout, pageno, currentjob, nonsiganfdrlistcvpdiff, 
-                                       avgcvmempdiff, avgmadmempdiff, avgvarmempdiff)
+    plotReplicateVarAndStableVariables(nr, currentLayout, pageno)
 
     # CVvsintensityplot 
     print("DEBUG: Plotting page 5")
     pageno <- pageno + 1
-    plotCVvsIntensity(methodlist, methodnames, filterED, filterrawdata, currentLayout, pageno, currentjob)
+    plotCVvsIntensity(nr, currentLayout, pageno)
 
     #MA plots
     print("DEBUG: Plotting page 6!")
     pageno <- pageno + 1
-    plotMA(methodlist, methodnames, filterED, currentLayout, pageno, currentjob)
+    plotMA(nr, currentLayout, pageno)
     
     # Scatterplots
     print("DEBUG: Plotting page 7")
     pageno <- pageno + 1
-    plotScatter(methodlist, methodnames, currentLayout, pageno, currentjob)
+    plotScatter(nr, currentLayout, pageno)
 
     # QQplot
     print("DEBUG: Plotting page 8")
     pageno <- pageno + 1
-    plotQQ(methodlist, methodnames, currentLayout, pageno, currentjob)
+    plotQQ(nr, currentLayout, pageno)
 
     # Boxplot
     print("DEBUG: Plotting page 9")
     pageno <- pageno + 1
-    plotBoxPlot(methodlist, methodnames, filterED, currentLayout, pageno, currentjob)
+    plotBoxPlot(nr, currentLayout, pageno)
 
     # RLE plots
     print("DEBUG: Plotting page 10")
     pageno <- pageno + 1
-    plotRLE(methodlist, methodnames, filterED, currentLayout, pageno, currentjob)
+    plotRLE(nr, currentLayout, pageno)
     
     # Density plots
     print("DEBUG: Plotting page 11")
     pageno <- pageno + 1
-    plotDensity(methodlist, methodnames, currentLayout, pageno, currentjob)
+    plotDensity(nr, currentLayout, pageno)
 
     # MDS plot
     print("DEBUG: Plotting page 12")
     pageno <- pageno + 1
-    plotMDS(methodlist, methodnames, filterED, currentLayout, pageno, currentjob)
+    plotMDS(nr, currentLayout, pageno)
     
     # meanSDplot
     print("DEBUG: Plotting page 13")
     pageno <- pageno + 1
-    plotMeanSD(methodlist, methodnames, currentLayout, pageno, currentjob)
+    plotMeanSD(nr, currentLayout, pageno)
     
     # Calculate correlation
-    correlationOutput <- calculateCorrelations(methodlist, filterED)
-    avgpercorsum <- correlationOutput[[1]]
-    avgspecorsum <- correlationOutput[[2]]
+    # correlationOutput <- calculateCorrelations(methodlist, filterED)
+    # avgpercorsum <- correlationOutput[[1]]
+    # avgspecorsum <- correlationOutput[[2]]
     
     # Correlation
     print("DEBUG: Plotting page 15")
     pageno <- pageno + 1
-    plotCorrelation(methodnames, avgpercorsum, avgspecorsum, currentLayout, pageno, currentjob)
+    plotCorrelation(nr, currentLayout, pageno)
 
     # Dendrograms
     print("DEBUG: Plotting page 16")
     pageno <- pageno + 1
-    plotDendrograms(methodlist, methodnames, filterED, currentLayout, pageno, currentjob)
+    plotDendrograms(nr, currentLayout, pageno)
 
     # DE plots
     print("DEBUG: Plotting page 17")
     pageno <- pageno + 1
-    plotDEPlots(methodnames, anfdr, kwfdr, currentLayout, pageno, currentjob)
+    plotDEPlots(nr, currentLayout, pageno)
     
     dev.off()
 }
@@ -201,7 +200,7 @@ plotCV <- function(nr, currentLayout, pageno) {
     stripchart(as.data.frame(avgcvmem), vertical=T, cex=0.4, las=2, pch=20, add=T, col="darkgray")
     boxplot(avgmadmem, main="PMAD - Intragroup", names=c(methodnames), border="red", density=20, cex=0.3, cex.axis=0.9, las=2, frame.plot=F)
     stripchart(as.data.frame(avgmadmem), vertical=T, cex=0.4, las=2, pch=20, add=T, col="darkgray")
-    boxplot(avgvarmem,main="PEV - Intragroup", names=c(methodnames), border="red", density=20, cex=0.3, cex.axis=0.9, las=2, frame.plot=F)
+    boxplot(avgvarmem, main="PEV - Intragroup", names=c(methodnames), border="red", density=20, cex=0.3, cex.axis=0.9, las=2, frame.plot=F)
     stripchart(as.data.frame(avgvarmem), vertical=T, cex=0.4, las=2, pch=20, add=T, col="darkgray")
     
     pushViewport(viewport(layout=currentLayout))
@@ -212,10 +211,16 @@ plotCV <- function(nr, currentLayout, pageno) {
 plotReplicateVarAndStableVariables <- function(nr, currentLayout, pageno) {
     # plotReplicateVarAndStableVariables <- function(methodlist, methodnames, currentLayout, pageno, currentjob, nonsiganfdrlistcvpdiff, 
     #                                                avgcvmempdiff, avgmadmempdiff, avgvarmempdiff) {
-        
+
+    nds <- nr@nds
+    methodnames <- getMethodNames(nr)
+    currentjob <- nds@jobName
     
-    print(methodnames)
-    print(c(methodnames))
+    ner <- nr@ner
+    nonsiganfdrlistcvpdiff <- ner@nonsiganfdrlistcvpdiff
+    avgcvmempdiff <- ner@avgcvmempdiff
+    avgmadmempdiff <- ner@avgmadmempdiff
+    avgvarmempdiff <- ner@avgvarmempdiff
     
     tout <- rbind(c(1, 2, 3), c(4, 5, 5))
     layout(tout)
@@ -256,7 +261,14 @@ plotReplicateVarAndStableVariables <- function(nr, currentLayout, pageno) {
 
 plotCVvsIntensity <- function(nr, currentLayout, pageno) {
     # plotCVvsIntensity <- function(methodlist, methodnames, filterED, filterrawdata, currentLayout, pageno, currentjob) {
-        
+
+    nds <- nr@nds
+    methodnames <- getMethodNames(nr)
+    methodlist <- getNormalizationMatrices(nr)
+    currentjob <- nds@jobName
+    filterED <- nds@sampleReplicateGroups
+    filterrawdata <- nds@filterrawdata
+    
     datastore <- methodlist[[1]]
     tempcvmat1 <- matrix(nrow=nrow(datastore), ncol=length(methodlist), byrow=T)
     tempavgmat1 <- matrix(nrow=nrow(datastore), ncol=length(methodlist), byrow=T)
@@ -294,8 +306,13 @@ plotCVvsIntensity <- function(nr, currentLayout, pageno) {
 
 plotMA <- function(nr, currentLayout, pageno) {
     # plotMA <- function(methodlist, methodnames, filterED, currentLayout, pageno, currentjob) {
-        
-    print("in plotMA")
+
+    nds <- nr@nds
+    methodnames <- getMethodNames(nr)
+    methodlist <- getNormalizationMatrices(nr)
+    currentjob <- nds@jobName
+    filterED <- nds@sampleReplicateGroups
+    filterrawdata <- nds@filterrawdata
     
     Malist <- list()
     for(i in 1:length(methodlist)) {
@@ -316,23 +333,21 @@ plotMA <- function(nr, currentLayout, pageno) {
             geom_abline(intercept=0, slope=0, size=0.3)
     } 
     
-    print("after loop in plotMA")
-    
     grid.newpage()
     pushViewport(viewport(layout=currentLayout))
     
-    print("before print plots")
-    # print(str(Malist))
-    
     printPlots(Malist, "MA plots", pageno, currentjob[2])
-    
-    print("returning from plotMA")
 }
 
 plotScatter <- function(nr, currentLayout, pageno) {
     # plotScatter <- function(methodlist, methodnames, currentLayout, pageno, currentjob) {
-        
-    tout<-rbind(c(1,2,3,4), c(5,6,7,8), c(9,10,11,12))
+    
+    nds <- nr@nds
+    methodnames <- getMethodNames(nr)
+    methodlist <- getNormalizationMatrices(nr)
+    currentjob <- nds@jobName
+    
+    tout <- rbind(c(1,2,3,4), c(5,6,7,8), c(9,10,11,12))
     layout(tout)
     par(mar=c(2,2,2,1), oma=c(3,2,3,2), xpd=NA)
     for(i in 1:length(methodlist)) {
@@ -348,10 +363,15 @@ plotScatter <- function(nr, currentLayout, pageno) {
 
 plotQQ <- function(nr, currentLayout, pageno) {
     # plotQQ <- function(methodlist, methodnames, currentLayout, pageno, currentjob) {
-        
+
+    nds <- nr@nds
+    methodnames <- getMethodNames(nr)
+    methodlist <- getNormalizationMatrices(nr)
+    currentjob <- nds@jobName
+
     qqlist <- list()
     
-    for(i in 1:length(methodlist)) {  
+    for (i in 1:length(methodlist)) {  
         datastore <- (methodlist[[i]])
         tempcolname <- colnames(datastore)
         #qqnorm(datastore[,1],main=paste(tempcolname[1],methodnames[i]),xlab="",ylab="")
@@ -365,7 +385,14 @@ plotQQ <- function(nr, currentLayout, pageno) {
 
 plotBoxPlot <- function(nr, currentLayout, pageno) {
     # plotBoxPlot <- function(methodlist, methodnames, filterED, currentLayout, pageno, currentjob) {
-        
+
+    nds <- nr@nds
+    methodnames <- getMethodNames(nr)
+    methodlist <- getNormalizationMatrices(nr)
+    currentjob <- nds@jobName
+    filterED <- nds@sampleReplicateGroups
+    filterrawdata <- nds@filterrawdata
+    
     tout<-rbind(c(1,2,3,4), c(5,6,7,8), c(9,10,11,12))
     layout(tout)
     par(mar=c(2,2,2,1), oma=c(3,2,3,2), xpd=NA)
@@ -396,8 +423,14 @@ plotBoxPlot <- function(nr, currentLayout, pageno) {
 # Visualize Relative Log Expression (RLE)
 plotRLE <- function(nr, currentLayout, pageno) {
     # plotRLE <- function(methodlist, methodnames, filterED, currentLayout, pageno, currentjob) {
-        
-    tout<-rbind(c(1,2,3,4), c(5,6,7,8), c(9,10,11,12))
+
+    nds <- nr@nds
+    methodnames <- getMethodNames(nr)
+    methodlist <- getNormalizationMatrices(nr)
+    currentjob <- nds@jobName
+    filterED <- nds@sampleReplicateGroups
+    
+    tout <- rbind(c(1,2,3,4), c(5,6,7,8), c(9,10,11,12))
     layout(tout)
     par(mar=c(2,2,2,1), oma=c(3,2,3,2), xpd=NA)
     
@@ -412,7 +445,12 @@ plotRLE <- function(nr, currentLayout, pageno) {
 
 plotDensity <- function(nr, currentLayout, pageno) {
     # plotDensity <- function(methodlist, methodnames, currentLayout, pageno, currentjob) {
-        
+
+    nds <- nr@nds
+    methodnames <- getMethodNames(nr)
+    methodlist <- getNormalizationMatrices(nr)
+    currentjob <- nds@jobName
+
     tout <- rbind(c(1,2,3,4), c(5,6,7,8), c(9,10,11,12))
     layout(tout)
     par(mar=c(3,2,3,1), oma=c(3,2,3,2), xpd=NA)
@@ -433,7 +471,13 @@ plotDensity <- function(nr, currentLayout, pageno) {
 
 plotMDS <- function(nr, currentLayout, pageno) {
     # plotMDS <- function(methodlist, methodnames, filterED, currentLayout, pageno, currentjob) {
-        
+
+    nds <- nr@nds
+    methodnames <- getMethodNames(nr)
+    methodlist <- getNormalizationMatrices(nr)
+    currentjob <- nds@jobName
+    filterED <- nds@sampleReplicateGroups
+
     tout<-rbind(c(1,2,3,4), c(5,6,7,8), c(9,10,11,12))
     layout(tout)
     par(mar=c(2,2,2,1), oma=c(3,2,3,2), xpd=NA)
@@ -454,10 +498,15 @@ plotMDS <- function(nr, currentLayout, pageno) {
 
 plotMeanSD <- function(nr, currentLayout, pageno) {
     # plotMeanSD <- function(methodlist, methodnames, currentLayout, pageno, currentjob) {
-        
-    tout <- rbind(c(1,2,3,4), c(5,6,7,8), c(9,10,11,12))
+
+    nds <- nr@nds
+    methodnames <- getMethodNames(nr)
+    methodlist <- getNormalizationMatrices(nr)
+    currentjob <- nds@jobName
+
+    tout <- rbind(c(1, 2, 3, 4), c(5, 6, 7, 8), c(9, 10, 11, 12))
     layout(tout)
-    par(mar=c(2,2,2,1), oma=c(3,2,3,2), xpd=NA)
+    par(mar=c(2, 2, 2, 1), oma=c(3, 2, 3, 2), xpd=NA)
     
     for (i in 1:length(methodlist)) {  
         datastore <- (methodlist[[i]])
@@ -466,8 +515,6 @@ plotMeanSD <- function(nr, currentLayout, pageno) {
         meanSdPlot(datastore, xlab="", ylab="")
         # TODO: The main=methodnames[i] seemed to cause crash here // Jakob
         # meanSdPlot(datastore, xlab="", ylab="", main=methodnames[i])
-        
-        print("After meanSdPlot")
     }
     
     pushViewport(viewport(layout=currentLayout))
@@ -475,46 +522,57 @@ plotMeanSD <- function(nr, currentLayout, pageno) {
     
 }
 
-calculateCorrelations <- function(methodlist, filterED) {
-    
-    par(mfrow=c(1,1))
-    avgpercorsum <- list()
-    avgspecorsum <- list()
-    corsum <- vector()
-    
-    for (i in 1:length(methodlist)) {
-        percorsum <- vector()
-        specorsum <- vector()
-        
-        flag1 <- 1
-        datastore <- as.matrix(methodlist[[i]])
-        un <- unique(filterED)
-        
-        for (uq in 1:length(un)) {
-            dt <- as.matrix(datastore[,which(filterED==un[uq])])
-            class(dt) <- "numeric"
-            percor <- cor(dt, use="pairwise.complete.obs", method="pearson")
-            spercor <- cor(dt, use="pairwise.complete.obs", method="spearman")
-            
-            for(rn in 1:(ncol(dt)-1)){
-                percorsum <- c(percorsum,percor[rn,-(1:rn)])
-                specorsum <- c(specorsum,spercor[rn,-(1:rn)])
-            }
-        }
-        
-        avgpercorsum[[i]] <- percorsum
-        avgspecorsum[[i]] <- specorsum
-    }
-    
-    list(avgpercorsum, avgspecorsum)
-}
+# calculateCorrelations <- function(methodlist, filterED) {
+#     
+#     par(mfrow=c(1,1))
+#     avgpercorsum <- list()
+#     avgspecorsum <- list()
+#     corsum <- vector()
+#     
+#     for (i in 1:length(methodlist)) {
+#         percorsum <- vector()
+#         specorsum <- vector()
+#         
+#         flag1 <- 1
+#         datastore <- as.matrix(methodlist[[i]])
+#         un <- unique(filterED)
+#         
+#         for (uq in 1:length(un)) {
+#             dt <- as.matrix(datastore[,which(filterED==un[uq])])
+#             class(dt) <- "numeric"
+#             percor <- cor(dt, use="pairwise.complete.obs", method="pearson")
+#             spercor <- cor(dt, use="pairwise.complete.obs", method="spearman")
+#             
+#             for(rn in 1:(ncol(dt)-1)){
+#                 percorsum <- c(percorsum,percor[rn,-(1:rn)])
+#                 specorsum <- c(specorsum,spercor[rn,-(1:rn)])
+#             }
+#         }
+#         
+#         avgpercorsum[[i]] <- percorsum
+#         avgspecorsum[[i]] <- specorsum
+#     }
+#     
+#     list(avgpercorsum, avgspecorsum)
+# }
 
 plotCorrelation <- function(nr, currentLayout, pageno) {
     # plotCorrelation <- function(methodnames, avgpercorsum, avgspecorsum, currentLayout, pageno, currentjob) {
-        
-    tout <- rbind(c(1,2), c(3))
+
+    ner <- nr@ner
+    avgpercorsum <- ner@avgpercorsum
+    avgspecorsum <- ner@avgspecorsum
+    
+    nds <- nr@nds
+    methodnames <- getMethodNames(nr)
+    methodlist <- getNormalizationMatrices(nr)
+    currentjob <- nds@jobName
+    filterED <- nds@sampleReplicateGroups
+    filterrawdata <- nds@filterrawdata
+    
+    tout <- rbind(c(1, 2), c(3))
     layout(tout)
-    par(mar=c(2,2,2,1), oma=c(2,2,3,2), xpd=NA)
+    par(mar=c(2, 2, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
     perdf <- data.frame(matrix(unlist(avgpercorsum), nrow=as.numeric(max(summary(avgpercorsum)[1])), byrow=T))
     abc <- boxplot(perdf, main="Pearson correlation - Intragroup", names=c(methodnames), border="red", density=20, cex=0.3, cex.axis=0.9, las=2)
     stripchart(as.data.frame(perdf), vertical=T, cex=0.4, las=2, pch=20, add=T, col="darkgreen")
@@ -527,7 +585,13 @@ plotCorrelation <- function(nr, currentLayout, pageno) {
 
 plotDendrograms <- function(nr, currentLayout, pageno) {
     # plotDendrograms <- function(methodlist, methodnames, filterED, currentLayout, pageno, currentjob) {
-        
+
+    nds <- nr@nds
+    methodnames <- getMethodNames(nr)
+    methodlist <- getNormalizationMatrices(nr)
+    currentjob <- nds@jobName
+    filterED <- nds@sampleReplicateGroups
+
     tout <- rbind(c(1,2,3,4), c(5,6,7,8), c(9,10,11,12))
     layout(tout)
     par(mar=c(2,2,2,1), oma=c(2,2,3,2), xpd=NA)
@@ -547,14 +611,23 @@ plotDendrograms <- function(nr, currentLayout, pageno) {
 plotDEPlots <- function(nr, currentLayout, pageno) {
     # plotDEPlots <- function(methodnames, anfdr, kwfdr, currentLayout, pageno, currentjob) {
         
-    tout <- rbind(c(1,2,3), c(4))
-    layout(tout)
-    par(mar=c(2,2,2,1), oma=c(2,2,3,2), xpd=NA)
+    nds <- nr@nds
+    methodnames <- getMethodNames(nr)
+    methodlist <- getNormalizationMatrices(nr)
+    currentjob <- nds@jobName
     
-    barplot(colSums(anfdr<0.05), main="ANOVA", names=c(methodnames), border="red", density=20, cex=0.5, cex.axis=0.9, las=2,
+    ner <- nr@ner
+    anfdr <- ner@anfdr
+    kwfdr <- ner@kwfdr
+
+    tout <- rbind(c(1, 2, 3), c(4))
+    layout(tout)
+    par(mar=c(2, 2, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
+    
+    barplot(colSums(anfdr < 0.05), main="ANOVA", names=c(methodnames), border="red", density=20, cex=0.5, cex.axis=0.9, las=2,
             ylab="No. of Variables with FDR<0.05")
     
-    barplot(colSums(kwfdr<0.05), main="Kruskal Wallis", names=c(methodnames), border="red", density=20, cex=0.5, cex.axis=0.9, 
+    barplot(colSums(kwfdr < 0.05), main="Kruskal Wallis", names=c(methodnames), border="red", density=20, cex=0.5, cex.axis=0.9, 
             las=2, ylab="No. of Variables with FDR<0.05")
     
     pushViewport(viewport(layout=currentLayout))

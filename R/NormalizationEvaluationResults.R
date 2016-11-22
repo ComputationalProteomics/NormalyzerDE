@@ -9,7 +9,10 @@ NormalizationEvaluationResults <- setClass("NormalizationEvaluationResults",
                                                 nonsiganfdrlist = "numeric",
                                                 nonsiganfdrlistcvpdiff = "numeric",
                                                 anfdr = "matrix",
-                                                kwfdr = "matrix"
+                                                kwfdr = "matrix",
+                                                
+                                                avgpercorsum = "list",
+                                                avgspecorsum = "list"
                                             ),
                                             prototype=prototype())
                                             

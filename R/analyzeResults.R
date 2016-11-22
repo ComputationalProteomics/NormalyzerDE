@@ -164,10 +164,56 @@ analyzeNormalizations <- function(nr, name) {
     ner@anfdr <- anfdr
     ner@kwfdr <- kwfdr
     
+    ner <- calculateCorrelations(nr, ner)
+    
     nr@ner <- ner
     
     nr
 }
+
+
+calculateCorrelations <- function(nr, ner) {
+    # calculateCorrelations <- function(methodlist, filterED) {
+        
+    methodlist <- getNormalizationMatrices(nr)
+    filterED <- nr@nds@sampleReplicateGroups
+    
+    par(mfrow=c(1,1))
+    avgpercorsum <- list()
+    avgspecorsum <- list()
+    corsum <- vector()
+    
+    for (i in 1:length(methodlist)) {
+        percorsum <- vector()
+        specorsum <- vector()
+        
+        flag1 <- 1
+        datastore <- as.matrix(methodlist[[i]])
+        un <- unique(filterED)
+        
+        for (uq in 1:length(un)) {
+            dt <- as.matrix(datastore[,which(filterED==un[uq])])
+            class(dt) <- "numeric"
+            percor <- cor(dt, use="pairwise.complete.obs", method="pearson")
+            spercor <- cor(dt, use="pairwise.complete.obs", method="spearman")
+            
+            for (rn in 1:(ncol(dt)-1)) {
+                percorsum <- c(percorsum,percor[rn,-(1:rn)])
+                specorsum <- c(specorsum,spercor[rn,-(1:rn)])
+            }
+        }
+        
+        avgpercorsum[[i]] <- percorsum
+        avgspecorsum[[i]] <- specorsum
+    }
+    
+    ner@avgpercorsum <- avgpercorsum
+    ner@avgspecorsum <- avgspecorsum
+    
+    # list(avgpercorsum, avgspecorsum)
+    ner
+}
+
 
 ## Removes rows from dataMatrix where not every replicate is represented by at least one TRUE value
 filterLinesWithEmptySamples <- function(dataMatrix, replicateHeader) {
