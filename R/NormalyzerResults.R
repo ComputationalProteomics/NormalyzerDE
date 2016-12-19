@@ -24,6 +24,29 @@ outputNames <- c("Log2",
                  "NF-G",
                  "Quantile")
 
+#' S4 class to represent dataset information
+#' 
+#' @slot nds Normalyzer dataset representing run data.
+#' @slot ner Normalyzer evaluation results.
+#' @slot methodnames Short names for included normalization methods.
+#' @slot normfinderMaxThreshold Max threshold for running Normfinder normalization.
+#' @slot furtherNormalizationMinThreshold Min threshold for running extended normalizations.
+#' @slot houseKeepingVars Vector of house keeping variables found by Normfinder.
+#' @slot data2log2 Log2 of filtered raw data.
+#' @slot data2limloess Lim-Loess normalized raw data.
+#' @slot fittedLR Fitted Loess regression (TODO: Investigate this further).
+#' @slot data2vsnrep Replicate based VSN normalization.
+#' @slot data2loess Loess normalization.
+#' @slot globalfittedRLR Global fitted RLR normalization (TODO: Investigate further).
+#' @slot data2vsn Global VSN normalized data.
+#' @slot data2GI GI-normalized data (TODO: Check out).
+#' @slot data2med Median normalized data.
+#' @slot data2mean Mean normalized data.
+#' @slot data2ctrlog CTR-log normalized data (TODO: Check out).
+#' @slot data2quantile Quantile normalized data.
+#' @slot data2ctr CTR normalized data (TODO: Check out).
+#' @slot data2mad MAD normalized data (TODO: Check out).
+#' @export
 NormalyzerResults <- setClass("NormalyzerResults",
                               slots=c(
                                   nds = "NormalyzerDataset",
@@ -53,23 +76,99 @@ NormalyzerResults <- setClass("NormalyzerResults",
                               ),
                               prototype=prototype(nds=NULL, normfinderMaxThreshold=1000, furtherNormalizationMinThreshold=100))
 
+#' Initialize Normalyzer results object
+#'
+#' @param nr Normalyzer results object.
+#' @rdname initializeResultsObject
+#' @export
 setGeneric(name="initializeResultsObject", function(nr) standardGeneric("initializeResultsObject"))
+
+#' Main function for executing normalizations
+#'
+#' @param nr Normalyzer results object.
+#' @rdname performNormalizations
+#' @export
 setGeneric(name="performNormalizations", function(nr) standardGeneric("performNormalizations"))
+
+#' Generate basic metrics normalizations
+#'
+#' @param nr Normalyzer results object.
+#' @rdname basicMetricNormalizations
+#' @export
 setGeneric(name="basicMetricNormalizations", function(nr) standardGeneric("basicMetricNormalizations"))
+
+#' Calculate and assign housekeeping variables
+#'
+#' @param nr Normalyzer results object.
+#' @rdname calculateHKdataForNormObj
+#' @export
 setGeneric(name="calculateHKdataForNormObj", function(nr) standardGeneric("calculateHKdataForNormObj"))
 
+#' Generate VSN normalization
+#'
+#' @param nr Normalyzer results object.
+#' @rdname performVSNNormalization
+#' @export
 setGeneric(name="performVSNNormalization", function(nr) standardGeneric("performVSNNormalization"))
+
+#' Generate quantile normalization
+#'
+#' @param nr Normalyzer results object.
+#' @rdname performQuantileNormalization
+#' @export
 setGeneric(name="performQuantileNormalization", function(nr) standardGeneric("performQuantileNormalization"))
+
+#' Generate SMAD normalization
+#'
+#' @param nr Normalyzer results object.
+#' @rdname performSMADNormalization
+#' @export
 setGeneric(name="performSMADNormalization", function(nr) standardGeneric("performSMADNormalization"))
+
+#' Generate cyclic Loess normalization
+#'
+#' @param nr Normalyzer results object.
+#' @rdname performCyclicLoessNormalization
+#' @export
 setGeneric(name="performCyclicLoessNormalization", function(nr) standardGeneric("performCyclicLoessNormalization"))
+
+#' Generate global RLR normalization
+#'
+#' @param nr Normalyzer results object.
+#' @rdname performGlobalRLRNormalization
+#' @export
 setGeneric(name="performGlobalRLRNormalization", function(nr) standardGeneric("performGlobalRLRNormalization"))
+
+#' Generate replicate based normalizations
+#'
+#' @param nr Normalyzer results object.
+#' @rdname performReplicateBasedNormalizations
+#' @export
 setGeneric(name="performReplicateBasedNormalizations", function(nr) standardGeneric("performReplicateBasedNormalizations"))
 
-setGeneric(name="getMethodNames", function(nr) standardGeneric("getMethodNames"))
+#' Get vector of labels for used methods
+#'
+#' @param nr Normalyzer results object.
+#' @rdname getUsedMethodNames
+#' @export
+setGeneric(name="getUsedMethodNames", function(nr) standardGeneric("getUsedMethodNames"))
+
+#' Get list of names for slots
+#'
+#' @param nr Normalyzer results object.
+#' @rdname getSlotNameList
+#' @export
 setGeneric(name="getSlotNameList", function(nr) standardGeneric("getSlotNameList"))
+
+#' Get list with normalization matrices
+#'
+#' @param nr Normalyzer results object.
+#' @rdname getNormalizationMatrices
+#' @export
 setGeneric(name="getNormalizationMatrices", function(nr) standardGeneric("getNormalizationMatrices"))
 
 
+#' @rdname initializeResultsObject
 setMethod("initializeResultsObject", "NormalyzerResults",
           function(nr) {
               
@@ -84,6 +183,7 @@ setMethod("initializeResultsObject", "NormalyzerResults",
               nr
           })
 
+#' @rdname performNormalizations
 setMethod("performNormalizations", "NormalyzerResults",
           function(nr) {
               
@@ -109,6 +209,7 @@ setMethod("performNormalizations", "NormalyzerResults",
               nr
           })
 
+#' @rdname basicMetricNormalizations
 setMethod("basicMetricNormalizations", "NormalyzerResults",
               function(nr) {
                   ## Normalizing using average sample sum, sample mean and sample median
@@ -132,6 +233,7 @@ setMethod("basicMetricNormalizations", "NormalyzerResults",
                   nr
             })
 
+#' @rdname calculateHKdataForNormObj
 setMethod("calculateHKdataForNormObj", "NormalyzerResults",
           function(nr) {
               nds <- nr@nds
@@ -153,6 +255,7 @@ setMethod("calculateHKdataForNormObj", "NormalyzerResults",
               nr
           })
 
+#' @rdname performVSNNormalization
 setMethod("performVSNNormalization", "NormalyzerResults",
           function(nr) {
               nds <- nr@nds
@@ -161,6 +264,7 @@ setMethod("performVSNNormalization", "NormalyzerResults",
               nr
           })
 
+#' @rdname performQuantileNormalization
 setMethod("performQuantileNormalization", "NormalyzerResults",
           function(nr) {
               stopifnot(!is.null(nr@data2log2))
@@ -169,6 +273,7 @@ setMethod("performQuantileNormalization", "NormalyzerResults",
               nr
           })
 
+#' @rdname performSMADNormalization
 setMethod("performSMADNormalization", "NormalyzerResults",
           function(nr) {
               mediandata <- apply(nr@data2log2, 2, "median", na.rm=T)
@@ -178,12 +283,14 @@ setMethod("performSMADNormalization", "NormalyzerResults",
               nr
           })
 
+#' @rdname performCyclicLoessNormalization
 setMethod("performCyclicLoessNormalization", "NormalyzerResults",
           function(nr) {
               nr@data2loess <- normalizeCyclicLoess(nr@data2log2, method="fast")
               nr
           })
 
+#' @rdname performGlobalRLRNormalization
 setMethod("performGlobalRLRNormalization", "NormalyzerResults",
           function(nr) {
               mediandata <- apply(nr@data2log2, 1, "median", na.rm=T)
@@ -214,6 +321,7 @@ setMethod("performGlobalRLRNormalization", "NormalyzerResults",
               nr
           })
 
+#' @rdname performReplicateBasedNormalizations
 setMethod("performReplicateBasedNormalizations", "NormalyzerResults",
           function(nr) {
               ## NORMALIZATION within REPLICATES RLR, VSN and Loess
@@ -258,7 +366,8 @@ setMethod("performReplicateBasedNormalizations", "NormalyzerResults",
               nr
           })
 
-setMethod("getMethodNames", "NormalyzerResults",
+#' @rdname getUsedMethodNames
+setMethod("getUsedMethodNames", "NormalyzerResults",
           function(nr) {
               
               usedMethodNames <- c()
@@ -272,10 +381,11 @@ setMethod("getMethodNames", "NormalyzerResults",
                       usedMethodNames <- c(usedMethodNames, outputName)
                   }
               }
-
+              
               usedMethodNames
           })
 
+#' @rdname getSlotNameList
 setMethod("getSlotNameList", "NormalyzerResults",
           function(nr) {
               methodDataList <- c()
@@ -292,6 +402,7 @@ setMethod("getSlotNameList", "NormalyzerResults",
               methodDataList
           })
 
+#' @rdname getNormalizationMatrices
 setMethod("getNormalizationMatrices", "NormalyzerResults",
           function(nr) {
               methodDataList <- list()

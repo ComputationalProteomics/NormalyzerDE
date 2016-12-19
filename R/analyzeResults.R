@@ -21,7 +21,7 @@ analyzeNormalizations <- function(nr, name) {
     nds <- nr@nds
     
     methodlist <- getNormalizationMatrices(nr)
-    methodnames <- getMethodNames(nr)
+    methodnames <- getUsedMethodNames(nr)
     getrawdata <- nds@rawData
     filterrawdata <- nds@filterrawdata
     filterED <- nds@sampleReplicateGroups

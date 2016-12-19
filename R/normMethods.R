@@ -13,7 +13,7 @@ normMethods <- function(nds, currentjob, jobdir) {
     nr <- generateNormalyzerResultsObject(nds)
     nr <- performNormalizations(nr)
     
-    methodnames <- getMethodNames(nr)
+    methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
 
     for (sampleIndex in 1:length(methodnames)) {
