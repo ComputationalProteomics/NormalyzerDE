@@ -1,3 +1,4 @@
+#' Debugging utility used to output "DEBUG" together with output
 myprint <- function(..., debug=T) {
     if (debug) {
         print(paste("DEBUG: ", ...))
@@ -7,10 +8,8 @@ myprint <- function(..., debug=T) {
     }
 }
 
-returnOne <- function() {
-    1
-}
-
+#' Debugging utility used to output information about variable together with
+#'  its content
 varprint <- function(variable, debug=T) {
     varName <- deparse(substitute(variable))
     
@@ -23,6 +22,12 @@ varprint <- function(variable, debug=T) {
 }
 
 
+#' Create empty directory for run if not already present
+#' 
+#' @param jobName Name of the run.
+#' @param outputDir Path to directory where to create the output directory.
+#' @return Path to newly created directory.
+#' @export
 setupJobDir <- function(jobName, outputDir) {
     
     print("DEBUG: Setup job dir called")
@@ -43,13 +48,16 @@ setupJobDir <- function(jobName, outputDir) {
     jobDir
 }
 
+#' Create directory, or return error if already present
+#' 
+#' @param targetPath Path where to attempt to create direcotry
 createDirectory <- function(targetPath) {
     
     if (file.exists(targetPath)) {
-        abc <- "Directory already exists"
-        class(abc) <- "try-error"
-        if (inherits(abc, "try-error")) {
-            return(abc)
+        error_handler <- "Directory already exists"
+        class(error_handler) <- "try-error"
+        if (inherits(error_handler, "try-error")) {
+            return(error_handler)
         }
         stop("Directory already exists")
     } 

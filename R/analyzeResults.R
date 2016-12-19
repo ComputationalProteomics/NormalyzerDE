@@ -1,3 +1,11 @@
+#' Calculate measures for normalization results
+#' 
+#' @param nr Normalyzer results object with calculated results.
+#' @param name Name of the ongoing processing run.
+#' @return Normalyzer results with attached evaluation results object.
+#' @export
+#' @examples
+#' normMethods(normalyzer_results_object, "my_run")
 analyzeNormalizations <- function(nr, name) {
     
     print("DEBUG: analyzeAndPlot entered")
@@ -171,10 +179,14 @@ analyzeNormalizations <- function(nr, name) {
     nr
 }
 
-
+#' Pearson and Spearman correlation calculations for methods and samples
+#' ! Needs some further investigations 
+#' 
+#' @param nr Normalyzer results object with calculated results.
+#' @param ner Normalyzer evaluation object.
+#' @return Normalyzer evaluation object with attached evaluation results.
 calculateCorrelations <- function(nr, ner) {
-    # calculateCorrelations <- function(methodlist, filterED) {
-        
+
     methodlist <- getNormalizationMatrices(nr)
     filterED <- nr@nds@sampleReplicateGroups
     
@@ -192,14 +204,14 @@ calculateCorrelations <- function(nr, ner) {
         un <- unique(filterED)
         
         for (uq in 1:length(un)) {
-            dt <- as.matrix(datastore[,which(filterED==un[uq])])
+            dt <- as.matrix(datastore[, which(filterED == un[uq])])
             class(dt) <- "numeric"
             percor <- cor(dt, use="pairwise.complete.obs", method="pearson")
             spercor <- cor(dt, use="pairwise.complete.obs", method="spearman")
             
-            for (rn in 1:(ncol(dt)-1)) {
-                percorsum <- c(percorsum,percor[rn,-(1:rn)])
-                specorsum <- c(specorsum,spercor[rn,-(1:rn)])
+            for (rn in 1:(ncol(dt) - 1)) {
+                percorsum <- c(percorsum, percor[rn, -(1:rn)])
+                specorsum <- c(specorsum, spercor[rn, -(1:rn)])
             }
         }
         
@@ -209,13 +221,17 @@ calculateCorrelations <- function(nr, ner) {
     
     ner@avgpercorsum <- avgpercorsum
     ner@avgspecorsum <- avgspecorsum
-    
-    # list(avgpercorsum, avgspecorsum)
     ner
 }
 
 
-## Removes rows from dataMatrix where not every replicate is represented by at least one TRUE value
+#' Removes rows from matrix where replicates aren't represented by at least
+#' one value
+#' 
+#' @param dataMatrix Matrix with expression values for entities in replicate 
+#'  samples.
+#' @param replicateHeader Header showing how samples in matrix are replicated.
+#' @return Reduced matrix where rows without any number are excluded.
 filterLinesWithEmptySamples <- function(dataMatrix, replicateHeader) {
     
     firstIndices <- getFirstIndicesInVector(replicateHeader)

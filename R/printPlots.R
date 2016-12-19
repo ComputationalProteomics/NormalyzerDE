@@ -1,11 +1,17 @@
+#' Generate PDF grid page filling it with provided list of plots
+#' ! Needs refactoring to reduce redundancy in code
+#' 
+#' @param plotlist List of target plots to display.
+#' @param plotname List of names corresponding to the provided plot list.
+#' @param pageno Current page number.
+#' @param jobname Name of ongoing job.
 printPlots <- function(plotlist, plotname, pageno, jobname) {
     
-    print("in print plots!!!")
-    
-    # print(str(plotlist))
+    print("In print plots!")
     
     gp <- gpar(fontsize=11, fontfamily="Helvetica", col="black", fontface="bold")
     gpfill <- gpar(fill="gray90", lwd=0, lty=0)
+    
     grid.rect(vp=viewport(layout.pos.row=1, layout.pos.col=1), gp=gpfill)
     grid.rect(vp=viewport(layout.pos.row=1, layout.pos.col=2), gp=gpfill)
     grid.rect(vp=viewport(layout.pos.row=1, layout.pos.col=3), gp=gpfill)
@@ -31,21 +37,21 @@ printPlots <- function(plotlist, plotname, pageno, jobname) {
     grid.text(paste("Project: ", jobname, sep=""),
               vp=viewport(layout.pos.row=5, layout.pos.col=1), just=c("left", "center"), gp=gp)
     
-    # print(str(plotlist))
-    # print(length(plotlist))
-    
     print(plotlist[[1]], vp=viewport(layout.pos.row=2, layout.pos.col=2))
     print(plotlist[[2]], vp=viewport(layout.pos.row=2, layout.pos.col=3))
     print(plotlist[[3]], vp=viewport(layout.pos.row=2, layout.pos.col=4))
     print(plotlist[[4]], vp=viewport(layout.pos.row=2, layout.pos.col=5))
     print(plotlist[[5]], vp=viewport(layout.pos.row=3, layout.pos.col=2))
+    
     if (length(plotlist) > 5) {
+        
         print(plotlist[[6]], vp=viewport(layout.pos.row=3, layout.pos.col=3))
         print(plotlist[[7]], vp=viewport(layout.pos.row=3, layout.pos.col=4))
         print(plotlist[[8]], vp=viewport(layout.pos.row=3, layout.pos.col=5))
         print(plotlist[[9]], vp=viewport(layout.pos.row=4, layout.pos.col=2))
         print(plotlist[[10]], vp=viewport(layout.pos.row=4, layout.pos.col=3))
         print(plotlist[[11]], vp=viewport(layout.pos.row=4, layout.pos.col=4))
+        
         if (length(plotlist) == 12) {
             print(plotlist[[12]], vp=viewport(layout.pos.row=4, layout.pos.col=5))  
         }

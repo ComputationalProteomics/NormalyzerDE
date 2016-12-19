@@ -1,7 +1,15 @@
+#' Print meta information for Normalyzer plot page
+#' ! Needs refactoring to reduce redundancy in code
+#' ! Needs double check of functionality
+#' 
+#' @param plotname Name of current plot.
+#' @param pageno Current page number.
+#' @param jobname Name of ongoing job.
 printMeta <- function(plotname, pageno, jobname) {
     
-    gp=gpar(fontsize=11, fontfamily="Helvetica", col="black", fontface="bold")
-    gpfill=gpar(fill="gray90", lwd=0, lty=0)
+    gp <- gpar(fontsize=11, fontfamily="Helvetica", col="black", fontface="bold")
+    gpfill <- gpar(fill="gray90", lwd=0, lty=0)
+    
     grid.rect(vp=viewport(layout.pos.row=1, layout.pos.col=1), gp=gpfill)
     grid.rect(vp=viewport(layout.pos.row=1, layout.pos.col=2), gp=gpfill)
     grid.rect(vp=viewport(layout.pos.row=1, layout.pos.col=3), gp=gpfill)
