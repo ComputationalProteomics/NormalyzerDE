@@ -1,4 +1,14 @@
-print('Normalyzer sourced')
+#' Normalyzer pipeline entry point
+#' 
+#' @param datafile CSV delimited input file containing raw counts and 
+#'  replicate information in header.
+#' @param jobName Give the current run a name.
+#' @param outputDir Specify an output directory for generated files.
+#'  Defaults to current working directory.
+#' @export
+#' @examples
+#' normalyzer("path/to/input.csv", "my_test_run")
+#' normalyzer("path/to/input.csv", "my_test_run", outputDir="my_output")
 
 normalyzer <- function(datafile, jobName, outputDir=NULL) {
     

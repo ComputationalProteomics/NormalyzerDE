@@ -1,3 +1,13 @@
+#' Perform normalizations on Normalyzer dataset
+#' 
+#' @param nds Normalyzer dataset object.
+#' @param currentjob Name of the ongoing processing run.
+#' @param jobdir Path to the output directory
+#' @return Returns Normalyzer results object with performed analyzes assigned
+#'  as attributes
+#' @export
+#' @examples
+#' normMethods(my_normalyzer_data_object, "my_run", outputDir="my_run_out_dir")
 normMethods <- function(nds, currentjob, jobdir) {
 
     nr <- generateNormalyzerResultsObject(nds)
@@ -24,23 +34,20 @@ normMethods <- function(nds, currentjob, jobdir) {
     return(nr)
 }
 
+#' Create empty Normalyzer results object from Normalyzer data object
+#' 
+#' @param nds Normalyzer dataset object.
+#' @return Empty Normalyzer results object.
 generateNormalyzerResultsObject <- function(nds) {
     nr <- NormalyzerResults(nds=nds)
     nr <- initializeResultsObject(nr)
     nr
 }
 
-getMethodList <- function(HKflag, normObj) {
-
-    if (HKflag) {
-        methodlist <- list(normObj@data2log2, normObj@data2GI, normObj@data2med, normObj@data2mean, normObj@data2ctrlog)
-    }
-    else {
-        methodlist <- list(normObj@data2log2, normObj@data2GI, normObj@data2med, normObj@data2mean)
-    }
-    methodlist
-}
-
+#' Retrieve vector with tags for used global normalization methods
+#' 
+#' @param nds Normalyzer dataset object.
+#' @return Vector with string names for normalization tags
 getMethodNames <- function(houseKeepingFlag) {
 
     if (houseKeepingFlag) {
@@ -52,7 +59,13 @@ getMethodNames <- function(houseKeepingFlag) {
     methodnames
 }
 
-## Retrieve index vector with first or last occurences of each element
+#' Retrieve indices for first or last occurences in vector with replicated 
+#' elements
+#' 
+#' @param targetVector Input vector with replicated elements.
+#' @param reverse Look for first or last occurence for each element.
+#'  By default looks for the first occurence.
+#' @return Vector with indices for each first occurence.
 getFirstIndicesInVector <- function(targetVector, reverse=F) {
     
     encounteredNumbers <- c()
