@@ -1,5 +1,3 @@
-
-
 #' S4 class to represent normalization evaluations
 #' 
 #' @slot avgcvmem TODO: Look into
@@ -15,6 +13,7 @@
 #' @slot avgpercorsum TODO: Look into
 #' @slot avgspecorsum TODO: Look into
 #' @export
+
 NormalizationEvaluationResults <- setClass("NormalizationEvaluationResults",
                                             slots=c(
                                                 avgcvmem = "matrix",

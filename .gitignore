@@ -1,6 +1,7 @@
 # Files
 *.swp
 *.Rhistory
+R/Rplots.pdf
 
 # Folders
 data/

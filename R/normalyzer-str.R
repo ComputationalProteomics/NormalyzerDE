@@ -15,44 +15,44 @@ normalyzer <- function(inputPath, jobName, outputDir=NULL) {
     print('start')
     
     # RcmdrMisc::numSummary used to summarize statistics
-    # require(Rcmdr)
+    require(Rcmdr)
     
     
     # Used for justvsn
-    # require(vsn)
+    require(vsn)
     
     # Used for quantile normalization
-    # require(preprocessCore)
+    require(preprocessCore)
 
     # Used for normalizeCyclicLoess
-    # require(limma)
+    require(limma)
     
     # Used for rlm
-    # require(MASS)
+    require(MASS)
     
     # ape::as.phylo
-    # require(ape)
+    require(ape)
     
     # Used for raster::cv - Coefficient of variation
-    # require(raster)
+    require(raster)
 
     # Used for car::showLabels
-    # require(car)
+    require(car)
     
     # gridExtra::arrange
-    # require(gridExtra)
+    require(gridExtra)
     
     # Extensively used for plotting
-    # require(ggplot2)
+    require(ggplot2)
     
     # grid::grid.layout, and much more for plotting
-    # require(grid)
+    require(grid)
 
     # Biobase::rowMedians ??
 
-    # require(PerformanceAnalytics)
-    # require(abind)
-    # require(e1071)
+    require(PerformanceAnalytics)
+    require(abind)
+    require(e1071)
     
         
         
@@ -63,8 +63,8 @@ normalyzer <- function(inputPath, jobName, outputDir=NULL) {
     source("printPlots.R")
 
     source("NormalyzerDataset.R")
-    source("NormalyzerResults.R")
     source("NormalizationEvaluationResults.R")
+    source("NormalyzerResults.R")
 
     source("utils.R")
     source("inputVerification.R")
