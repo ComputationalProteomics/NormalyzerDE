@@ -1,7 +1,8 @@
 Package: Normalyzer
 Title: Evaluation of normalization methods
 Version: 0.0.0.9000
-Authors@R: person("Jakob", "Willforss", email = "jakob.willforss@immun.lth.se", role = c("aut", "cre"))
+Authors: Aakash Chawade, Jakob Willforss
+Maintainer: Jakob Willforss <jakob.willforss@immun.lth.se>
 Description: Evaluation of normalization methods applied to proteomic data.
 Imports: 
     vsn,
