@@ -1,3 +1,11 @@
+#' Generate full output report plot document
+#' 
+#' @param nr Normalyzer results object.
+#' @param jobdir Path to output directory for run.
+#' @export
+#' @examples
+#' generatePlots
+#' generatePlots(my_normalyzer_results, "path/to/my_run")
 generatePlots <- function(nr, jobdir) {
     
     nds <- nr@nds
@@ -14,12 +22,12 @@ generatePlots <- function(nr, jobdir) {
     # TI
     print("DEBUG: Plotting page 2")
     pageno <- 2
-    plotTI(nr, currentLayout, pageno)
+    plotSampleOutlierSummary(nr, currentLayout, pageno)
     
     # CV
     print("DEBUG: Plotting page 3")
     pageno <- pageno + 1
-    plotCV(nr, currentLayout, pageno)
+    plotReplicateVariance(nr, currentLayout, pageno)
 
     # Stable variables plot and CV in percent difference
     print("DEBUG: Plotting page 4")
@@ -89,6 +97,10 @@ generatePlots <- function(nr, jobdir) {
     dev.off()
 }
 
+#' Setup PDF report settings
+#' 
+#' @param currentjob Name of current run.
+#' @param jobdir Path to output directory for run.
 setupPlotting <- function(currentjob, jobdir) {
 
     palette(c("red", "green", "blue", "orange", "darkgray", "blueviolet", "darkslateblue", "darkviolet", "gray", "bisque4",
@@ -101,9 +113,13 @@ setupPlotting <- function(currentjob, jobdir) {
     def.par <- par(no.readonly=T)
 }
 
+#' Generate first page in output report
+#' 
+#' @param currentjob Name of current run.
+#' @param currentFont Font used for output document.
 plotFrontPage <- function(currentjob, currentFont) {
     
-    par(mfrow=c(4,1))
+    par(mfrow=c(4, 1))
     # TODO: Re-insert nice illustration (figure?)
     # data(data4pdftitle)
     plot(1, type="n", axes=F, xlab="", ylab="")
@@ -132,7 +148,12 @@ plotFrontPage <- function(currentjob, currentFont) {
               vp=viewport(layout.pos.row=7), just=c("center", "center"), gp=gpar(fontsize=10, fontfamily=currentFont, col="black"))
 }
 
-plotTI <- function(nr, currentLayout, pageno) {
+#' Generate sample summary of intensities, missing values and MDS plot
+#' 
+#' @param nr Normalyzer results object.
+#' @param currentLayout Layout used for document.
+#' @param pageno Current page number.
+plotSampleOutlierSummary <- function(nr, currentLayout, pageno) {
 
     nds <- nr@nds
     methodlist <- getNormalizationMatrices(nr)
@@ -144,21 +165,29 @@ plotTI <- function(nr, currentLayout, pageno) {
     layout(tout)
     par(mar=c(4, 4, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
     datacoltotal <- apply(filterrawdata, 2, function(x) { sum(x, na.rm=T) })
+    
     barplot(datacoltotal, las=2, main="Total intensity", cex.names=0.5, names.arg=substr(names(datacoltotal), 1, 10))
     datamissingcol <- apply(filterrawdata, 2, function(x) { sum(is.na(x)) })
     barplot(datamissingcol, las=2, main="Total missing", cex.names=0.5, names.arg=substr(names(datamissingcol), 1, 10))
     datastore <- methodlist[[1]]
+    
     d <- dist(scale(t(na.omit(datastore)), center=TRUE, scale=TRUE))
     fit <- cmdscale(d, eig=TRUE, k=2)
     x <- fit$points[, 1]
     y <- fit$points[, 2]
+    
     plot(x, y, type="n", main="Log2-MDS plot", xlab="", ylab="")
-    text((fit$points[,1]), (fit$points[,2]), col=filterED, labels=filterED)
+    text(fit$points[, 1], fit$points[, 2], col=filterED, labels=filterED)
     pushViewport(viewport(layout=currentLayout))
     printMeta("Data Summary - Outlier detection", pageno, currentjob)
 }
 
-plotCV <- function(nr, currentLayout, pageno) {
+#' Generate normalization replicate variance summary
+#' 
+#' @param nr Normalyzer results object.
+#' @param currentLayout Layout used for document.
+#' @param pageno Current page number.
+plotReplicateVariance <- function(nr, currentLayout, pageno) {
 
     nds <- nr@nds
     methodnames <- getMethodNames(nr)
@@ -184,7 +213,12 @@ plotCV <- function(nr, currentLayout, pageno) {
     printMeta("Replicate variation", pageno, currentjob)
 }
 
-# Replicate variation is plotted in percentage difference
+#' Generate replicate variance overview for normalization methods and CV
+#' plot for stable variables
+#' 
+#' @param nr Normalyzer results object.
+#' @param currentLayout Layout used for document.
+#' @param pageno Current page number.
 plotReplicateVarAndStableVariables <- function(nr, currentLayout, pageno) {
 
     nds <- nr@nds
@@ -234,6 +268,12 @@ plotReplicateVarAndStableVariables <- function(nr, currentLayout, pageno) {
     printMeta("Replicate variation (Relative to Log2)", pageno, currentjob)
 }
 
+#' Overview of coefficient of variation compared to intensity for variables
+#'  for different normalization methods
+#' 
+#' @param nr Normalyzer results object.
+#' @param currentLayout Layout used for document.
+#' @param pageno Current page number.
 plotCVvsIntensity <- function(nr, currentLayout, pageno) {
 
     nds <- nr@nds
@@ -278,6 +318,12 @@ plotCVvsIntensity <- function(nr, currentLayout, pageno) {
     printMeta("CV vs Raw Intensity plots", pageno, currentjob)
 }
 
+#' Expression vs. fold-change for variables for each normalization method
+#' ! TODO: Need to investigate what the actual fold change is here
+#' 
+#' @param nr Normalyzer results object.
+#' @param currentLayout Layout used for document.
+#' @param pageno Current page number.
 plotMA <- function(nr, currentLayout, pageno) {
 
     nds <- nr@nds
@@ -312,6 +358,12 @@ plotMA <- function(nr, currentLayout, pageno) {
     printPlots(Malist, "MA plots", pageno, currentjob)
 }
 
+#' Scatter plot comparing replicate expression between samples
+#' TODO: Investigate this further
+#' 
+#' @param nr Normalyzer results object.
+#' @param currentLayout Layout used for document.
+#' @param pageno Current page number.
 plotScatter <- function(nr, currentLayout, pageno) {
 
     nds <- nr@nds
@@ -334,6 +386,12 @@ plotScatter <- function(nr, currentLayout, pageno) {
     printMeta("Scatterplots", pageno, currentjob)
 }
 
+#' QQ-plots for variable values
+#' TODO: Investigate this further - What is actually extracted here?
+#' 
+#' @param nr Normalyzer results object.
+#' @param currentLayout Layout used for document.
+#' @param pageno Current page number.
 plotQQ <- function(nr, currentLayout, pageno) {
 
     nds <- nr@nds
@@ -347,7 +405,7 @@ plotQQ <- function(nr, currentLayout, pageno) {
         datastore <- methodlist[[i]]
         tempcolname <- colnames(datastore)
         #qqnorm(datastore[,1],main=paste(tempcolname[1],methodnames[i]),xlab="",ylab="")
-        qqlist[[i]] <- qplot(sample=datastore[,1], stat="qq") + labs(x=(""), y=(""), title=(paste(tempcolname[1], methodnames[i])))
+        qqlist[[i]] <- qplot(sample=datastore[, 1], stat="qq") + labs(x=(""), y=(""), title=(paste(tempcolname[1], methodnames[i])))
     }
     
     grid.newpage()
@@ -355,6 +413,12 @@ plotQQ <- function(nr, currentLayout, pageno) {
     printPlots(qqlist, "Q-Q plots", pageno, currentjob)
 }
 
+#' Boxplots showing distribution of values after different normalizations
+#' TODO: Investigate this further - What is actually extracted here?
+#' 
+#' @param nr Normalyzer results object.
+#' @param currentLayout Layout used for document.
+#' @param pageno Current page number.
 plotBoxPlot <- function(nr, currentLayout, pageno) {
 
     nds <- nr@nds
@@ -384,14 +448,19 @@ plotBoxPlot <- function(nr, currentLayout, pageno) {
     for (i in 1:length(methodlist)) {   
         par(mar=c(5, 1, 1, 1))
         boxplot(methodlist[[i]], cex=0.1, cex.axis=0.7, las=2, main=methodnames[i], col=(filterED), outcol="lightgray", 
-                ylim=c((mindata - 1), (maxdata + 1)), names=substr(colnames(methodlist[[i]]), 1, 10))
+                ylim=c(mindata - 1, maxdata + 1), names=substr(colnames(methodlist[[i]]), 1, 10))
     }
     
     pushViewport(viewport(layout=currentLayout))
     printMeta("Boxplots", pageno, currentjob)
 }
 
-# Visualize Relative Log Expression (RLE)
+#' Boxplots showing relative log expression after normalizations
+#' TODO: Investigate this further - What is actually extracted here?
+#' 
+#' @param nr Normalyzer results object.
+#' @param currentLayout Layout used for document.
+#' @param pageno Current page number.
 plotRLE <- function(nr, currentLayout, pageno) {
 
     nds <- nr@nds
@@ -413,6 +482,11 @@ plotRLE <- function(nr, currentLayout, pageno) {
     printMeta("Relative Log Expression (RLE) plots", pageno, currentjob)
 }
 
+#' Density plots showing value distributions after normalizations
+#' 
+#' @param nr Normalyzer results object.
+#' @param currentLayout Layout used for document.
+#' @param pageno Current page number.
 plotDensity <- function(nr, currentLayout, pageno) {
 
     nds <- nr@nds
@@ -427,7 +501,7 @@ plotDensity <- function(nr, currentLayout, pageno) {
     for (i in 1:length(methodlist)) {
         datastore <- (methodlist[[i]])
         tempd <- density(datastore[, 1], na.rm=T)
-        plot(density(datastore[, 1], na.rm=T), xlab="", ylab="", ylim=c(min(tempd$y), max(tempd$y)*1.5), main=methodnames[i], lty=2, lwd=1, col="darkgray")
+        plot(density(datastore[, 1], na.rm=T), xlab="", ylab="", ylim=c(min(tempd$y), max(tempd$y) * 1.5), main=methodnames[i], lty=2, lwd=1, col="darkgray")
         
         for (j in 2:ncol(datastore)) {
             lines(density(datastore[, j], na.rm=T), , lty=2, lwd=1, col="darkgray")
@@ -438,6 +512,13 @@ plotDensity <- function(nr, currentLayout, pageno) {
     printMeta("Density plots", pageno, currentjob)
 }
 
+#' MDS plots showing grouping of samples after normalizations
+#' TODO: Investigate this further - What is actually extracted here?
+#' TODO: Do the d-value with number non-missing data vanish?
+#' 
+#' @param nr Normalyzer results object.
+#' @param currentLayout Layout used for document.
+#' @param pageno Current page number.
 plotMDS <- function(nr, currentLayout, pageno) {
 
     nds <- nr@nds
@@ -464,6 +545,12 @@ plotMDS <- function(nr, currentLayout, pageno) {
     printMeta(paste("MDS plots - Built from", ncol(d), "variables with non-missing data", sep=" "), pageno, currentjob)
 }
 
+#' Visualize standard deviation over (expression?) for different values
+#' TODO: What is on the x-axis here?
+#' 
+#' @param nr Normalyzer results object.
+#' @param currentLayout Layout used for document.
+#' @param pageno Current page number.
 plotMeanSD <- function(nr, currentLayout, pageno) {
 
     nds <- nr@nds
@@ -495,6 +582,12 @@ plotMeanSD <- function(nr, currentLayout, pageno) {
     printMeta("MeanSDplots", pageno, currentjob)
 }
 
+#' Visualize correlations for plots
+#' TODO: What exactly is going on here?
+#' 
+#' @param nr Normalyzer results object.
+#' @param currentLayout Layout used for document.
+#' @param pageno Current page number.
 plotCorrelation <- function(nr, currentLayout, pageno) {
 
     ner <- nr@ner
@@ -536,6 +629,12 @@ plotCorrelation <- function(nr, currentLayout, pageno) {
     printMeta("Correlation plots", pageno, currentjob)
 }
 
+#' Visualize dendrogram grouping of samples
+#' TODO: Why is the Quantile one crazy? (Numbers instead of replicate names)
+#' 
+#' @param nr Normalyzer results object.
+#' @param currentLayout Layout used for document.
+#' @param pageno Current page number.
 plotDendrograms <- function(nr, currentLayout, pageno) {
 
     nds <- nr@nds
@@ -571,6 +670,11 @@ plotDendrograms <- function(nr, currentLayout, pageno) {
               pageno, currentjob)
 }
 
+#' Visualize number of DE variables for ANOVA and Kruskal Wallis
+#' 
+#' @param nr Normalyzer results object.
+#' @param currentLayout Layout used for document.
+#' @param pageno Current page number.
 plotDEPlots <- function(nr, currentLayout, pageno) {
 
     nds <- nr@nds
