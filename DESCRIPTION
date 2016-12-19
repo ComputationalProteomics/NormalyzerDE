@@ -7,17 +7,15 @@ Description: Evaluation of normalization methods applied to proteomic data.
 Imports: 
     vsn,
     Rcmdr,
-    PerformanceAnalytics,
     preprocessCore,
     limma,
     MASS,
-    abind,
-    e1071,
     ape,
     raster,
     car,
+    grid,
     gridExtra,
-    ggplot2
+    ggplot2,
 License: GPL (>=2)
 Encoding: UTF-8
 LazyData: true

@@ -50,9 +50,9 @@ normalyzer <- function(inputPath, jobName, outputDir=NULL) {
 
     # Biobase::rowMedians ??
 
-    require(PerformanceAnalytics)
-    require(abind)
-    require(e1071)
+    # require(PerformanceAnalytics)
+    # require(abind)
+    # require(e1071)
     
         
         
