@@ -113,16 +113,16 @@ analyzeNormalizations <- function(nr, name) {
         temmadmatsum <- apply(madmem, 2, mean, na.rm=T)
         avgmadmem[, meti] <- temmadmatsum
         
-        tempcvmat<-matrix(nrow=nrow(datastore), ncol=length(levels(as.factor(unlist(filterED)))), byrow=T)
+        tempcvmat <- matrix(nrow=nrow(datastore), ncol=length(levels(as.factor(unlist(filterED)))), byrow=T)
         
         for (i in 1:nrow(datastore)) {
             
-            tempcv <- numSummary(datastore[i, ], statistics=c("cv"), groups=unlist(filterED))
+            tempcv <- RcmdrMisc::numSummary(datastore[i, ], statistics=c("cv"), groups=unlist(filterED))
             tempcvmat[i, ] <- tempcv$table
         }
         
         temcvmatsum <- apply(tempcvmat, 2, mean, na.rm=T)
-        avgcvmem[, meti] <- ((temcvmatsum * 100))
+        avgcvmem[, meti] <- temcvmatsum * 100
         
         # ANOVA
         nbsNAperLine <- rowSums(is.na(datastore))
@@ -153,7 +153,7 @@ analyzeNormalizations <- function(nr, name) {
     nonsiganfdrlistcv <- vector()
     for (mlist in 1:methodCount) {
         tmpdata <- methodlist[[mlist]][nonsiganfdrlist, ]
-        nonsiganfdrlistcv[mlist] <- mean(apply(tmpdata, 1, function(x) cv(x, na.rm=T)), na.rm=T)
+        nonsiganfdrlistcv[mlist] <- mean(apply(tmpdata, 1, function(x) raster::cv(x, na.rm=T)), na.rm=T)
     }
     
     nonsiganfdrlistcvpdiff <- sapply(1:length(nonsiganfdrlistcv), function(x) (nonsiganfdrlistcv[x] * 100) / nonsiganfdrlistcv[1])

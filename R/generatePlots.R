@@ -11,7 +11,7 @@ generatePlots <- function(nr, jobdir) {
     nds <- nr@nds
     currentjob <- nds@jobName
 
-    currentLayout <- grid.layout(nrow=5, ncol=6, heights=c(0.1, 1, 1, 1, 0.1), 
+    currentLayout <- grid::grid.layout(nrow=5, ncol=6, heights=c(0.1, 1, 1, 1, 0.1), 
                                  widths=c(0.1, 1, 1, 1, 1, 0.1), 
                                  default.units=c('null', 'null'))
     currentFont <- "Helvetica"
@@ -107,9 +107,12 @@ setupPlotting <- function(currentjob, jobdir) {
               "brown", "cadetblue4", "darkgreen", "darkcyan", "darkmagenta", "darkgoldenrod4", "coral1"))
     
     pdf(file=paste(jobdir, "/Norm_report-", currentjob, ".pdf", sep=""), paper="a4r", width=0, height=0)    
-    theme_norm <- theme_set(theme_bw())
-    theme_norm <- theme_update(panel.grid.minor=element_blank(), axis.text=element_text(size=7), axis.title=element_text(size=8), 
-                               plot.title=element_text(size=8), plot.margin=unit(c(1, 1, 1, 1), "mm"))
+    theme_norm <- ggplot2::theme_set(ggplot2::theme_bw())
+    theme_norm <- ggplot2::theme_update(panel.grid.minor=ggplot2::element_blank(), 
+                                        axis.text=ggplot2::element_text(size=7), 
+                                        axis.title=ggplot2::element_text(size=8), 
+                                        plot.title=ggplot2::element_text(size=8), 
+                                        plot.margin=ggplot2::unit(c(1, 1, 1, 1), "mm"))
     def.par <- par(no.readonly=T)
 }
 
@@ -126,26 +129,26 @@ plotFrontPage <- function(currentjob, currentFont) {
     
     # TODO: Re-insert nice illustration (figure?)
     # boxplot(data4pdftitle, axes=F, col=c("green","green","red","red"))
-    la1 <- grid.layout(nrow=7, ncol=1, heights=c(0.2, 1, 0.1, 0.2, 0.1, 0.2, 0.2), default.units=c('null','null'))
-    gpfill <- gpar(fill="gray90", lwd=0, lty=0)
-    pushViewport(viewport(layout=la1))
-    grid.rect(vp=viewport(layout.pos.row=1), gp=gpfill)
-    grid.rect(vp=viewport(layout.pos.row=7), gp=gpfill)
+    la1 <- grid::grid.layout(nrow=7, ncol=1, heights=c(0.2, 1, 0.1, 0.2, 0.1, 0.2, 0.2), default.units=c('null','null'))
+    gpfill <- grid::gpar(fill="gray90", lwd=0, lty=0)
+    grid::pushViewport(grid::viewport(layout=la1))
+    grid::grid.rect(vp=grid::viewport(layout.pos.row=1), gp=gpfill)
+    grid::grid.rect(vp=grid::viewport(layout.pos.row=7), gp=gpfill)
     
-    grid.text(paste("Project Name: ", currentjob, sep=""), vp=viewport(layout.pos.row=3), just=c("center","center"), 
-              gp=gpar(fontsize=12, fontfamily=currentFont, col="black"))
-    grid.text(paste("Normalyzer (ver 1.1.1)"), vp=viewport(layout.pos.row=4), just=c("center", "center"), 
-              gp=gpar(fontface="bold", fontsize=32, fontfamily=currentFont, col="darkblue"))
+    grid::grid.text(paste("Project Name: ", currentjob, sep=""), vp=grid::viewport(layout.pos.row=3), just=c("center","center"), 
+              gp=grid::gpar(fontsize=12, fontfamily=currentFont, col="black"))
+    grid::grid.text(paste("Normalyzer (ver 1.1.1)"), vp=grid::viewport(layout.pos.row=4), just=c("center", "center"), 
+              gp=grid::gpar(fontface="bold", fontsize=32, fontfamily=currentFont, col="darkblue"))
     
-    grid.text(paste("Report created on: ", Sys.Date(), sep=""), vp=viewport(layout.pos.row=5), just=c("center","center"),
-              gp=gpar(fontsize=12, fontfamily=currentFont, col="black"))
+    grid::grid.text(paste("Report created on: ", Sys.Date(), sep=""), vp=grid::viewport(layout.pos.row=5), just=c("center","center"),
+              gp=grid::gpar(fontsize=12, fontfamily=currentFont, col="black"))
     
     citationText <- "Citation: Chawade, A., Alexandersson, E., Levander, F. (2014). Normalyzer: a tool for rapid evaluation of normalization methods for omics data sets. J Proteome Res.,13 (6)"
     
-    grid.text(citationText, vp=viewport(layout.pos.row=6), just=c("center","center"), gp=gpar(fontsize=10, fontfamily=currentFont, col="black"))
+    grid::grid.text(citationText, vp=grid::viewport(layout.pos.row=6), just=c("center","center"), gp=grid::gpar(fontsize=10, fontfamily=currentFont, col="black"))
     
-    grid.text("Documentation for analyzing this report can be found at http://quantitativeproteomics.org/normalyzer/help.php",
-              vp=viewport(layout.pos.row=7), just=c("center", "center"), gp=gpar(fontsize=10, fontfamily=currentFont, col="black"))
+    grid::grid.text("Documentation for analyzing this report can be found at http://quantitativeproteomics.org/normalyzer/help.php",
+              vp=grid::viewport(layout.pos.row=7), just=c("center", "center"), gp=grid::gpar(fontsize=10, fontfamily=currentFont, col="black"))
 }
 
 #' Generate sample summary of intensities, missing values and MDS plot
@@ -178,7 +181,7 @@ plotSampleOutlierSummary <- function(nr, currentLayout, pageno) {
     
     plot(x, y, type="n", main="Log2-MDS plot", xlab="", ylab="")
     text(fit$points[, 1], fit$points[, 2], col=filterED, labels=filterED)
-    pushViewport(viewport(layout=currentLayout))
+    grid::pushViewport(grid::viewport(layout=currentLayout))
     printMeta("Data Summary - Outlier detection", pageno, currentjob)
 }
 
@@ -209,7 +212,7 @@ plotReplicateVariance <- function(nr, currentLayout, pageno) {
     boxplot(avgvarmem, main="PEV - Intragroup", names=c(methodnames), border="red", density=20, cex=0.3, cex.axis=0.9, las=2, frame.plot=F)
     stripchart(as.data.frame(avgvarmem), vertical=T, cex=0.4, las=2, pch=20, add=T, col="darkgray")
     
-    pushViewport(viewport(layout=currentLayout))
+    grid::pushViewport(grid::viewport(layout=currentLayout))
     printMeta("Replicate variation", pageno, currentjob)
 }
 
@@ -255,16 +258,16 @@ plotReplicateVarAndStableVariables <- function(nr, currentLayout, pageno) {
         if (min(avgcvmempdiff) < 0 || max(avgcvmempdiff) > 100 || min(nonsiganfdrlistcvpdiff) < 0 || max(nonsiganfdrlistcvpdiff) > 100) {
             plot(avgcvmempdiff, nonsiganfdrlistcvpdiff, pch=18, xlim=c(0, 100), ylim=c(0, 100), main="Stable variables plot", 
                  xlab="PCV (intragroup) compared to Log2", ylab="% Global CV of stable variables compared to Log2")
-            showLabels(avgcvmempdiff, nonsiganfdrlistcvpdiff, labels=methodnames, id.method="mahal", id.cex=0.7, id.col="black")
+            car::showLabels(avgcvmempdiff, nonsiganfdrlistcvpdiff, labels=methodnames, id.method="mahal", id.cex=0.7, id.col="black")
         }
         else {
             plot(avgcvmempdiff, nonsiganfdrlistcvpdiff, pch=18, main="Stable variables plot", 
                  xlab="PCV (Intragroup) compared to Log2", ylab="% Global CV of stable variables compared to Log2")
-            showLabels(avgcvmempdiff, nonsiganfdrlistcvpdiff, labels=methodnames, id.method="mahal", id.cex=0.7, id.col="black")
+            car::showLabels(avgcvmempdiff, nonsiganfdrlistcvpdiff, labels=methodnames, id.method="mahal", id.cex=0.7, id.col="black")
         }
     }
     
-    pushViewport(viewport(layout=currentLayout))
+    grid::pushViewport(grid::viewport(layout=currentLayout))
     printMeta("Replicate variation (Relative to Log2)", pageno, currentjob)
 }
 
@@ -295,8 +298,8 @@ plotCVvsIntensity <- function(nr, currentLayout, pageno) {
         
         for (i in 1:nrow(datastore)) {
             
-            tempcv <- numSummary(datastore[i, ], statistics=c("cv"))
-            tempavg <- numSummary(filterrawdata[i, ], statistics=c("mean"))
+            tempcv <- RcmdrMisc::numSummary(datastore[i, ], statistics=c("cv"))
+            tempavg <- RcmdrMisc::numSummary(filterrawdata[i, ], statistics=c("mean"))
             tempcvmat1[i, j] <- 100 * tempcv$table
             tempavgmat1[i, j] <- tempavg$table 
         }
@@ -314,7 +317,7 @@ plotCVvsIntensity <- function(nr, currentLayout, pageno) {
         plot(tempavgmat1[, i], tempcvmat1[, i], main=methodnames[i], xlab="Raw intensity", ylab="CV", cex=0.3, ylim=c(0, maxtempcv))
     }
     
-    pushViewport(viewport(layout=currentLayout))
+    grid::pushViewport(grid::viewport(layout=currentLayout))
     printMeta("CV vs Raw Intensity plots", pageno, currentjob)
 }
 
@@ -344,16 +347,16 @@ plotMA <- function(nr, currentLayout, pageno) {
         fc <- apply(cbind(datastore1[, 1], avg), 1, function(x) x[1] - x[2])
         df <- as.data.frame(cbind(avg, fc))
         
-        Malist[[i]] <- ggplot(df, aes(avg, fc)) + 
-            geom_point(color="darkgray", size=0.7) + 
-            labs(x=("Replicate group mean"), y=("Replicate-1 Fold Change"), 
+        Malist[[i]] <- ggplot2::ggplot(df, ggplot2::aes(avg, fc)) + 
+            ggplot2::geom_point(color="darkgray", size=0.7) + 
+            ggplot2::labs(x=("Replicate group mean"), y=("Replicate-1 Fold Change"), 
                  title=(paste(tempcolname[1], methodnames[i]))) + 
-            stat_smooth(method="loess", se=F, colour="red") + 
-            geom_abline(intercept=0, slope=0, size=0.3)
+            ggplot2::stat_smooth(method="loess", se=F, colour="red") + 
+            ggplot2::geom_abline(intercept=0, slope=0, size=0.3)
     } 
     
-    grid.newpage()
-    pushViewport(viewport(layout=currentLayout))
+    grid::grid.newpage()
+    grid::pushViewport(grid::viewport(layout=currentLayout))
     
     printPlots(Malist, "MA plots", pageno, currentjob)
 }
@@ -382,7 +385,8 @@ plotScatter <- function(nr, currentLayout, pageno) {
         
         legend("topleft", bty="n", legend=paste("R2 ", format(summary(fit)$adj.r.squared, digits=2)), cex=0.7)
     }
-    pushViewport(viewport(layout=currentLayout))
+    
+    grid::pushViewport(grid::viewport(layout=currentLayout))
     printMeta("Scatterplots", pageno, currentjob)
 }
 
@@ -405,11 +409,12 @@ plotQQ <- function(nr, currentLayout, pageno) {
         datastore <- methodlist[[i]]
         tempcolname <- colnames(datastore)
         #qqnorm(datastore[,1],main=paste(tempcolname[1],methodnames[i]),xlab="",ylab="")
-        qqlist[[i]] <- qplot(sample=datastore[, 1], stat="qq") + labs(x=(""), y=(""), title=(paste(tempcolname[1], methodnames[i])))
+        qqlist[[i]] <- ggplot2::qplot(sample=datastore[, 1], stat="qq") + 
+            ggplot2::labs(x=(""), y=(""), title=(paste(tempcolname[1], methodnames[i])))
     }
     
-    grid.newpage()
-    pushViewport(viewport(layout=currentLayout))
+    grid::grid.newpage()
+    grid::pushViewport(grid::viewport(layout=currentLayout))
     printPlots(qqlist, "Q-Q plots", pageno, currentjob)
 }
 
@@ -451,7 +456,7 @@ plotBoxPlot <- function(nr, currentLayout, pageno) {
                 ylim=c(mindata - 1, maxdata + 1), names=substr(colnames(methodlist[[i]]), 1, 10))
     }
     
-    pushViewport(viewport(layout=currentLayout))
+    grid::pushViewport(grid::viewport(layout=currentLayout))
     printMeta("Boxplots", pageno, currentjob)
 }
 
@@ -474,11 +479,11 @@ plotRLE <- function(nr, currentLayout, pageno) {
     par(mar=c(2, 2, 2, 1), oma=c(3, 2, 3, 2), xpd=NA)
     
     for (i in 1:length(methodlist)) {
-        deviations = methodlist[[i]] - rowMedians(methodlist[[i]], na.rm=T)
+        deviations = methodlist[[i]] - Biobase::rowMedians(methodlist[[i]], na.rm=T)
         boxplot(deviations, outcol="lightgray", cex=0.1, cex.axis=0.7, las=2, main=methodnames[i], col=(filterED), names=substr(colnames(methodlist[[i]]), 1, 6))
     }
     
-    pushViewport(viewport(layout=currentLayout))
+    grid::pushViewport(grid::viewport(layout=currentLayout))
     printMeta("Relative Log Expression (RLE) plots", pageno, currentjob)
 }
 
@@ -508,7 +513,7 @@ plotDensity <- function(nr, currentLayout, pageno) {
         }
     }
     
-    pushViewport(viewport(layout=currentLayout))
+    grid::pushViewport(grid::viewport(layout=currentLayout))
     printMeta("Density plots", pageno, currentjob)
 }
 
@@ -541,7 +546,7 @@ plotMDS <- function(nr, currentLayout, pageno) {
         text(fit$points[, 1], fit$points[, 2], col=filterED, labels=filterED)
     }
     
-    pushViewport(viewport(layout=currentLayout))
+    grid::pushViewport(grid::viewport(layout=currentLayout))
     printMeta(paste("MDS plots - Built from", ncol(d), "variables with non-missing data", sep=" "), pageno, currentjob)
 }
 
@@ -565,20 +570,22 @@ plotMeanSD <- function(nr, currentLayout, pageno) {
         datastore <- methodlist[[i]]
         print(paste("Feeding method name: ", methodnames[i]))
         
-        msd <- meanSdPlot(datastore, xlab="", ylab="", plot=F)
+        msd <- vsn::meanSdPlot(datastore, xlab="", ylab="", plot=F)
         
         sdPlots[[i]] <- msd$gg + 
-            ggtitle(methodnames[i]) + 
-            theme(legend.position="none", plot.margin=unit(c(1,0,0,0), "cm"))
+            ggplot2::ggtitle(methodnames[i]) + 
+            ggplot2::theme(legend.position="none", plot.margin=ggplot2::unit(c(1,0,0,0), "cm"))
 
         # TODO: The main=methodnames[i] seemed to cause crash here // Jakob
         # meanSdPlot(datastore, xlab="", ylab="", main=methodnames[i])
     }
 
-    
-    do.call("grid.arrange", c(sdPlots, nrow=3, ncol=4, padding=1, top=1))
 
-    pushViewport(viewport(layout=currentLayout))
+    # Old, not sure it worked properly?    
+    # do.call("gridExtra::grid.arrange", c(sdPlots, nrow=3, ncol=4, padding=1, top=1))
+    
+    gridExtra::arrangeGrob(sdPlots, nrow=3, ncol=4, padding=1, top=1)
+    grid::pushViewport(grid::viewport(layout=currentLayout))
     printMeta("MeanSDplots", pageno, currentjob)
 }
 
@@ -625,7 +632,7 @@ plotCorrelation <- function(nr, currentLayout, pageno) {
     
     stripchart(as.data.frame(spedf), 
                vertical=T, cex=0.4, las=2, pch=20, add=T, col="darkgreen")
-    pushViewport(viewport(layout=currentLayout))
+    grid::pushViewport(grid::viewport(layout=currentLayout))
     printMeta("Correlation plots", pageno, currentjob)
 }
 
@@ -660,11 +667,11 @@ plotDendrograms <- function(nr, currentLayout, pageno) {
         
         hc <- hclust(dist(scaledTransposedMatrix), "ave")
         
-        plot(as.phylo(hc), main=methodnames[j], cex=0.5, tip.color=colt[filterED])
-        axisPhylo(side=1)
+        plot(ape::as.phylo(hc), main=methodnames[j], cex=0.5, tip.color=colt[filterED])
+        ape::axisPhylo(side=1)
     }
     
-    pushViewport(viewport(layout=currentLayout))
+    grid::pushViewport(grid::viewport(layout=currentLayout))
     printMeta(paste("Dendrograms - Built from", ncol(scaledTransposedMatrix), 
                     "variables containing non-missing data", sep=" "), 
               pageno, currentjob)
@@ -698,7 +705,7 @@ plotDEPlots <- function(nr, currentLayout, pageno) {
             border="red", density=20, cex=0.5, cex.axis=0.9, 
             las=2, ylab="No. of Variables with FDR < 0.05")
     
-    pushViewport(viewport(layout=currentLayout))
+    grid::pushViewport(grid::viewport(layout=currentLayout))
     printMeta("Differential Expression", pageno, currentjob)
 }
 

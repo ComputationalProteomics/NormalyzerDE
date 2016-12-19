@@ -260,7 +260,7 @@ setMethod("performVSNNormalization", "NormalyzerResults",
           function(nr) {
               nds <- nr@nds
               filterrawdata <- nds@filterrawdata
-              nr@data2vsn <- justvsn(filterrawdata)
+              nr@data2vsn <- vsn::justvsn(filterrawdata)
               nr
           })
 
@@ -269,7 +269,7 @@ setMethod("performQuantileNormalization", "NormalyzerResults",
           function(nr) {
               stopifnot(!is.null(nr@data2log2))
               
-              nr@data2quantile <- normalize.quantiles(nr@data2log2, copy=T)
+              nr@data2quantile <- preprocessCore::normalize.quantiles(nr@data2log2, copy=T)
               nr
           })
 
@@ -286,7 +286,7 @@ setMethod("performSMADNormalization", "NormalyzerResults",
 #' @rdname performCyclicLoessNormalization
 setMethod("performCyclicLoessNormalization", "NormalyzerResults",
           function(nr) {
-              nr@data2loess <- normalizeCyclicLoess(nr@data2log2, method="fast")
+              nr@data2loess <- limma::normalizeCyclicLoess(nr@data2log2, method="fast")
               nr
           })
 
@@ -300,7 +300,7 @@ setMethod("performGlobalRLRNormalization", "NormalyzerResults",
                   
                   # print(sprintf("Index: %i", j))
                   
-                  lrFit <- rlm(as.matrix(nr@data2log2[, j])~mediandata, na.action=na.exclude)
+                  lrFit <- MASS::rlm(as.matrix(nr@data2log2[, j])~mediandata, na.action=na.exclude)
                   coeffs <- lrFit$coefficients
                   coeffs2 <- coeffs[2]
                   coeffs1 <- coeffs[1]
@@ -350,13 +350,13 @@ setMethod("performReplicateBasedNormalizations", "NormalyzerResults",
                   
                   for (currentCol in startColIndex:endColIndex) {
                       
-                      LRfit <- rlm(as.matrix(nr@data2log2[, currentCol])~mediandata, na.action=na.exclude)
+                      LRfit <- MASS::rlm(as.matrix(nr@data2log2[, currentCol])~mediandata, na.action=na.exclude)
                       LRcoeffs <- LRfit$coefficients
                       nr@fittedLR <- cbind(nr@fittedLR, (nr@data2log2[, currentCol] - LRcoeffs[1]) / LRcoeffs[2])
                   }
                   
-                  nr@data2limloess <- cbind(nr@data2limloess, normalizeCyclicLoess(nr@data2log2[, startColIndex:endColIndex], method="fast"))
-                  nr@data2vsnrep <- cbind(nr@data2vsnrep, justvsn(as.matrix(filterrawdata[, startColIndex:endColIndex])))
+                  nr@data2limloess <- cbind(nr@data2limloess, limma::normalizeCyclicLoess(nr@data2log2[, startColIndex:endColIndex], method="fast"))
+                  nr@data2vsnrep <- cbind(nr@data2vsnrep, vsn::justvsn(as.matrix(filterrawdata[, startColIndex:endColIndex])))
               }
               
               colnames(nr@fittedLR) <- colnames(nr@data2log2)

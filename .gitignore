@@ -1,4 +1,6 @@
 # Files
+*.swp
+*.Rhistory
 
 # Folders
 data/
