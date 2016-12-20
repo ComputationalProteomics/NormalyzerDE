@@ -216,7 +216,7 @@ setMethod("basicMetricNormalizations", "NormalyzerResults",
                   
                   nds <- nr@nds
                   
-                  avgcolsum <- median(nds@colsum)
+                  avgcolsum <- stats::median(nds@colsum)
                   for (i in 1:nrow(nds@filterrawdata)) {
                       nr@data2GI[i, ] <- unlist(sapply(1:ncol(nds@filterrawdata), function(zd) { (nds@filterrawdata[i, zd] / nds@colsum[zd]) * (avgcolsum) }))
                       nr@data2med[i, ] <- unlist(sapply(1:ncol(nds@filterrawdata), function(zd) { (nds@filterrawdata[i, zd] / nds@medofdata[zd]) * mean(nds@medofdata) }))
@@ -277,7 +277,7 @@ setMethod("performQuantileNormalization", "NormalyzerResults",
 setMethod("performSMADNormalization", "NormalyzerResults",
           function(nr) {
               mediandata <- apply(nr@data2log2, 2, "median", na.rm=T)
-              maddata <- apply(nr@data2log2, 2, function(x) mad(x, na.rm=T))
+              maddata <- apply(nr@data2log2, 2, function(x) stats::mad(x, na.rm=T))
               nr@data2mad <- t(apply(nr@data2log2, 1, function(x) ((x - mediandata) / maddata)))
               nr@data2mad <- nr@data2mad + mean(mediandata)
               nr
@@ -300,7 +300,7 @@ setMethod("performGlobalRLRNormalization", "NormalyzerResults",
                   
                   # print(sprintf("Index: %i", j))
                   
-                  lrFit <- MASS::rlm(as.matrix(nr@data2log2[, j])~mediandata, na.action=na.exclude)
+                  lrFit <- MASS::rlm(as.matrix(nr@data2log2[, j])~mediandata, na.action=stats::na.exclude)
                   coeffs <- lrFit$coefficients
                   coeffs2 <- coeffs[2]
                   coeffs1 <- coeffs[1]
@@ -350,7 +350,7 @@ setMethod("performReplicateBasedNormalizations", "NormalyzerResults",
                   
                   for (currentCol in startColIndex:endColIndex) {
                       
-                      LRfit <- MASS::rlm(as.matrix(nr@data2log2[, currentCol])~mediandata, na.action=na.exclude)
+                      LRfit <- MASS::rlm(as.matrix(nr@data2log2[, currentCol])~mediandata, na.action=stats::na.exclude)
                       LRcoeffs <- LRfit$coefficients
                       nr@fittedLR <- cbind(nr@fittedLR, (nr@data2log2[, currentCol] - LRcoeffs[1]) / LRcoeffs[2])
                   }
@@ -374,7 +374,7 @@ setMethod("getUsedMethodNames", "NormalyzerResults",
               
               for (i in 1:length(slotNames)) {
                   slotName <- slotNames[i]
-                  fieldValue <- slot(nr, slotName)
+                  fieldValue <- methods::slot(nr, slotName)
                   
                   if (!all(is.na(fieldValue))) {
                       outputName <- outputNames[i]
@@ -392,7 +392,7 @@ setMethod("getSlotNameList", "NormalyzerResults",
               
               for (i in 1:length(slotNames)) {
                   slotName <- slotNames[i]
-                  fieldValue <- slot(nr, slotName)
+                  fieldValue <- methods::slot(nr, slotName)
                   
                   if (!all(is.na(fieldValue))) {
                       methodDataList <- c(methodDataList, slotName)
@@ -410,7 +410,7 @@ setMethod("getNormalizationMatrices", "NormalyzerResults",
               listCounter <- 1
               for (i in 1:length(slotNames)) {
                   slotName <- slotNames[i]
-                  fieldValue <- slot(nr, slotName)
+                  fieldValue <- methods::slot(nr, slotName)
                   
                   if (!all(is.na(fieldValue))) {
                       methodDataList[[listCounter]] <- fieldValue

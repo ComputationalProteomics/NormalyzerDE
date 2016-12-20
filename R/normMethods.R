@@ -6,8 +6,6 @@
 #' @return Returns Normalyzer results object with performed analyzes assigned
 #'  as attributes
 #' @export
-#' @examples
-#' normMethods(my_normalyzer_data_object, "my_run", outputDir="my_run_out_dir")
 normMethods <- function(nds, currentjob, jobdir) {
 
     nr <- generateNormalyzerResultsObject(nds)
@@ -18,16 +16,16 @@ normMethods <- function(nds, currentjob, jobdir) {
 
     for (sampleIndex in 1:length(methodnames)) {
         
-        write.table(file=paste(jobdir, "/", methodnames[sampleIndex], "-normalized.txt", sep=""),
+        utils::write.table(file=paste(jobdir, "/", methodnames[sampleIndex], "-normalized.txt", sep=""),
                     cbind(nds@rawData[-(1:2), (1:(length(nds@inputHeaderValues) - length(nds@sampleReplicateGroups)))],
                           methodlist[[sampleIndex]]), sep="\t", row.names=F, col.names=nds@rawData[2,], quote=F)
     }
     
     if (!all(is.na(nr@houseKeepingVars))) {
-        write.table(file=paste(jobdir, "/housekeeping-variables.txt", sep=""), nr@houseKeepingVars, sep="\t", row.names=F, col.names=nds@rawData[2,], quote=F)
+        utils::write.table(file=paste(jobdir, "/housekeeping-variables.txt", sep=""), nr@houseKeepingVars, sep="\t", row.names=F, col.names=nds@rawData[2,], quote=F)
     }
     
-    write.table(file=paste(jobdir, "/submitted_rawdata.txt", sep=""), 
+    utils::write.table(file=paste(jobdir, "/submitted_rawdata.txt", sep=""), 
                 cbind(nds@rawData[-(1:2), (1:(length(nds@inputHeaderValues) - length(nds@sampleReplicateGroups)))], nds@filterrawdata), sep="\t", row.names=F,
                 col.names=nds@rawData[2,], quote=F)
 
@@ -46,7 +44,7 @@ generateNormalyzerResultsObject <- function(nds) {
 
 #' Retrieve vector with tags for used global normalization methods
 #' 
-#' @param nds Normalyzer dataset object.
+#' @param houseKeepingFlag Boolean telling whether house-keeing normalization is used
 #' @return Vector with string names for normalization tags
 getMethodNames <- function(houseKeepingFlag) {
 

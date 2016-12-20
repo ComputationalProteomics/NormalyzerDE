@@ -3,9 +3,6 @@
 #' @param nr Normalyzer results object.
 #' @param jobdir Path to output directory for run.
 #' @export
-#' @examples
-#' generatePlots
-#' generatePlots(my_normalyzer_results, "path/to/my_run")
 generatePlots <- function(nr, jobdir) {
     
     nds <- nr@nds
@@ -94,7 +91,7 @@ generatePlots <- function(nr, jobdir) {
     pageno <- pageno + 1
     plotDEPlots(nr, currentLayout, pageno)
     
-    dev.off()
+    grDevices::dev.off()
 }
 
 #' Setup PDF report settings
@@ -103,17 +100,17 @@ generatePlots <- function(nr, jobdir) {
 #' @param jobdir Path to output directory for run.
 setupPlotting <- function(currentjob, jobdir) {
 
-    palette(c("red", "green", "blue", "orange", "darkgray", "blueviolet", "darkslateblue", "darkviolet", "gray", "bisque4",
+    grDevices::palette(c("red", "green", "blue", "orange", "darkgray", "blueviolet", "darkslateblue", "darkviolet", "gray", "bisque4",
               "brown", "cadetblue4", "darkgreen", "darkcyan", "darkmagenta", "darkgoldenrod4", "coral1"))
     
-    pdf(file=paste(jobdir, "/Norm_report-", currentjob, ".pdf", sep=""), paper="a4r", width=0, height=0)    
+    grDevices::pdf(file=paste(jobdir, "/Norm_report-", currentjob, ".pdf", sep=""), paper="a4r", width=0, height=0)    
     theme_norm <- ggplot2::theme_set(ggplot2::theme_bw())
     theme_norm <- ggplot2::theme_update(panel.grid.minor=ggplot2::element_blank(), 
                                         axis.text=ggplot2::element_text(size=7), 
                                         axis.title=ggplot2::element_text(size=8), 
                                         plot.title=ggplot2::element_text(size=8), 
                                         plot.margin=ggplot2::unit(c(1, 1, 1, 1), "mm"))
-    def.par <- par(no.readonly=T)
+    def.par <- graphics::par(no.readonly=T)
 }
 
 #' Generate first page in output report
@@ -122,10 +119,10 @@ setupPlotting <- function(currentjob, jobdir) {
 #' @param currentFont Font used for output document.
 plotFrontPage <- function(currentjob, currentFont) {
     
-    par(mfrow=c(4, 1))
+    graphics::par(mfrow=c(4, 1))
     # TODO: Re-insert nice illustration (figure?)
     # data(data4pdftitle)
-    plot(1, type="n", axes=F, xlab="", ylab="")
+    graphics::plot(1, type="n", axes=F, xlab="", ylab="")
     
     # TODO: Re-insert nice illustration (figure?)
     # boxplot(data4pdftitle, axes=F, col=c("green","green","red","red"))
@@ -165,22 +162,22 @@ plotSampleOutlierSummary <- function(nr, currentLayout, pageno) {
     currentjob <- nds@jobName
     
     tout <- rbind(c(1, 2), c(3, 4))
-    layout(tout)
-    par(mar=c(4, 4, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
+    graphics::layout(tout)
+    graphics::par(mar=c(4, 4, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
     datacoltotal <- apply(filterrawdata, 2, function(x) { sum(x, na.rm=T) })
     
-    barplot(datacoltotal, las=2, main="Total intensity", cex.names=0.5, names.arg=substr(names(datacoltotal), 1, 10))
+    graphics::barplot(datacoltotal, las=2, main="Total intensity", cex.names=0.5, names.arg=substr(names(datacoltotal), 1, 10))
     datamissingcol <- apply(filterrawdata, 2, function(x) { sum(is.na(x)) })
-    barplot(datamissingcol, las=2, main="Total missing", cex.names=0.5, names.arg=substr(names(datamissingcol), 1, 10))
+    graphics::barplot(datamissingcol, las=2, main="Total missing", cex.names=0.5, names.arg=substr(names(datamissingcol), 1, 10))
     datastore <- methodlist[[1]]
     
-    d <- dist(scale(t(na.omit(datastore)), center=TRUE, scale=TRUE))
-    fit <- cmdscale(d, eig=TRUE, k=2)
+    d <- stats::dist(scale(t(stats::na.omit(datastore)), center=TRUE, scale=TRUE))
+    fit <- stats::cmdscale(d, eig=TRUE, k=2)
     x <- fit$points[, 1]
     y <- fit$points[, 2]
     
-    plot(x, y, type="n", main="Log2-MDS plot", xlab="", ylab="")
-    text(fit$points[, 1], fit$points[, 2], col=filterED, labels=filterED)
+    graphics::plot(x, y, type="n", main="Log2-MDS plot", xlab="", ylab="")
+    graphics::text(fit$points[, 1], fit$points[, 2], col=filterED, labels=filterED)
     grid::pushViewport(grid::viewport(layout=currentLayout))
     printMeta("Data Summary - Outlier detection", pageno, currentjob)
 }
@@ -202,15 +199,15 @@ plotReplicateVariance <- function(nr, currentLayout, pageno) {
     avgvarmem <- ner@avgvarmem
     
     tout <- rbind(c(1, 2, 3), c(4))
-    layout(tout)
-    par(mar=c(2, 2, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
+    graphics::layout(tout)
+    graphics::par(mar=c(2, 2, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
     
-    boxplot(avgcvmem, main="PCV - Intragroup", names=c(methodnames), border="red", density=20, cex=0.3, cex.axis=0.9, las=2, frame.plot=F)
-    stripchart(as.data.frame(avgcvmem), vertical=T, cex=0.4, las=2, pch=20, add=T, col="darkgray")
-    boxplot(avgmadmem, main="PMAD - Intragroup", names=c(methodnames), border="red", density=20, cex=0.3, cex.axis=0.9, las=2, frame.plot=F)
-    stripchart(as.data.frame(avgmadmem), vertical=T, cex=0.4, las=2, pch=20, add=T, col="darkgray")
-    boxplot(avgvarmem, main="PEV - Intragroup", names=c(methodnames), border="red", density=20, cex=0.3, cex.axis=0.9, las=2, frame.plot=F)
-    stripchart(as.data.frame(avgvarmem), vertical=T, cex=0.4, las=2, pch=20, add=T, col="darkgray")
+    graphics::boxplot(avgcvmem, main="PCV - Intragroup", names=c(methodnames), border="red", density=20, cex=0.3, cex.axis=0.9, las=2, frame.plot=F)
+    graphics::stripchart(as.data.frame(avgcvmem), vertical=T, cex=0.4, las=2, pch=20, add=T, col="darkgray")
+    graphics::boxplot(avgmadmem, main="PMAD - Intragroup", names=c(methodnames), border="red", density=20, cex=0.3, cex.axis=0.9, las=2, frame.plot=F)
+    graphics::stripchart(as.data.frame(avgmadmem), vertical=T, cex=0.4, las=2, pch=20, add=T, col="darkgray")
+    graphics::boxplot(avgvarmem, main="PEV - Intragroup", names=c(methodnames), border="red", density=20, cex=0.3, cex.axis=0.9, las=2, frame.plot=F)
+    graphics::stripchart(as.data.frame(avgvarmem), vertical=T, cex=0.4, las=2, pch=20, add=T, col="darkgray")
     
     grid::pushViewport(grid::viewport(layout=currentLayout))
     printMeta("Replicate variation", pageno, currentjob)
@@ -235,33 +232,33 @@ plotReplicateVarAndStableVariables <- function(nr, currentLayout, pageno) {
     avgvarmempdiff <- ner@avgvarmempdiff
     
     tout <- rbind(c(1, 2, 3), c(4, 5, 5))
-    layout(tout)
-    par(mar=c(6, 6, 3, 1), oma=c(2, 3, 3, 2), xpd=NA)
-    abc <- barplot(avgcvmempdiff, main="PCV compared to log2 ", names.arg=c(methodnames), border="red", 
+    graphics::layout(tout)
+    graphics::par(mar=c(6, 6, 3, 1), oma=c(2, 3, 3, 2), xpd=NA)
+    abc <- graphics::barplot(avgcvmempdiff, main="PCV compared to log2 ", names.arg=c(methodnames), border="red", 
                    ylim=c(min(avgcvmempdiff) - 10, (max(avgmadmempdiff)) + 5), density=20, cex=0.9, cex.axis=0.7, las=2, xpd=F)
-    axis(1, at=c(0.2, (max(abc) + 0.5)), labels=F, lwd.ticks=0)
-    axis(1, at=abc, labels=F, lwd=0, lwd.ticks=1)
-    text(abc,avgcvmempdiff, labels=round(avgcvmempdiff, digits=0), pos=3, las=2)  
-    abc<-barplot(avgmadmempdiff, main="PMAD compared to log2", names.arg=c(methodnames), border="red", 
+    graphics::axis(1, at=c(0.2, (max(abc) + 0.5)), labels=F, lwd.ticks=0)
+    graphics::axis(1, at=abc, labels=F, lwd=0, lwd.ticks=1)
+    graphics::text(abc,avgcvmempdiff, labels=round(avgcvmempdiff, digits=0), pos=3, las=2)  
+    abc<-graphics::barplot(avgmadmempdiff, main="PMAD compared to log2", names.arg=c(methodnames), border="red", 
                  ylim=c(min(avgmadmempdiff) - 10, max(avgmadmempdiff) + 5), density=20, cex=0.9, cex.axis=0.7, las=2, xpd=F)
-    axis(1, at=c(0.2, max(abc) + 0.5), labels=F, lwd.ticks=0)
-    axis(1, at=abc, labels=F, lwd=0, lwd.ticks=1)
-    text(abc, avgmadmempdiff, labels=round(avgmadmempdiff, digits=0), pos=3, las=2)
-    abc <- barplot(avgvarmempdiff, main="%PEV - compared to log2", names.arg=c(methodnames), border="red", 
+    graphics::axis(1, at=c(0.2, max(abc) + 0.5), labels=F, lwd.ticks=0)
+    graphics::axis(1, at=abc, labels=F, lwd=0, lwd.ticks=1)
+    graphics::text(abc, avgmadmempdiff, labels=round(avgmadmempdiff, digits=0), pos=3, las=2)
+    abc <- graphics::barplot(avgvarmempdiff, main="%PEV - compared to log2", names.arg=c(methodnames), border="red", 
                    ylim=c(min(avgvarmempdiff) - 10, max(avgmadmempdiff) + 5), density=20, cex=0.9, cex.axis=0.7, las=2, xpd=F)
-    axis(1, at=c(0.2, max(abc) + 0.5), labels=F, lwd.ticks=0)
-    axis(1, at=abc, labels=F, lwd=0, lwd.ticks=1)
-    text(abc, avgvarmempdiff, labels=round(avgvarmempdiff, digits=0), pos=3, las=2)
+    graphics::axis(1, at=c(0.2, max(abc) + 0.5), labels=F, lwd.ticks=0)
+    graphics::axis(1, at=abc, labels=F, lwd=0, lwd.ticks=1)
+    graphics::text(abc, avgvarmempdiff, labels=round(avgvarmempdiff, digits=0), pos=3, las=2)
     
     if (!is.na(nonsiganfdrlistcvpdiff)) {
         
         if (min(avgcvmempdiff) < 0 || max(avgcvmempdiff) > 100 || min(nonsiganfdrlistcvpdiff) < 0 || max(nonsiganfdrlistcvpdiff) > 100) {
-            plot(avgcvmempdiff, nonsiganfdrlistcvpdiff, pch=18, xlim=c(0, 100), ylim=c(0, 100), main="Stable variables plot", 
+            graphics::plot(avgcvmempdiff, nonsiganfdrlistcvpdiff, pch=18, xlim=c(0, 100), ylim=c(0, 100), main="Stable variables plot", 
                  xlab="PCV (intragroup) compared to Log2", ylab="% Global CV of stable variables compared to Log2")
             car::showLabels(avgcvmempdiff, nonsiganfdrlistcvpdiff, labels=methodnames, id.method="mahal", id.cex=0.7, id.col="black")
         }
         else {
-            plot(avgcvmempdiff, nonsiganfdrlistcvpdiff, pch=18, main="Stable variables plot", 
+            graphics::plot(avgcvmempdiff, nonsiganfdrlistcvpdiff, pch=18, main="Stable variables plot", 
                  xlab="PCV (Intragroup) compared to Log2", ylab="% Global CV of stable variables compared to Log2")
             car::showLabels(avgcvmempdiff, nonsiganfdrlistcvpdiff, labels=methodnames, id.method="mahal", id.cex=0.7, id.col="black")
         }
@@ -310,11 +307,11 @@ plotCVvsIntensity <- function(nr, currentLayout, pageno) {
     }
     
     tout <- rbind(c(1, 2, 3, 4), c(5, 6, 7, 8), c(9, 10, 11, 12))
-    layout(tout)
-    par(mar=c(4, 4, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
+    graphics::layout(tout)
+    graphics::par(mar=c(4, 4, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
     
     for (i in 1:ncol(tempcvmat1)) {
-        plot(tempavgmat1[, i], tempcvmat1[, i], main=methodnames[i], xlab="Raw intensity", ylab="CV", cex=0.3, ylim=c(0, maxtempcv))
+        graphics::plot(tempavgmat1[, i], tempcvmat1[, i], main=methodnames[i], xlab="Raw intensity", ylab="CV", cex=0.3, ylim=c(0, maxtempcv))
     }
     
     grid::pushViewport(grid::viewport(layout=currentLayout))
@@ -375,15 +372,15 @@ plotScatter <- function(nr, currentLayout, pageno) {
     currentjob <- nds@jobName
     
     tout <- rbind(c(1, 2, 3, 4), c(5, 6, 7, 8), c(9, 10, 11, 12))
-    layout(tout)
-    par(mar=c(2, 2, 2, 1), oma=c(3, 2, 3, 2), xpd=NA)
+    graphics::layout(tout)
+    graphics::par(mar=c(2, 2, 2, 1), oma=c(3, 2, 3, 2), xpd=NA)
     
     for (i in 1:length(methodlist)) {
         datastore <- methodlist[[i]]
-        fit <- lm(datastore[, 1]~datastore[, 2])
-        plot(datastore[, 1], datastore[, 2], xlab="", ylab="", main=methodnames[i], pch=19, cex=0.2)
+        fit <- stats::lm(datastore[, 1]~datastore[, 2])
+        graphics::plot(datastore[, 1], datastore[, 2], xlab="", ylab="", main=methodnames[i], pch=19, cex=0.2)
         
-        legend("topleft", bty="n", legend=paste("R2 ", format(summary(fit)$adj.r.squared, digits=2)), cex=0.7)
+        graphics::legend("topleft", bty="n", legend=paste("R2 ", format(summary(fit)$adj.r.squared, digits=2)), cex=0.7)
     }
     
     grid::pushViewport(grid::viewport(layout=currentLayout))
@@ -434,8 +431,8 @@ plotBoxPlot <- function(nr, currentLayout, pageno) {
     filterrawdata <- nds@filterrawdata
     
     tout<-rbind(c(1, 2, 3, 4), c(5, 6, 7, 8), c(9, 10, 11, 12))
-    layout(tout)
-    par(mar=c(2, 2, 2, 1), oma=c(3, 2, 3, 2), xpd=NA)
+    graphics::layout(tout)
+    graphics::par(mar=c(2, 2, 2, 1), oma=c(3, 2, 3, 2), xpd=NA)
     mindata <- 1000
     maxdata <- 0
     
@@ -451,8 +448,8 @@ plotBoxPlot <- function(nr, currentLayout, pageno) {
     }
     
     for (i in 1:length(methodlist)) {   
-        par(mar=c(5, 1, 1, 1))
-        boxplot(methodlist[[i]], cex=0.1, cex.axis=0.7, las=2, main=methodnames[i], col=(filterED), outcol="lightgray", 
+        graphics::par(mar=c(5, 1, 1, 1))
+        graphics::boxplot(methodlist[[i]], cex=0.1, cex.axis=0.7, las=2, main=methodnames[i], col=(filterED), outcol="lightgray", 
                 ylim=c(mindata - 1, maxdata + 1), names=substr(colnames(methodlist[[i]]), 1, 10))
     }
     
@@ -475,12 +472,12 @@ plotRLE <- function(nr, currentLayout, pageno) {
     filterED <- nds@sampleReplicateGroups
     
     tout <- rbind(c(1, 2, 3, 4), c(5, 6, 7, 8), c(9, 10, 11, 12))
-    layout(tout)
-    par(mar=c(2, 2, 2, 1), oma=c(3, 2, 3, 2), xpd=NA)
+    graphics::layout(tout)
+    graphics::par(mar=c(2, 2, 2, 1), oma=c(3, 2, 3, 2), xpd=NA)
     
     for (i in 1:length(methodlist)) {
         deviations = methodlist[[i]] - Biobase::rowMedians(methodlist[[i]], na.rm=T)
-        boxplot(deviations, outcol="lightgray", cex=0.1, cex.axis=0.7, las=2, main=methodnames[i], col=(filterED), names=substr(colnames(methodlist[[i]]), 1, 6))
+        graphics::boxplot(deviations, outcol="lightgray", cex=0.1, cex.axis=0.7, las=2, main=methodnames[i], col=(filterED), names=substr(colnames(methodlist[[i]]), 1, 6))
     }
     
     grid::pushViewport(grid::viewport(layout=currentLayout))
@@ -500,16 +497,16 @@ plotDensity <- function(nr, currentLayout, pageno) {
     currentjob <- nds@jobName
 
     tout <- rbind(c(1, 2, 3, 4), c(5, 6, 7, 8), c(9, 10, 11, 12))
-    layout(tout)
-    par(mar=c(3, 2, 3, 1), oma=c(3, 2, 3, 2), xpd=NA)
+    graphics::layout(tout)
+    graphics::par(mar=c(3, 2, 3, 1), oma=c(3, 2, 3, 2), xpd=NA)
     
     for (i in 1:length(methodlist)) {
         datastore <- (methodlist[[i]])
-        tempd <- density(datastore[, 1], na.rm=T)
-        plot(density(datastore[, 1], na.rm=T), xlab="", ylab="", ylim=c(min(tempd$y), max(tempd$y) * 1.5), main=methodnames[i], lty=2, lwd=1, col="darkgray")
+        tempd <- stats::density(datastore[, 1], na.rm=T)
+        graphics::plot(stats::density(datastore[, 1], na.rm=T), xlab="", ylab="", ylim=c(min(tempd$y), max(tempd$y) * 1.5), main=methodnames[i], lty=2, lwd=1, col="darkgray")
         
         for (j in 2:ncol(datastore)) {
-            lines(density(datastore[, j], na.rm=T), , lty=2, lwd=1, col="darkgray")
+            graphics::lines(stats::density(datastore[, j], na.rm=T), , lty=2, lwd=1, col="darkgray")
         }
     }
     
@@ -533,17 +530,17 @@ plotMDS <- function(nr, currentLayout, pageno) {
     filterED <- nds@sampleReplicateGroups
 
     tout <- rbind(c(1, 2, 3, 4), c(5, 6, 7, 8), c(9, 10, 11, 12))
-    layout(tout)
-    par(mar=c(2, 2, 2, 1), oma=c(3, 2, 3, 2), xpd=NA)
+    graphics::layout(tout)
+    graphics::par(mar=c(2, 2, 2, 1), oma=c(3, 2, 3, 2), xpd=NA)
 
     for (i in 1:length(methodlist)) {
         datastore <- (methodlist[[i]])
-        d <- dist(scale(t(na.omit(datastore)), center=TRUE, scale=TRUE))
-        fit <- cmdscale(d, eig=TRUE, k=2)
+        d <- stats::dist(scale(t(stats::na.omit(datastore)), center=TRUE, scale=TRUE))
+        fit <- stats::cmdscale(d, eig=TRUE, k=2)
         x <- fit$points[, 1]
         y <- fit$points[, 2]
-        plot(x, y, type="n", main=methodnames[i], xlab="", ylab="")
-        text(fit$points[, 1], fit$points[, 2], col=filterED, labels=filterED)
+        graphics::plot(x, y, type="n", main=methodnames[i], xlab="", ylab="")
+        graphics::text(fit$points[, 1], fit$points[, 2], col=filterED, labels=filterED)
     }
     
     grid::pushViewport(grid::viewport(layout=currentLayout))
@@ -609,28 +606,28 @@ plotCorrelation <- function(nr, currentLayout, pageno) {
     filterrawdata <- nds@filterrawdata
     
     tout <- rbind(c(1, 2), c(3))
-    layout(tout)
-    par(mar=c(2, 2, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
+    graphics::layout(tout)
+    graphics::par(mar=c(2, 2, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
     
     perdf <- data.frame(matrix(unlist(avgpercorsum), 
                                nrow=as.numeric(max(summary(avgpercorsum)[1])), 
                                byrow=T))
     
-    abc <- boxplot(perdf, main="Pearson correlation - Intragroup", 
+    abc <- graphics::boxplot(perdf, main="Pearson correlation - Intragroup", 
                    names=c(methodnames), border="red", 
                    density=20, cex=0.3, cex.axis=0.9, las=2)
     
-    stripchart(as.data.frame(perdf), vertical=T, cex=0.4, las=2, pch=20, add=T, col="darkgreen")
+    graphics::stripchart(as.data.frame(perdf), vertical=T, cex=0.4, las=2, pch=20, add=T, col="darkgreen")
     
     spedf <- data.frame(matrix(unlist(avgspecorsum), 
                                nrow=as.numeric(max(summary(avgspecorsum)[1])), 
                                byrow=T))
     
-    abc <- boxplot(spedf, main="Spearman correlation - Intragroup", 
+    abc <- graphics::boxplot(spedf, main="Spearman correlation - Intragroup", 
                    names=c(methodnames), border="red", 
                    density=20, cex=0.3, cex.axis=0.9, las=2)
     
-    stripchart(as.data.frame(spedf), 
+    graphics::stripchart(as.data.frame(spedf), 
                vertical=T, cex=0.4, las=2, pch=20, add=T, col="darkgreen")
     grid::pushViewport(grid::viewport(layout=currentLayout))
     printMeta("Correlation plots", pageno, currentjob)
@@ -654,8 +651,8 @@ plotDendrograms <- function(nr, currentLayout, pageno) {
     print(length(filterED))
     
     tout <- rbind(c(1, 2, 3, 4), c(5, 6, 7, 8), c(9, 10, 11, 12))
-    layout(tout)
-    par(mar=c(2, 2, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
+    graphics::layout(tout)
+    graphics::par(mar=c(2, 2, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
     colt<-(c("red", "green", "blue", "orange", "darkgray", "blueviolet", 
              "darkslateblue", "darkviolet", "gray", "bisque4", "brown", 
              "cadetblue4", "darkgreen", "darkcyan", "darkmagenta", 
@@ -663,11 +660,11 @@ plotDendrograms <- function(nr, currentLayout, pageno) {
     
     for (j in 1:length(methodlist)) {
         
-        scaledTransposedMatrix <- scale(t(na.omit(methodlist[[j]])), center=TRUE, scale=TRUE)
+        scaledTransposedMatrix <- scale(t(stats::na.omit(methodlist[[j]])), center=TRUE, scale=TRUE)
         
-        hc <- hclust(dist(scaledTransposedMatrix), "ave")
+        hc <- stats::hclust(stats::dist(scaledTransposedMatrix), "ave")
         
-        plot(ape::as.phylo(hc), main=methodnames[j], cex=0.5, tip.color=colt[filterED])
+        graphics::plot(ape::as.phylo(hc), main=methodnames[j], cex=0.5, tip.color=colt[filterED])
         ape::axisPhylo(side=1)
     }
     
@@ -694,14 +691,14 @@ plotDEPlots <- function(nr, currentLayout, pageno) {
     kwfdr <- ner@kwfdr
 
     tout <- rbind(c(1, 2, 3), c(4))
-    layout(tout)
-    par(mar=c(2, 2, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
+    graphics::layout(tout)
+    graphics::par(mar=c(2, 2, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
     
-    barplot(colSums(anfdr < 0.05), main="ANOVA", names=c(methodnames), 
+    graphics::barplot(colSums(anfdr < 0.05), main="ANOVA", names=c(methodnames), 
             border="red", density=20, cex=0.5, cex.axis=0.9, las=2,
             ylab="No. of Variables with FDR < 0.05")
     
-    barplot(colSums(kwfdr < 0.05), main="Kruskal Wallis", names=c(methodnames), 
+    graphics::barplot(colSums(kwfdr < 0.05), main="Kruskal Wallis", names=c(methodnames), 
             border="red", density=20, cex=0.5, cex.axis=0.9, 
             las=2, ylab="No. of Variables with FDR < 0.05")
     

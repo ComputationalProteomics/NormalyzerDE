@@ -4,8 +4,6 @@
 #' @param name Name of the ongoing processing run.
 #' @return Normalyzer results with attached evaluation results object.
 #' @export
-#' @examples
-#' normMethods(normalyzer_results_object, "my_run")
 analyzeNormalizations <- function(nr, name) {
     
     print("DEBUG: analyzeAndPlot entered")
@@ -51,7 +49,7 @@ analyzeNormalizations <- function(nr, name) {
         # print(paste("Processing: ", methodlist[[meti]]))
         print(paste("Processing methodlist index: ", meti))
         
-        # datastore <- slot(nr, slotNameList[[meti]])
+        # datastore <- methods::slot(nr, slotNameList[[meti]])
         datastore <- methodlist[[meti]]
         templabel <- methodnames[meti]
         
@@ -90,19 +88,19 @@ analyzeNormalizations <- function(nr, name) {
                 
                 if (flag == 1) {
                     count <- count + 1
-                    madmem[, count] <- apply(datastore[, z:y], 1, function(x) { mad(x, na.rm=T) })
-                    nonmissingmat <- (apply(datastore[, z:y], 1, function(x) { ((sum(!is.na(x)))) })) - 1
-                    tempvar <- nonmissingmat * apply(datastore[, z:y], 1, function(x) { var(x, na.rm=TRUE) })
+                    madmem[, count] <- apply(datastore[, z:y], 1, function(x) { stats::mad(x, na.rm=T) })
+                    nonmissingmat <- apply(datastore[, z:y], 1, function(x) { sum(!is.na(x)) }) - 1
+                    tempvar <- nonmissingmat * apply(datastore[, z:y], 1, function(x) { stats::var(x, na.rm=TRUE) })
                 }
                 
                 if (flag == 2) {  
                     count <- count + 1
-                    madmem[, count] <- apply(datastore[, z:y], 1, function(x) { mad(x, na.rm=T) })  
-                    nonmissingmat <- (apply(datastore[, z:y], 1, function(x) { ((sum(!is.na(x)))) })) - 1
-                    tempvar <- nonmissingmat * apply(datastore[, z:y], 1, function(x) { var(x, na.rm=TRUE) })
+                    madmem[, count] <- apply(datastore[, z:y], 1, function(x) { stats::mad(x, na.rm=T) })  
+                    nonmissingmat <- (apply(datastore[, z:y], 1, function(x) { sum(!is.na(x)) })) - 1
+                    tempvar <- nonmissingmat * apply(datastore[, z:y], 1, function(x) { stats::var(x, na.rm=TRUE) })
                 }
                 
-                varmem <- c(varmem, ((sum(tempvar, na.rm=T)) / (sum(nonmissingmat, na.rm=T))))
+                varmem <- c(varmem, sum(tempvar, na.rm=T) / (sum(nonmissingmat, na.rm=T)))
                 z <- i
                 x <- filterED[i]
                 flag <- 2
@@ -131,12 +129,12 @@ analyzeNormalizations <- function(nr, name) {
         datastoretmp <- datastore[nbsNAperLine < (ncol(datastore) / 2), ]
         dataStoreReplicateNAFiltered <- filterLinesWithEmptySamples(datastoretmp, filterED)
         
-        anpvalue <- cbind(anpvalue, apply(dataStoreReplicateNAFiltered, 1, function(x) summary(aov(unlist(x)~filterED))[[1]][[5]][1]))
-        anfdr <- cbind(anfdr, p.adjust(anpvalue[, meti], method="BH"))
+        anpvalue <- cbind(anpvalue, apply(dataStoreReplicateNAFiltered, 1, function(x) summary(stats::aov(unlist(x)~filterED))[[1]][[5]][1]))
+        anfdr <- cbind(anfdr, stats::p.adjust(anpvalue[, meti], method="BH"))
         
         # Kruskal Wallis
-        kwpvalue <- cbind(kwpvalue, apply(dataStoreReplicateNAFiltered, 1, function(x) kruskal.test(unlist(x)~filterED, na.action="na.exclude")[[3]][1]))
-        kwfdr <- cbind(kwfdr, p.adjust(kwpvalue[, meti], method="BH")) 
+        kwpvalue <- cbind(kwpvalue, apply(dataStoreReplicateNAFiltered, 1, function(x) stats::kruskal.test(unlist(x)~filterED, na.action="na.exclude")[[3]][1]))
+        kwfdr <- cbind(kwfdr, stats::p.adjust(kwpvalue[, meti], method="BH")) 
     }
     
     # make sure first method is data2log2
@@ -146,8 +144,8 @@ analyzeNormalizations <- function(nr, name) {
     
     # finds top 5% of least DE variables in log2 data based on ANOVA
     # generates error if it doesnt find leastDE peptides
-    if (sum(anfdr[, 1] >= min(head(rev(sort(anfdr[, 1])), n=(5 * nrow(anfdr) / 100)))) > 0) {
-        nonsiganfdrlist <- which(anfdr[, 1] >= min(head(rev(sort(anfdr[, 1])), n=(5 * nrow(anfdr) / 100))))
+    if (sum(anfdr[, 1] >= min(utils::head(rev(sort(anfdr[, 1])), n=(5 * nrow(anfdr) / 100)))) > 0) {
+        nonsiganfdrlist <- which(anfdr[, 1] >= min(utils::head(rev(sort(anfdr[, 1])), n=(5 * nrow(anfdr) / 100))))
     }
     
     nonsiganfdrlistcv <- vector()
@@ -190,7 +188,7 @@ calculateCorrelations <- function(nr, ner) {
     methodlist <- getNormalizationMatrices(nr)
     filterED <- nr@nds@sampleReplicateGroups
     
-    par(mfrow=c(1,1))
+    graphics::par(mfrow=c(1,1))
     avgpercorsum <- list()
     avgspecorsum <- list()
     corsum <- vector()
@@ -206,8 +204,8 @@ calculateCorrelations <- function(nr, ner) {
         for (uq in 1:length(un)) {
             dt <- as.matrix(datastore[, which(filterED == un[uq])])
             class(dt) <- "numeric"
-            percor <- cor(dt, use="pairwise.complete.obs", method="pearson")
-            spercor <- cor(dt, use="pairwise.complete.obs", method="spearman")
+            percor <- stats::cor(dt, use="pairwise.complete.obs", method="pearson")
+            spercor <- stats::cor(dt, use="pairwise.complete.obs", method="spearman")
             
             for (rn in 1:(ncol(dt) - 1)) {
                 percorsum <- c(percorsum, percor[rn, -(1:rn)])

@@ -5,12 +5,10 @@
 #' @param jobName Name of ongoing run.
 #' @return Normalyzer data object representing verified input data.
 #' @export
-#' @examples
-#' getVerifiedNormalyzerObjectFromFile("path/to/mydata.csv", "my_run")
 getVerifiedNormalyzerObjectFromFile <- function(inputPath, jobName) {
 
     # rawData <- retrieveRawData(inputPath)
-    rawData <- as.matrix(read.table(inputPath, header=F, sep="\t", stringsAsFactors=F, quote=""))
+    rawData <- as.matrix(utils::read.table(inputPath, header=F, sep="\t", stringsAsFactors=F, quote=""))
     
     rawData <- getReplicateSortedData(rawData)
     verifySampleReplication(rawData)  # This is the way to do it!

@@ -1,3 +1,11 @@
+# require("grDevices")
+# require("graphics")
+# require("methods")
+# require("stats")
+# require("utils")
+
+
+
 #' Normalyzer pipeline entry point
 #' 
 #' @param inputPath CSV delimited input file containing raw counts and 
@@ -6,73 +14,49 @@
 #' @param outputDir Specify an output directory for generated files.
 #'  Defaults to current working directory.
 #' @export
-#' @examples
-#' normalyzer("path/to/input.csv", "my_test_run")
-#' normalyzer("path/to/input.csv", "my_test_run", outputDir="my_output")
-
+#' @import MASS Rcmdr limma preprocessCore
 normalyzer <- function(inputPath, jobName, outputDir=NULL) {
     
     print('start')
     
-    # RcmdrMisc::numSummary used to summarize statistics
-    require(Rcmdr)
+    # require(Rcmdr)  # RcmdrMisc::numSummary, CRAN
+    # require(vsn)    # Used for justvsn, BioConductor
+    # require(preprocessCore)     # Used for quantile normalization, BC
+    # require(limma)  # Used for normalizeCyclicLoess, BioConductor
+    # require(MASS)   # Used for rlm, BioConductor
+    # require(ape)    # ape::as.phylo
+    # require(raster) # Used for raster::cv - Coefficient of variation
+    # require(car)    # Used for car::showLabels, BioConductor
+    # require(gridExtra)  # gridExtra::arrange, CRAN
+    # require(ggplot2)  # Extensively used for plotting, CRAN
+    # require(grid)     # grid::grid.layout, and much more for plotting, base
     
     
-    # Used for justvsn
-    require(vsn)
-    
-    # Used for quantile normalization
-    require(preprocessCore)
-
-    # Used for normalizeCyclicLoess
-    require(limma)
-    
-    # Used for rlm
-    require(MASS)
-    
-    # ape::as.phylo
-    require(ape)
-    
-    # Used for raster::cv - Coefficient of variation
-    require(raster)
-
-    # Used for car::showLabels
-    require(car)
-    
-    # gridExtra::arrange
-    require(gridExtra)
-    
-    # Extensively used for plotting
-    require(ggplot2)
-    
-    # grid::grid.layout, and much more for plotting
-    require(grid)
-
     # Biobase::rowMedians ??
-
+    
+    # Not used
     # require(PerformanceAnalytics)
     # require(abind)
     # require(e1071)
     
-        
-        
-    source("generatePlots.R")
-    source("normfinder-pipeline.R")
-    source("normMethods.R")
-    source("printMeta.R")
-    source("printPlots.R")
-
-    source("NormalyzerDataset.R")
-    source("NormalizationEvaluationResults.R")
-    source("NormalyzerResults.R")
-
-    source("utils.R")
-    source("inputVerification.R")
-    source("analyzeResults.R")
+    
+    #source("generatePlots.R")
+    #source("normfinder-pipeline.R")
+    #source("normMethods.R")
+    #source("printMeta.R")
+    #source("printPlots.R")
+    #
+    #source("NormalyzerDataset.R")
+    #source("NormalizationEvaluationResults.R")
+    #source("NormalyzerResults.R")
+    #
+    #source("utils.R")
+    #source("inputVerification.R")
+    #source("analyzeResults.R")
     
     normObj <- getVerifiedNormalyzerObjectFromFile(inputPath, jobName)
     jobDir <- setupJobDir(jobName, outputDir)
-        
+    
     print("Normalizing data....")
     normalyzerResultsObject <- normMethods(normObj, jobName, jobDir)
     print("Finished Normalization")

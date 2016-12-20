@@ -104,7 +104,7 @@ normfinder <- function(nds) {
         for (j in 1:k){
             varpair <- rep(0, k)
             for (j1 in 1:k) {
-                varpair[j1] <- var(z[j, ] - z[j1, ])
+                varpair[j1] <- stats::var(z[j, ] - z[j1, ])
             }
             varmin[i,j] <- min(varpair[varpair > 0]) / 4
         }

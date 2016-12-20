@@ -1,4 +1,6 @@
 #' Debugging utility used to output "DEBUG" together with output
+#' @param ... Input to print
+#' @param debug Append text DEBUG in front of statement, default is TRUE
 myprint <- function(..., debug=T) {
     if (debug) {
         print(paste("DEBUG: ", ...))
@@ -10,6 +12,8 @@ myprint <- function(..., debug=T) {
 
 #' Debugging utility used to output information about variable together with
 #'  its content
+#' @param variable Target variable to print information about
+#' @param debug Append text DEBUG in front of statement, default is TRUE
 varprint <- function(variable, debug=T) {
     varName <- deparse(substitute(variable))
     
