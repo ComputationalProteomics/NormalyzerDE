@@ -18,6 +18,10 @@ Imports:
     methods,
     Biobase,
     RcmdrMisc,
+    Rcmdr,
+    preprocessCore,
+    limma,
+    MASS,
 Suggests:
     knitr,
     testthat,

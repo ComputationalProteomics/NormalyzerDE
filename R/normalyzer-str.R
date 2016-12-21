@@ -15,7 +15,7 @@
 #'  Defaults to current working directory.
 #' @return None
 #' @export
-#' @import MASS Rcmdr limma preprocessCore
+#' @import MASS Rcmdr limma preprocessCore methods
 normalyzer <- function(inputPath, jobName, outputDir=NULL) {
     
     print('start')
