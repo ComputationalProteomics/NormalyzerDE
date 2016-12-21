@@ -1,4 +1,6 @@
-test_that("getMethodNames function returns given set of method names without provided flag", {
+context("Tests")
+test_that("getMethodNames function returns given set of method names without 
+          provided flag", {
     expectedMethodNames <- c("Log2", "TI-G", "MedI-G", "AI-G")
     houseKeepingFlag <- TRUE
     

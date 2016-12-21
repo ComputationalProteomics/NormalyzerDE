@@ -35,29 +35,31 @@ normalyzer <- function(inputPath, jobName, outputDir=NULL) {
     # Biobase::rowMedians ??
     
 
-    #source("generatePlots.R")
-    #source("normfinder-pipeline.R")
-    #source("normMethods.R")
-    #source("printMeta.R")
-    #source("printPlots.R")
-    #
-    #source("NormalyzerDataset.R")
-    #source("NormalizationEvaluationResults.R")
-    #source("NormalyzerResults.R")
-    #
-    #source("utils.R")
-    #source("inputVerification.R")
-    #source("analyzeResults.R")
+    source("generatePlots.R")
+    source("normfinder-pipeline.R")
+    source("normMethods.R")
+    source("printMeta.R")
+    source("printPlots.R")
+
+    source("NormalyzerDataset.R")
+    source("NormalizationEvaluationResults.R")
+    source("NormalyzerResults.R")
+
+    source("utils.R")
+    source("inputVerification.R")
+    source("analyzeResults.R")
     
     normObj <- getVerifiedNormalyzerObjectFromFile(inputPath, jobName)
     jobDir <- setupJobDir(jobName, outputDir)
     
+
     print("Normalizing data....")
     normalyzerResultsObject <- normMethods(normObj, jobName, jobDir)
     print("Finished Normalization")
     
     print("Analyzing results...")
-    normalyzerResultsObject <- analyzeNormalizations(normalyzerResultsObject, jobName)
+    normalyzerResultsObject <- analyzeNormalizations(normalyzerResultsObject, 
+                                                     jobName)
     print("Finished analysing results")
     
     print("Generating plots...")
