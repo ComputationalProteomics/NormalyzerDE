@@ -11,6 +11,6 @@ test_that("getMethodNames function returns given set of method names without
     }
 })
 
-test_that("Dummy fail test", {
-    expect_equal(1, 2)
+test_that("Dummy succeed test", {
+    expect_equal(1, 1)
 })

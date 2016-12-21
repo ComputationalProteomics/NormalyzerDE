@@ -1,15 +1,15 @@
 slotNames <- c("data2log2",
-                   "data2limloess",
-                   "fittedLR",
-                   "data2vsnrep",
-                   "data2loess",
-                   "globalfittedRLR",
-                   "data2vsn",
-                   "data2GI",
-                   "data2med",
-                   "data2mean",
-                   "data2ctrlog",
-                   "data2quantile")
+               "data2limloess",
+               "fittedLR",
+               "data2vsnrep",
+               "data2loess",
+               "globalfittedRLR",
+               "data2vsn",
+               "data2GI",
+               "data2med",
+               "data2mean",
+               "data2ctrlog",
+               "data2quantile")
 
 outputNames <- c("Log2",
                  "Loess-R",
@@ -57,7 +57,7 @@ NormalyzerResults <- setClass("NormalyzerResults",
                                   furtherNormalizationMinThreshold="numeric",
                                   
                                   houseKeepingVars="matrix",
-
+                                  
                                   data2log2 = "matrix",
                                   data2limloess = "matrix",
                                   fittedLR = "matrix",
@@ -79,93 +79,119 @@ NormalyzerResults <- setClass("NormalyzerResults",
 #' Initialize Normalyzer results object
 #'
 #' @param nr Normalyzer results object.
+#' @return None
 #' @rdname initializeResultsObject
 #' @export
-setGeneric(name="initializeResultsObject", function(nr) standardGeneric("initializeResultsObject"))
+setGeneric(name="initializeResultsObject", 
+           function(nr) standardGeneric("initializeResultsObject"))
 
 #' Main function for executing normalizations
 #'
 #' @param nr Normalyzer results object.
+#' @return None
 #' @rdname performNormalizations
 #' @export
-setGeneric(name="performNormalizations", function(nr) standardGeneric("performNormalizations"))
+setGeneric(name="performNormalizations", 
+           function(nr) standardGeneric("performNormalizations"))
 
 #' Generate basic metrics normalizations
 #'
 #' @param nr Normalyzer results object.
+#' @return None
 #' @rdname basicMetricNormalizations
 #' @export
-setGeneric(name="basicMetricNormalizations", function(nr) standardGeneric("basicMetricNormalizations"))
+setGeneric(name="basicMetricNormalizations", 
+           function(nr) standardGeneric("basicMetricNormalizations"))
 
 #' Calculate and assign housekeeping variables
 #'
 #' @param nr Normalyzer results object.
+#' @return None
 #' @rdname calculateHKdataForNormObj
 #' @export
-setGeneric(name="calculateHKdataForNormObj", function(nr) standardGeneric("calculateHKdataForNormObj"))
+setGeneric(name="calculateHKdataForNormObj", 
+           function(nr) standardGeneric("calculateHKdataForNormObj"))
 
 #' Generate VSN normalization
 #'
 #' @param nr Normalyzer results object.
+#' @return None
 #' @rdname performVSNNormalization
 #' @export
-setGeneric(name="performVSNNormalization", function(nr) standardGeneric("performVSNNormalization"))
+setGeneric(name="performVSNNormalization", 
+           function(nr) standardGeneric("performVSNNormalization"))
 
 #' Generate quantile normalization
 #'
 #' @param nr Normalyzer results object.
+#' @return None
 #' @rdname performQuantileNormalization
 #' @export
-setGeneric(name="performQuantileNormalization", function(nr) standardGeneric("performQuantileNormalization"))
+setGeneric(name="performQuantileNormalization", 
+           function(nr) standardGeneric("performQuantileNormalization"))
 
 #' Generate SMAD normalization
 #'
 #' @param nr Normalyzer results object.
+#' @return None
 #' @rdname performSMADNormalization
 #' @export
-setGeneric(name="performSMADNormalization", function(nr) standardGeneric("performSMADNormalization"))
+setGeneric(name="performSMADNormalization", 
+           function(nr) standardGeneric("performSMADNormalization"))
 
 #' Generate cyclic Loess normalization
 #'
 #' @param nr Normalyzer results object.
+#' @return None
 #' @rdname performCyclicLoessNormalization
 #' @export
-setGeneric(name="performCyclicLoessNormalization", function(nr) standardGeneric("performCyclicLoessNormalization"))
+setGeneric(name="performCyclicLoessNormalization", 
+           function(nr) standardGeneric("performCyclicLoessNormalization"))
 
 #' Generate global RLR normalization
 #'
 #' @param nr Normalyzer results object.
+#' @return None
 #' @rdname performGlobalRLRNormalization
 #' @export
-setGeneric(name="performGlobalRLRNormalization", function(nr) standardGeneric("performGlobalRLRNormalization"))
+setGeneric(name="performGlobalRLRNormalization", 
+           function(nr) standardGeneric("performGlobalRLRNormalization"))
 
 #' Generate replicate based normalizations
 #'
 #' @param nr Normalyzer results object.
+#' @return None
 #' @rdname performReplicateBasedNormalizations
 #' @export
-setGeneric(name="performReplicateBasedNormalizations", function(nr) standardGeneric("performReplicateBasedNormalizations"))
+setGeneric(name="performReplicateBasedNormalizations", 
+           function(nr) standardGeneric("performReplicateBasedNormalizations"))
 
 #' Get vector of labels for used methods
 #'
 #' @param nr Normalyzer results object.
+#' @return None
 #' @rdname getUsedMethodNames
 #' @export
-setGeneric(name="getUsedMethodNames", function(nr) standardGeneric("getUsedMethodNames"))
+setGeneric(name="getUsedMethodNames", 
+           function(nr) standardGeneric("getUsedMethodNames"))
 
 #' Get list of names for slots
 #'
 #' @param nr Normalyzer results object.
+#' @return None
 #' @rdname getSlotNameList
 #' @export
-setGeneric(name="getSlotNameList", function(nr) standardGeneric("getSlotNameList"))
+setGeneric(name="getSlotNameList", 
+           function(nr) standardGeneric("getSlotNameList"))
 
 #' Get list with normalization matrices
 #'
 #' @param nr Normalyzer results object.
+#' @return None
 #' @rdname getNormalizationMatrices
 #' @export
-setGeneric(name="getNormalizationMatrices", function(nr) standardGeneric("getNormalizationMatrices"))
+setGeneric(name="getNormalizationMatrices", 
+           function(nr) standardGeneric("getNormalizationMatrices"))
 
 
 #' @rdname initializeResultsObject
@@ -173,15 +199,20 @@ setMethod("initializeResultsObject", "NormalyzerResults",
           function(nr) {
               
               nds <- nr@nds
-
+              
               nr@data2log2 <- log2(nds@filterrawdata)
-              nr@data2GI <- matrix(nrow=nrow(nds@filterrawdata), ncol=ncol(nds@filterrawdata), byrow=T)
-              nr@data2ctr <- matrix(nrow=nrow(nds@filterrawdata), ncol=ncol(nds@filterrawdata), byrow=T)
-              nr@data2med <- matrix(nrow=nrow(nds@filterrawdata), ncol=ncol(nds@filterrawdata), byrow=T) 
-              nr@data2mean <- matrix(nrow=nrow(nds@filterrawdata), ncol=ncol(nds@filterrawdata), byrow=T)
+              nr@data2GI <- matrix(nrow=nrow(nds@filterrawdata), 
+                                   ncol=ncol(nds@filterrawdata), byrow=TRUE)
+              nr@data2ctr <- matrix(nrow=nrow(nds@filterrawdata), 
+                                    ncol=ncol(nds@filterrawdata), byrow=TRUE)
+              nr@data2med <- matrix(nrow=nrow(nds@filterrawdata), 
+                                    ncol=ncol(nds@filterrawdata), byrow=TRUE) 
+              nr@data2mean <- matrix(nrow=nrow(nds@filterrawdata), 
+                                     ncol=ncol(nds@filterrawdata), byrow=TRUE)
               
               nr
-          })
+          }
+)
 
 #' @rdname performNormalizations
 setMethod("performNormalizations", "NormalyzerResults",
@@ -201,228 +232,228 @@ setMethod("performNormalizations", "NormalyzerResults",
                   nr <- performSMADNormalization(nr)
                   nr <- performCyclicLoessNormalization(nr)
                   nr <- performGlobalRLRNormalization(nr)
-
+                  
                   ## NORMALIZATION within REPLICATES RLR, VSN and Loess
                   nr <- performReplicateBasedNormalizations(nr)
               }
               
               nr
-          })
+          }
+)
 
 #' @rdname basicMetricNormalizations
 setMethod("basicMetricNormalizations", "NormalyzerResults",
-              function(nr) {
-                  ## Normalizing using average sample sum, sample mean and sample median
-                  
-                  nds <- nr@nds
-                  
-                  avgcolsum <- stats::median(nds@colsum)
-                  for (i in 1:nrow(nds@filterrawdata)) {
-                      nr@data2GI[i, ] <- unlist(sapply(1:ncol(nds@filterrawdata), function(zd) { (nds@filterrawdata[i, zd] / nds@colsum[zd]) * (avgcolsum) }))
-                      nr@data2med[i, ] <- unlist(sapply(1:ncol(nds@filterrawdata), function(zd) { (nds@filterrawdata[i, zd] / nds@medofdata[zd]) * mean(nds@medofdata) }))
-                      nr@data2mean[i, ] <- unlist(sapply(1:ncol(nds@filterrawdata), function(zd) { (nds@filterrawdata[i, zd] / nds@meanofdata[zd]) * mean(nds@meanofdata) }))
-                  } 
-                  
-                  nr@data2GI <- log2(nr@data2GI)
-                  nr@data2med <- log2(nr@data2med)
-                  nr@data2mean <- log2(nr@data2mean)
-                  colnames(nr@data2GI) <- colnames(nr@data2log2)
-                  colnames(nr@data2med) <- colnames(nr@data2log2)
-                  colnames(nr@data2mean) <- colnames(nr@data2log2)
-                  
-                  nr
-            })
+          function(nr) {
+            ## Normalizing using average sample sum, sample mean and sample median
+              
+            nds <- nr@nds
+
+            avgcolsum <- stats::median(nds@colsum)
+            for (i in 1:nrow(nds@filterrawdata)) {
+                nr@data2GI[i, ] <- unlist(sapply(1:ncol(nds@filterrawdata), 
+                                                 function(zd) { (nds@filterrawdata[i, zd] / nds@colsum[zd]) * (avgcolsum) }))
+                nr@data2med[i, ] <- unlist(sapply(1:ncol(nds@filterrawdata), 
+                                                  function(zd) { (nds@filterrawdata[i, zd] / nds@medofdata[zd]) * mean(nds@medofdata) }))
+                nr@data2mean[i, ] <- unlist(sapply(1:ncol(nds@filterrawdata), 
+                                                   function(zd) { (nds@filterrawdata[i, zd] / nds@meanofdata[zd]) * mean(nds@meanofdata) }))
+            } 
+              
+            nr@data2GI <- log2(nr@data2GI)
+            nr@data2med <- log2(nr@data2med)
+            nr@data2mean <- log2(nr@data2mean)
+            colnames(nr@data2GI) <- colnames(nr@data2log2)
+            colnames(nr@data2med) <- colnames(nr@data2log2)
+            colnames(nr@data2mean) <- colnames(nr@data2log2)
+              
+            nr
+        }
+)
 
 #' @rdname calculateHKdataForNormObj
 setMethod("calculateHKdataForNormObj", "NormalyzerResults",
-          function(nr) {
-              nds <- nr@nds
-
-              filterrawdata <- nds@filterrawdata
+        function(nr) {
               
-              Hkvartemp <- as.matrix(nr@houseKeepingVars[, -(1:(length(nds@inputHeaderValues) - length(nds@sampleReplicateGroups)))])
-              class(Hkvartemp) <- "numeric"
-              colmedianctr <- apply(Hkvartemp, 2, FUN="mean")
+            nds <- nr@nds
+            filterrawdata <- nds@filterrawdata
               
-              for(i in 1:nrow(filterrawdata)) {
-                  nr@data2ctr[i,] <- unlist(sapply(1:ncol(filterrawdata), 
-                                                   function(zd) { (filterrawdata[i, zd] / colmedianctr[zd]) * (mean(colmedianctr)) }))
-              }
+            Hkvartemp <- as.matrix(nr@houseKeepingVars[, -(1:(length(nds@inputHeaderValues) - length(nds@sampleReplicateGroups)))])
+            class(Hkvartemp) <- "numeric"
+            colmedianctr <- apply(Hkvartemp, 2, FUN="mean")
               
-              nr@data2ctrlog <- log2(nr@data2ctr)
-              colnames(nr@data2ctrlog) <- colnames(nds@filterrawdata)
-                            
-              nr
-          })
+            for(i in 1:nrow(filterrawdata)) {
+                nr@data2ctr[i,] <- unlist(sapply(1:ncol(filterrawdata), 
+                                                 function(zd) { (filterrawdata[i, zd] / colmedianctr[zd]) * mean(colmedianctr) }))
+            }
+              
+            nr@data2ctrlog <- log2(nr@data2ctr)
+            colnames(nr@data2ctrlog) <- colnames(nds@filterrawdata)
+              
+            nr
+        })
 
 #' @rdname performVSNNormalization
 setMethod("performVSNNormalization", "NormalyzerResults",
-          function(nr) {
-              nds <- nr@nds
-              filterrawdata <- nds@filterrawdata
-              nr@data2vsn <- vsn::justvsn(filterrawdata)
-              nr
-          })
+        function(nr) {
+            nds <- nr@nds
+            filterrawdata <- nds@filterrawdata
+            nr@data2vsn <- vsn::justvsn(filterrawdata)
+            nr
+        })
 
 #' @rdname performQuantileNormalization
 setMethod("performQuantileNormalization", "NormalyzerResults",
-          function(nr) {
-              stopifnot(!is.null(nr@data2log2))
+        function(nr) {
+            stopifnot(!is.null(nr@data2log2))
               
-              nr@data2quantile <- preprocessCore::normalize.quantiles(nr@data2log2, copy=T)
-              nr
-          })
+            nr@data2quantile <- preprocessCore::normalize.quantiles(nr@data2log2, copy=TRUE)
+            nr
+        })
 
 #' @rdname performSMADNormalization
 setMethod("performSMADNormalization", "NormalyzerResults",
-          function(nr) {
-              mediandata <- apply(nr@data2log2, 2, "median", na.rm=T)
-              maddata <- apply(nr@data2log2, 2, function(x) stats::mad(x, na.rm=T))
-              nr@data2mad <- t(apply(nr@data2log2, 1, function(x) ((x - mediandata) / maddata)))
-              nr@data2mad <- nr@data2mad + mean(mediandata)
-              nr
-          })
+        function(nr) {
+            mediandata <- apply(nr@data2log2, 2, "median", na.rm=TRUE)
+            maddata <- apply(nr@data2log2, 2, function(x) stats::mad(x, na.rm=TRUE))
+            nr@data2mad <- t(apply(nr@data2log2, 1, function(x) ((x - mediandata) / maddata)))
+            nr@data2mad <- nr@data2mad + mean(mediandata)
+            nr
+        })
 
 #' @rdname performCyclicLoessNormalization
 setMethod("performCyclicLoessNormalization", "NormalyzerResults",
-          function(nr) {
-              nr@data2loess <- limma::normalizeCyclicLoess(nr@data2log2, method="fast")
-              nr
-          })
+        function(nr) {
+            nr@data2loess <- limma::normalizeCyclicLoess(nr@data2log2, method="fast")
+            nr
+        })
 
 #' @rdname performGlobalRLRNormalization
 setMethod("performGlobalRLRNormalization", "NormalyzerResults",
-          function(nr) {
-              mediandata <- apply(nr@data2log2, 1, "median", na.rm=T)
-              isFirstSample <- TRUE
+        function(nr) {
+            mediandata <- apply(nr@data2log2, 1, "median", na.rm=TRUE)
+            isFirstSample <- TRUE
               
-              for (j in 1:ncol(nr@data2log2)) {
+            for (j in 1:ncol(nr@data2log2)) {
                   
-                  # print(sprintf("Index: %i", j))
+                # print(sprintf("Index: %i", j))
                   
-                  lrFit <- MASS::rlm(as.matrix(nr@data2log2[, j])~mediandata, na.action=stats::na.exclude)
-                  coeffs <- lrFit$coefficients
-                  coeffs2 <- coeffs[2]
-                  coeffs1 <- coeffs[1]
+                lrFit <- MASS::rlm(as.matrix(nr@data2log2[, j])~mediandata, na.action=stats::na.exclude)
+                coeffs <- lrFit$coefficients
+                coeffs2 <- coeffs[2]
+                coeffs1 <- coeffs[1]
                   
-                  if (isFirstSample) {
-                      value_to_assign <- (nr@data2log2[, j] - coeffs1) / coeffs2
-                      globalfittedRLR <- (nr@data2log2[, j] - coeffs1) / coeffs2
-                      isFirstSample <- FALSE
-                  }
-                  else {
-                      globalfittedRLR <- cbind(globalfittedRLR, (nr@data2log2[, j] - coeffs1) / coeffs2)
-                  }
-              }
+                if (isFirstSample) {
+                    value_to_assign <- (nr@data2log2[, j] - coeffs1) / coeffs2
+                    globalfittedRLR <- (nr@data2log2[, j] - coeffs1) / coeffs2
+                    isFirstSample <- FALSE
+                }
+                else {
+                    globalfittedRLR <- cbind(globalfittedRLR, (nr@data2log2[, j] - coeffs1) / coeffs2)
+                }
+            }
               
-              nr@globalfittedRLR <- globalfittedRLR
-              colnames(nr@globalfittedRLR) <- colnames(nr@data2log2)
+            nr@globalfittedRLR <- globalfittedRLR
+            colnames(nr@globalfittedRLR) <- colnames(nr@data2log2)
               
-              nr
-          })
+            nr
+        })
 
 #' @rdname performReplicateBasedNormalizations
 setMethod("performReplicateBasedNormalizations", "NormalyzerResults",
-          function(nr) {
-              ## NORMALIZATION within REPLICATES RLR, VSN and Loess
+        function(nr) {
+            ## NORMALIZATION within REPLICATES RLR, VSN and Loess
               
-              nds <- nr@nds
+            nds <- nr@nds
               
-              sampleReplicateGroups <- nds@sampleReplicateGroups
-              filterrawdata <- nds@filterrawdata
-
-              firstIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=F)
-              lastIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=T)
+            sampleReplicateGroups <- nds@sampleReplicateGroups
+            filterrawdata <- nds@filterrawdata
               
-              stopifnot(length(firstIndices) == length(lastIndices))
+            firstIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=FALSE)
+            lastIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=TRUE)
               
-              nr@fittedLR <- matrix(, nrow=nrow(filterrawdata), ncol=0)
-              nr@data2limloess <- matrix(, nrow=nrow(filterrawdata), ncol=0)
-              nr@data2vsnrep <- matrix(, nrow=nrow(filterrawdata), ncol=0)
+            stopifnot(length(firstIndices) == length(lastIndices))
               
-              for (sampleIndex in 1:length(firstIndices)) {
+            nr@fittedLR <- matrix(, nrow=nrow(filterrawdata), ncol=0)
+            nr@data2limloess <- matrix(, nrow=nrow(filterrawdata), ncol=0)
+            nr@data2vsnrep <- matrix(, nrow=nrow(filterrawdata), ncol=0)
+              
+            for (sampleIndex in 1:length(firstIndices)) {
                   
-                  startColIndex <- firstIndices[sampleIndex]
-                  endColIndex <- lastIndices[sampleIndex]
+                startColIndex <- firstIndices[sampleIndex]
+                endColIndex <- lastIndices[sampleIndex]
                   
-                  # Median based LR normalization
-                  mediandata <- apply(nr@data2log2[, startColIndex:endColIndex], 1, "median", na.rm=T)
+                # Median based LR normalization
+                mediandata <- apply(nr@data2log2[, startColIndex:endColIndex], 1, "median", na.rm=TRUE)
                   
-                  for (currentCol in startColIndex:endColIndex) {
+                for (currentCol in startColIndex:endColIndex) {
                       
-                      LRfit <- MASS::rlm(as.matrix(nr@data2log2[, currentCol])~mediandata, na.action=stats::na.exclude)
-                      LRcoeffs <- LRfit$coefficients
-                      nr@fittedLR <- cbind(nr@fittedLR, (nr@data2log2[, currentCol] - LRcoeffs[1]) / LRcoeffs[2])
-                  }
+                    LRfit <- MASS::rlm(as.matrix(nr@data2log2[, currentCol])~mediandata, na.action=stats::na.exclude)
+                    LRcoeffs <- LRfit$coefficients
+                    nr@fittedLR <- cbind(nr@fittedLR, (nr@data2log2[, currentCol] - LRcoeffs[1]) / LRcoeffs[2])
+                }
                   
-                  nr@data2limloess <- cbind(nr@data2limloess, limma::normalizeCyclicLoess(nr@data2log2[, startColIndex:endColIndex], method="fast"))
-                  nr@data2vsnrep <- cbind(nr@data2vsnrep, vsn::justvsn(as.matrix(filterrawdata[, startColIndex:endColIndex])))
-              }
+                nr@data2limloess <- cbind(nr@data2limloess, limma::normalizeCyclicLoess(nr@data2log2[, startColIndex:endColIndex], method="fast"))
+                nr@data2vsnrep <- cbind(nr@data2vsnrep, vsn::justvsn(as.matrix(filterrawdata[, startColIndex:endColIndex])))
+            }
               
-              colnames(nr@fittedLR) <- colnames(nr@data2log2)
-              colnames(nr@data2limloess) <- colnames(nr@data2log2)
-              colnames(nr@data2vsnrep) <- colnames(nr@data2log2)
+            colnames(nr@fittedLR) <- colnames(nr@data2log2)
+            colnames(nr@data2limloess) <- colnames(nr@data2log2)
+            colnames(nr@data2vsnrep) <- colnames(nr@data2log2)
               
-              nr
-          })
+            nr
+        })
 
 #' @rdname getUsedMethodNames
 setMethod("getUsedMethodNames", "NormalyzerResults",
-          function(nr) {
+        function(nr) {
               
-              usedMethodNames <- c()
+            usedMethodNames <- c()
               
-              for (i in 1:length(slotNames)) {
-                  slotName <- slotNames[i]
-                  fieldValue <- methods::slot(nr, slotName)
+            for (i in 1:length(slotNames)) {
+                slotName <- slotNames[i]
+                fieldValue <- methods::slot(nr, slotName)
                   
-                  if (!all(is.na(fieldValue))) {
-                      outputName <- outputNames[i]
-                      usedMethodNames <- c(usedMethodNames, outputName)
-                  }
-              }
+                if (!all(is.na(fieldValue))) {
+                    outputName <- outputNames[i]
+                    usedMethodNames <- c(usedMethodNames, outputName)
+                }
+            }
               
-              usedMethodNames
-          })
+            usedMethodNames
+        })
 
 #' @rdname getSlotNameList
 setMethod("getSlotNameList", "NormalyzerResults",
-          function(nr) {
-              methodDataList <- c()
+        function(nr) {
+            methodDataList <- c()
               
-              for (i in 1:length(slotNames)) {
-                  slotName <- slotNames[i]
-                  fieldValue <- methods::slot(nr, slotName)
+            for (i in 1:length(slotNames)) {
+                slotName <- slotNames[i]
+                fieldValue <- methods::slot(nr, slotName)
                   
-                  if (!all(is.na(fieldValue))) {
-                      methodDataList <- c(methodDataList, slotName)
-                  }
-              }
+                if (!all(is.na(fieldValue))) {
+                    methodDataList <- c(methodDataList, slotName)
+                }
+            }
               
-              methodDataList
-          })
+            methodDataList
+        })
 
 #' @rdname getNormalizationMatrices
 setMethod("getNormalizationMatrices", "NormalyzerResults",
-          function(nr) {
-              methodDataList <- list()
-              
-              listCounter <- 1
-              for (i in 1:length(slotNames)) {
-                  slotName <- slotNames[i]
-                  fieldValue <- methods::slot(nr, slotName)
+        function(nr) {
+            methodDataList <- list()
+            
+            listCounter <- 1
+            for (i in 1:length(slotNames)) {
+                slotName <- slotNames[i]
+                fieldValue <- methods::slot(nr, slotName)
                   
-                  if (!all(is.na(fieldValue))) {
-                      methodDataList[[listCounter]] <- fieldValue
-                      listCounter <- listCounter + 1
-                  }
-              }
-              
-              methodDataList
-          })
-
-
-
-
-
+                if (!all(is.na(fieldValue))) {
+                    methodDataList[[listCounter]] <- fieldValue
+                    listCounter <- listCounter + 1
+                }
+            }
+            
+            methodDataList
+        })
 

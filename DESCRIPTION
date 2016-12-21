@@ -14,7 +14,10 @@ Imports:
     raster,
     car,
     gridExtra,
-    ggplot2
+    ggplot2,
+    methods,
+    Biobase,
+    RcmdrMisc,
 Suggests:
     knitr,
     testthat,

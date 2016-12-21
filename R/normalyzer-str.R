@@ -13,6 +13,7 @@
 #' @param jobName Give the current run a name.
 #' @param outputDir Specify an output directory for generated files.
 #'  Defaults to current working directory.
+#' @return None
 #' @export
 #' @import MASS Rcmdr limma preprocessCore
 normalyzer <- function(inputPath, jobName, outputDir=NULL) {

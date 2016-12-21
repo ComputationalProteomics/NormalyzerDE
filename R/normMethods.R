@@ -16,18 +16,20 @@ normMethods <- function(nds, currentjob, jobdir) {
 
     for (sampleIndex in 1:length(methodnames)) {
         
-        utils::write.table(file=paste(jobdir, "/", methodnames[sampleIndex], "-normalized.txt", sep=""),
-                    cbind(nds@rawData[-(1:2), (1:(length(nds@inputHeaderValues) - length(nds@sampleReplicateGroups)))],
-                          methodlist[[sampleIndex]]), sep="\t", row.names=F, col.names=nds@rawData[2,], quote=F)
+        utils::write.table(file=paste(jobdir, "/", 
+                                      methodnames[sampleIndex], 
+                                      "-normalized.txt", sep=""),
+                    cbind(nds@rawData[-(1:2), 1:(length(nds@inputHeaderValues) - length(nds@sampleReplicateGroups))],
+                          methodlist[[sampleIndex]]), sep="\t", row.names=FALSE, col.names=nds@rawData[2,], quote=FALSE)
     }
     
     if (!all(is.na(nr@houseKeepingVars))) {
-        utils::write.table(file=paste(jobdir, "/housekeeping-variables.txt", sep=""), nr@houseKeepingVars, sep="\t", row.names=F, col.names=nds@rawData[2,], quote=F)
+        utils::write.table(file=paste(jobdir, "/housekeeping-variables.txt", sep=""), nr@houseKeepingVars, sep="\t", row.names=FALSE, col.names=nds@rawData[2,], quote=FALSE)
     }
     
     utils::write.table(file=paste(jobdir, "/submitted_rawdata.txt", sep=""), 
-                cbind(nds@rawData[-(1:2), (1:(length(nds@inputHeaderValues) - length(nds@sampleReplicateGroups)))], nds@filterrawdata), sep="\t", row.names=F,
-                col.names=nds@rawData[2,], quote=F)
+                cbind(nds@rawData[-(1:2), (1:(length(nds@inputHeaderValues) - length(nds@sampleReplicateGroups)))], nds@filterrawdata), sep="\t", row.names=FALSE,
+                col.names=nds@rawData[2,], quote=FALSE)
 
     return(nr)
 }
@@ -44,7 +46,8 @@ generateNormalyzerResultsObject <- function(nds) {
 
 #' Retrieve vector with tags for used global normalization methods
 #' 
-#' @param houseKeepingFlag Boolean telling whether house-keeing normalization is used
+#' @param houseKeepingFlag Boolean telling whether house-keeing normalization 
+#' is used
 #' @return Vector with string names for normalization tags
 getMethodNames <- function(houseKeepingFlag) {
 
@@ -64,7 +67,7 @@ getMethodNames <- function(houseKeepingFlag) {
 #' @param reverse Look for first or last occurence for each element.
 #'  By default looks for the first occurence.
 #' @return Vector with indices for each first occurence.
-getFirstIndicesInVector <- function(targetVector, reverse=F) {
+getFirstIndicesInVector <- function(targetVector, reverse=FALSE) {
     
     encounteredNumbers <- c()
     firstIndices <- c()

@@ -1,7 +1,8 @@
 #' Debugging utility used to output "DEBUG" together with output
 #' @param ... Input to print
 #' @param debug Append text DEBUG in front of statement, default is TRUE
-myprint <- function(..., debug=T) {
+#' @return None
+myprint <- function(..., debug=TRUE) {
     if (debug) {
         print(paste("DEBUG: ", ...))
     }
@@ -14,14 +15,17 @@ myprint <- function(..., debug=T) {
 #'  its content
 #' @param variable Target variable to print information about
 #' @param debug Append text DEBUG in front of statement, default is TRUE
-varprint <- function(variable, debug=T) {
+#' @return None
+varprint <- function(variable, debug=TRUE) {
     varName <- deparse(substitute(variable))
     
     if (debug) {
-        cat(varName, variable, sprintf("[%s]", typeof(variable)), sprintf("[%s elements]", length(variable)), "\n")
+        cat(varName, variable, sprintf("[%s]", typeof(variable)), 
+            sprintf("[%s elements]", length(variable)), "\n")
     }
     else {
-        cat("DEBUG: ", varName, variable, sprintf("[%s]", typeof(variable)), sprintf("[%s elements]", length(variable)), "\n")
+        cat("DEBUG: ", varName, variable, sprintf("[%s]", typeof(variable)), 
+            sprintf("[%s elements]", length(variable)), "\n")
     }
 }
 
@@ -55,6 +59,7 @@ setupJobDir <- function(jobName, outputDir) {
 #' Create directory, or return error if already present
 #' 
 #' @param targetPath Path where to attempt to create direcotry
+#' @return None
 createDirectory <- function(targetPath) {
     
     if (file.exists(targetPath)) {

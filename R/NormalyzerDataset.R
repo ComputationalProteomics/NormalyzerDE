@@ -33,6 +33,7 @@ NormalyzerDataset <- setClass("NormalyzerDataset",
 #' Initialize values for dataset
 #'
 #' @param nds Normalyzer dataset.
+#' @return None
 #' @rdname setupValues
 #' @export
 setGeneric(name="setupValues", function(nds) standardGeneric("setupValues"))
@@ -47,11 +48,11 @@ setMethod("setupValues", "NormalyzerDataset",
         nds <- setupFilterRawData(nds)
         nds <- setupNormfinderFilterRawData(nds)
         
-        nds@colsum <- colSums(nds@filterrawdata, na.rm=T)
+        nds@colsum <- colSums(nds@filterrawdata, na.rm=TRUE)
         nds@medofdata <- apply(nds@filterrawdata, 2, 
-                             FUN="median", na.rm=T)
+                             FUN="median", na.rm=TRUE)
         nds@meanofdata <- apply(nds@filterrawdata, 2, 
-                              FUN="mean", na.rm=T)
+                              FUN="mean", na.rm=TRUE)
         
         nds
     }
@@ -60,6 +61,7 @@ setMethod("setupValues", "NormalyzerDataset",
 #' Setup filtered raw data slot
 #'
 #' @param nds Normalyzer dataset.
+#' @return None
 #' @rdname setupFilterRawData
 #' @export
 setGeneric(name="setupFilterRawData", 
@@ -93,10 +95,11 @@ setMethod("setupFilterRawData", "NormalyzerDataset",
 #' Setup Normfinder filtered raw data
 #'
 #' @param nds Normalyzer dataset.
+#' @return None
 #' @rdname setupNormfinderFilterRawData
 #' @export
 setGeneric(name="setupNormfinderFilterRawData", 
-           function(nds) standardGeneric("setupNormfinderFilterRawData"))
+        function(nds) standardGeneric("setupNormfinderFilterRawData"))
 
 #' @rdname setupNormfinderFilterRawData
 setMethod("setupNormfinderFilterRawData", "NormalyzerDataset",

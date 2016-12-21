@@ -8,7 +8,8 @@
 getVerifiedNormalyzerObjectFromFile <- function(inputPath, jobName) {
 
     # rawData <- retrieveRawData(inputPath)
-    rawData <- as.matrix(utils::read.table(inputPath, header=F, sep="\t", stringsAsFactors=F, quote=""))
+    rawData <- as.matrix(utils::read.table(inputPath, header=FALSE, sep="\t", 
+                                           stringsAsFactors=FALSE, quote=""))
     
     rawData <- getReplicateSortedData(rawData)
     verifySampleReplication(rawData)  # This is the way to do it!

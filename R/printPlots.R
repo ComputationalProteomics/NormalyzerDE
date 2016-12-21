@@ -5,6 +5,7 @@
 #' @param plotname List of names corresponding to the provided plot list.
 #' @param pageno Current page number.
 #' @param jobname Name of ongoing job.
+#' @return None
 printPlots <- function(plotlist, plotname, pageno, jobname) {
     
     print("In print plots!")

@@ -2,6 +2,7 @@
 #' 
 #' @param nr Normalyzer results object.
 #' @param jobdir Path to output directory for run.
+#' @return None
 #' @export
 generatePlots <- function(nr, jobdir) {
     
@@ -98,6 +99,7 @@ generatePlots <- function(nr, jobdir) {
 #' 
 #' @param currentjob Name of current run.
 #' @param jobdir Path to output directory for run.
+#' @return None
 setupPlotting <- function(currentjob, jobdir) {
 
     grDevices::palette(c("red", "green", "blue", "orange", "darkgray", "blueviolet", "darkslateblue", "darkviolet", "gray", "bisque4",
@@ -110,22 +112,23 @@ setupPlotting <- function(currentjob, jobdir) {
                                         axis.title=ggplot2::element_text(size=8), 
                                         plot.title=ggplot2::element_text(size=8), 
                                         plot.margin=ggplot2::unit(c(1, 1, 1, 1), "mm"))
-    def.par <- graphics::par(no.readonly=T)
+    def.par <- graphics::par(no.readonly=TRUE)
 }
 
 #' Generate first page in output report
 #' 
 #' @param currentjob Name of current run.
 #' @param currentFont Font used for output document.
+#' @return None
 plotFrontPage <- function(currentjob, currentFont) {
     
     graphics::par(mfrow=c(4, 1))
     # TODO: Re-insert nice illustration (figure?)
     # data(data4pdftitle)
-    graphics::plot(1, type="n", axes=F, xlab="", ylab="")
+    graphics::plot(1, type="n", axes=FALSE, xlab="", ylab="")
     
     # TODO: Re-insert nice illustration (figure?)
-    # boxplot(data4pdftitle, axes=F, col=c("green","green","red","red"))
+    # boxplot(data4pdftitle, axes=FALSE, col=c("green","green","red","red"))
     la1 <- grid::grid.layout(nrow=7, ncol=1, heights=c(0.2, 1, 0.1, 0.2, 0.1, 0.2, 0.2), default.units=c('null','null'))
     gpfill <- grid::gpar(fill="gray90", lwd=0, lty=0)
     grid::pushViewport(grid::viewport(layout=la1))
@@ -153,6 +156,7 @@ plotFrontPage <- function(currentjob, currentFont) {
 #' @param nr Normalyzer results object.
 #' @param currentLayout Layout used for document.
 #' @param pageno Current page number.
+#' @return None
 plotSampleOutlierSummary <- function(nr, currentLayout, pageno) {
 
     nds <- nr@nds
@@ -164,7 +168,7 @@ plotSampleOutlierSummary <- function(nr, currentLayout, pageno) {
     tout <- rbind(c(1, 2), c(3, 4))
     graphics::layout(tout)
     graphics::par(mar=c(4, 4, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
-    datacoltotal <- apply(filterrawdata, 2, function(x) { sum(x, na.rm=T) })
+    datacoltotal <- apply(filterrawdata, 2, function(x) { sum(x, na.rm=TRUE) })
     
     graphics::barplot(datacoltotal, las=2, main="Total intensity", cex.names=0.5, names.arg=substr(names(datacoltotal), 1, 10))
     datamissingcol <- apply(filterrawdata, 2, function(x) { sum(is.na(x)) })
@@ -187,6 +191,7 @@ plotSampleOutlierSummary <- function(nr, currentLayout, pageno) {
 #' @param nr Normalyzer results object.
 #' @param currentLayout Layout used for document.
 #' @param pageno Current page number.
+#' @return None
 plotReplicateVariance <- function(nr, currentLayout, pageno) {
 
     nds <- nr@nds
@@ -202,12 +207,29 @@ plotReplicateVariance <- function(nr, currentLayout, pageno) {
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
     
-    graphics::boxplot(avgcvmem, main="PCV - Intragroup", names=c(methodnames), border="red", density=20, cex=0.3, cex.axis=0.9, las=2, frame.plot=F)
-    graphics::stripchart(as.data.frame(avgcvmem), vertical=T, cex=0.4, las=2, pch=20, add=T, col="darkgray")
-    graphics::boxplot(avgmadmem, main="PMAD - Intragroup", names=c(methodnames), border="red", density=20, cex=0.3, cex.axis=0.9, las=2, frame.plot=F)
-    graphics::stripchart(as.data.frame(avgmadmem), vertical=T, cex=0.4, las=2, pch=20, add=T, col="darkgray")
-    graphics::boxplot(avgvarmem, main="PEV - Intragroup", names=c(methodnames), border="red", density=20, cex=0.3, cex.axis=0.9, las=2, frame.plot=F)
-    graphics::stripchart(as.data.frame(avgvarmem), vertical=T, cex=0.4, las=2, pch=20, add=T, col="darkgray")
+    graphics::boxplot(avgcvmem, main="PCV - Intragroup", names=c(methodnames), 
+                      border="red", density=20, cex=0.3, cex.axis=0.9, las=2, 
+                      frame.plot=FALSE)
+    
+    graphics::stripchart(as.data.frame(avgcvmem), 
+                         vertical=TRUE, cex=0.4, las=2, 
+                         pch=20, add=TRUE, col="darkgray")
+    
+    graphics::boxplot(avgmadmem, main="PMAD - Intragroup", names=c(methodnames), 
+                      border="red", density=20, cex=0.3, cex.axis=0.9, las=2, 
+                      frame.plot=FALSE)
+    
+    graphics::stripchart(as.data.frame(avgmadmem), 
+                         vertical=TRUE, cex=0.4, las=2, 
+                         pch=20, add=TRUE, col="darkgray")
+    
+    graphics::boxplot(avgvarmem, main="PEV - Intragroup", names=c(methodnames), 
+                      border="red", density=20, cex=0.3, cex.axis=0.9, las=2, 
+                      frame.plot=FALSE)
+    
+    graphics::stripchart(as.data.frame(avgvarmem), 
+                         vertical=TRUE, cex=0.4, las=2, 
+                         pch=20, add=TRUE, col="darkgray")
     
     grid::pushViewport(grid::viewport(layout=currentLayout))
     printMeta("Replicate variation", pageno, currentjob)
@@ -219,6 +241,7 @@ plotReplicateVariance <- function(nr, currentLayout, pageno) {
 #' @param nr Normalyzer results object.
 #' @param currentLayout Layout used for document.
 #' @param pageno Current page number.
+#' @return None
 plotReplicateVarAndStableVariables <- function(nr, currentLayout, pageno) {
 
     nds <- nr@nds
@@ -234,33 +257,59 @@ plotReplicateVarAndStableVariables <- function(nr, currentLayout, pageno) {
     tout <- rbind(c(1, 2, 3), c(4, 5, 5))
     graphics::layout(tout)
     graphics::par(mar=c(6, 6, 3, 1), oma=c(2, 3, 3, 2), xpd=NA)
-    abc <- graphics::barplot(avgcvmempdiff, main="PCV compared to log2 ", names.arg=c(methodnames), border="red", 
-                   ylim=c(min(avgcvmempdiff) - 10, (max(avgmadmempdiff)) + 5), density=20, cex=0.9, cex.axis=0.7, las=2, xpd=F)
-    graphics::axis(1, at=c(0.2, (max(abc) + 0.5)), labels=F, lwd.ticks=0)
-    graphics::axis(1, at=abc, labels=F, lwd=0, lwd.ticks=1)
-    graphics::text(abc,avgcvmempdiff, labels=round(avgcvmempdiff, digits=0), pos=3, las=2)  
-    abc<-graphics::barplot(avgmadmempdiff, main="PMAD compared to log2", names.arg=c(methodnames), border="red", 
-                 ylim=c(min(avgmadmempdiff) - 10, max(avgmadmempdiff) + 5), density=20, cex=0.9, cex.axis=0.7, las=2, xpd=F)
-    graphics::axis(1, at=c(0.2, max(abc) + 0.5), labels=F, lwd.ticks=0)
-    graphics::axis(1, at=abc, labels=F, lwd=0, lwd.ticks=1)
-    graphics::text(abc, avgmadmempdiff, labels=round(avgmadmempdiff, digits=0), pos=3, las=2)
-    abc <- graphics::barplot(avgvarmempdiff, main="%PEV - compared to log2", names.arg=c(methodnames), border="red", 
-                   ylim=c(min(avgvarmempdiff) - 10, max(avgmadmempdiff) + 5), density=20, cex=0.9, cex.axis=0.7, las=2, xpd=F)
-    graphics::axis(1, at=c(0.2, max(abc) + 0.5), labels=F, lwd.ticks=0)
-    graphics::axis(1, at=abc, labels=F, lwd=0, lwd.ticks=1)
+    
+    abc <- graphics::barplot(avgcvmempdiff, main="PCV compared to log2 ", 
+                            names.arg=c(methodnames), border="red", 
+                            ylim=c(min(avgcvmempdiff) - 10, max(avgmadmempdiff) + 5), 
+                            density=20, cex=0.9, cex.axis=0.7, las=2, xpd=FALSE)
+    
+    graphics::axis(1, at=c(0.2, (max(abc) + 0.5)), labels=FALSE, lwd.ticks=0)
+    graphics::axis(1, at=abc, labels=FALSE, lwd=0, lwd.ticks=1)
+    graphics::text(abc,avgcvmempdiff, labels=round(avgcvmempdiff, digits=0), 
+                   pos=3, las=2)
+    
+    abc<-graphics::barplot(avgmadmempdiff, main="PMAD compared to log2", 
+                        names.arg=c(methodnames), border="red", 
+                        ylim=c(min(avgmadmempdiff) - 10, max(avgmadmempdiff) + 5), 
+                        density=20, cex=0.9, cex.axis=0.7, las=2, xpd=FALSE)
+    
+    graphics::axis(1, at=c(0.2, max(abc) + 0.5), labels=FALSE, lwd.ticks=0)
+    graphics::axis(1, at=abc, labels=FALSE, lwd=0, lwd.ticks=1)
+    graphics::text(abc, avgmadmempdiff, 
+                   labels=round(avgmadmempdiff, digits=0), 
+                   pos=3, las=2)
+    
+    abc <- graphics::barplot(avgvarmempdiff, main="%PEV - compared to log2", 
+                            names.arg=c(methodnames), border="red", 
+                            ylim=c(min(avgvarmempdiff) - 10, max(avgmadmempdiff) + 5),
+                            density=20, cex=0.9, cex.axis=0.7, las=2, xpd=FALSE)
+    
+    graphics::axis(1, at=c(0.2, max(abc) + 0.5), labels=FALSE, lwd.ticks=0)
+    graphics::axis(1, at=abc, labels=FALSE, lwd=0, lwd.ticks=1)
     graphics::text(abc, avgvarmempdiff, labels=round(avgvarmempdiff, digits=0), pos=3, las=2)
     
     if (!is.na(nonsiganfdrlistcvpdiff)) {
         
-        if (min(avgcvmempdiff) < 0 || max(avgcvmempdiff) > 100 || min(nonsiganfdrlistcvpdiff) < 0 || max(nonsiganfdrlistcvpdiff) > 100) {
-            graphics::plot(avgcvmempdiff, nonsiganfdrlistcvpdiff, pch=18, xlim=c(0, 100), ylim=c(0, 100), main="Stable variables plot", 
-                 xlab="PCV (intragroup) compared to Log2", ylab="% Global CV of stable variables compared to Log2")
-            car::showLabels(avgcvmempdiff, nonsiganfdrlistcvpdiff, labels=methodnames, id.method="mahal", id.cex=0.7, id.col="black")
+        if (min(avgcvmempdiff) < 0 || max(avgcvmempdiff) > 100 || 
+            min(nonsiganfdrlistcvpdiff) < 0 || max(nonsiganfdrlistcvpdiff) > 100) {
+            
+            graphics::plot(avgcvmempdiff, nonsiganfdrlistcvpdiff, pch=18, 
+                        xlim=c(0, 100), ylim=c(0, 100), 
+                        main="Stable variables plot", 
+                        xlab="PCV (intragroup) compared to Log2", 
+                        ylab="% Global CV of stable variables compared to Log2")
+            car::showLabels(avgcvmempdiff, nonsiganfdrlistcvpdiff, 
+                            labels=methodnames, id.method="mahal", 
+                            id.cex=0.7, id.col="black")
         }
         else {
-            graphics::plot(avgcvmempdiff, nonsiganfdrlistcvpdiff, pch=18, main="Stable variables plot", 
-                 xlab="PCV (Intragroup) compared to Log2", ylab="% Global CV of stable variables compared to Log2")
-            car::showLabels(avgcvmempdiff, nonsiganfdrlistcvpdiff, labels=methodnames, id.method="mahal", id.cex=0.7, id.col="black")
+            graphics::plot(avgcvmempdiff, nonsiganfdrlistcvpdiff, pch=18, 
+                        main="Stable variables plot", 
+                        xlab="PCV (Intragroup) compared to Log2", 
+                        ylab="% Global CV of stable variables compared to Log2")
+            car::showLabels(avgcvmempdiff, nonsiganfdrlistcvpdiff, 
+                            labels=methodnames, id.method="mahal", 
+                            id.cex=0.7, id.col="black")
         }
     }
     
@@ -274,6 +323,7 @@ plotReplicateVarAndStableVariables <- function(nr, currentLayout, pageno) {
 #' @param nr Normalyzer results object.
 #' @param currentLayout Layout used for document.
 #' @param pageno Current page number.
+#' @return None
 plotCVvsIntensity <- function(nr, currentLayout, pageno) {
 
     nds <- nr@nds
@@ -284,8 +334,10 @@ plotCVvsIntensity <- function(nr, currentLayout, pageno) {
     filterrawdata <- nds@filterrawdata
     
     datastore <- methodlist[[1]]
-    tempcvmat1 <- matrix(nrow=nrow(datastore), ncol=length(methodlist), byrow=T)
-    tempavgmat1 <- matrix(nrow=nrow(datastore), ncol=length(methodlist), byrow=T)
+    tempcvmat1 <- matrix(nrow=nrow(datastore), 
+                         ncol=length(methodlist), byrow=TRUE)
+    tempavgmat1 <- matrix(nrow=nrow(datastore), 
+                          ncol=length(methodlist), byrow=TRUE)
     maxtempcv <- 0
     
     for (j in 1:length(methodlist)) {
@@ -295,14 +347,16 @@ plotCVvsIntensity <- function(nr, currentLayout, pageno) {
         
         for (i in 1:nrow(datastore)) {
             
-            tempcv <- RcmdrMisc::numSummary(datastore[i, ], statistics=c("cv"))
-            tempavg <- RcmdrMisc::numSummary(filterrawdata[i, ], statistics=c("mean"))
+            tempcv <- RcmdrMisc::numSummary(datastore[i, ], 
+                                            statistics=c("cv"))
+            tempavg <- RcmdrMisc::numSummary(filterrawdata[i, ], 
+                                             statistics=c("mean"))
             tempcvmat1[i, j] <- 100 * tempcv$table
             tempavgmat1[i, j] <- tempavg$table 
         }
         
-        if (maxtempcv < max(tempcvmat1, na.rm=T)) {
-            maxtempcv <- max(tempcvmat1, na.rm=T)
+        if (maxtempcv < max(tempcvmat1, na.rm=TRUE)) {
+            maxtempcv <- max(tempcvmat1, na.rm=TRUE)
         }
     }
     
@@ -311,7 +365,9 @@ plotCVvsIntensity <- function(nr, currentLayout, pageno) {
     graphics::par(mar=c(4, 4, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
     
     for (i in 1:ncol(tempcvmat1)) {
-        graphics::plot(tempavgmat1[, i], tempcvmat1[, i], main=methodnames[i], xlab="Raw intensity", ylab="CV", cex=0.3, ylim=c(0, maxtempcv))
+        graphics::plot(tempavgmat1[, i], tempcvmat1[, i], main=methodnames[i], 
+                       xlab="Raw intensity", ylab="CV", cex=0.3, 
+                       ylim=c(0, maxtempcv))
     }
     
     grid::pushViewport(grid::viewport(layout=currentLayout))
@@ -324,6 +380,7 @@ plotCVvsIntensity <- function(nr, currentLayout, pageno) {
 #' @param nr Normalyzer results object.
 #' @param currentLayout Layout used for document.
 #' @param pageno Current page number.
+#' @return None
 plotMA <- function(nr, currentLayout, pageno) {
 
     nds <- nr@nds
@@ -346,9 +403,10 @@ plotMA <- function(nr, currentLayout, pageno) {
         
         Malist[[i]] <- ggplot2::ggplot(df, ggplot2::aes(avg, fc)) + 
             ggplot2::geom_point(color="darkgray", size=0.7) + 
-            ggplot2::labs(x=("Replicate group mean"), y=("Replicate-1 Fold Change"), 
-                 title=(paste(tempcolname[1], methodnames[i]))) + 
-            ggplot2::stat_smooth(method="loess", se=F, colour="red") + 
+            ggplot2::labs(x=("Replicate group mean"), 
+                        y=("Replicate-1 Fold Change"),
+                        title=(paste(tempcolname[1], methodnames[i]))) + 
+            ggplot2::stat_smooth(method="loess", se=FALSE, colour="red") + 
             ggplot2::geom_abline(intercept=0, slope=0, size=0.3)
     } 
     
@@ -364,6 +422,7 @@ plotMA <- function(nr, currentLayout, pageno) {
 #' @param nr Normalyzer results object.
 #' @param currentLayout Layout used for document.
 #' @param pageno Current page number.
+#' @return None
 plotScatter <- function(nr, currentLayout, pageno) {
 
     nds <- nr@nds
@@ -395,6 +454,7 @@ plotScatter <- function(nr, currentLayout, pageno) {
 #' @param nr Normalyzer results object.
 #' @param currentLayout Layout used for document.
 #' @param pageno Current page number.
+#' @return None
 plotQQ <- function(nr, currentLayout, pageno) {
 
     nds <- nr@nds
@@ -423,6 +483,7 @@ plotQQ <- function(nr, currentLayout, pageno) {
 #' @param nr Normalyzer results object.
 #' @param currentLayout Layout used for document.
 #' @param pageno Current page number.
+#' @return None
 plotBoxPlot <- function(nr, currentLayout, pageno) {
 
     nds <- nr@nds
@@ -439,8 +500,8 @@ plotBoxPlot <- function(nr, currentLayout, pageno) {
     maxdata <- 0
     
     for (i in 1:length(methodlist)) { 
-        tempmin <- min(methodlist[[i]], na.rm=T)
-        tempmax <- max(methodlist[[i]], na.rm=T)
+        tempmin <- min(methodlist[[i]], na.rm=TRUE)
+        tempmax <- max(methodlist[[i]], na.rm=TRUE)
         if (tempmin < mindata) {
             mindata <- tempmin
         }
@@ -465,6 +526,7 @@ plotBoxPlot <- function(nr, currentLayout, pageno) {
 #' @param nr Normalyzer results object.
 #' @param currentLayout Layout used for document.
 #' @param pageno Current page number.
+#' @return None
 plotRLE <- function(nr, currentLayout, pageno) {
 
     nds <- nr@nds
@@ -478,7 +540,7 @@ plotRLE <- function(nr, currentLayout, pageno) {
     graphics::par(mar=c(2, 2, 2, 1), oma=c(3, 2, 3, 2), xpd=NA)
     
     for (i in 1:length(methodlist)) {
-        deviations = methodlist[[i]] - Biobase::rowMedians(methodlist[[i]], na.rm=T)
+        deviations = methodlist[[i]] - Biobase::rowMedians(methodlist[[i]], na.rm=TRUE)
         graphics::boxplot(deviations, outcol="lightgray", cex=0.1, cex.axis=0.7, las=2, main=methodnames[i], col=(filterED), names=substr(colnames(methodlist[[i]]), 1, 6))
     }
     
@@ -491,6 +553,7 @@ plotRLE <- function(nr, currentLayout, pageno) {
 #' @param nr Normalyzer results object.
 #' @param currentLayout Layout used for document.
 #' @param pageno Current page number.
+#' @return None
 plotDensity <- function(nr, currentLayout, pageno) {
 
     nds <- nr@nds
@@ -504,11 +567,11 @@ plotDensity <- function(nr, currentLayout, pageno) {
     
     for (i in 1:length(methodlist)) {
         datastore <- (methodlist[[i]])
-        tempd <- stats::density(datastore[, 1], na.rm=T)
-        graphics::plot(stats::density(datastore[, 1], na.rm=T), xlab="", ylab="", ylim=c(min(tempd$y), max(tempd$y) * 1.5), main=methodnames[i], lty=2, lwd=1, col="darkgray")
+        tempd <- stats::density(datastore[, 1], na.rm=TRUE)
+        graphics::plot(stats::density(datastore[, 1], na.rm=TRUE), xlab="", ylab="", ylim=c(min(tempd$y), max(tempd$y) * 1.5), main=methodnames[i], lty=2, lwd=1, col="darkgray")
         
         for (j in 2:ncol(datastore)) {
-            graphics::lines(stats::density(datastore[, j], na.rm=T), , lty=2, lwd=1, col="darkgray")
+            graphics::lines(stats::density(datastore[, j], na.rm=TRUE), , lty=2, lwd=1, col="darkgray")
         }
     }
     
@@ -523,6 +586,7 @@ plotDensity <- function(nr, currentLayout, pageno) {
 #' @param nr Normalyzer results object.
 #' @param currentLayout Layout used for document.
 #' @param pageno Current page number.
+#' @return None
 plotMDS <- function(nr, currentLayout, pageno) {
 
     nds <- nr@nds
@@ -555,6 +619,7 @@ plotMDS <- function(nr, currentLayout, pageno) {
 #' @param nr Normalyzer results object.
 #' @param currentLayout Layout used for document.
 #' @param pageno Current page number.
+#' @return None
 plotMeanSD <- function(nr, currentLayout, pageno) {
 
     nds <- nr@nds
@@ -569,7 +634,7 @@ plotMeanSD <- function(nr, currentLayout, pageno) {
         datastore <- methodlist[[i]]
         print(paste("Feeding method name: ", methodnames[i]))
         
-        msd <- vsn::meanSdPlot(datastore, xlab="", ylab="", plot=F)
+        msd <- vsn::meanSdPlot(datastore, xlab="", ylab="", plot=FALSE)
         
         sdPlots[[i]] <- msd$gg + 
             ggplot2::ggtitle(methodnames[i]) + 
@@ -594,6 +659,7 @@ plotMeanSD <- function(nr, currentLayout, pageno) {
 #' @param nr Normalyzer results object.
 #' @param currentLayout Layout used for document.
 #' @param pageno Current page number.
+#' @return None
 plotCorrelation <- function(nr, currentLayout, pageno) {
 
     ner <- nr@ner
@@ -613,24 +679,24 @@ plotCorrelation <- function(nr, currentLayout, pageno) {
     
     perdf <- data.frame(matrix(unlist(avgpercorsum), 
                                nrow=as.numeric(max(summary(avgpercorsum)[1])), 
-                               byrow=T))
+                               byrow=TRUE))
     
     abc <- graphics::boxplot(perdf, main="Pearson correlation - Intragroup", 
                    names=c(methodnames), border="red", 
                    density=20, cex=0.3, cex.axis=0.9, las=2)
     
-    graphics::stripchart(as.data.frame(perdf), vertical=T, cex=0.4, las=2, pch=20, add=T, col="darkgreen")
+    graphics::stripchart(as.data.frame(perdf), vertical=TRUE, cex=0.4, las=2, pch=20, add=TRUE, col="darkgreen")
     
     spedf <- data.frame(matrix(unlist(avgspecorsum), 
                                nrow=as.numeric(max(summary(avgspecorsum)[1])), 
-                               byrow=T))
+                               byrow=TRUE))
     
     abc <- graphics::boxplot(spedf, main="Spearman correlation - Intragroup", 
                    names=c(methodnames), border="red", 
                    density=20, cex=0.3, cex.axis=0.9, las=2)
     
     graphics::stripchart(as.data.frame(spedf), 
-               vertical=T, cex=0.4, las=2, pch=20, add=T, col="darkgreen")
+               vertical=TRUE, cex=0.4, las=2, pch=20, add=TRUE, col="darkgreen")
     grid::pushViewport(grid::viewport(layout=currentLayout))
     printMeta("Correlation plots", pageno, currentjob)
 }
@@ -641,6 +707,7 @@ plotCorrelation <- function(nr, currentLayout, pageno) {
 #' @param nr Normalyzer results object.
 #' @param currentLayout Layout used for document.
 #' @param pageno Current page number.
+#' @return None
 plotDendrograms <- function(nr, currentLayout, pageno) {
 
     nds <- nr@nds
@@ -681,6 +748,7 @@ plotDendrograms <- function(nr, currentLayout, pageno) {
 #' @param nr Normalyzer results object.
 #' @param currentLayout Layout used for document.
 #' @param pageno Current page number.
+#' @return None
 plotDEPlots <- function(nr, currentLayout, pageno) {
 
     nds <- nr@nds

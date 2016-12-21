@@ -34,10 +34,11 @@ analyzeNormalizations <- function(nr, name) {
     methodCount <- length(methodnames)
     rowCount <- length(levels(as.factor(unlist(filterED))))
     
-    avgcvmem <- matrix(nrow=rowCount, ncol=methodCount, byrow=T)
-    avgmadmem <- matrix(nrow=rowCount, ncol=methodCount, byrow=T)
-    avgvarmem <- matrix(nrow=rowCount, ncol=methodCount, byrow=T)
-    datamadpeptmem <- matrix(nrow=nrow(filterrawdata), ncol=methodCount, byrow=T)
+    avgcvmem <- matrix(nrow=rowCount, ncol=methodCount, byrow=TRUE)
+    avgmadmem <- matrix(nrow=rowCount, ncol=methodCount, byrow=TRUE)
+    avgvarmem <- matrix(nrow=rowCount, ncol=methodCount, byrow=TRUE)
+    datamadpeptmem <- matrix(nrow=nrow(filterrawdata), 
+                             ncol=methodCount, byrow=TRUE)
     
     anpvalue <- vector()
     anfdr <- vector()
@@ -72,7 +73,9 @@ analyzeNormalizations <- function(nr, name) {
         flag <- 1
         flag1 <- 1
         count <- 0
-        madmem <- matrix(nrow=nrow(datastore), ncol=length(levels(as.factor(unlist(filterED)))), byrow=T)
+        madmem <- matrix(nrow=nrow(datastore), 
+                         ncol=length(levels(as.factor(unlist(filterED)))), 
+                         byrow=TRUE)
         tempcv <- vector()
         varmem <- vector()
         tempvar <- vector()
@@ -88,19 +91,21 @@ analyzeNormalizations <- function(nr, name) {
                 
                 if (flag == 1) {
                     count <- count + 1
-                    madmem[, count] <- apply(datastore[, z:y], 1, function(x) { stats::mad(x, na.rm=T) })
+                    madmem[, count] <- apply(datastore[, z:y], 1, function(x) { stats::mad(x, na.rm=TRUE) })
                     nonmissingmat <- apply(datastore[, z:y], 1, function(x) { sum(!is.na(x)) }) - 1
                     tempvar <- nonmissingmat * apply(datastore[, z:y], 1, function(x) { stats::var(x, na.rm=TRUE) })
                 }
                 
                 if (flag == 2) {  
                     count <- count + 1
-                    madmem[, count] <- apply(datastore[, z:y], 1, function(x) { stats::mad(x, na.rm=T) })  
+                    madmem[, count] <- apply(datastore[, z:y], 1, function(x) { stats::mad(x, na.rm=TRUE) })  
                     nonmissingmat <- (apply(datastore[, z:y], 1, function(x) { sum(!is.na(x)) })) - 1
                     tempvar <- nonmissingmat * apply(datastore[, z:y], 1, function(x) { stats::var(x, na.rm=TRUE) })
                 }
                 
-                varmem <- c(varmem, sum(tempvar, na.rm=T) / (sum(nonmissingmat, na.rm=T)))
+                varmem <- c(varmem, 
+                            sum(tempvar, na.rm=TRUE) / (sum(nonmissingmat, 
+                                                            na.rm=TRUE)))
                 z <- i
                 x <- filterED[i]
                 flag <- 2
@@ -108,10 +113,10 @@ analyzeNormalizations <- function(nr, name) {
         }
         
         avgvarmem[, meti] <- varmem
-        temmadmatsum <- apply(madmem, 2, mean, na.rm=T)
+        temmadmatsum <- apply(madmem, 2, mean, na.rm=TRUE)
         avgmadmem[, meti] <- temmadmatsum
         
-        tempcvmat <- matrix(nrow=nrow(datastore), ncol=length(levels(as.factor(unlist(filterED)))), byrow=T)
+        tempcvmat <- matrix(nrow=nrow(datastore), ncol=length(levels(as.factor(unlist(filterED)))), byrow=TRUE)
         
         for (i in 1:nrow(datastore)) {
             
@@ -119,7 +124,7 @@ analyzeNormalizations <- function(nr, name) {
             tempcvmat[i, ] <- tempcv$table
         }
         
-        temcvmatsum <- apply(tempcvmat, 2, mean, na.rm=T)
+        temcvmatsum <- apply(tempcvmat, 2, mean, na.rm=TRUE)
         avgcvmem[, meti] <- temcvmatsum * 100
         
         # ANOVA
@@ -151,7 +156,7 @@ analyzeNormalizations <- function(nr, name) {
     nonsiganfdrlistcv <- vector()
     for (mlist in 1:methodCount) {
         tmpdata <- methodlist[[mlist]][nonsiganfdrlist, ]
-        nonsiganfdrlistcv[mlist] <- mean(apply(tmpdata, 1, function(x) raster::cv(x, na.rm=T)), na.rm=T)
+        nonsiganfdrlistcv[mlist] <- mean(apply(tmpdata, 1, function(x) raster::cv(x, na.rm=TRUE)), na.rm=TRUE)
     }
     
     nonsiganfdrlistcvpdiff <- sapply(1:length(nonsiganfdrlistcv), function(x) (nonsiganfdrlistcv[x] * 100) / nonsiganfdrlistcv[1])
@@ -233,7 +238,7 @@ calculateCorrelations <- function(nr, ner) {
 filterLinesWithEmptySamples <- function(dataMatrix, replicateHeader) {
     
     firstIndices <- getFirstIndicesInVector(replicateHeader)
-    lastIndices <- getFirstIndicesInVector(replicateHeader, reverse=T)
+    lastIndices <- getFirstIndicesInVector(replicateHeader, reverse=TRUE)
     
     replicatesHaveData <- rep(TRUE, nrow(dataMatrix))
     
