@@ -34,12 +34,7 @@ normalyzer <- function(inputPath, jobName, outputDir=NULL) {
     
     # Biobase::rowMedians ??
     
-    # Not used
-    # require(PerformanceAnalytics)
-    # require(abind)
-    # require(e1071)
-    
-    
+
     #source("generatePlots.R")
     #source("normfinder-pipeline.R")
     #source("normMethods.R")

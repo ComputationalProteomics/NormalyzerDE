@@ -2,6 +2,8 @@
 *.swp
 *.Rhistory
 R/Rplots.pdf
+*.pdf
+*.html
 
 # Folders
 data/

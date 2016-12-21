@@ -1,13 +1,12 @@
 Package: Normalyzer
 Title: Evaluation of normalization methods
-Version: 0.0.0.9000
+Version: 0.0.9
 Authors: Aakash Chawade, Jakob Willforss
 Maintainer: Jakob Willforss <jakob.willforss@immun.lth.se>
 Description: Evaluation of normalization methods applied to proteomic data.
 Imports: 
     vsn,
     Rcmdr,
-    PerformanceAnalytics,
     preprocessCore,
     limma,
     MASS,
@@ -18,6 +17,12 @@ Imports:
     car,
     gridExtra,
     ggplot2
+Suggests: 
+    knitr,
+    testthat
+VignetteBuilder: knitr
+biocViews:
+    Normalization,
 License: GPL (>=2)
 Encoding: UTF-8
 LazyData: true

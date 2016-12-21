@@ -375,6 +375,8 @@ plotScatter <- function(nr, currentLayout, pageno) {
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(3, 2, 3, 2), xpd=NA)
     
+    # TODO, What is retrieved from datastore?
+    
     for (i in 1:length(methodlist)) {
         datastore <- methodlist[[i]]
         fit <- stats::lm(datastore[, 1]~datastore[, 2])
