@@ -5,6 +5,8 @@
 # require("utils")
 
 
+# Testrun: normalyzer("../dev_data/canker_matrix_jonathan_t3.sub_200.tsv", "textx", outputDir="../runs/")
+
 
 #' Normalyzer pipeline entry point
 #' 
@@ -16,7 +18,7 @@
 #' @return None
 #' @export
 #' @import MASS Rcmdr limma preprocessCore methods
-normalyzer <- function(inputPath, jobName, outputDir=NULL) {
+normalyzer <- function(inputPath, jobName, outputDir=NULL, forceAllMethods=FALSE) {
     
     print('start')
     
@@ -35,17 +37,17 @@ normalyzer <- function(inputPath, jobName, outputDir=NULL) {
     
     # Biobase::rowMedians ??
     
-
+    
     source("generatePlots.R")
     source("normfinder-pipeline.R")
     source("normMethods.R")
     source("printMeta.R")
     source("printPlots.R")
-
+    
     source("NormalyzerDataset.R")
     source("NormalizationEvaluationResults.R")
     source("NormalyzerResults.R")
-
+    
     source("utils.R")
     source("inputVerification.R")
     source("analyzeResults.R")
@@ -53,9 +55,9 @@ normalyzer <- function(inputPath, jobName, outputDir=NULL) {
     normObj <- getVerifiedNormalyzerObjectFromFile(inputPath, jobName)
     jobDir <- setupJobDir(jobName, outputDir)
     
-
+    
     print("Normalizing data....")
-    normalyzerResultsObject <- normMethods(normObj, jobName, jobDir)
+    normalyzerResultsObject <- normMethods(normObj, jobName, jobDir, forceAll=forceAllMethods)
     print("Finished Normalization")
     
     print("Analyzing results...")

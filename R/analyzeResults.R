@@ -189,7 +189,7 @@ analyzeNormalizations <- function(nr, name) {
 #' @param ner Normalyzer evaluation object.
 #' @return Normalyzer evaluation object with attached evaluation results.
 calculateCorrelations <- function(nr, ner) {
-
+    
     methodlist <- getNormalizationMatrices(nr)
     filterED <- nr@nds@sampleReplicateGroups
     

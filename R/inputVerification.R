@@ -8,18 +8,50 @@
 getVerifiedNormalyzerObjectFromFile <- function(inputPath, jobName) {
 
     # rawData <- retrieveRawData(inputPath)
-    rawData <- as.matrix(utils::read.table(inputPath, header=FALSE, sep="\t", 
-                                           stringsAsFactors=FALSE, quote=""))
+    
+    # tryCatch(read.table(my_table), error=function(e){print(paste("Unable to open input:", my_table))})
+
+    rawData <- loadRawDataFromFile(inputPath)
+    
+    verifyValidNumbers(rawData)
+    
+    # rawData <- as.matrix(utils::read.table(inputPath, header=FALSE, sep="\t", 
+    #                                        stringsAsFactors=FALSE, quote=""))
     
     rawData <- getReplicateSortedData(rawData)
     verifySampleReplication(rawData)  # This is the way to do it!
     rawData <- preprocessData(rawData)
-    
+
     nds <- generateNormalyzerDataset(rawData, jobName)
 
     # Verification step: Check whether all colsum values are > 0
     
+    
     nds
+}
+
+#' Try reading raw Normalyzer matrix from provided filepath
+#' 
+#' @param inputPath Path to Normalyzer data.
+#' @return Table containing raw data from input file.
+loadRawDataFromFile <- function(inputPath) {
+    tryCatch(
+        rawData <- as.matrix(utils::read.table(inputPath, 
+                                               header=FALSE, 
+                                               sep="\t", 
+                                               stringsAsFactors=FALSE,
+                                               quote="")), 
+        error=function(e) {
+            print(paste0("Provided input file (", inputPath, ") not found:"))
+            stop("Please provide a valid input file.")
+        },
+        
+        warning=function(w) {
+            print(paste0("Provided input file (", inputPath, ") not found:"))
+            stop("Please provide a valid input file.")
+        }
+    )
+    rawData
 }
 
 #' Setup Normalyzer dataset from given raw data
@@ -57,7 +89,7 @@ getReplicateSortedData <- function(rawData) {
 #'  otherwise
 #' 
 #' @param rawData Dataframe with unparsed Normalyzer input data.
-#' @return Vector with replicate line
+#' @return None
 #' @export
 verifySampleReplication <- function(rawData) {
 
@@ -77,20 +109,51 @@ verifySampleReplication <- function(rawData) {
             }
         }
     }
-    replicateLine
 }
 
 #' Replace 0 values with NA in input data
 #' 
 #' @param rawData Dataframe with Normalyzer input data.
 #' @return Parsed rawdata where 0 values are replaced with NA
-preprocessData <- function(rawData) {
+preprocessData <- function(normalyzerDf) {
 
-    rep0 <- rawData[-1,]
-    rep0[which(rep0 == 0)] <- NA
-    rawData <- rbind(rawData[1, ], rep0)
+    # TODO: Is this problematic? What if you have zero as sample name?
+
+    dataMatrix <- normalyzerDf[-1:-2, ]
+    dataMatrix[which(dataMatrix == 0)] <- NA
+    normalyzerDf <- rbind(normalyzerDf[1:2, ], dataMatrix)
+
+    normalyzerDf
+}
+
+#' Verify that input fields conform to the expected formats
+#' 
+#' @param rawData Dataframe with Normalyzer input data.
+#' @return Parsed rawdata where 0 values are replaced with NA
+verifyValidNumbers <- function(normalyzerDf) {
     
-    rawData
+    validPatterns <- c("\\d+(\\.\\d+)?", "NA")
+    
+    rawData <- normalyzerDf[-1:-2,-1]
+    
+    regexPattern <- sprintf("^(%s)$", paste(validPatterns, collapse="|"))
+    matches <- grep(regexPattern, rawData, perl=TRUE, ignore.case=TRUE)
+    nonMatches <- rawData[-matches]
+    
+    if (length(na.omit(nonMatches) > 0)) {
+        error_string <- paste(
+            "Invalid values encountered in input data.",
+            "Only valid data is numeric and NA- or na-fields",
+            "Invalid fields: ",
+            paste(unique(nonMatches), collapse=" "),
+            "Aborting...",
+            sep="\n"
+        )
+        
+        stop(error_string)
+    }
+    
+    print("Input data checked. All fields are valid.")
 }
 
 

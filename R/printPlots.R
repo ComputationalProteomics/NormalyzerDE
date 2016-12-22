@@ -27,16 +27,16 @@ printPlots <- function(plotlist, plotname, pageno, jobname) {
     grid::grid.rect(vp=grid::viewport(layout.pos.row=5, layout.pos.col=6), gp=gpfill)
     
     grid::grid.text(plotname, 
-              vp=grid::viewport(layout.pos.row=1, layout.pos.col=1),
-              just=c("left","center"), gp=grid::gpar(fontface="bold", fontsize=14, 
-                                               fontfamily="Helvetica", col="darkBlue"))
+                    vp=grid::viewport(layout.pos.row=1, layout.pos.col=1),
+                    just=c("left","center"), gp=grid::gpar(fontface="bold", fontsize=14, 
+                                                           fontfamily="Helvetica", col="darkBlue"))
     grid::grid.text("Normalyzer Report", 
-              vp=grid::viewport(layout.pos.row=1, layout.pos.col=6),
-              just=c("right", "center"), gp=gp)
+                    vp=grid::viewport(layout.pos.row=1, layout.pos.col=6),
+                    just=c("right", "center"), gp=gp)
     grid::grid.text(paste("Page ", pageno,sep=""), 
-              vp=grid::viewport(layout.pos.row=5, layout.pos.col=6), just=c("right", "center"), gp=gp)
+                    vp=grid::viewport(layout.pos.row=5, layout.pos.col=6), just=c("right", "center"), gp=gp)
     grid::grid.text(paste("Project: ", jobname, sep=""),
-              vp=grid::viewport(layout.pos.row=5, layout.pos.col=1), just=c("left", "center"), gp=gp)
+                    vp=grid::viewport(layout.pos.row=5, layout.pos.col=1), just=c("left", "center"), gp=gp)
     
     print(plotlist[[1]], vp=grid::viewport(layout.pos.row=2, layout.pos.col=2))
     print(plotlist[[2]], vp=grid::viewport(layout.pos.row=2, layout.pos.col=3))

@@ -92,7 +92,7 @@ setGeneric(name="initializeResultsObject",
 #' @rdname performNormalizations
 #' @export
 setGeneric(name="performNormalizations", 
-           function(nr) standardGeneric("performNormalizations"))
+           function(nr, forceAll=FALSE) standardGeneric("performNormalizations"))
 
 #' Generate basic metrics normalizations
 #'
@@ -216,17 +216,17 @@ setMethod("initializeResultsObject", "NormalyzerResults",
 
 #' @rdname performNormalizations
 setMethod("performNormalizations", "NormalyzerResults",
-          function(nr) {
+          function(nr, forceAll=FALSE) {
               
               nds <- nr@nds
               nr <- basicMetricNormalizations(nr)
               
-              if (nrow(nds@normfinderFilterRawData) < nr@normfinderMaxThreshold) {
+              if (nrow(nds@normfinderFilterRawData) < nr@normfinderMaxThreshold || forceAll) {
                   nr@houseKeepingVars <- normfinder(nds)
                   nr <- calculateHKdataForNormObj(nr)
               }
               
-              if (nrow(nds@filterrawdata) > nr@furtherNormalizationMinThreshold) {
+              if (nrow(nds@filterrawdata) > nr@furtherNormalizationMinThreshold || forceAll) {
                   nr <- performVSNNormalization(nr)
                   nr <- performQuantileNormalization(nr)
                   nr <- performSMADNormalization(nr)

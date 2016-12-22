@@ -8,12 +8,13 @@ generatePlots <- function(nr, jobdir) {
     
     nds <- nr@nds
     currentjob <- nds@jobName
-
-    currentLayout <- grid::grid.layout(nrow=5, ncol=6, heights=c(0.1, 1, 1, 1, 0.1), 
-                                 widths=c(0.1, 1, 1, 1, 1, 0.1), 
-                                 default.units=c('null', 'null'))
+    
+    currentLayout <- grid::grid.layout(nrow=5, ncol=6, 
+                                       heights=c(0.1, 1, 1, 1, 0.1), 
+                                       widths=c(0.1, 1, 1, 1, 1, 0.1), 
+                                       default.units=c('null', 'null'))
     currentFont <- "Helvetica"
-
+    
     setupPlotting(currentjob, jobdir)
     plotFrontPage(currentjob, currentFont)
     
@@ -26,17 +27,17 @@ generatePlots <- function(nr, jobdir) {
     print("DEBUG: Plotting page 3")
     pageno <- pageno + 1
     plotReplicateVariance(nr, currentLayout, pageno)
-
+    
     # Stable variables plot and CV in percent difference
     print("DEBUG: Plotting page 4")
     pageno <- pageno + 1
     plotReplicateVarAndStableVariables(nr, currentLayout, pageno)
-
+    
     # CVvsintensityplot 
     print("DEBUG: Plotting page 5")
     pageno <- pageno + 1
     plotCVvsIntensity(nr, currentLayout, pageno)
-
+    
     #MA plots
     print("DEBUG: Plotting page 6!")
     pageno <- pageno + 1
@@ -46,17 +47,17 @@ generatePlots <- function(nr, jobdir) {
     print("DEBUG: Plotting page 7")
     pageno <- pageno + 1
     plotScatter(nr, currentLayout, pageno)
-
+    
     # QQplot
     print("DEBUG: Plotting page 8")
     pageno <- pageno + 1
     plotQQ(nr, currentLayout, pageno)
-
+    
     # Boxplot
     print("DEBUG: Plotting page 9")
     pageno <- pageno + 1
     plotBoxPlot(nr, currentLayout, pageno)
-
+    
     # RLE plots
     print("DEBUG: Plotting page 10")
     pageno <- pageno + 1
@@ -66,7 +67,7 @@ generatePlots <- function(nr, jobdir) {
     print("DEBUG: Plotting page 11")
     pageno <- pageno + 1
     plotDensity(nr, currentLayout, pageno)
-
+    
     # MDS plot
     print("DEBUG: Plotting page 12")
     pageno <- pageno + 1
@@ -81,12 +82,12 @@ generatePlots <- function(nr, jobdir) {
     print("DEBUG: Plotting page 15")
     pageno <- pageno + 1
     plotCorrelation(nr, currentLayout, pageno)
-
+    
     # Dendrograms
     print("DEBUG: Plotting page 16")
     pageno <- pageno + 1
     plotDendrograms(nr, currentLayout, pageno)
-
+    
     # DE plots
     print("DEBUG: Plotting page 17")
     pageno <- pageno + 1
@@ -101,11 +102,15 @@ generatePlots <- function(nr, jobdir) {
 #' @param jobdir Path to output directory for run.
 #' @return None
 setupPlotting <- function(currentjob, jobdir) {
-
-    grDevices::palette(c("red", "green", "blue", "orange", "darkgray", "blueviolet", "darkslateblue", "darkviolet", "gray", "bisque4",
-              "brown", "cadetblue4", "darkgreen", "darkcyan", "darkmagenta", "darkgoldenrod4", "coral1"))
     
-    grDevices::pdf(file=paste(jobdir, "/Norm_report-", currentjob, ".pdf", sep=""), paper="a4r", width=0, height=0)    
+    grDevices::palette(c("red", "green", "blue", "orange", "darkgray", 
+                         "blueviolet", "darkslateblue", "darkviolet", "gray", 
+                         "bisque4", "brown", "cadetblue4", "darkgreen", 
+                         "darkcyan", "darkmagenta", "darkgoldenrod4", "coral1"))
+    
+    grDevices::pdf(file=paste(jobdir, "/Norm_report-", 
+                              currentjob, ".pdf", sep=""), 
+                   paper="a4r", width=0, height=0)    
     theme_norm <- ggplot2::theme_set(ggplot2::theme_bw())
     theme_norm <- ggplot2::theme_update(panel.grid.minor=ggplot2::element_blank(), 
                                         axis.text=ggplot2::element_text(size=7), 
@@ -136,19 +141,19 @@ plotFrontPage <- function(currentjob, currentFont) {
     grid::grid.rect(vp=grid::viewport(layout.pos.row=7), gp=gpfill)
     
     grid::grid.text(paste("Project Name: ", currentjob, sep=""), vp=grid::viewport(layout.pos.row=3), just=c("center","center"), 
-              gp=grid::gpar(fontsize=12, fontfamily=currentFont, col="black"))
+                    gp=grid::gpar(fontsize=12, fontfamily=currentFont, col="black"))
     grid::grid.text(paste("Normalyzer (ver 1.1.1)"), vp=grid::viewport(layout.pos.row=4), just=c("center", "center"), 
-              gp=grid::gpar(fontface="bold", fontsize=32, fontfamily=currentFont, col="darkblue"))
+                    gp=grid::gpar(fontface="bold", fontsize=32, fontfamily=currentFont, col="darkblue"))
     
     grid::grid.text(paste("Report created on: ", Sys.Date(), sep=""), vp=grid::viewport(layout.pos.row=5), just=c("center","center"),
-              gp=grid::gpar(fontsize=12, fontfamily=currentFont, col="black"))
+                    gp=grid::gpar(fontsize=12, fontfamily=currentFont, col="black"))
     
     citationText <- "Citation: Chawade, A., Alexandersson, E., Levander, F. (2014). Normalyzer: a tool for rapid evaluation of normalization methods for omics data sets. J Proteome Res.,13 (6)"
     
     grid::grid.text(citationText, vp=grid::viewport(layout.pos.row=6), just=c("center","center"), gp=grid::gpar(fontsize=10, fontfamily=currentFont, col="black"))
     
     grid::grid.text("Documentation for analyzing this report can be found at http://quantitativeproteomics.org/normalyzer/help.php",
-              vp=grid::viewport(layout.pos.row=7), just=c("center", "center"), gp=grid::gpar(fontsize=10, fontfamily=currentFont, col="black"))
+                    vp=grid::viewport(layout.pos.row=7), just=c("center", "center"), gp=grid::gpar(fontsize=10, fontfamily=currentFont, col="black"))
 }
 
 #' Generate sample summary of intensities, missing values and MDS plot
@@ -158,7 +163,7 @@ plotFrontPage <- function(currentjob, currentFont) {
 #' @param pageno Current page number.
 #' @return None
 plotSampleOutlierSummary <- function(nr, currentLayout, pageno) {
-
+    
     nds <- nr@nds
     methodlist <- getNormalizationMatrices(nr)
     filterED <- nds@sampleReplicateGroups
@@ -193,7 +198,7 @@ plotSampleOutlierSummary <- function(nr, currentLayout, pageno) {
 #' @param pageno Current page number.
 #' @return None
 plotReplicateVariance <- function(nr, currentLayout, pageno) {
-
+    
     nds <- nr@nds
     methodnames <- getUsedMethodNames(nr)
     currentjob <- nds@jobName
@@ -243,7 +248,7 @@ plotReplicateVariance <- function(nr, currentLayout, pageno) {
 #' @param pageno Current page number.
 #' @return None
 plotReplicateVarAndStableVariables <- function(nr, currentLayout, pageno) {
-
+    
     nds <- nr@nds
     methodnames <- getUsedMethodNames(nr)
     currentjob <- nds@jobName
@@ -259,9 +264,9 @@ plotReplicateVarAndStableVariables <- function(nr, currentLayout, pageno) {
     graphics::par(mar=c(6, 6, 3, 1), oma=c(2, 3, 3, 2), xpd=NA)
     
     abc <- graphics::barplot(avgcvmempdiff, main="PCV compared to log2 ", 
-                            names.arg=c(methodnames), border="red", 
-                            ylim=c(min(avgcvmempdiff) - 10, max(avgmadmempdiff) + 5), 
-                            density=20, cex=0.9, cex.axis=0.7, las=2, xpd=FALSE)
+                             names.arg=c(methodnames), border="red", 
+                             ylim=c(min(avgcvmempdiff) - 10, max(avgmadmempdiff) + 5), 
+                             density=20, cex=0.9, cex.axis=0.7, las=2, xpd=FALSE)
     
     graphics::axis(1, at=c(0.2, (max(abc) + 0.5)), labels=FALSE, lwd.ticks=0)
     graphics::axis(1, at=abc, labels=FALSE, lwd=0, lwd.ticks=1)
@@ -269,9 +274,9 @@ plotReplicateVarAndStableVariables <- function(nr, currentLayout, pageno) {
                    pos=3, las=2)
     
     abc<-graphics::barplot(avgmadmempdiff, main="PMAD compared to log2", 
-                        names.arg=c(methodnames), border="red", 
-                        ylim=c(min(avgmadmempdiff) - 10, max(avgmadmempdiff) + 5), 
-                        density=20, cex=0.9, cex.axis=0.7, las=2, xpd=FALSE)
+                           names.arg=c(methodnames), border="red", 
+                           ylim=c(min(avgmadmempdiff) - 10, max(avgmadmempdiff) + 5), 
+                           density=20, cex=0.9, cex.axis=0.7, las=2, xpd=FALSE)
     
     graphics::axis(1, at=c(0.2, max(abc) + 0.5), labels=FALSE, lwd.ticks=0)
     graphics::axis(1, at=abc, labels=FALSE, lwd=0, lwd.ticks=1)
@@ -280,9 +285,9 @@ plotReplicateVarAndStableVariables <- function(nr, currentLayout, pageno) {
                    pos=3, las=2)
     
     abc <- graphics::barplot(avgvarmempdiff, main="%PEV - compared to log2", 
-                            names.arg=c(methodnames), border="red", 
-                            ylim=c(min(avgvarmempdiff) - 10, max(avgmadmempdiff) + 5),
-                            density=20, cex=0.9, cex.axis=0.7, las=2, xpd=FALSE)
+                             names.arg=c(methodnames), border="red", 
+                             ylim=c(min(avgvarmempdiff) - 10, max(avgmadmempdiff) + 5),
+                             density=20, cex=0.9, cex.axis=0.7, las=2, xpd=FALSE)
     
     graphics::axis(1, at=c(0.2, max(abc) + 0.5), labels=FALSE, lwd.ticks=0)
     graphics::axis(1, at=abc, labels=FALSE, lwd=0, lwd.ticks=1)
@@ -294,19 +299,19 @@ plotReplicateVarAndStableVariables <- function(nr, currentLayout, pageno) {
             min(nonsiganfdrlistcvpdiff) < 0 || max(nonsiganfdrlistcvpdiff) > 100) {
             
             graphics::plot(avgcvmempdiff, nonsiganfdrlistcvpdiff, pch=18, 
-                        xlim=c(0, 100), ylim=c(0, 100), 
-                        main="Stable variables plot", 
-                        xlab="PCV (intragroup) compared to Log2", 
-                        ylab="% Global CV of stable variables compared to Log2")
+                           xlim=c(0, 100), ylim=c(0, 100), 
+                           main="Stable variables plot", 
+                           xlab="PCV (intragroup) compared to Log2", 
+                           ylab="% Global CV of stable variables compared to Log2")
             car::showLabels(avgcvmempdiff, nonsiganfdrlistcvpdiff, 
                             labels=methodnames, id.method="mahal", 
                             id.cex=0.7, id.col="black")
         }
         else {
             graphics::plot(avgcvmempdiff, nonsiganfdrlistcvpdiff, pch=18, 
-                        main="Stable variables plot", 
-                        xlab="PCV (Intragroup) compared to Log2", 
-                        ylab="% Global CV of stable variables compared to Log2")
+                           main="Stable variables plot", 
+                           xlab="PCV (Intragroup) compared to Log2", 
+                           ylab="% Global CV of stable variables compared to Log2")
             car::showLabels(avgcvmempdiff, nonsiganfdrlistcvpdiff, 
                             labels=methodnames, id.method="mahal", 
                             id.cex=0.7, id.col="black")
@@ -325,7 +330,7 @@ plotReplicateVarAndStableVariables <- function(nr, currentLayout, pageno) {
 #' @param pageno Current page number.
 #' @return None
 plotCVvsIntensity <- function(nr, currentLayout, pageno) {
-
+    
     nds <- nr@nds
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
@@ -382,7 +387,7 @@ plotCVvsIntensity <- function(nr, currentLayout, pageno) {
 #' @param pageno Current page number.
 #' @return None
 plotMA <- function(nr, currentLayout, pageno) {
-
+    
     nds <- nr@nds
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
@@ -404,8 +409,8 @@ plotMA <- function(nr, currentLayout, pageno) {
         Malist[[i]] <- ggplot2::ggplot(df, ggplot2::aes(avg, fc)) + 
             ggplot2::geom_point(color="darkgray", size=0.7) + 
             ggplot2::labs(x=("Replicate group mean"), 
-                        y=("Replicate-1 Fold Change"),
-                        title=(paste(tempcolname[1], methodnames[i]))) + 
+                          y=("Replicate-1 Fold Change"),
+                          title=(paste(tempcolname[1], methodnames[i]))) + 
             ggplot2::stat_smooth(method="loess", se=FALSE, colour="red") + 
             ggplot2::geom_abline(intercept=0, slope=0, size=0.3)
     } 
@@ -424,7 +429,7 @@ plotMA <- function(nr, currentLayout, pageno) {
 #' @param pageno Current page number.
 #' @return None
 plotScatter <- function(nr, currentLayout, pageno) {
-
+    
     nds <- nr@nds
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
@@ -456,12 +461,12 @@ plotScatter <- function(nr, currentLayout, pageno) {
 #' @param pageno Current page number.
 #' @return None
 plotQQ <- function(nr, currentLayout, pageno) {
-
+    
     nds <- nr@nds
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
     currentjob <- nds@jobName
-
+    
     qqlist <- list()
     
     for (i in 1:length(methodlist)) {  
@@ -485,7 +490,7 @@ plotQQ <- function(nr, currentLayout, pageno) {
 #' @param pageno Current page number.
 #' @return None
 plotBoxPlot <- function(nr, currentLayout, pageno) {
-
+    
     nds <- nr@nds
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
@@ -513,7 +518,7 @@ plotBoxPlot <- function(nr, currentLayout, pageno) {
     for (i in 1:length(methodlist)) {   
         graphics::par(mar=c(5, 1, 1, 1))
         graphics::boxplot(methodlist[[i]], cex=0.1, cex.axis=0.7, las=2, main=methodnames[i], col=(filterED), outcol="lightgray", 
-                ylim=c(mindata - 1, maxdata + 1), names=substr(colnames(methodlist[[i]]), 1, 10))
+                          ylim=c(mindata - 1, maxdata + 1), names=substr(colnames(methodlist[[i]]), 1, 10))
     }
     
     grid::pushViewport(grid::viewport(layout=currentLayout))
@@ -528,7 +533,7 @@ plotBoxPlot <- function(nr, currentLayout, pageno) {
 #' @param pageno Current page number.
 #' @return None
 plotRLE <- function(nr, currentLayout, pageno) {
-
+    
     nds <- nr@nds
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
@@ -555,12 +560,12 @@ plotRLE <- function(nr, currentLayout, pageno) {
 #' @param pageno Current page number.
 #' @return None
 plotDensity <- function(nr, currentLayout, pageno) {
-
+    
     nds <- nr@nds
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
     currentjob <- nds@jobName
-
+    
     tout <- rbind(c(1, 2, 3, 4), c(5, 6, 7, 8), c(9, 10, 11, 12))
     graphics::layout(tout)
     graphics::par(mar=c(3, 2, 3, 1), oma=c(3, 2, 3, 2), xpd=NA)
@@ -588,17 +593,17 @@ plotDensity <- function(nr, currentLayout, pageno) {
 #' @param pageno Current page number.
 #' @return None
 plotMDS <- function(nr, currentLayout, pageno) {
-
+    
     nds <- nr@nds
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
     currentjob <- nds@jobName
     filterED <- nds@sampleReplicateGroups
-
+    
     tout <- rbind(c(1, 2, 3, 4), c(5, 6, 7, 8), c(9, 10, 11, 12))
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(3, 2, 3, 2), xpd=NA)
-
+    
     for (i in 1:length(methodlist)) {
         datastore <- (methodlist[[i]])
         d <- stats::dist(scale(t(stats::na.omit(datastore)), center=TRUE, scale=TRUE))
@@ -621,12 +626,12 @@ plotMDS <- function(nr, currentLayout, pageno) {
 #' @param pageno Current page number.
 #' @return None
 plotMeanSD <- function(nr, currentLayout, pageno) {
-
+    
     nds <- nr@nds
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
     currentjob <- nds@jobName
-
+    
     sdPlots <- list()
     
     for (i in 1:length(methodlist)) {
@@ -639,12 +644,12 @@ plotMeanSD <- function(nr, currentLayout, pageno) {
         sdPlots[[i]] <- msd$gg + 
             ggplot2::ggtitle(methodnames[i]) + 
             ggplot2::theme(legend.position="none", plot.margin=ggplot2::unit(c(1,0,0,0), "cm"))
-
+        
         # TODO: The main=methodnames[i] seemed to cause crash here // Jakob
         # meanSdPlot(datastore, xlab="", ylab="", main=methodnames[i])
     }
-
-
+    
+    
     # Old, not sure it worked properly?    
     # do.call("gridExtra::grid.arrange", c(sdPlots, nrow=3, ncol=4, padding=1, top=1))
     
@@ -661,7 +666,7 @@ plotMeanSD <- function(nr, currentLayout, pageno) {
 #' @param pageno Current page number.
 #' @return None
 plotCorrelation <- function(nr, currentLayout, pageno) {
-
+    
     ner <- nr@ner
     avgpercorsum <- ner@avgpercorsum
     avgspecorsum <- ner@avgspecorsum
@@ -682,8 +687,8 @@ plotCorrelation <- function(nr, currentLayout, pageno) {
                                byrow=TRUE))
     
     abc <- graphics::boxplot(perdf, main="Pearson correlation - Intragroup", 
-                   names=c(methodnames), border="red", 
-                   density=20, cex=0.3, cex.axis=0.9, las=2)
+                             names=c(methodnames), border="red", 
+                             density=20, cex=0.3, cex.axis=0.9, las=2)
     
     graphics::stripchart(as.data.frame(perdf), vertical=TRUE, cex=0.4, las=2, pch=20, add=TRUE, col="darkgreen")
     
@@ -692,11 +697,11 @@ plotCorrelation <- function(nr, currentLayout, pageno) {
                                byrow=TRUE))
     
     abc <- graphics::boxplot(spedf, main="Spearman correlation - Intragroup", 
-                   names=c(methodnames), border="red", 
-                   density=20, cex=0.3, cex.axis=0.9, las=2)
+                             names=c(methodnames), border="red", 
+                             density=20, cex=0.3, cex.axis=0.9, las=2)
     
     graphics::stripchart(as.data.frame(spedf), 
-               vertical=TRUE, cex=0.4, las=2, pch=20, add=TRUE, col="darkgreen")
+                         vertical=TRUE, cex=0.4, las=2, pch=20, add=TRUE, col="darkgreen")
     grid::pushViewport(grid::viewport(layout=currentLayout))
     printMeta("Correlation plots", pageno, currentjob)
 }
@@ -709,13 +714,13 @@ plotCorrelation <- function(nr, currentLayout, pageno) {
 #' @param pageno Current page number.
 #' @return None
 plotDendrograms <- function(nr, currentLayout, pageno) {
-
+    
     nds <- nr@nds
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
     currentjob <- nds@jobName
     filterED <- nds@sampleReplicateGroups
-
+    
     print(length(methodnames))
     print(length(filterED))
     
@@ -750,7 +755,7 @@ plotDendrograms <- function(nr, currentLayout, pageno) {
 #' @param pageno Current page number.
 #' @return None
 plotDEPlots <- function(nr, currentLayout, pageno) {
-
+    
     nds <- nr@nds
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
@@ -759,18 +764,18 @@ plotDEPlots <- function(nr, currentLayout, pageno) {
     ner <- nr@ner
     anfdr <- ner@anfdr
     kwfdr <- ner@kwfdr
-
+    
     tout <- rbind(c(1, 2, 3), c(4))
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
     
     graphics::barplot(colSums(anfdr < 0.05), main="ANOVA", names=c(methodnames), 
-            border="red", density=20, cex=0.5, cex.axis=0.9, las=2,
-            ylab="No. of Variables with FDR < 0.05")
+                      border="red", density=20, cex=0.5, cex.axis=0.9, las=2,
+                      ylab="No. of Variables with FDR < 0.05")
     
     graphics::barplot(colSums(kwfdr < 0.05), main="Kruskal Wallis", names=c(methodnames), 
-            border="red", density=20, cex=0.5, cex.axis=0.9, 
-            las=2, ylab="No. of Variables with FDR < 0.05")
+                      border="red", density=20, cex=0.5, cex.axis=0.9, 
+                      las=2, ylab="No. of Variables with FDR < 0.05")
     
     grid::pushViewport(grid::viewport(layout=currentLayout))
     printMeta("Differential Expression", pageno, currentjob)

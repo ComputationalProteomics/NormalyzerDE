@@ -6,7 +6,7 @@
 #' @return Returns Normalyzer results object with performed analyzes assigned
 #'  as attributes
 #' @export
-normMethods <- function(nds, currentjob, jobdir) {
+normMethods <- function(nds, currentjob, jobdir, forceAll=FALSE) {
 
     nr <- generateNormalyzerResultsObject(nds)
     nr <- performNormalizations(nr)
@@ -20,7 +20,7 @@ normMethods <- function(nds, currentjob, jobdir) {
                                       methodnames[sampleIndex], 
                                       "-normalized.txt", sep=""),
                     cbind(nds@rawData[-(1:2), 1:(length(nds@inputHeaderValues) - length(nds@sampleReplicateGroups))],
-                          methodlist[[sampleIndex]]), sep="\t", row.names=FALSE, col.names=nds@rawData[2,], quote=FALSE)
+                          methodlist[[sampleIndex]]), sep="\t", row.names=FALSE, col.names=nds@rawData[2, ], quote=FALSE)
     }
     
     if (!all(is.na(nr@houseKeepingVars))) {
@@ -28,8 +28,8 @@ normMethods <- function(nds, currentjob, jobdir) {
     }
     
     utils::write.table(file=paste(jobdir, "/submitted_rawdata.txt", sep=""), 
-                cbind(nds@rawData[-(1:2), (1:(length(nds@inputHeaderValues) - length(nds@sampleReplicateGroups)))], nds@filterrawdata), sep="\t", row.names=FALSE,
-                col.names=nds@rawData[2,], quote=FALSE)
+                cbind(nds@rawData[-(1:2), 1:(length(nds@inputHeaderValues) - length(nds@sampleReplicateGroups))], nds@filterrawdata), sep="\t", row.names=FALSE,
+                col.names=nds@rawData[2, ], quote=FALSE)
 
     return(nr)
 }
