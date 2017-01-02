@@ -29,7 +29,6 @@ varprint <- function(variable, debug=TRUE) {
     }
 }
 
-
 #' Create empty directory for run if not already present
 #' 
 #' @param jobName Name of the run.
@@ -58,7 +57,7 @@ setupJobDir <- function(jobName, outputDir) {
 
 #' Create directory, or return error if already present
 #' 
-#' @param targetPath Path where to attempt to create direcotry
+#' @param targetPath Path where to attempt to create directory
 #' @return None
 createDirectory <- function(targetPath) {
     
@@ -73,4 +72,17 @@ createDirectory <- function(targetPath) {
     else {
         dir.create(targetPath)
     }
+}
+
+#' Get number of seconds between two Sys.time() objects
+#' 
+#' @param start Start-time object
+#' @param end End-time object
+#' @return None
+elapsedSecondsBetweenSystimes <- function(start, end) {
+    
+    startSecond <- strtoi(format(start, "%s"))
+    endSecond <- strtoi(format(end, "%s"))
+    elapsed <- end - start
+    elapsed
 }

@@ -33,6 +33,7 @@ normalyzer <- function(inputPath,
                        sampleAbundThres=15) {
     
     print('start')
+    startTime <- Sys.time()
     
     # require(Rcmdr)  # RcmdrMisc::numSummary, CRAN
     # require(vsn)    # Used for justvsn, BioConductor
@@ -87,6 +88,10 @@ normalyzer <- function(inputPath,
     generatePlots(normalyzerResultsObject, jobDir)
     
     print(paste("Done! Results are stored in ", jobDir))
+    
+    endTime <- Sys.time()
+    elapsedTime <- elapsedSecondsBetweenSystimes(startTime, endTime)
+    print(paste("Processing took", elapsedTime, "seconds"))
 }
 
 

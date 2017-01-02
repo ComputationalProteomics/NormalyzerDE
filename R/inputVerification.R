@@ -23,19 +23,25 @@ getVerifiedNormalyzerObject <- function(inputPath, jobName, threshold=15, omitSa
     processedRawData <- preprocessData(repSortedRawData)
     
     
-    # Verify values in samples
-    # verifyValuesInSamples(processedRawData)
-    
     lowCountSampleFiltered <- getLowCountSampleFiltered(processedRawData, 
                                                         threshold=threshold, 
                                                         stopIfTooFew=!omitSamples)
     
 
+
+    # If no samples left after omitting, stop
+        
+    # Verify replicates
+    
+    str(processedRawData)
+    str(lowCountSampleFiltered)
+    
     print(head(processedRawData))
     print(head(lowCountSampleFiltered))
     
+    # nds <- generateNormalyzerDataset(processedRawData, jobName)
     nds <- generateNormalyzerDataset(lowCountSampleFiltered, jobName)
-
+    
     # Verification step: Check whether all colsum values are > 0
     
     
@@ -182,7 +188,12 @@ getLowCountSampleFiltered <- function(dfWithNAs, threshold=15, stopIfTooFew=TRUE
         }
     }
     
-    dfWithNAs[, -sampleIndices[notPassingThreshold]]
+    if (length(notPassingThreshold > 0)) {
+        dfWithNAs[, -sampleIndices[notPassingThreshold]]
+    }
+    else {
+        dfWithNAs
+    }
 }
 
 
