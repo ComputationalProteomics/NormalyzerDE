@@ -5,15 +5,13 @@
 #' @param jobName Name of ongoing run.
 #' @return Normalyzer data object representing verified input data.
 #' @export
-getVerifiedNormalyzerObjectFromFile <- function(inputPath, jobName) {
+getVerifiedNormalyzerObject <- function(inputPath, jobName, threshold=15, omitSamples=FALSE) {
 
     # rawData <- retrieveRawData(inputPath)
     
     # tryCatch(read.table(my_table), error=function(e){print(paste("Unable to open input:", my_table))})
     
     rawData <- loadRawDataFromFile(inputPath)
-    
-    str(rawData)
     
     verifyValidNumbers(rawData)
     
@@ -26,12 +24,17 @@ getVerifiedNormalyzerObjectFromFile <- function(inputPath, jobName) {
     
     
     # Verify values in samples
+    # verifyValuesInSamples(processedRawData)
     
-    verifyValuesInSamples(processedRawData)
-    
+    lowCountSampleFiltered <- getLowCountSampleFiltered(processedRawData, 
+                                                        threshold=threshold, 
+                                                        stopIfTooFew=!omitSamples)
     
 
-    nds <- generateNormalyzerDataset(processedRawData, jobName)
+    print(head(processedRawData))
+    print(head(lowCountSampleFiltered))
+    
+    nds <- generateNormalyzerDataset(lowCountSampleFiltered, jobName)
 
     # Verification step: Check whether all colsum values are > 0
     
@@ -142,7 +145,7 @@ preprocessData <- function(normalyzerDf) {
 #'        Zero values are expected to have been replaced with NAs.
 #' @param threshold Lowest number of allowed values in a column.
 #' @return None
-verifyValuesInSamples <- function(dfWithNAs, threshold=15) {
+getLowCountSampleFiltered <- function(dfWithNAs, threshold=15, stopIfTooFew=TRUE) {
     
     rawData <- dfWithNAs[-1:-2,]
     header <- dfWithNAs[1,]
@@ -153,14 +156,13 @@ verifyValuesInSamples <- function(dfWithNAs, threshold=15) {
     for (i in 1:length(sampleIndices)) {
         
         sampleIndex <- sampleIndices[i]
-        
         numberOfValues[i] <- length(na.omit(rawData[,sampleIndex]))
         print(paste("Number found: ", numberOfValues[i]))
     }
     
     notPassingThreshold <- which(numberOfValues < threshold)
     
-    if (length(notPassingThreshold) > 0) {
+    if (length(notPassingThreshold) > 0 && stopIfTooFew) {
         error_string <- paste(
             "Following samples does not contain enough non-NA values:",
             paste(sampleIndices[notPassingThreshold], collapse=" "),
@@ -168,16 +170,22 @@ verifyValuesInSamples <- function(dfWithNAs, threshold=15) {
             paste(numberOfValues[notPassingThreshold], collapse=" "),
             "Current threshold:",
             threshold,
+            "You can force processing without this sample by specifying the",
+            "option \"omitLowAbundSamples\"",
             sep="\n")
-        # class(error_object) <- "try-error"
-        # if (inherits(error_object, "try-error")) {
-        #     return(error_object)
-        # }
-        # stop(paste("Number of replicates are less than 2 for the group ", replicateLineUnique[i], sep=""))
-        stop(error_string)
+        
+        if (stopIfTooFew) {
+            stop(error_string)
+        }
+        else {
+            warning(error_string)
+        }
     }
     
+    dfWithNAs[, -sampleIndices[notPassingThreshold]]
 }
+
+
 
 #' Verify that input fields conform to the expected formats
 #' 

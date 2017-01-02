@@ -15,10 +15,22 @@
 #' @param jobName Give the current run a name.
 #' @param outputDir Specify an output directory for generated files.
 #'  Defaults to current working directory.
+#' @param forceAllMethods Debugging function. Run all normalizations even if
+#'  they aren't in the recommended range of number of values
+#' @param omitLowAbundSamples Automatically remove samples with fewer non-NA
+#'  values compared to threshold given by sampleAbundThres. 
+#'  Will otherwise stop with error message if such sample is encountered.
+#' @param sampleAbundThres Threshold for omitting low-abundant
+#'  samples. Is by default set to 15.
 #' @return None
 #' @export
 #' @import MASS Rcmdr limma preprocessCore methods
-normalyzer <- function(inputPath, jobName, outputDir=NULL, forceAllMethods=FALSE) {
+normalyzer <- function(inputPath, 
+                       jobName, 
+                       outputDir=NULL,
+                       forceAllMethods=FALSE,
+                       omitLowAbundSamples=FALSE,
+                       sampleAbundThres=15) {
     
     print('start')
     
@@ -52,12 +64,18 @@ normalyzer <- function(inputPath, jobName, outputDir=NULL, forceAllMethods=FALSE
     source("inputVerification.R")
     source("analyzeResults.R")
     
-    normObj <- getVerifiedNormalyzerObjectFromFile(inputPath, jobName)
+    normObj <- getVerifiedNormalyzerObject(inputPath, 
+                                           jobName,
+                                           threshold=sampleAbundThres,
+                                           omitSamples=omitLowAbundSamples)
     jobDir <- setupJobDir(jobName, outputDir)
     
     
     print("Normalizing data....")
-    normalyzerResultsObject <- normMethods(normObj, jobName, jobDir, forceAll=forceAllMethods)
+    normalyzerResultsObject <- normMethods(normObj, 
+                                           jobName, 
+                                           jobDir, 
+                                           forceAll=forceAllMethods)
     print("Finished Normalization")
     
     print("Analyzing results...")
