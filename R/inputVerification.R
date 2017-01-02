@@ -10,8 +10,10 @@ getVerifiedNormalyzerObjectFromFile <- function(inputPath, jobName) {
     # rawData <- retrieveRawData(inputPath)
     
     # tryCatch(read.table(my_table), error=function(e){print(paste("Unable to open input:", my_table))})
-
+    
     rawData <- loadRawDataFromFile(inputPath)
+    
+    str(rawData)
     
     verifyValidNumbers(rawData)
     
@@ -40,7 +42,8 @@ loadRawDataFromFile <- function(inputPath) {
                                                header=FALSE, 
                                                sep="\t", 
                                                stringsAsFactors=FALSE,
-                                               quote="")), 
+                                               quote="",
+                                               comment.char="")),
         error=function(e) {
             print(paste0("Provided input file (", inputPath, ") not found:"))
             stop("Please provide a valid input file.")
@@ -130,11 +133,13 @@ preprocessData <- function(normalyzerDf) {
 #' 
 #' @param rawData Dataframe with Normalyzer input data.
 #' @return Parsed rawdata where 0 values are replaced with NA
-verifyValidNumbers <- function(normalyzerDf) {
+verifyValidNumbers <- function(normalyzerDfAll) {
+    
+    normalyzerDf <- normalyzerDfAll[, which(normalyzerDfAll[1,] != "0")]
     
     validPatterns <- c("\\d+(\\.\\d+)?", "NA")
     
-    rawData <- normalyzerDf[-1:-2,-1]
+    rawData <- normalyzerDf[-1:-2,]
     
     regexPattern <- sprintf("^(%s)$", paste(validPatterns, collapse="|"))
     matches <- grep(regexPattern, rawData, perl=TRUE, ignore.case=TRUE)
