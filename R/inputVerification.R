@@ -20,11 +20,18 @@ getVerifiedNormalyzerObjectFromFile <- function(inputPath, jobName) {
     # rawData <- as.matrix(utils::read.table(inputPath, header=FALSE, sep="\t", 
     #                                        stringsAsFactors=FALSE, quote=""))
     
-    rawData <- getReplicateSortedData(rawData)
-    verifySampleReplication(rawData)  # This is the way to do it!
-    rawData <- preprocessData(rawData)
+    repSortedRawData <- getReplicateSortedData(rawData)
+    verifySampleReplication(repSortedRawData)  # This is the way to do it!
+    processedRawData <- preprocessData(repSortedRawData)
+    
+    
+    # Verify values in samples
+    
+    verifyValuesInSamples(processedRawData)
+    
+    
 
-    nds <- generateNormalyzerDataset(rawData, jobName)
+    nds <- generateNormalyzerDataset(processedRawData, jobName)
 
     # Verification step: Check whether all colsum values are > 0
     
@@ -124,9 +131,52 @@ preprocessData <- function(normalyzerDf) {
 
     dataMatrix <- normalyzerDf[-1:-2, ]
     dataMatrix[which(dataMatrix == 0)] <- NA
-    normalyzerDf <- rbind(normalyzerDf[1:2, ], dataMatrix)
+    processedDf <- rbind(normalyzerDf[1:2, ], dataMatrix)
 
-    normalyzerDf
+    processedDf
+}
+
+#' Verify that samples contain at least a lowest number of values
+#' 
+#' @param dfWithNAs Dataframe with processed Normalyzer input data.
+#'        Zero values are expected to have been replaced with NAs.
+#' @param threshold Lowest number of allowed values in a column.
+#' @return None
+verifyValuesInSamples <- function(dfWithNAs, threshold=15) {
+    
+    rawData <- dfWithNAs[-1:-2,]
+    header <- dfWithNAs[1,]
+    sampleIndices <- which(header != "0")
+    
+    numberOfValues <- vector(length=length(sampleIndices), mode="numeric")
+    
+    for (i in 1:length(sampleIndices)) {
+        
+        sampleIndex <- sampleIndices[i]
+        
+        numberOfValues[i] <- length(na.omit(rawData[,sampleIndex]))
+        print(paste("Number found: ", numberOfValues[i]))
+    }
+    
+    notPassingThreshold <- which(numberOfValues < threshold)
+    
+    if (length(notPassingThreshold) > 0) {
+        error_string <- paste(
+            "Following samples does not contain enough non-NA values:",
+            paste(sampleIndices[notPassingThreshold], collapse=" "),
+            "Found number of values:",
+            paste(numberOfValues[notPassingThreshold], collapse=" "),
+            "Current threshold:",
+            threshold,
+            sep="\n")
+        # class(error_object) <- "try-error"
+        # if (inherits(error_object, "try-error")) {
+        #     return(error_object)
+        # }
+        # stop(paste("Number of replicates are less than 2 for the group ", replicateLineUnique[i], sep=""))
+        stop(error_string)
+    }
+    
 }
 
 #' Verify that input fields conform to the expected formats
