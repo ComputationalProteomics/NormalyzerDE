@@ -31,14 +31,14 @@ generatePlots <- function(nr, jobdir) {
     # Stable variables plot and CV in percent difference
     print("DEBUG: Plotting page 4")
     pageno <- pageno + 1
-    plotReplicateVarAndStableVariables(nr, currentLayout, pageno)
+    #plotReplicateVarAndStableVariables(nr, currentLayout, pageno)
     
     # CVvsintensityplot 
     print("DEBUG: Plotting page 5")
     pageno <- pageno + 1
     plotCVvsIntensity(nr, currentLayout, pageno)
     
-    #MA plots
+    # MA plots
     print("DEBUG: Plotting page 6!")
     pageno <- pageno + 1
     plotMA(nr, currentLayout, pageno)
@@ -211,6 +211,8 @@ plotReplicateVariance <- function(nr, currentLayout, pageno) {
     tout <- rbind(c(1, 2, 3), c(4))
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
+    
+    print(avgcvmem)
     
     graphics::boxplot(avgcvmem, main="PCV - Intragroup", names=c(methodnames), 
                       border="red", density=20, cex=0.3, cex.axis=0.9, las=2, 
