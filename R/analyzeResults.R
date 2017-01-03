@@ -10,84 +10,9 @@ analyzeNormalizations <- function(nr, name) {
     print("DEBUG: analyzeAndPlot entered")
 
     nds <- nr@nds
-    
-    methodList <- getNormalizationMatrices(nr)
-    methodNames <- getUsedMethodNames(nr)
-    rawData <- nds@rawData
-    filterRawData <- nds@filterrawdata
-    sampleReplicateGroups <- nds@sampleReplicateGroups
-    getEDdata <- nds@inputHeaderValues
-    houseKeepingFlag <- !is.null(nr@houseKeepingVars)
-    
-    pooledVarMem <- vector()
-    medianOfSamples <- vector()
-    dataMadSamplesMem <- vector()
+    nr@ner <- setupNormalizationEvaluationObject(nr)
 
-    methodCount <- length(methodNames)
-    rowCount <- length(levels(as.factor(unlist(sampleReplicateGroups))))
-    
-    datamadpeptmem <- matrix(nrow=nrow(filterRawData), ncol=methodCount, byrow=TRUE)
-    
-    anovaPVal <- vector()
-    # anovaFDR <- vector()
-    krusWalPVal <- vector()
-    # krusValFDR <- vector()
-    
-    firstIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=FALSE)
-    lastIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=TRUE)
-    
-    for (methodIndex in 1:methodCount) {
-        
-        print(paste("Processing methodlist index: ", methodIndex))
-        
-        # processedDataMatrix <- methodList[[methodIndex]]
-        # normalizationName <- methodNames[methodIndex]
-        # 
-        # rowNonNACount <- vector()
-        # 
-        # for (sampleIndex in 1:length(firstIndices)) {
-        #     
-        #     startColIndex <- firstIndices[sampleIndex]
-        #     endColIndex <- lastIndices[sampleIndex]
-        #     
-        #     rowNonNACount <- apply(processedDataMatrix[, startColIndex:endColIndex], 1, function(x) { sum(!is.na(x)) }) - 1
-        # }
-
-        # # ANOVA
-        # nbsNAperLine <- rowSums(is.na(processedDataMatrix))
-        # 
-        # # Retrieving lines where at least half is non-NAs
-        # datastoretmp <- processedDataMatrix[nbsNAperLine < ncol(processedDataMatrix) / 2, ]
-        # dataStoreReplicateNAFiltered <- filterLinesWithEmptySamples(datastoretmp, sampleReplicateGroups)
-        
-        # anovaPVal <- cbind(anovaPVal, apply(dataStoreReplicateNAFiltered, 1, function(sampleIndex) summary(stats::aov(unlist(sampleIndex)~sampleReplicateGroups))[[1]][[5]][1]))
-        # anovaFDR <- cbind(anovaFDR, stats::p.adjust(anovaPVal[, methodIndex], method="BH"))
-        
-        # Kruskal Wallis
-        # krusWalPVal <- cbind(krusWalPVal, apply(dataStoreReplicateNAFiltered, 1, function(sampleIndex) stats::kruskal.test(unlist(sampleIndex)~sampleReplicateGroups, na.action="na.exclude")[[3]][1]))
-        # krusValFDR <- cbind(krusValFDR, stats::p.adjust(krusWalPVal[, methodIndex], method="BH")) 
-    }
-    
-    # finds top 5% of least DE variables in log2 data based on ANOVA
-    # generates error if it doesnt find leastDE peptides
-    
-    # if (sum(anovaFDR[, 1] >= min(utils::head(rev(sort(anovaFDR[, 1])), n=(5 * nrow(anovaFDR) / 100)))) > 0) {
-    #     nonsiganfdrlist <- which(anovaFDR[, 1] >= min(utils::head(rev(sort(anovaFDR[, 1])), n=(5 * nrow(anovaFDR) / 100))))
-    # }
-    
-    # nonsiganfdrlistcv <- vector()
-    # for (mlist in 1:methodCount) {
-    #     tmpdata <- methodList[[mlist]][nonsiganfdrlist, ]
-    #     nonsiganfdrlistcv[mlist] <- mean(apply(tmpdata, 1, function(sampleIndex) raster::cv(sampleIndex, na.rm=TRUE)), na.rm=TRUE)
-    # }
-    
-    # nonsiganfdrlistcvpdiff <- sapply(1:length(nonsiganfdrlistcv), function(sampleIndex) (nonsiganfdrlistcv[sampleIndex] * 100) / nonsiganfdrlistcv[1])
-    
-    
     print("Analysis finished. Next, preparing plots and report.")
-    
-    nr@ner <- setupNormalizationEvaluationObject(nr, avgcvmem, avgmadmem, avgvarmem, avgcvmempdiff, avgmadmempdiff,
-                                                 avgvarmempdiff, nonsiganfdrlist, nonsiganfdrlistcvpdiff, anovaFDR, krusValFDR)
     
     nr
 }
@@ -166,26 +91,17 @@ filterLinesWithEmptySamples <- function(dataMatrix, replicateHeader) {
 }
 
 
-setupNormalizationEvaluationObject <- function(nr, avgcvmem, avgmadmem, avgvarmem, avgcvmempdiff, avgmadmempdiff,
-                                               avgvarmempdiff, nonsiganfdrlist, nonsiganfdrlistcvpdiff, anovaFDR, krusValFDR) {
+#' Setup normalization evaluation object 
+#' 
+#' @param nr Normalyzer results object to be evaluated
+#' @return Normalization evaluation object
+setupNormalizationEvaluationObject <- function(nr) {
     
     ner <- NormalizationEvaluationResults()
 
     ner <- calculateCV(ner, nr)
     ner <- calculateMAD(ner, nr)
     ner <- calculateAvgVar(ner, nr)
-    
-    # ner@avgmadmem <- avgmadmem
-    # ner@avgvarmem <- avgvarmem
-
-    # ner@avgmadmempdiff <- avgmadmempdiff
-    # ner@avgvarmempdiff <- avgvarmempdiff
-    
-    # ner@nonsiganfdrlist <- nonsiganfdrlist
-    # ner@nonsiganfdrlistcvpdiff <- nonsiganfdrlistcvpdiff
-    # ner@anfdr <- anovaFDR
-    # ner@kwfdr <- krusValFDR
-    
     ner <- calculateSignificanceMeasures(ner, nr)
     
     ner <- calculateCorrelations(nr, ner)

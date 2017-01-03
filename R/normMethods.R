@@ -9,7 +9,7 @@
 normMethods <- function(nds, currentjob, jobdir, forceAll=FALSE) {
 
     nr <- generateNormalyzerResultsObject(nds)
-    nr <- performNormalizations(nr)
+    nr <- performNormalizations(nr, forceAll=forceAll)
     
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)

@@ -1,13 +1,18 @@
 #' S4 class to represent normalization evaluations
 #' 
-#' @slot avgcvmem TODO: Look into
-#' @slot avgmadmem TODO: Look into
-#' @slot avgvarmem TODO: Look into
-#' @slot avgcvmempdiff TODO: Look into
-#' @slot avgmadmempdiff TODO: Look into
-#' @slot avgvarmempdiff TODO: Look into
-#' @slot nonsiganfdrlist TODO: Look into
-#' @slot nonsiganfdrlistcvpdiff TODO: Look into
+#' @slot avgcvmem Average coefficient of variance per method
+#' @slot avgmadmem Average median absolute deviation 
+#' @slot avgvarmem Average variance per method
+#' @slot avgcvmempdiff Percentage difference of mean coefficient of variance
+#'  compared to log2-transformed data
+#' @slot avgmadmempdiff Percentage difference of median absolute deviation
+#'  compared to log2-transformed data
+#' @slot avgvarmempdiff Percentage difference of mean variance compared
+#'  to log2-transformed data
+#' @slot nonsiganfdrlist List of 5% least variable entries based on ANOVA
+#'  for log2-transformed data
+#' @slot nonsiganfdrlistcvpdiff Coefficient of variance for least variable
+#'  entries
 #' @slot anfdr TODO: Look into
 #' @slot kwfdr TODO: Look into
 #' @slot avgpercorsum TODO: Look into
@@ -35,7 +40,6 @@ NormalizationEvaluationResults <- setClass("NormalizationEvaluationResults",
                                                avgspecorsum = "list"
                                            ),
                                            prototype=prototype())
-
 
 
 #' Calculate coefficient of variation (relative standard deviation)
@@ -68,16 +72,8 @@ setMethod("calculateCV", "NormalizationEvaluationResults",
                       tempCVMatrix[i, ] <- tempCV$table
                   }
                   
-                  # print(head(tempCVMatrix))
-                  
                   tempCVMatrixSum <- apply(tempCVMatrix, 2, mean, na.rm=TRUE)
-                  
-                  # print("tempCVMatrixSum")
-                  # print(head(tempCVMatrixSum))
-                  
                   avgCVPerNormAndReplicates[, methodIndex] <- tempCVMatrixSum * 100
-                  
-                  # print(head(avgCVPerNormAndReplicates))
               }
               
               # Requires log normalized data to be at first index
@@ -91,7 +87,7 @@ setMethod("calculateCV", "NormalizationEvaluationResults",
           }
 )
 
-#' 
+#' Calculate median absolute deviation measures
 #'
 #' @param nr Normalyzer results object.
 #' @return None
@@ -136,22 +132,14 @@ setMethod("calculateMAD", "NormalizationEvaluationResults",
               
               avgmadmempdiff <- sapply(1:ncol(avgmadmem), function (sampleIndex) (mean(avgmadmem[, sampleIndex]) * 100) / mean(avgmadmem[, 1]))
               
-              print("Assignment")
-              
               ner@avgmadmem <- avgmadmem
               ner@avgmadmempdiff <- avgmadmempdiff
-              
-              print(head(ner@avgmadmem))
-              print(head(ner@avgmadmempdiff))
-              
-              print("Return")
-              # stop("")
               
               ner
           }
 )
 
-#' 
+#' Calculate average variation measures
 #'
 #' @param nr Normalyzer results object.
 #' @return None
@@ -206,7 +194,8 @@ setMethod("calculateAvgVar", "NormalizationEvaluationResults",
 )
 
 
-#' 
+#' Calculate significance measures (p-value and FDR-value) for ANOVA and
+#' Kruskal-Wallis
 #'
 #' @param nr Normalyzer results object.
 #' @return None
@@ -281,72 +270,6 @@ setMethod("calculateSignificanceMeasures", "NormalizationEvaluationResults",
               ner
           }
 )
-
-#' 
-#'
-#' @param nr Normalyzer results object.
-#' @return None
-#' @rdname calculateAnfdr
-setGeneric(name="calculateAnfdr", 
-           function(nr) standardGeneric("calculateAnfdr"))
-
-#' @rdname calculateAnfdr
-setMethod("calculateAnfdr", "NormalizationEvaluationResults",
-          function(nr) {
-              nr
-          }
-)
-
-#' 
-#'
-#' @param nr Normalyzer results object.
-#' @return None
-#' @rdname calculateKwfdr
-setGeneric(name="calculateKwfdr", 
-           function(nr) standardGeneric("calculateKwfdr"))
-
-#' @rdname calculateKwfdr
-setMethod("calculateKwfdr", "NormalizationEvaluationResults",
-          function(nr) {
-              nr
-          }
-)
-
-
-#' 
-#'
-#' @param nr Normalyzer results object.
-#' @return None
-#' @rdname calculateAvgpercorsum
-setGeneric(name="calculateAvgpercorsum", 
-           function(nr) standardGeneric("calculateAvgpercorsum"))
-
-#' @rdname calculateAvgpercorsum
-setMethod("calculateAvgpercorsum", "NormalizationEvaluationResults",
-          function(nr) {
-              nr
-          }
-)
-
-#' 
-#'
-#' @param nr Normalyzer results object.
-#' @return None
-#' @rdname calculateAvgspecorsum
-setGeneric(name="calculateAvgspecorsum", 
-           function(nr) standardGeneric("calculateAvgspecorsum"))
-
-#' @rdname calculateAvgspecorsum
-setMethod("calculateAvgspecorsum", "NormalizationEvaluationResults",
-          function(nr) {
-              nr
-          }
-)
-
-
-
-
-
 
 
 
