@@ -212,8 +212,6 @@ plotReplicateVariance <- function(nr, currentLayout, pageno) {
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
     
-    print(avgcvmem)
-    
     graphics::boxplot(avgcvmem, main="PCV - Intragroup", names=c(methodnames), 
                       border="red", density=20, cex=0.3, cex.axis=0.9, las=2, 
                       frame.plot=FALSE)

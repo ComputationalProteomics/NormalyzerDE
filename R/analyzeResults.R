@@ -26,9 +26,6 @@ analyzeNormalizations <- function(nr, name) {
     methodCount <- length(methodNames)
     rowCount <- length(levels(as.factor(unlist(sampleReplicateGroups))))
     
-    # ?
-    avgmadmem <- matrix(nrow=rowCount, ncol=methodCount, byrow=TRUE)
-    
     avgvarmem <- matrix(nrow=rowCount, ncol=methodCount, byrow=TRUE)
     datamadpeptmem <- matrix(nrow=nrow(filterRawData), ncol=methodCount, byrow=TRUE)
     
@@ -47,11 +44,6 @@ analyzeNormalizations <- function(nr, name) {
         processedDataMatrix <- methodList[[methodIndex]]
         normalizationName <- methodNames[methodIndex]
 
-        # ?
-        medianAbsDevMem <- matrix(nrow=nrow(processedDataMatrix),
-                                  ncol=length(levels(as.factor(unlist(sampleReplicateGroups)))),
-                                  byrow=TRUE)
-        
         tempcv <- vector()
         replicateGroupVariance <- vector()
         rowVariances <- vector()
@@ -62,9 +54,6 @@ analyzeNormalizations <- function(nr, name) {
             startColIndex <- firstIndices[sampleIndex]
             endColIndex <- lastIndices[sampleIndex]
             
-            # ?
-            medianAbsDevMem[, sampleIndex] <- apply(processedDataMatrix[, startColIndex:endColIndex], 1, function(x) { stats::mad(x, na.rm=TRUE) })
-            
             rowNonNACount <- apply(processedDataMatrix[, startColIndex:endColIndex], 1, function(x) { sum(!is.na(x)) }) - 1
 
             rowVariances <- rowNonNACount * apply(processedDataMatrix[, startColIndex:endColIndex], 1, function(x) { stats::var(x, na.rm=TRUE) })
@@ -74,10 +63,6 @@ analyzeNormalizations <- function(nr, name) {
 
         avgvarmem[, methodIndex] <- replicateGroupVariance
         
-        # ?
-        temmadmatsum <- apply(medianAbsDevMem, 2, mean, na.rm=TRUE)
-        avgmadmem[, methodIndex] <- temmadmatsum
-
         # ANOVA
         nbsNAperLine <- rowSums(is.na(processedDataMatrix))
         
@@ -205,10 +190,10 @@ setupNormalizationEvaluationObject <- function(nr, avgcvmem, avgmadmem, avgvarme
     ner <- calculateMAD(ner, nr)
     
     # ner@avgmadmem <- avgmadmem
-    # ner@avgvarmem <- avgvarmem
+    ner@avgvarmem <- avgvarmem
 
     # ner@avgmadmempdiff <- avgmadmempdiff
-    # ner@avgvarmempdiff <- avgvarmempdiff
+    ner@avgvarmempdiff <- avgvarmempdiff
     
     ner@nonsiganfdrlist <- nonsiganfdrlist
     ner@nonsiganfdrlistcvpdiff <- nonsiganfdrlistcvpdiff
