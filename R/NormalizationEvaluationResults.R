@@ -210,29 +210,75 @@ setMethod("calculateAvgVar", "NormalizationEvaluationResults",
 #'
 #' @param nr Normalyzer results object.
 #' @return None
-#' @rdname calculateNonsiganfdrlist
-setGeneric(name="calculateNonsiganfdrlist", 
-           function(nr) standardGeneric("calculateNonsiganfdrlist"))
+#' @rdname calculateSignificanceMeasures
+setGeneric(name="calculateSignificanceMeasures", 
+           function(ner, nr) standardGeneric("calculateSignificanceMeasures"))
 
-#' @rdname calculateNonsiganfdrlist
-setMethod("calculateNonsiganfdrlist", "NormalizationEvaluationResults",
-          function(nr) {
-              nr
-          }
-)
+#' @rdname calculateSignificanceMeasures
+setMethod("calculateSignificanceMeasures", "NormalizationEvaluationResults",
+          function(ner, nr) {
+              
+              # Setup
+              sampleReplicateGroups <- nr@nds@sampleReplicateGroups
+              methodCount <- length(getUsedMethodNames(nr))
+              methodList <- getNormalizationMatrices(nr)
+              rowCount <- length(levels(as.factor(unlist(sampleReplicateGroups))))
+              
+              anovaPVal <- vector()
+              krusWalPVal <- vector()
+              anovaFDR <- vector()
+              krusValFDR <- vector()
+              
+              firstIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=FALSE)
+              lastIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=TRUE)
 
-#' 
-#'
-#' @param nr Normalyzer results object.
-#' @return None
-#' @rdname calculateNonsiganfdrlistcvpdiff
-setGeneric(name="calculateNonsiganfdrlistcvpdiff", 
-           function(nr) standardGeneric("calculateNonsiganfdrlistcvpdiff"))
+              for (methodIndex in 1:methodCount) {
+                  
+                  processedDataMatrix <- methodList[[methodIndex]]
+                  rowNonNACount <- vector()
+                  
+                  for (sampleIndex in 1:length(firstIndices)) {
+                      
+                      startColIndex <- firstIndices[sampleIndex]
+                      endColIndex <- lastIndices[sampleIndex]
+                      
+                      rowNonNACount <- apply(processedDataMatrix[, startColIndex:endColIndex], 1, function(x) { sum(!is.na(x)) }) - 1
+                  }
+                  
+                  # ANOVA
+                  nbsNAperLine <- rowSums(is.na(processedDataMatrix))
+                  
+                  # Retrieving lines where at least half is non-NAs
+                  datastoretmp <- processedDataMatrix[nbsNAperLine < ncol(processedDataMatrix) / 2, ]
+                  dataStoreReplicateNAFiltered <- filterLinesWithEmptySamples(datastoretmp, sampleReplicateGroups)
+                  
+                  anovaPVal <- cbind(anovaPVal, apply(dataStoreReplicateNAFiltered, 1, function(sampleIndex) summary(stats::aov(unlist(sampleIndex)~sampleReplicateGroups))[[1]][[5]][1]))
+                  anovaFDR <- cbind(anovaFDR, stats::p.adjust(anovaPVal[, methodIndex], method="BH"))
 
-#' @rdname calculateNonsiganfdrlistcvpdiff
-setMethod("calculateNonsiganfdrlistcvpdiff", "NormalizationEvaluationResults",
-          function(nr) {
-              nr
+                  krusWalPVal <- cbind(krusWalPVal, apply(dataStoreReplicateNAFiltered, 1, function(sampleIndex) stats::kruskal.test(unlist(sampleIndex)~sampleReplicateGroups, na.action="na.exclude")[[3]][1]))
+                  krusValFDR <- cbind(krusValFDR, stats::p.adjust(krusWalPVal[, methodIndex], method="BH"))
+              }
+              
+              # Finds to 5% of least DE variables in log2 data based on ANOVA
+              # Generates error if it doesn't find least DE peptides
+              if (sum(anovaFDR[, 1] >= min(utils::head(rev(sort(anovaFDR[, 1])), n=(5 * nrow(anovaFDR) / 100)))) > 0) {
+                  nonsiganfdrlist <- which(anovaFDR[, 1] >= min(utils::head(rev(sort(anovaFDR[, 1])), n=(5 * nrow(anovaFDR) / 100))))
+              }
+              
+              nonsiganfdrlistcv <- vector()
+              for (mlist in 1:methodCount) {
+                  tmpdata <- methodList[[mlist]][nonsiganfdrlist, ]
+                  nonsiganfdrlistcv[mlist] <- mean(apply(tmpdata, 1, function(sampleIndex) raster::cv(sampleIndex, na.rm=TRUE)), na.rm=TRUE)
+              }
+              
+              nonsiganfdrlistcvpdiff <- sapply(1:length(nonsiganfdrlistcv), function(sampleIndex) (nonsiganfdrlistcv[sampleIndex] * 100) / nonsiganfdrlistcv[1])
+              
+              ner@nonsiganfdrlist <- nonsiganfdrlistcv
+              ner@nonsiganfdrlistcvpdiff <- nonsiganfdrlistcvpdiff
+              ner@anfdr <- anovaFDR
+              ner@kwfdr <- krusValFDR
+              
+              ner
           }
 )
 

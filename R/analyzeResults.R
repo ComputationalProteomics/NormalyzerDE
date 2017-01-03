@@ -29,9 +29,9 @@ analyzeNormalizations <- function(nr, name) {
     datamadpeptmem <- matrix(nrow=nrow(filterRawData), ncol=methodCount, byrow=TRUE)
     
     anovaPVal <- vector()
-    anovaFDR <- vector()
+    # anovaFDR <- vector()
     krusWalPVal <- vector()
-    krusValFDR <- vector()
+    # krusValFDR <- vector()
     
     firstIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=FALSE)
     lastIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=TRUE)
@@ -40,47 +40,48 @@ analyzeNormalizations <- function(nr, name) {
         
         print(paste("Processing methodlist index: ", methodIndex))
         
-        processedDataMatrix <- methodList[[methodIndex]]
-        normalizationName <- methodNames[methodIndex]
+        # processedDataMatrix <- methodList[[methodIndex]]
+        # normalizationName <- methodNames[methodIndex]
+        # 
+        # rowNonNACount <- vector()
+        # 
+        # for (sampleIndex in 1:length(firstIndices)) {
+        #     
+        #     startColIndex <- firstIndices[sampleIndex]
+        #     endColIndex <- lastIndices[sampleIndex]
+        #     
+        #     rowNonNACount <- apply(processedDataMatrix[, startColIndex:endColIndex], 1, function(x) { sum(!is.na(x)) }) - 1
+        # }
 
-        rowNonNACount <- vector()
+        # # ANOVA
+        # nbsNAperLine <- rowSums(is.na(processedDataMatrix))
+        # 
+        # # Retrieving lines where at least half is non-NAs
+        # datastoretmp <- processedDataMatrix[nbsNAperLine < ncol(processedDataMatrix) / 2, ]
+        # dataStoreReplicateNAFiltered <- filterLinesWithEmptySamples(datastoretmp, sampleReplicateGroups)
         
-        for (sampleIndex in 1:length(firstIndices)) {
-            
-            startColIndex <- firstIndices[sampleIndex]
-            endColIndex <- lastIndices[sampleIndex]
-            
-            rowNonNACount <- apply(processedDataMatrix[, startColIndex:endColIndex], 1, function(x) { sum(!is.na(x)) }) - 1
-        }
-
-        # ANOVA
-        nbsNAperLine <- rowSums(is.na(processedDataMatrix))
-        
-        # Retrieving lines where at least half is non-NAs
-        datastoretmp <- processedDataMatrix[nbsNAperLine < ncol(processedDataMatrix) / 2, ]
-        dataStoreReplicateNAFiltered <- filterLinesWithEmptySamples(datastoretmp, sampleReplicateGroups)
-        
-        anovaPVal <- cbind(anovaPVal, apply(dataStoreReplicateNAFiltered, 1, function(sampleIndex) summary(stats::aov(unlist(sampleIndex)~sampleReplicateGroups))[[1]][[5]][1]))
-        anovaFDR <- cbind(anovaFDR, stats::p.adjust(anovaPVal[, methodIndex], method="BH"))
+        # anovaPVal <- cbind(anovaPVal, apply(dataStoreReplicateNAFiltered, 1, function(sampleIndex) summary(stats::aov(unlist(sampleIndex)~sampleReplicateGroups))[[1]][[5]][1]))
+        # anovaFDR <- cbind(anovaFDR, stats::p.adjust(anovaPVal[, methodIndex], method="BH"))
         
         # Kruskal Wallis
-        krusWalPVal <- cbind(krusWalPVal, apply(dataStoreReplicateNAFiltered, 1, function(sampleIndex) stats::kruskal.test(unlist(sampleIndex)~sampleReplicateGroups, na.action="na.exclude")[[3]][1]))
-        krusValFDR <- cbind(krusValFDR, stats::p.adjust(krusWalPVal[, methodIndex], method="BH")) 
+        # krusWalPVal <- cbind(krusWalPVal, apply(dataStoreReplicateNAFiltered, 1, function(sampleIndex) stats::kruskal.test(unlist(sampleIndex)~sampleReplicateGroups, na.action="na.exclude")[[3]][1]))
+        # krusValFDR <- cbind(krusValFDR, stats::p.adjust(krusWalPVal[, methodIndex], method="BH")) 
     }
     
     # finds top 5% of least DE variables in log2 data based on ANOVA
     # generates error if it doesnt find leastDE peptides
-    if (sum(anovaFDR[, 1] >= min(utils::head(rev(sort(anovaFDR[, 1])), n=(5 * nrow(anovaFDR) / 100)))) > 0) {
-        nonsiganfdrlist <- which(anovaFDR[, 1] >= min(utils::head(rev(sort(anovaFDR[, 1])), n=(5 * nrow(anovaFDR) / 100))))
-    }
     
-    nonsiganfdrlistcv <- vector()
-    for (mlist in 1:methodCount) {
-        tmpdata <- methodList[[mlist]][nonsiganfdrlist, ]
-        nonsiganfdrlistcv[mlist] <- mean(apply(tmpdata, 1, function(sampleIndex) raster::cv(sampleIndex, na.rm=TRUE)), na.rm=TRUE)
-    }
+    # if (sum(anovaFDR[, 1] >= min(utils::head(rev(sort(anovaFDR[, 1])), n=(5 * nrow(anovaFDR) / 100)))) > 0) {
+    #     nonsiganfdrlist <- which(anovaFDR[, 1] >= min(utils::head(rev(sort(anovaFDR[, 1])), n=(5 * nrow(anovaFDR) / 100))))
+    # }
     
-    nonsiganfdrlistcvpdiff <- sapply(1:length(nonsiganfdrlistcv), function(sampleIndex) (nonsiganfdrlistcv[sampleIndex] * 100) / nonsiganfdrlistcv[1])
+    # nonsiganfdrlistcv <- vector()
+    # for (mlist in 1:methodCount) {
+    #     tmpdata <- methodList[[mlist]][nonsiganfdrlist, ]
+    #     nonsiganfdrlistcv[mlist] <- mean(apply(tmpdata, 1, function(sampleIndex) raster::cv(sampleIndex, na.rm=TRUE)), na.rm=TRUE)
+    # }
+    
+    # nonsiganfdrlistcvpdiff <- sapply(1:length(nonsiganfdrlistcv), function(sampleIndex) (nonsiganfdrlistcv[sampleIndex] * 100) / nonsiganfdrlistcv[1])
     
     
     print("Analysis finished. Next, preparing plots and report.")
@@ -180,11 +181,12 @@ setupNormalizationEvaluationObject <- function(nr, avgcvmem, avgmadmem, avgvarme
     # ner@avgmadmempdiff <- avgmadmempdiff
     # ner@avgvarmempdiff <- avgvarmempdiff
     
-    ner@nonsiganfdrlist <- nonsiganfdrlist
-    ner@nonsiganfdrlistcvpdiff <- nonsiganfdrlistcvpdiff
+    # ner@nonsiganfdrlist <- nonsiganfdrlist
+    # ner@nonsiganfdrlistcvpdiff <- nonsiganfdrlistcvpdiff
+    # ner@anfdr <- anovaFDR
+    # ner@kwfdr <- krusValFDR
     
-    ner@anfdr <- anovaFDR
-    ner@kwfdr <- krusValFDR
+    ner <- calculateSignificanceMeasures(ner, nr)
     
     ner <- calculateCorrelations(nr, ner)
     ner
