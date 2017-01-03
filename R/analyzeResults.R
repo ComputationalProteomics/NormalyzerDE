@@ -26,7 +26,6 @@ analyzeNormalizations <- function(nr, name) {
     methodCount <- length(methodNames)
     rowCount <- length(levels(as.factor(unlist(sampleReplicateGroups))))
     
-    avgvarmem <- matrix(nrow=rowCount, ncol=methodCount, byrow=TRUE)
     datamadpeptmem <- matrix(nrow=nrow(filterRawData), ncol=methodCount, byrow=TRUE)
     
     anovaPVal <- vector()
@@ -44,9 +43,6 @@ analyzeNormalizations <- function(nr, name) {
         processedDataMatrix <- methodList[[methodIndex]]
         normalizationName <- methodNames[methodIndex]
 
-        tempcv <- vector()
-        replicateGroupVariance <- vector()
-        rowVariances <- vector()
         rowNonNACount <- vector()
         
         for (sampleIndex in 1:length(firstIndices)) {
@@ -55,19 +51,13 @@ analyzeNormalizations <- function(nr, name) {
             endColIndex <- lastIndices[sampleIndex]
             
             rowNonNACount <- apply(processedDataMatrix[, startColIndex:endColIndex], 1, function(x) { sum(!is.na(x)) }) - 1
-
-            rowVariances <- rowNonNACount * apply(processedDataMatrix[, startColIndex:endColIndex], 1, function(x) { stats::var(x, na.rm=TRUE) })
-
-            replicateGroupVariance <- c(replicateGroupVariance, sum(rowVariances, na.rm=TRUE) / sum(rowNonNACount, na.rm=TRUE))
         }
 
-        avgvarmem[, methodIndex] <- replicateGroupVariance
-        
         # ANOVA
         nbsNAperLine <- rowSums(is.na(processedDataMatrix))
         
         # Retrieving lines where at least half is non-NAs
-        datastoretmp <- processedDataMatrix[nbsNAperLine < (ncol(processedDataMatrix) / 2), ]
+        datastoretmp <- processedDataMatrix[nbsNAperLine < ncol(processedDataMatrix) / 2, ]
         dataStoreReplicateNAFiltered <- filterLinesWithEmptySamples(datastoretmp, sampleReplicateGroups)
         
         anovaPVal <- cbind(anovaPVal, apply(dataStoreReplicateNAFiltered, 1, function(sampleIndex) summary(stats::aov(unlist(sampleIndex)~sampleReplicateGroups))[[1]][[5]][1]))
@@ -77,11 +67,6 @@ analyzeNormalizations <- function(nr, name) {
         krusWalPVal <- cbind(krusWalPVal, apply(dataStoreReplicateNAFiltered, 1, function(sampleIndex) stats::kruskal.test(unlist(sampleIndex)~sampleReplicateGroups, na.action="na.exclude")[[3]][1]))
         krusValFDR <- cbind(krusValFDR, stats::p.adjust(krusWalPVal[, methodIndex], method="BH")) 
     }
-    
-    # make sure first method is data2log2
-    # avgcvmempdiff <- sapply(1:ncol(avgcvmem), function (sampleIndex) (mean(avgcvmem[, sampleIndex]) * 100) / mean(avgcvmem[, 1]))
-    # avgmadmempdiff <- sapply(1:ncol(avgmadmem), function (sampleIndex) (mean(avgmadmem[, sampleIndex]) * 100) / mean(avgmadmem[, 1]))
-    avgvarmempdiff <- sapply(1:ncol(avgvarmem), function (sampleIndex) (mean(avgvarmem[, sampleIndex]) * 100) / mean(avgvarmem[, 1]))
     
     # finds top 5% of least DE variables in log2 data based on ANOVA
     # generates error if it doesnt find leastDE peptides
@@ -186,14 +171,14 @@ setupNormalizationEvaluationObject <- function(nr, avgcvmem, avgmadmem, avgvarme
     ner <- NormalizationEvaluationResults()
 
     ner <- calculateCV(ner, nr)
-
     ner <- calculateMAD(ner, nr)
+    ner <- calculateAvgVar(ner, nr)
     
     # ner@avgmadmem <- avgmadmem
-    ner@avgvarmem <- avgvarmem
+    # ner@avgvarmem <- avgvarmem
 
     # ner@avgmadmempdiff <- avgmadmempdiff
-    ner@avgvarmempdiff <- avgvarmempdiff
+    # ner@avgvarmempdiff <- avgvarmempdiff
     
     ner@nonsiganfdrlist <- nonsiganfdrlist
     ner@nonsiganfdrlistcvpdiff <- nonsiganfdrlistcvpdiff

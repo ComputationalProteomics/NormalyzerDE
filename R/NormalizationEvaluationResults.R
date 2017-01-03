@@ -111,7 +111,6 @@ setMethod("calculateMAD", "NormalizationEvaluationResults",
               
               # Start
               avgmadmem <- matrix(nrow=rowCount, ncol=methodCount, byrow=TRUE)
-              
               firstIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=FALSE)
               lastIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=TRUE)
               
@@ -119,19 +118,16 @@ setMethod("calculateMAD", "NormalizationEvaluationResults",
                   
                   processedDataMatrix <- methodList[[methodIndex]]
                   
-                  
                   medianAbsDevMem <- matrix(nrow=nrow(processedDataMatrix), 
                                             ncol=length(levels(as.factor(unlist(sampleReplicateGroups)))), 
                                             byrow=TRUE)
                   
-                  # Internal loop
                   for (sampleIndex in 1:length(firstIndices)) {
                       startColIndex <- firstIndices[sampleIndex]
                       endColIndex <- lastIndices[sampleIndex]
                       
                       medianAbsDevMem[, sampleIndex] <- apply(processedDataMatrix[, startColIndex:endColIndex], 1, function(x) { stats::mad(x, na.rm=TRUE) })
                       rowNonNACount <- apply(processedDataMatrix[, startColIndex:endColIndex], 1, function(x) { sum(!is.na(x)) }) - 1
-                      
                   }
                   
                   temmadmatsum <- apply(medianAbsDevMem, 2, mean, na.rm=TRUE)
@@ -159,62 +155,56 @@ setMethod("calculateMAD", "NormalizationEvaluationResults",
 #'
 #' @param nr Normalyzer results object.
 #' @return None
-#' @rdname calculateAvgvarmem
-setGeneric(name="calculateAvgvarmem", 
-           function(nr) standardGeneric("calculateAvgvarmem"))
+#' @rdname calculateAvgVar
+setGeneric(name="calculateAvgVar", 
+           function(ner, nr) standardGeneric("calculateAvgVar"))
 
-#' @rdname calculateAvgvarmem
-setMethod("calculateAvgvarmem", "NormalizationEvaluationResults",
-          function(nr) {
-              nr
+#' @rdname calculateAvgVar
+setMethod("calculateAvgVar", "NormalizationEvaluationResults",
+          function(ner, nr) {
+              
+              # Setup
+              sampleReplicateGroups <- nr@nds@sampleReplicateGroups
+              methodCount <- length(getUsedMethodNames(nr))
+              methodList <- getNormalizationMatrices(nr)
+              rowCount <- length(levels(as.factor(unlist(sampleReplicateGroups))))
+              
+              # Start
+              avgvarmem <- matrix(nrow=rowCount, ncol=methodCount, byrow=TRUE)
+              firstIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=FALSE)
+              lastIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=TRUE)
+              
+              for (methodIndex in 1:methodCount) {
+                  
+                  replicateGroupVariance <- vector()
+                  rowVariances <- vector()
+                  
+                  processedDataMatrix <- methodList[[methodIndex]]
+                  
+                  for (sampleIndex in 1:length(firstIndices)) {
+                      
+                      startColIndex <- firstIndices[sampleIndex]
+                      endColIndex <- lastIndices[sampleIndex]
+                      
+                      rowNonNACount <- apply(processedDataMatrix[, startColIndex:endColIndex], 1, function(x) { sum(!is.na(x)) }) - 1
+                      rowVariances <- rowNonNACount * apply(processedDataMatrix[, startColIndex:endColIndex], 1, function(x) { stats::var(x, na.rm=TRUE) })
+                      
+                      replicateGroupVariance <- c(replicateGroupVariance, sum(rowVariances, na.rm=TRUE) / sum(rowNonNACount, na.rm=TRUE))
+                  }
+                  
+                  avgvarmem[, methodIndex] <- replicateGroupVariance
+                  
+              }
+              
+              avgvarmempdiff <- sapply(1:ncol(avgvarmem), function (sampleIndex) (mean(avgvarmem[, sampleIndex]) * 100) / mean(avgvarmem[, 1]))
+              
+              ner@avgvarmem <- avgvarmem
+              ner@avgvarmempdiff <- avgvarmempdiff
+              
+              ner
           }
 )
 
-
-#' 
-#'
-#' @param nr Normalyzer results object.
-#' @return None
-#' @rdname calculateAvgcvmempdiff
-setGeneric(name="calculateAvgcvmempdiff", 
-           function(nr) standardGeneric("calculateAvgcvmempdiff"))
-
-#' @rdname calculateAvgcvmempdiff
-setMethod("calculateAvgcvmempdiff", "NormalizationEvaluationResults",
-          function(nr) {
-              nr
-          }
-)
-
-#' 
-#'
-#' @param nr Normalyzer results object.
-#' @return None
-#' @rdname Calculate avgmadmempdiff
-setGeneric(name="avgmadmempdiff", 
-           function(nr) standardGeneric("avgmadmempdiff"))
-
-#' @rdname calculateAvgcvmempdiff
-setMethod("calculateAvgcvmempdiff", "NormalizationEvaluationResults",
-          function(nr) {
-              nr
-          }
-)
-
-#' 
-#'
-#' @param nr Normalyzer results object.
-#' @return None
-#' @rdname calculateAvgvarmempdiff
-setGeneric(name="calculateAvgvarmempdiff", 
-           function(nr) standardGeneric("calculateAvgvarmempdiff"))
-
-#' @rdname calculateAvgvarmempdiff
-setMethod("calculateAvgvarmempdiff", "NormalizationEvaluationResults",
-          function(nr) {
-              nr
-          }
-)
 
 #' 
 #'
