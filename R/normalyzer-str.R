@@ -30,7 +30,8 @@ normalyzer <- function(inputPath,
                        outputDir=NULL,
                        forceAllMethods=FALSE,
                        omitLowAbundSamples=FALSE,
-                       sampleAbundThres=15) {
+                       sampleAbundThres=15,
+                       requireReplicates=TRUE) {
     
     print('start')
     startTime <- Sys.time()
@@ -68,7 +69,8 @@ normalyzer <- function(inputPath,
     normObj <- getVerifiedNormalyzerObject(inputPath, 
                                            jobName,
                                            threshold=sampleAbundThres,
-                                           omitSamples=omitLowAbundSamples)
+                                           omitSamples=omitLowAbundSamples,
+                                           requireReplicates=requireReplicates)
     jobDir <- setupJobDir(jobName, outputDir)
     
     

@@ -222,8 +222,14 @@ setMethod("performNormalizations", "NormalyzerResults",
               nr <- basicMetricNormalizations(nr)
               
               if (nrow(nds@normfinderFilterRawData) < nr@normfinderMaxThreshold || forceAll) {
-                  nr@houseKeepingVars <- normfinder(nds)
-                  nr <- calculateHKdataForNormObj(nr)
+                  
+                  if (!nds@singleReplicateRun) {
+                      nr@houseKeepingVars <- normfinder(nds)
+                      nr <- calculateHKdataForNormObj(nr)
+                  }
+                  else {
+                      print("Processing in single replicate mode, Normfinder is omitted")
+                  }
               }
               
               if (nrow(nds@filterrawdata) > nr@furtherNormalizationMinThreshold || forceAll) {
@@ -234,7 +240,12 @@ setMethod("performNormalizations", "NormalyzerResults",
                   nr <- performGlobalRLRNormalization(nr)
                   
                   ## NORMALIZATION within REPLICATES RLR, VSN and Loess
-                  nr <- performReplicateBasedNormalizations(nr)
+                  if (!nds@singleReplicateRun) {
+                      nr <- performReplicateBasedNormalizations(nr)
+                  }
+                  else {
+                      print("Processing in single replicate mode, replicate based normalizations are omitted")
+                  }
               }
               
               nr

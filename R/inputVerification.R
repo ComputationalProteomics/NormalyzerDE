@@ -5,21 +5,16 @@
 #' @param jobName Name of ongoing run.
 #' @return Normalyzer data object representing verified input data.
 #' @export
-getVerifiedNormalyzerObject <- function(inputPath, jobName, threshold=15, omitSamples=FALSE) {
+getVerifiedNormalyzerObject <- function(inputPath, jobName, threshold=15, 
+                                        omitSamples=FALSE,
+                                        requireReplicates=TRUE) {
 
-    # rawData <- retrieveRawData(inputPath)
-    
-    # tryCatch(read.table(my_table), error=function(e){print(paste("Unable to open input:", my_table))})
-    
     rawData <- loadRawDataFromFile(inputPath)
     
     verifyValidNumbers(rawData)
     
-    # rawData <- as.matrix(utils::read.table(inputPath, header=FALSE, sep="\t", 
-    #                                        stringsAsFactors=FALSE, quote=""))
-    
     repSortedRawData <- getReplicateSortedData(rawData)
-    verifySampleReplication(repSortedRawData)  # This is the way to do it!
+    # verifySampleReplication(repSortedRawData)  # This is the way to do it!
     processedRawData <- preprocessData(repSortedRawData)
     
     
@@ -28,21 +23,19 @@ getVerifiedNormalyzerObject <- function(inputPath, jobName, threshold=15, omitSa
                                                         stopIfTooFew=!omitSamples)
     
 
-
     # If no samples left after omitting, stop
-        
-    # Verify replicates
     
-    str(processedRawData)
-    str(lowCountSampleFiltered)
+    # Verify replicates - Control whether to crash or progress
+    validateSampleReplication(lowCountSampleFiltered, 
+                              requireReplicates=requireReplicates)
     
-    print(head(processedRawData))
-    print(head(lowCountSampleFiltered))
     
+
     # nds <- generateNormalyzerDataset(processedRawData, jobName)
     nds <- generateNormalyzerDataset(lowCountSampleFiltered, jobName)
     
-    # Verification step: Check whether all colsum values are > 0
+
+    
     
     
     nds
@@ -73,17 +66,40 @@ loadRawDataFromFile <- function(inputPath) {
     rawData
 }
 
-#' Setup Normalyzer dataset from given raw data
-#' 
-#' @param rawData Dataframe with unparsed Normalyzer input data.
-#' @param jobName Name of ongoing run.
-#' @return Normalyzer data object representing loaded data.
-generateNormalyzerDataset <- function(rawData, jobName) {
 
-    nds <- NormalyzerDataset(jobName=jobName, rawData=rawData)
-    nds <- setupValues(nds)
-    nds
+#' Verify that input fields conform to the expected formats
+#' 
+#' @param rawData Dataframe with Normalyzer input data.
+#' @return Parsed rawdata where 0 values are replaced with NA
+verifyValidNumbers <- function(normalyzerDfAll) {
+    
+    normalyzerDf <- normalyzerDfAll[, which(normalyzerDfAll[1,] != "0"), 
+                                    drop=FALSE]
+    
+    validPatterns <- c("\\d+(\\.\\d+)?", "NA")
+    
+    rawData <- normalyzerDf[-1:-2,]
+    
+    regexPattern <- sprintf("^(%s)$", paste(validPatterns, collapse="|"))
+    matches <- grep(regexPattern, rawData, perl=TRUE, ignore.case=TRUE)
+    nonMatches <- rawData[-matches]
+    
+    if (length(na.omit(nonMatches) > 0)) {
+        error_string <- paste(
+            "Invalid values encountered in input data.",
+            "Only valid data is numeric and NA- or na-fields",
+            "Invalid fields: ",
+            paste(unique(nonMatches), collapse=" "),
+            "Aborting...",
+            sep="\n"
+        )
+        
+        stop(error_string)
+    }
+    
+    print("Input data checked. All fields are valid.")
 }
+
 
 #' Get dataframe with raw data column sorted on replicates
 #' 
@@ -104,31 +120,30 @@ getReplicateSortedData <- function(rawData) {
     rawData
 }
 
-#' Perform validations that input data is in correct format, and abort
-#'  otherwise
-#' 
-#' @param rawData Dataframe with unparsed Normalyzer input data.
-#' @return None
-#' @export
-verifySampleReplication <- function(rawData) {
-
-    replicateLine <- rawData[1, ]
-    replicateLineUnique <- unique(replicateLine)
-    
-    for (i in 1:length(replicateLineUnique)) {
-        if (replicateLineUnique[i] != 0) {
-            if (length(grep(replicateLineUnique[i], replicateLine)) < 2) {
-                
-                error_object <- paste("Number of replicates are less than 2 for the group ", replicateLineUnique[i], sep="")
-                class(error_object) <- "try-error"
-                if (inherits(error_object, "try-error")) {
-                    return(error_object)
-                }
-                stop(paste("Number of replicates are less than 2 for the group ", replicateLineUnique[i], sep=""))
-            }
-        }
-    }
-}
+# #' Perform validations that input data is in correct format, and abort
+# #'  otherwise
+# #' @param rawData Dataframe with unparsed Normalyzer input data.
+# #' @return None
+# #' @export
+# verifySampleReplication <- function(rawData) {
+# 
+#     replicateLine <- rawData[1, ]
+#     replicateLineUnique <- unique(replicateLine)
+#     
+#     for (i in 1:length(replicateLineUnique)) {
+#         if (replicateLineUnique[i] != 0) {
+#             if (length(grep(replicateLineUnique[i], replicateLine)) < 2) {
+#                 
+#                 error_object <- paste("Number of replicates are less than 2 for the group ", replicateLineUnique[i], sep="")
+#                 class(error_object) <- "try-error"
+#                 if (inherits(error_object, "try-error")) {
+#                     return(error_object)
+#                 }
+#                 stop(paste("Number of replicates are less than 2 for the group ", replicateLineUnique[i], sep=""))
+#             }
+#         }
+#     }
+# }
 
 #' Replace 0 values with NA in input data
 #' 
@@ -168,7 +183,7 @@ getLowCountSampleFiltered <- function(dfWithNAs, threshold=15, stopIfTooFew=TRUE
     
     notPassingThreshold <- which(numberOfValues < threshold)
     
-    if (length(notPassingThreshold) > 0 && stopIfTooFew) {
+    if (length(notPassingThreshold) > 0) {
         error_string <- paste(
             "Following samples does not contain enough non-NA values:",
             paste(sampleIndices[notPassingThreshold], collapse=" "),
@@ -197,38 +212,52 @@ getLowCountSampleFiltered <- function(dfWithNAs, threshold=15, stopIfTooFew=TRUE
 }
 
 
-
-#' Verify that input fields conform to the expected formats
+#' Check whether all samples have replicates
 #' 
-#' @param rawData Dataframe with Normalyzer input data.
-#' @return Parsed rawdata where 0 values are replaced with NA
-verifyValidNumbers <- function(normalyzerDfAll) {
+#' @param processedDf Prepared Normalyzer dataframe.
+#' @return None
+validateSampleReplication <- function(processedDf, requireReplicates=TRUE) {
     
-    normalyzerDf <- normalyzerDfAll[, which(normalyzerDfAll[1,] != "0")]
+    # header <- processedDf[1,]
+    # sampleValues <- header[which(header != "0")]
+    # headerCounts <- table(sampleValues)
+    # 
+    # nonReplicatedSamples <- names(headerCounts[which(headerCounts == 1)])
     
-    validPatterns <- c("\\d+(\\.\\d+)?", "NA")
+    nonReplicatedSamples <- getNonReplicatedFromDf(processedDf)
     
-    rawData <- normalyzerDf[-1:-2,]
-    
-    regexPattern <- sprintf("^(%s)$", paste(validPatterns, collapse="|"))
-    matches <- grep(regexPattern, rawData, perl=TRUE, ignore.case=TRUE)
-    nonMatches <- rawData[-matches]
-    
-    if (length(na.omit(nonMatches) > 0)) {
-        error_string <- paste(
-            "Invalid values encountered in input data.",
-            "Only valid data is numeric and NA- or na-fields",
-            "Invalid fields: ",
-            paste(unique(nonMatches), collapse=" "),
-            "Aborting...",
-            sep="\n"
-        )
+    if (length(nonReplicatedSamples) > 0) {
         
-        stop(error_string)
+        error_string <- paste(
+            "Following samples does not have replicates:",
+            paste(nonReplicatedSamples, collapse=" "),
+            "By default this is not allowed.",
+            "You can force limited processing of non-replicated data by",
+            "specifying the \"requireReplicates\" option",
+            sep="\n")
+        
+        if (requireReplicates) {
+            stop(error_string)
+        }
+        else {
+            warning(error_string)
+        }
     }
-    
-    print("Input data checked. All fields are valid.")
+    else {
+        print("Sample replication check: All samples have replicates")
+    }
 }
 
 
+#' Setup Normalyzer dataset from given raw data
+#' 
+#' @param rawData Dataframe with unparsed Normalyzer input data.
+#' @param jobName Name of ongoing run.
+#' @return Normalyzer data object representing loaded data.
+generateNormalyzerDataset <- function(rawData, jobName) {
+    
+    nds <- NormalyzerDataset(jobName=jobName, rawData=rawData)
+    nds <- setupValues(nds)
+    nds
+}
 

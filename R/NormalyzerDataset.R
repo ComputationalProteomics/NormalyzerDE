@@ -26,9 +26,12 @@ NormalyzerDataset <- setClass("NormalyzerDataset",
                                   
                                   colsum = "numeric",
                                   medofdata = "numeric",
-                                  meanofdata = "numeric"
+                                  meanofdata = "numeric",
+                                  
+                                  singleReplicateRun = "logical"
                               ),
-                              prototype=prototype(jobName=NULL, rawData=NULL))
+                              prototype=prototype(jobName=NULL, 
+                                                  rawData=NULL))
 
 #' Initialize values for dataset
 #'
@@ -41,12 +44,32 @@ setGeneric(name="setupValues", function(nds) standardGeneric("setupValues"))
 #' @rdname setupValues
 setMethod("setupValues", "NormalyzerDataset",
           function(nds) {
+              
+              # Detect single replicate, and assign related logical
+              
+              nonReplicatedSamples <- getNonReplicatedFromDf(nds@rawData)
+              
+              if (length(nonReplicatedSamples) > 0) {
+                  nds@singleReplicateRun = TRUE
+                  print(paste("Non replicated samples in dataset:",
+                        paste(nonReplicatedSamples, collapse=" "),
+                        "performing limited single-replicate run",
+                        sep="\n"))
+              }
+              else {
+                  nds@singleReplicateRun = FALSE
+              }
+              
               nds@inputHeaderValues <- nds@rawData[1, ]
+              
               sampleRepStr <- nds@inputHeaderValues[-which(nds@inputHeaderValues < 1)]
               nds@sampleReplicateGroups <- as.numeric(sampleRepStr)
               
               nds <- setupFilterRawData(nds)
-              nds <- setupNormfinderFilterRawData(nds)
+              
+              if (!nds@singleReplicateRun) {
+                  nds <- setupNormfinderFilterRawData(nds)
+              }
               
               nds@colsum <- colSums(nds@filterrawdata, na.rm=TRUE)
               nds@medofdata <- apply(nds@filterrawdata, 2, 
@@ -74,18 +97,17 @@ setMethod("setupFilterRawData", "NormalyzerDataset",
               
               stopifnot(!is.null(nds@rawData))
               
-              
               fullSampleHead <- nds@inputHeaderValues
               filteredSampleHead <- nds@sampleReplicateGroups
               
               nbrNonRepInHeader <- length(fullSampleHead) - length(filteredSampleHead)
               
-              annotTrimMatrix <- nds@rawData[, -(1:nbrNonRepInHeader)]
+              annotTrimMatrix <- nds@rawData[, -(1:nbrNonRepInHeader), drop=FALSE]
               
               colnames(annotTrimMatrix) <- nds@rawData[2, -(1:nbrNonRepInHeader)]
               filterRawData <- as.matrix(annotTrimMatrix[-(1:2), ])
               class(filterRawData) <- "numeric"
-              
+
               nds@filterrawdata <- filterRawData
               
               nds
@@ -113,7 +135,7 @@ setMethod("setupNormfinderFilterRawData", "NormalyzerDataset",
               countVal <- rowSums(!is.na(nds@rawData[, which(fullSampleHeader > 0)]))
               
               nbrReplicates <- 1 * ncol(nds@rawData[, which(fullSampleHeader > 0)])
-              nds@normfinderFilterRawData <- nds@rawData[countVal >= nbrReplicates, ]
+              nds@normfinderFilterRawData <- nds@rawData[countVal >= nbrReplicates,]
               
               nds
           }
