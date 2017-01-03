@@ -2,57 +2,57 @@
 #' 
 #' @param nr Normalyzer results object with calculated results.
 #' @param name Name of the ongoing processing run.
+#'
 #' @return Normalyzer results with attached evaluation results object.
 #' @export
 analyzeNormalizations <- function(nr, name) {
     
     print("DEBUG: analyzeAndPlot entered")
-    
-    # Analysis takes too long, rewriting needed
-    currentjob <- name
-    
-    # What is this?
-    if (is.na(currentjob[2])) {
-        currentjob[2] <- currentjob[1]
-    }
-    
+
     nds <- nr@nds
     
-    methodlist <- getNormalizationMatrices(nr)
-    methodnames <- getUsedMethodNames(nr)
-    getrawdata <- nds@rawData
-    filterrawdata <- nds@filterrawdata
-    filterED <- nds@sampleReplicateGroups
+    methodList <- getNormalizationMatrices(nr)
+    methodNames <- getUsedMethodNames(nr)
+    rawData <- nds@rawData
+    filterRawData <- nds@filterrawdata
+    sampleReplicateGroups <- nds@sampleReplicateGroups
     getEDdata <- nds@inputHeaderValues
     HKflag <- !is.null(nr@houseKeepingVars)
     
-    pooledvarmem <- vector()
-    Medianofsamples <- vector()
-    datamadsamplesmem <- vector()
-    datalabels <- vector()
+    pooledVarMem <- vector()
+    medianOfSamples <- vector()
+    dataMadSamplesMem <- vector()
+    dataLabels <- vector()
     
-    methodCount <- length(methodnames)
-    rowCount <- length(levels(as.factor(unlist(filterED))))
+    methodCount <- length(methodNames)
+    rowCount <- length(levels(as.factor(unlist(sampleReplicateGroups))))
     
     avgcvmem <- matrix(nrow=rowCount, ncol=methodCount, byrow=TRUE)
     avgmadmem <- matrix(nrow=rowCount, ncol=methodCount, byrow=TRUE)
     avgvarmem <- matrix(nrow=rowCount, ncol=methodCount, byrow=TRUE)
-    datamadpeptmem <- matrix(nrow=nrow(filterrawdata), 
+    datamadpeptmem <- matrix(nrow=nrow(filterRawData), 
                              ncol=methodCount, byrow=TRUE)
     
-    anpvalue <- vector()
-    anfdr <- vector()
-    kwpvalue <- vector()
-    kwfdr <- vector()
+    anovaPVal <- vector()
+    anovaFDR <- vector()
+    krusWalPVal <- vector()
+    krusValFDR <- vector()
     
-    for (meti in 1:methodCount) {
+    firstIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=FALSE)
+    lastIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=TRUE)
+    
+    print(firstIndices)
+    print(lastIndices)
+
+    # Here, we iterate through the different normalizations
+    for (methodIndex in 1:methodCount) {
         
         # print(paste("Processing: ", methodlist[[meti]]))
-        print(paste("Processing methodlist index: ", meti))
+        print(paste("Processing methodlist index: ", methodIndex))
         
         # datastore <- methods::slot(nr, slotNameList[[meti]])
-        datastore <- methodlist[[meti]]
-        templabel <- methodnames[meti]
+        datastore <- methodList[[methodIndex]]
+        templabel <- methodNames[methodIndex]
         
         datamadsamples <- NA
         datamadpeptides <- NA
@@ -65,101 +65,86 @@ analyzeNormalizations <- function(nr, name) {
         pvobj1 <- 0
         pvobj2 <- 0
         
-        datalabels <- c(datalabels,templabel)
-        #MAD rows
-        x <- 1
-        z <- 1
-        y <- 1
-        flag <- 1
-        flag1 <- 1
-        count <- 0
-        madmem <- matrix(nrow=nrow(datastore), 
-                         ncol=length(levels(as.factor(unlist(filterED)))), 
-                         byrow=TRUE)
-        tempcv <- vector()
-        varmem <- vector()
-        tempvar <- vector()
-        nonmissingmat <- vector()
+        dataLabels <- c(dataLabels, templabel)
         
-        for (i in 1:length(filterED)) {
-            if (x != filterED[i] || i == length(filterED)) {
-                
-                y <- i - 1
-                if (i == length(filterED)) {
-                    y <- i
-                }
-                
-                if (flag == 1) {
-                    count <- count + 1
-                    madmem[, count] <- apply(datastore[, z:y], 1, function(x) { stats::mad(x, na.rm=TRUE) })
-                    nonmissingmat <- apply(datastore[, z:y], 1, function(x) { sum(!is.na(x)) }) - 1
-                    tempvar <- nonmissingmat * apply(datastore[, z:y], 1, function(x) { stats::var(x, na.rm=TRUE) })
-                }
-                
-                if (flag == 2) {  
-                    count <- count + 1
-                    madmem[, count] <- apply(datastore[, z:y], 1, function(x) { stats::mad(x, na.rm=TRUE) })  
-                    nonmissingmat <- (apply(datastore[, z:y], 1, function(x) { sum(!is.na(x)) })) - 1
-                    tempvar <- nonmissingmat * apply(datastore[, z:y], 1, function(x) { stats::var(x, na.rm=TRUE) })
-                }
-                
-                varmem <- c(varmem, 
-                            sum(tempvar, na.rm=TRUE) / (sum(nonmissingmat, 
-                                                            na.rm=TRUE)))
-                z <- i
-                x <- filterED[i]
-                flag <- 2
-            }
+        # MAD rows
+        # sampleIndex <- 1
+        # startColIndex <- 1
+        # endColIndex <- 1
+        # flag <- 1
+        # flag1 <- 1
+        # count <- 0
+        medianAbsDevMem <- matrix(nrow=nrow(datastore), 
+                                  ncol=length(levels(as.factor(unlist(sampleReplicateGroups)))), 
+                                  byrow=TRUE)
+        tempcv <- vector()
+        replicateGroupVariance <- vector()
+        rowVariances <- vector()
+        rowNonNACount <- vector()
+        
+        print("Before internal loop")
+        
+        for (sampleIndex in 1:length(firstIndices)) {
+            
+            startColIndex <- firstIndices[sampleIndex]
+            endColIndex <- lastIndices[sampleIndex]
+            
+            medianAbsDevMem[, sampleIndex] <- apply(datastore[, startColIndex:endColIndex], 1, function(x) { stats::mad(x, na.rm=TRUE) })
+            rowNonNACount <- apply(datastore[, startColIndex:endColIndex], 1, function(x) { sum(!is.na(x)) }) - 1
+            
+            rowVariances <- rowNonNACount * apply(datastore[, startColIndex:endColIndex], 1, function(x) { stats::var(x, na.rm=TRUE) })
+
+            replicateGroupVariance <- c(replicateGroupVariance, sum(rowVariances, na.rm=TRUE) / sum(rowNonNACount, na.rm=TRUE))
         }
         
-        avgvarmem[, meti] <- varmem
-        temmadmatsum <- apply(madmem, 2, mean, na.rm=TRUE)
-        avgmadmem[, meti] <- temmadmatsum
+        avgvarmem[, methodIndex] <- replicateGroupVariance
+        temmadmatsum <- apply(medianAbsDevMem, 2, mean, na.rm=TRUE)
+        avgmadmem[, methodIndex] <- temmadmatsum
         
-        tempcvmat <- matrix(nrow=nrow(datastore), ncol=length(levels(as.factor(unlist(filterED)))), byrow=TRUE)
+        tempcvmat <- matrix(nrow=nrow(datastore), ncol=length(levels(as.factor(unlist(sampleReplicateGroups)))), byrow=TRUE)
         
         for (i in 1:nrow(datastore)) {
             
-            tempcv <- RcmdrMisc::numSummary(datastore[i, ], statistics=c("cv"), groups=unlist(filterED))
+            tempcv <- RcmdrMisc::numSummary(datastore[i, ], statistics=c("cv"), groups=unlist(sampleReplicateGroups))
             tempcvmat[i, ] <- tempcv$table
         }
         
         temcvmatsum <- apply(tempcvmat, 2, mean, na.rm=TRUE)
-        avgcvmem[, meti] <- temcvmatsum * 100
+        avgcvmem[, methodIndex] <- temcvmatsum * 100
         
         # ANOVA
         nbsNAperLine <- rowSums(is.na(datastore))
         
         # Retrieving lines where at least half is non-NAs
         datastoretmp <- datastore[nbsNAperLine < (ncol(datastore) / 2), ]
-        dataStoreReplicateNAFiltered <- filterLinesWithEmptySamples(datastoretmp, filterED)
+        dataStoreReplicateNAFiltered <- filterLinesWithEmptySamples(datastoretmp, sampleReplicateGroups)
         
-        anpvalue <- cbind(anpvalue, apply(dataStoreReplicateNAFiltered, 1, function(x) summary(stats::aov(unlist(x)~filterED))[[1]][[5]][1]))
-        anfdr <- cbind(anfdr, stats::p.adjust(anpvalue[, meti], method="BH"))
+        anovaPVal <- cbind(anovaPVal, apply(dataStoreReplicateNAFiltered, 1, function(sampleIndex) summary(stats::aov(unlist(sampleIndex)~sampleReplicateGroups))[[1]][[5]][1]))
+        anovaFDR <- cbind(anovaFDR, stats::p.adjust(anovaPVal[, methodIndex], method="BH"))
         
         # Kruskal Wallis
-        kwpvalue <- cbind(kwpvalue, apply(dataStoreReplicateNAFiltered, 1, function(x) stats::kruskal.test(unlist(x)~filterED, na.action="na.exclude")[[3]][1]))
-        kwfdr <- cbind(kwfdr, stats::p.adjust(kwpvalue[, meti], method="BH")) 
+        krusWalPVal <- cbind(krusWalPVal, apply(dataStoreReplicateNAFiltered, 1, function(sampleIndex) stats::kruskal.test(unlist(sampleIndex)~sampleReplicateGroups, na.action="na.exclude")[[3]][1]))
+        krusValFDR <- cbind(krusValFDR, stats::p.adjust(krusWalPVal[, methodIndex], method="BH")) 
     }
     
     # make sure first method is data2log2
-    avgcvmempdiff <- sapply(1:ncol(avgcvmem), function (x) (mean(avgcvmem[, x]) * 100) / mean(avgcvmem[, 1]))
-    avgmadmempdiff <- sapply(1:ncol(avgmadmem), function (x) (mean(avgmadmem[, x]) * 100) / mean(avgmadmem[, 1]))
-    avgvarmempdiff <- sapply(1:ncol(avgvarmem), function (x) (mean(avgvarmem[, x]) * 100) / mean(avgvarmem[, 1]))
+    avgcvmempdiff <- sapply(1:ncol(avgcvmem), function (sampleIndex) (mean(avgcvmem[, sampleIndex]) * 100) / mean(avgcvmem[, 1]))
+    avgmadmempdiff <- sapply(1:ncol(avgmadmem), function (sampleIndex) (mean(avgmadmem[, sampleIndex]) * 100) / mean(avgmadmem[, 1]))
+    avgvarmempdiff <- sapply(1:ncol(avgvarmem), function (sampleIndex) (mean(avgvarmem[, sampleIndex]) * 100) / mean(avgvarmem[, 1]))
     
     # finds top 5% of least DE variables in log2 data based on ANOVA
     # generates error if it doesnt find leastDE peptides
-    if (sum(anfdr[, 1] >= min(utils::head(rev(sort(anfdr[, 1])), n=(5 * nrow(anfdr) / 100)))) > 0) {
-        nonsiganfdrlist <- which(anfdr[, 1] >= min(utils::head(rev(sort(anfdr[, 1])), n=(5 * nrow(anfdr) / 100))))
+    if (sum(anovaFDR[, 1] >= min(utils::head(rev(sort(anovaFDR[, 1])), n=(5 * nrow(anovaFDR) / 100)))) > 0) {
+        nonsiganfdrlist <- which(anovaFDR[, 1] >= min(utils::head(rev(sort(anovaFDR[, 1])), n=(5 * nrow(anovaFDR) / 100))))
     }
     
     nonsiganfdrlistcv <- vector()
     for (mlist in 1:methodCount) {
-        tmpdata <- methodlist[[mlist]][nonsiganfdrlist, ]
-        nonsiganfdrlistcv[mlist] <- mean(apply(tmpdata, 1, function(x) raster::cv(x, na.rm=TRUE)), na.rm=TRUE)
+        tmpdata <- methodList[[mlist]][nonsiganfdrlist, ]
+        nonsiganfdrlistcv[mlist] <- mean(apply(tmpdata, 1, function(sampleIndex) raster::cv(sampleIndex, na.rm=TRUE)), na.rm=TRUE)
     }
     
-    nonsiganfdrlistcvpdiff <- sapply(1:length(nonsiganfdrlistcv), function(x) (nonsiganfdrlistcv[x] * 100) / nonsiganfdrlistcv[1])
+    nonsiganfdrlistcvpdiff <- sapply(1:length(nonsiganfdrlistcv), function(sampleIndex) (nonsiganfdrlistcv[sampleIndex] * 100) / nonsiganfdrlistcv[1])
     print("Finished analysis, preparing plots and report...")
     
     ner <- NormalizationEvaluationResults()
@@ -172,8 +157,8 @@ analyzeNormalizations <- function(nr, name) {
     ner@avgvarmempdiff <- avgvarmempdiff
     ner@nonsiganfdrlist <- nonsiganfdrlist
     ner@nonsiganfdrlistcvpdiff <- nonsiganfdrlistcvpdiff
-    ner@anfdr <- anfdr
-    ner@kwfdr <- kwfdr
+    ner@anfdr <- anovaFDR
+    ner@kwfdr <- krusValFDR
     
     ner <- calculateCorrelations(nr, ner)
     
