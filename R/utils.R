@@ -86,3 +86,17 @@ elapsedSecondsBetweenSystimes <- function(start, end) {
     elapsed <- end - start
     elapsed
 }
+
+#' Returns samples present only once in Normalyzer header
+#' 
+#' @param normalyzerDf Normalyzer data frame
+#' @return Vector with names of non-replicated samples
+getNonReplicatedFromDf <- function(normalyzerDf) {
+    
+    header <- normalyzerDf[1,]
+    sampleValues <- header[which(header != "0")]
+    headerCounts <- table(sampleValues)
+    
+    nonReplicatedSamples <- names(headerCounts[which(headerCounts == 1)])
+    nonReplicatedSamples
+}
