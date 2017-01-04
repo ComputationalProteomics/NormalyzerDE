@@ -13,10 +13,10 @@
 #'  for log2-transformed data
 #' @slot nonsiganfdrlistcvpdiff Coefficient of variance for least variable
 #'  entries
-#' @slot anfdr TODO: Look into
-#' @slot kwfdr TODO: Look into
-#' @slot avgpercorsum TODO: Look into
-#' @slot avgspecorsum TODO: Look into
+#' @slot anfdr TODO: Look into (FDR for ANOVA)
+#' @slot kwfdr TODO: Look into (FDR for Kruskal-Wallis)
+#' @slot avgpercorsum TODO: Look into (Average Pearson correlation sum)
+#' @slot avgspecorsum TODO: Look into (Average Spearman correlation sum)
 #' @export
 
 NormalizationEvaluationResults <- setClass("NormalizationEvaluationResults",

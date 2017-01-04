@@ -5,9 +5,6 @@
 # require("utils")
 
 
-# Testrun: normalyzer("../dev_data/canker_matrix_jonathan_t3.sub_200.tsv", "textx", outputDir="../runs/")
-
-
 #' Normalyzer pipeline entry point
 #' 
 #' @param inputPath CSV delimited input file containing raw counts and 

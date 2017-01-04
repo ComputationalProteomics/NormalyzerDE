@@ -18,80 +18,85 @@ generatePlots <- function(nr, jobdir) {
     setupPlotting(currentjob, jobdir)
     plotFrontPage(currentjob, currentFont)
     
+    isSingleRepRun <- nr@nds@singleReplicateRun
+    
     # TI
     print("DEBUG: Plotting page 2")
     pageno <- 2
     plotSampleOutlierSummary(nr, currentLayout, pageno)
     
     # CV
-    print("DEBUG: Plotting page 3")
-    pageno <- pageno + 1
-    plotReplicateVariance(nr, currentLayout, pageno)
+    if (!isSingleRepRun) {
+        print("DEBUG: Plotting page 3")
+        pageno <- pageno + 1
+        plotReplicateVariance(nr, currentLayout, pageno)
+        
+        # Stable variables plot and CV in percent difference
+        print("DEBUG: Plotting page 4")
+        pageno <- pageno + 1
+        plotReplicateVarAndStableVariables(nr, currentLayout, pageno)
     
-    # Stable variables plot and CV in percent difference
-    print("DEBUG: Plotting page 4")
-    pageno <- pageno + 1
-    plotReplicateVarAndStableVariables(nr, currentLayout, pageno)
+        # CVvsintensityplot 
+        print("DEBUG: Plotting page 5")
+        pageno <- pageno + 1
+        plotCVvsIntensity(nr, currentLayout, pageno)
+        
+        # MA plots
+        print("DEBUG: Plotting page 6!")
+        pageno <- pageno + 1
+        plotMA(nr, currentLayout, pageno)
+        
+        # Scatterplots
+        print("DEBUG: Plotting page 7")
+        pageno <- pageno + 1
+        plotScatter(nr, currentLayout, pageno)
+        
+        # QQplot
+        print("DEBUG: Plotting page 8")
+        pageno <- pageno + 1
+        plotQQ(nr, currentLayout, pageno)
+        
+        # Boxplot
+        print("DEBUG: Plotting page 9")
+        pageno <- pageno + 1
+        plotBoxPlot(nr, currentLayout, pageno)
+        
+        # RLE plots
+        print("DEBUG: Plotting page 10")
+        pageno <- pageno + 1
+        plotRLE(nr, currentLayout, pageno)
+        
+        # Density plots
+        print("DEBUG: Plotting page 11")
+        pageno <- pageno + 1
+        plotDensity(nr, currentLayout, pageno)
+        
+        # MDS plot
+        print("DEBUG: Plotting page 12")
+        pageno <- pageno + 1
+        plotMDS(nr, currentLayout, pageno)
+        
+        # meanSDplot
+        print("DEBUG: Plotting page 13")
+        pageno <- pageno + 1
+        plotMeanSD(nr, currentLayout, pageno)
+        
+        # Correlation
+        print("DEBUG: Plotting page 15")
+        pageno <- pageno + 1
+        plotCorrelation(nr, currentLayout, pageno)
+        
+        # Dendrograms
+        print("DEBUG: Plotting page 16")
+        pageno <- pageno + 1
+        plotDendrograms(nr, currentLayout, pageno)
+        
+        # DE plots
+        print("DEBUG: Plotting page 17")
+        pageno <- pageno + 1
+        plotDEPlots(nr, currentLayout, pageno)
+    }
     
-    # CVvsintensityplot 
-    print("DEBUG: Plotting page 5")
-    pageno <- pageno + 1
-    plotCVvsIntensity(nr, currentLayout, pageno)
-    
-    # MA plots
-    print("DEBUG: Plotting page 6!")
-    pageno <- pageno + 1
-    plotMA(nr, currentLayout, pageno)
-    
-    # Scatterplots
-    print("DEBUG: Plotting page 7")
-    pageno <- pageno + 1
-    plotScatter(nr, currentLayout, pageno)
-    
-    # QQplot
-    print("DEBUG: Plotting page 8")
-    pageno <- pageno + 1
-    plotQQ(nr, currentLayout, pageno)
-    
-    # Boxplot
-    print("DEBUG: Plotting page 9")
-    pageno <- pageno + 1
-    plotBoxPlot(nr, currentLayout, pageno)
-    
-    # RLE plots
-    print("DEBUG: Plotting page 10")
-    pageno <- pageno + 1
-    plotRLE(nr, currentLayout, pageno)
-    
-    # Density plots
-    print("DEBUG: Plotting page 11")
-    pageno <- pageno + 1
-    plotDensity(nr, currentLayout, pageno)
-    
-    # MDS plot
-    print("DEBUG: Plotting page 12")
-    pageno <- pageno + 1
-    plotMDS(nr, currentLayout, pageno)
-    
-    # meanSDplot
-    print("DEBUG: Plotting page 13")
-    pageno <- pageno + 1
-    plotMeanSD(nr, currentLayout, pageno)
-    
-    # Correlation
-    print("DEBUG: Plotting page 15")
-    pageno <- pageno + 1
-    plotCorrelation(nr, currentLayout, pageno)
-    
-    # Dendrograms
-    print("DEBUG: Plotting page 16")
-    pageno <- pageno + 1
-    plotDendrograms(nr, currentLayout, pageno)
-    
-    # DE plots
-    print("DEBUG: Plotting page 17")
-    pageno <- pageno + 1
-    plotDEPlots(nr, currentLayout, pageno)
     
     grDevices::dev.off()
 }
@@ -173,22 +178,31 @@ plotSampleOutlierSummary <- function(nr, currentLayout, pageno) {
     tout <- rbind(c(1, 2), c(3, 4))
     graphics::layout(tout)
     graphics::par(mar=c(4, 4, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
+    
+    print(head(filterrawdata))
+    
     datacoltotal <- apply(filterrawdata, 2, function(x) { sum(x, na.rm=TRUE) })
+    
+    print(datacoltotal)
     
     graphics::barplot(datacoltotal, las=2, main="Total intensity", cex.names=0.5, names.arg=substr(names(datacoltotal), 1, 10))
     datamissingcol <- apply(filterrawdata, 2, function(x) { sum(is.na(x)) })
     graphics::barplot(datamissingcol, las=2, main="Total missing", cex.names=0.5, names.arg=substr(names(datamissingcol), 1, 10))
     datastore <- methodlist[[1]]
     
-    d <- stats::dist(scale(t(stats::na.omit(datastore)), center=TRUE, scale=TRUE))
-    fit <- stats::cmdscale(d, eig=TRUE, k=2)
-    x <- fit$points[, 1]
-    y <- fit$points[, 2]
+    isSingleRepRun <- nr@nds@singleReplicateRun
     
-    graphics::plot(x, y, type="n", main="Log2-MDS plot", xlab="", ylab="")
-    graphics::text(fit$points[, 1], fit$points[, 2], col=filterED, labels=filterED)
-    grid::pushViewport(grid::viewport(layout=currentLayout))
-    printMeta("Data Summary - Outlier detection", pageno, currentjob)
+    if (!isSingleRepRun) {
+        d <- stats::dist(scale(t(stats::na.omit(datastore)), center=TRUE, scale=TRUE))
+        fit <- stats::cmdscale(d, eig=TRUE, k=2)
+        x <- fit$points[, 1]
+        y <- fit$points[, 2]
+        
+        graphics::plot(x, y, type="n", main="Log2-MDS plot", xlab="", ylab="")
+        graphics::text(fit$points[, 1], fit$points[, 2], col=filterED, labels=filterED)
+        grid::pushViewport(grid::viewport(layout=currentLayout))
+        printMeta("Data Summary - Outlier detection", pageno, currentjob)
+    }
 }
 
 #' Generate normalization replicate variance summary

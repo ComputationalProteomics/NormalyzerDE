@@ -25,17 +25,12 @@ getVerifiedNormalyzerObject <- function(inputPath, jobName, threshold=15,
 
     # If no samples left after omitting, stop
     
-    # Verify replicates - Control whether to crash or progress
-    validateSampleReplication(lowCountSampleFiltered, 
-                              requireReplicates=requireReplicates)
-    
+    verifyMultipleSamplesPresent(lowCountSampleFiltered, requireReplicates=requireReplicates)
+    validateSampleReplication(lowCountSampleFiltered, requireReplicates=requireReplicates)
     
 
     # nds <- generateNormalyzerDataset(processedRawData, jobName)
     nds <- generateNormalyzerDataset(lowCountSampleFiltered, jobName)
-    
-
-    
     
     
     nds
@@ -120,30 +115,6 @@ getReplicateSortedData <- function(rawData) {
     rawData
 }
 
-# #' Perform validations that input data is in correct format, and abort
-# #'  otherwise
-# #' @param rawData Dataframe with unparsed Normalyzer input data.
-# #' @return None
-# #' @export
-# verifySampleReplication <- function(rawData) {
-# 
-#     replicateLine <- rawData[1, ]
-#     replicateLineUnique <- unique(replicateLine)
-#     
-#     for (i in 1:length(replicateLineUnique)) {
-#         if (replicateLineUnique[i] != 0) {
-#             if (length(grep(replicateLineUnique[i], replicateLine)) < 2) {
-#                 
-#                 error_object <- paste("Number of replicates are less than 2 for the group ", replicateLineUnique[i], sep="")
-#                 class(error_object) <- "try-error"
-#                 if (inherits(error_object, "try-error")) {
-#                     return(error_object)
-#                 }
-#                 stop(paste("Number of replicates are less than 2 for the group ", replicateLineUnique[i], sep=""))
-#             }
-#         }
-#     }
-# }
 
 #' Replace 0 values with NA in input data
 #' 
@@ -183,7 +154,20 @@ getLowCountSampleFiltered <- function(dfWithNAs, threshold=15, stopIfTooFew=TRUE
     
     notPassingThreshold <- which(numberOfValues < threshold)
     
-    if (length(notPassingThreshold) > 0) {
+    if (length(notPassingThreshold) == length(numberOfValues)) {
+        error_string <- paste(
+            "None of the samples had enough valid non-NA values",
+            "Found number of non-NA values:",
+            paste(numberOfValues[notPassingThreshold], collapse=" "),
+            "Current threshold: ",
+            threshold,
+            "You could try lowering the threshold by adjusting \"sampleAbundThres\"",
+            "Be aware that this will likely lead to downstream crashes.",
+            sep="\n"
+        )
+        stop(error_string)
+    }
+    else if (length(notPassingThreshold) > 0) {
         error_string <- paste(
             "Following samples does not contain enough non-NA values:",
             paste(sampleIndices[notPassingThreshold], collapse=" "),
@@ -203,8 +187,11 @@ getLowCountSampleFiltered <- function(dfWithNAs, threshold=15, stopIfTooFew=TRUE
         }
     }
     
+    print(length(notPassingThreshold))
+    print(length(numberOfValues))
+    
     if (length(notPassingThreshold > 0)) {
-        dfWithNAs[, -sampleIndices[notPassingThreshold]]
+        naSamplesOmittedDf <- dfWithNAs[, -sampleIndices[notPassingThreshold]]
     }
     else {
         dfWithNAs
@@ -215,14 +202,10 @@ getLowCountSampleFiltered <- function(dfWithNAs, threshold=15, stopIfTooFew=TRUE
 #' Check whether all samples have replicates
 #' 
 #' @param processedDf Prepared Normalyzer dataframe.
+#' @param requireReplicates By default stops processing if not all samples
+#'  have replicates
 #' @return None
 validateSampleReplication <- function(processedDf, requireReplicates=TRUE) {
-    
-    # header <- processedDf[1,]
-    # sampleValues <- header[which(header != "0")]
-    # headerCounts <- table(sampleValues)
-    # 
-    # nonReplicatedSamples <- names(headerCounts[which(headerCounts == 1)])
     
     nonReplicatedSamples <- getNonReplicatedFromDf(processedDf)
     
@@ -245,6 +228,45 @@ validateSampleReplication <- function(processedDf, requireReplicates=TRUE) {
     }
     else {
         print("Sample replication check: All samples have replicates")
+    }
+}
+
+
+#' Check whether more than one sample is present
+#' 
+#' @param processedDf Prepared Normalyzer dataframe.
+#' @return None
+verifyMultipleSamplesPresent <- function(processedDf, requireReplicates=TRUE) {
+    
+    print(processedDf)
+    
+    header <- processedDf[1,]
+    distinctSamples <- unique(header[which(header != "0")])
+        
+    if (length(distinctSamples) == 1) {
+        
+        error_string <- paste(
+            "Found less than two distinct samples. Following was found:",
+            paste(distinctSamples, collapse=" "),
+            "For full processing two samples are required",
+            "You can force limited processing by turning of the", 
+            "\"requireReplicates\" option",
+            sep="\n")
+        
+        if (requireReplicates) {
+            stop(error_string)
+        }
+        else {
+            warning(error_string)
+        }
+    }
+    else if (length(distinctSamples) == 0) {
+        stop("No replicate groups found. Double check your input file,
+             and check that your data haven't been filtered out in preceeding
+             input validation steps.")
+    }
+    else {
+        print("Sample check: More than one sample group found")
     }
 }
 

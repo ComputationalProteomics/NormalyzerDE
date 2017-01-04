@@ -98,11 +98,15 @@ filterLinesWithEmptySamples <- function(dataMatrix, replicateHeader) {
 setupNormalizationEvaluationObject <- function(nr) {
     
     ner <- NormalizationEvaluationResults()
-
     ner <- calculateCV(ner, nr)
-    ner <- calculateMAD(ner, nr)
-    ner <- calculateAvgVar(ner, nr)
-    ner <- calculateSignificanceMeasures(ner, nr)
+    
+    singleRepRun <- nr@nds@singleReplicateRun 
+    
+    if (!singleRepRun) {
+        ner <- calculateMAD(ner, nr)
+        ner <- calculateAvgVar(ner, nr)
+        ner <- calculateSignificanceMeasures(ner, nr)
+    }
     
     ner <- calculateCorrelations(nr, ner)
     ner

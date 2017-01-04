@@ -46,9 +46,7 @@ setMethod("setupValues", "NormalyzerDataset",
           function(nds) {
               
               # Detect single replicate, and assign related logical
-              
               nonReplicatedSamples <- getNonReplicatedFromDf(nds@rawData)
-              
               if (length(nonReplicatedSamples) > 0) {
                   nds@singleReplicateRun = TRUE
                   print(paste("Non replicated samples in dataset:",
@@ -60,6 +58,22 @@ setMethod("setupValues", "NormalyzerDataset",
                   nds@singleReplicateRun = FALSE
               }
               
+              # Detect single sample group
+              header <- nds@rawData[1,]
+              distinctSamples <- unique(header[which(header != "0")])
+              if (length(distinctSamples) == 1) {
+                  nds@singleReplicateRun = TRUE
+                  print(paste("Only one replicate group present.",
+                              paste("Group: ", distinctSamples[1]),
+                              "Proceeding with limited processing",
+                              sep="\n"))
+              }
+              else if (length(distinctSamples) == 0) {
+                  stop("No sample replicate groups found - Aborting.")
+              }
+              
+              
+              # Setup
               nds@inputHeaderValues <- nds@rawData[1, ]
               
               sampleRepStr <- nds@inputHeaderValues[-which(nds@inputHeaderValues < 1)]
@@ -105,7 +119,8 @@ setMethod("setupFilterRawData", "NormalyzerDataset",
               annotTrimMatrix <- nds@rawData[, -(1:nbrNonRepInHeader), drop=FALSE]
               
               colnames(annotTrimMatrix) <- nds@rawData[2, -(1:nbrNonRepInHeader)]
-              filterRawData <- as.matrix(annotTrimMatrix[-(1:2), ])
+              
+              filterRawData <- as.matrix(annotTrimMatrix[-(1:2),, drop=FALSE ])
               class(filterRawData) <- "numeric"
 
               nds@filterrawdata <- filterRawData
