@@ -12,30 +12,14 @@ printMeta <- function(plotname, pageno, jobname) {
                      col="black", fontface="bold")
     gpfill <- grid::gpar(fill="gray90", lwd=0, lty=0)
     
-    grid::grid.rect(vp=grid::viewport(layout.pos.row=1, 
-                                      layout.pos.col=1), gp=gpfill)
-    grid::grid.rect(vp=grid::viewport(layout.pos.row=1, 
-                                      layout.pos.col=2), gp=gpfill)
-    grid::grid.rect(vp=grid::viewport(layout.pos.row=1, 
-                                      layout.pos.col=3), gp=gpfill)
-    grid::grid.rect(vp=grid::viewport(layout.pos.row=1, 
-                                      layout.pos.col=4), gp=gpfill)
-    grid::grid.rect(vp=grid::viewport(layout.pos.row=1, 
-                                      layout.pos.col=5), gp=gpfill)
-    grid::grid.rect(vp=grid::viewport(layout.pos.row=1, 
-                                      layout.pos.col=6), gp=gpfill)
-    grid::grid.rect(vp=grid::viewport(layout.pos.row=5, 
-                                      layout.pos.col=1), gp=gpfill)
-    grid::grid.rect(vp=grid::viewport(layout.pos.row=5, 
-                                      layout.pos.col=2), gp=gpfill)
-    grid::grid.rect(vp=grid::viewport(layout.pos.row=5, 
-                                      layout.pos.col=3), gp=gpfill)
-    grid::grid.rect(vp=grid::viewport(layout.pos.row=5, 
-                                      layout.pos.col=4), gp=gpfill)
-    grid::grid.rect(vp=grid::viewport(layout.pos.row=5, 
-                                      layout.pos.col=5), gp=gpfill)
-    grid::grid.rect(vp=grid::viewport(layout.pos.row=5, 
-                                      layout.pos.col=6), gp=gpfill)
+    for (pos in 1:12) {
+        if (pos <= 6) row <- 1
+        else row <- 5
+        
+        col <- (pos - 1) %% 6 + 1
+        grid::grid.rect(vp=grid::viewport(layout.pos.row=row, 
+                                          layout.pos.col=col), gp=gpfill)
+    }
     
     grid::grid.text(plotname, 
                     vp=grid::viewport(layout.pos.row=1, layout.pos.col=1), 

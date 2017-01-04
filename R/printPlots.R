@@ -18,7 +18,7 @@ printPlots <- function(plotlist, plotname, pageno, jobname) {
         else row <- 5
 
         col <- (pos - 1) %% 6 + 1
-        print(paste("row", row, "col", col))
+        # print(paste("row", row, "col", col))
         grid::grid.rect(vp=grid::viewport(layout.pos.row=row, layout.pos.col=col), gp=gpfill)
     }
     
