@@ -42,7 +42,10 @@ printPlots <- function(plotlist, plotname, pageno, jobname) {
     print(plotlist[[2]], vp=grid::viewport(layout.pos.row=2, layout.pos.col=3))
     print(plotlist[[3]], vp=grid::viewport(layout.pos.row=2, layout.pos.col=4))
     print(plotlist[[4]], vp=grid::viewport(layout.pos.row=2, layout.pos.col=5))
-    print(plotlist[[5]], vp=grid::viewport(layout.pos.row=3, layout.pos.col=2))
+    
+    if (length(plotlist) > 4) {
+        print(plotlist[[5]], vp=grid::viewport(layout.pos.row=3, layout.pos.col=2))
+    }
     
     if (length(plotlist) > 5) {
         

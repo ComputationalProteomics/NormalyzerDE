@@ -238,11 +238,20 @@ validateSampleReplication <- function(processedDf, requireReplicates=TRUE) {
 #' @return None
 verifyMultipleSamplesPresent <- function(processedDf, requireReplicates=TRUE) {
     
-    print(processedDf)
-    
     header <- processedDf[1,]
-    distinctSamples <- unique(header[which(header != "0")])
+    samples <- header[which(header != "0")]
+    distinctSamples <- unique(samples)
+
+    if (length(samples) < 2) {
+        error_string <- paste(
+            "At least two samples are required to run Normalyzer",
+            "Here, we found:",
+            paste(samples, collapse=" "),
+            sep="\n")
         
+        stop(error_string)
+    }
+            
     if (length(distinctSamples) == 1) {
         
         error_string <- paste(
