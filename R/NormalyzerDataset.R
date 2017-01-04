@@ -82,7 +82,7 @@ setMethod("setupValues", "NormalyzerDataset",
               nds <- setupFilterRawData(nds)
               
               if (!nds@singleReplicateRun) {
-                  nds <- setupNormfinderFilterRawData(nds)
+                nds <- setupNormfinderFilterRawData(nds)
               }
               
               nds@colsum <- colSums(nds@filterrawdata, na.rm=TRUE)
@@ -107,17 +107,14 @@ setGeneric(name="setupFilterRawData",
 #' @rdname setupFilterRawData
 setMethod("setupFilterRawData", "NormalyzerDataset",
           function(nds) {
-              print("DEBUG: setupFilterRawData")
-              
+
               stopifnot(!is.null(nds@rawData))
               
               fullSampleHead <- nds@inputHeaderValues
               filteredSampleHead <- nds@sampleReplicateGroups
-              
               nbrNonRepInHeader <- length(fullSampleHead) - length(filteredSampleHead)
               
               annotTrimMatrix <- nds@rawData[, -(1:nbrNonRepInHeader), drop=FALSE]
-              
               colnames(annotTrimMatrix) <- nds@rawData[2, -(1:nbrNonRepInHeader)]
               
               filterRawData <- as.matrix(annotTrimMatrix[-(1:2),, drop=FALSE ])
@@ -148,10 +145,10 @@ setMethod("setupNormfinderFilterRawData", "NormalyzerDataset",
               filteredSampleHeader <- nds@sampleReplicateGroups
               
               countVal <- rowSums(!is.na(nds@rawData[, which(fullSampleHeader > 0)]))
-              
               nbrReplicates <- 1 * ncol(nds@rawData[, which(fullSampleHeader > 0)])
-              nds@normfinderFilterRawData <- nds@rawData[countVal >= nbrReplicates,]
-              
+                            
+              nds@normfinderFilterRawData <- nds@rawData[countVal >= nbrReplicates,,drop=FALSE]
+
               nds
           }
 )

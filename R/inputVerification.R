@@ -23,6 +23,9 @@ getVerifiedNormalyzerObject <- function(inputPath, jobName, threshold=15,
                                                         stopIfTooFew=!omitSamples)
     
 
+    
+    
+    
     # If no samples left after omitting, stop
     
     verifyMultipleSamplesPresent(lowCountSampleFiltered, requireReplicates=requireReplicates)
@@ -106,13 +109,15 @@ getReplicateSortedData <- function(rawData) {
     temp_df <- as.factor(rawData[1, ])
     factor_levels <- levels(temp_df)
     temp_df <- NULL
-    
+
     for (i in 1:length(factor_levels)) {
-        temp_df <- cbind(temp_df, rawData[, which(rawData[1, ] == factor_levels[as.numeric(i)])])
+        
+        print(paste("Iterating", i))
+        
+        temp_df <- cbind(temp_df, rawData[, which(rawData[1,] == factor_levels[as.numeric(i)]), drop=FALSE])
     }
     
-    rawData <- temp_df
-    rawData
+    temp_df
 }
 
 
@@ -121,8 +126,6 @@ getReplicateSortedData <- function(rawData) {
 #' @param rawData Dataframe with Normalyzer input data.
 #' @return Parsed rawdata where 0 values are replaced with NA
 preprocessData <- function(normalyzerDf) {
-
-    # TODO: Is this problematic? What if you have zero as sample name?
 
     dataMatrix <- normalyzerDf[-1:-2, ]
     dataMatrix[which(dataMatrix == 0)] <- NA
