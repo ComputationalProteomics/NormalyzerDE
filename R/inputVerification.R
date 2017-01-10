@@ -24,18 +24,11 @@ getVerifiedNormalyzerObject <- function(inputPath, jobName, threshold=15,
     
     
     # If no samples left after omitting, stop
-    
     verifyMultipleSamplesPresent(lowCountSampleFiltered, requireReplicates=requireReplicates)
     validateSampleReplication(lowCountSampleFiltered, requireReplicates=requireReplicates)
-    
 
     # nds <- generateNormalyzerDataset(processedRawData, jobName)
     nds <- generateNormalyzerDataset(lowCountSampleFiltered, jobName)
-    
-    
-    print(head(rawData, 50))
-    print(head(nds@filterrawdata, 50))
-    stop("")
     
     
     nds
@@ -73,7 +66,7 @@ loadRawDataFromFile <- function(inputPath) {
 #' @return Parsed rawdata where 0 values are replaced with NA
 verifyValidNumbers <- function(normalyzerDfAll) {
     
-    normalyzerDf <- normalyzerDfAll[, which(normalyzerDfAll[1,] != "0"), 
+    normalyzerDf <- normalyzerDfAll[, which(as.numeric(normalyzerDfAll[1,]) > 0), 
                                     drop=FALSE]
     
     validPatterns <- c("\\d+(\\.\\d+)?", "NA")
@@ -146,7 +139,7 @@ getLowCountSampleFiltered <- function(dfWithNAs, threshold=15, stopIfTooFew=TRUE
     
     rawData <- dfWithNAs[-1:-2,]
     header <- dfWithNAs[1,]
-    sampleIndices <- which(header != "0")
+    sampleIndices <- which(as.numeric(header) > 0)
     
     numberOfValues <- vector(length=length(sampleIndices), mode="numeric")
     
@@ -244,7 +237,7 @@ validateSampleReplication <- function(processedDf, requireReplicates=TRUE) {
 verifyMultipleSamplesPresent <- function(processedDf, requireReplicates=TRUE) {
     
     header <- processedDf[1,]
-    samples <- header[which(header != "0")]
+    samples <- header[which(as.numeric(header) > 0)]
     distinctSamples <- unique(samples)
 
     if (length(samples) < 2) {

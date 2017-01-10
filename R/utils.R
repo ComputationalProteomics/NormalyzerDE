@@ -94,7 +94,7 @@ elapsedSecondsBetweenSystimes <- function(start, end) {
 getNonReplicatedFromDf <- function(normalyzerDf) {
     
     header <- normalyzerDf[1,]
-    sampleValues <- header[which(header != "0")]
+    sampleValues <- header[which(as.numeric(header) > 0)]
     headerCounts <- table(sampleValues)
     
     nonReplicatedSamples <- names(headerCounts[which(headerCounts == 1)])

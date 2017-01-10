@@ -50,21 +50,21 @@ setMethod("setupValues", "NormalyzerDataset",
               # Detect single replicate, and assign related logical
               nonReplicatedSamples <- getNonReplicatedFromDf(nds@rawData)
               if (length(nonReplicatedSamples) > 0) {
-                  nds@singleReplicateRun = TRUE
+                  nds@singleReplicateRun <- TRUE
                   print(paste("Non replicated samples in dataset:",
                         paste(nonReplicatedSamples, collapse=" "),
                         "performing limited single-replicate run",
                         sep="\n"))
               }
               else {
-                  nds@singleReplicateRun = FALSE
+                  nds@singleReplicateRun <- FALSE
               }
               
               # Detect single sample group
               header <- nds@rawData[1,]
-              distinctSamples <- unique(header[which(header != "0")])
+              distinctSamples <- unique(header[which(as.numeric(header) > 0)])
               if (length(distinctSamples) == 1) {
-                  nds@singleReplicateRun = TRUE
+                  nds@singleReplicateRun <- TRUE
                   print(paste("Only one replicate group present.",
                               paste("Group: ", distinctSamples[1]),
                               "Proceeding with limited processing",
@@ -74,11 +74,10 @@ setMethod("setupValues", "NormalyzerDataset",
                   stop("No sample replicate groups found - Aborting.")
               }
               
-              
               # Setup
               nds@inputHeaderValues <- nds@rawData[1, ]
               
-              sampleRepStr <- nds@inputHeaderValues[-which(nds@inputHeaderValues < 1)]
+              sampleRepStr <- nds@inputHeaderValues[-which(as.numeric(nds@inputHeaderValues) < 1)]
               nds@sampleReplicateGroups <- as.numeric(sampleRepStr)
               
               nds <- setupFilterRawData(nds)
@@ -92,6 +91,24 @@ setMethod("setupValues", "NormalyzerDataset",
                                      FUN="median", na.rm=TRUE)
               nds@meanofdata <- apply(nds@filterrawdata, 2, 
                                       FUN="mean", na.rm=TRUE)
+              
+              # If present - extract RT column
+              rt_annotations <- nds@inputHeaderValues[which(inputHeaderValues == "-1")]
+              
+              if (length(rt_annotations) > 1) {
+                  error_message <- paste(
+                      "Only able to handle single RT column (marked with -1)",
+                      "Please set unwanted RT columns to 0")
+                  stop(error_message)
+              }
+              else if (length(rt_annotations) == 1) {
+                  print("RT annotation column found")
+                  rtValues <- nds@rawData[, which(inputHeaderValues == "-1")][-1:-2]
+                  
+                  print(as.numeric(rtValues))
+                  
+                  nds@retentionTimes <- as.numeric(rtValues)
+              }
               
               nds
           }
@@ -113,15 +130,11 @@ setMethod("setupFilterRawData", "NormalyzerDataset",
               stopifnot(!is.null(nds@rawData))
               
               fullSampleHead <- nds@inputHeaderValues
-              filteredSampleHead <- nds@sampleReplicateGroups
-              nbrNonRepInHeader <- length(fullSampleHead) - length(filteredSampleHead)
+              sampleDataWithHead <- nds@rawData[, which(as.numeric(fullSampleHead) > 0), drop=FALSE]
               
-              annotTrimMatrix <- nds@rawData[, -(1:nbrNonRepInHeader), drop=FALSE]
-              colnames(annotTrimMatrix) <- nds@rawData[2, -(1:nbrNonRepInHeader)]
-              
-              filterRawData <- as.matrix(annotTrimMatrix[-(1:2),, drop=FALSE ])
+              filterRawData <- as.matrix(sampleDataWithHead[-(1:2),, drop=FALSE ])
               class(filterRawData) <- "numeric"
-
+              
               nds@filterrawdata <- filterRawData
               
               nds

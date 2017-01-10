@@ -414,6 +414,10 @@ setMethod("performReplicateBasedNormalizations", "NormalyzerResults",
                 endColIndex <- lastIndices[sampleIndex]
                   
                 # Median based LR normalization
+                
+                # print(startColIndex)
+                # print(endColIndex)
+                
                 mediandata <- apply(nr@data2log2[, startColIndex:endColIndex], 1, "median", na.rm=TRUE)
                   
                 for (currentCol in startColIndex:endColIndex) {

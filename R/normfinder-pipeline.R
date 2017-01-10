@@ -31,31 +31,31 @@ normfinder <- function(nds) {
     filterrawdata1 <- nds@normfinderFilterRawData
     getEDdata <- nds@inputHeaderValues
     
-    gr <- getEDdata[-which(getEDdata < 1)]
+    gr <- getEDdata[-which(as.numeric(getEDdata) < 1)]
     
-    filnavn <- filterrawdata1[, -(1:(length(getEDdata) - length(gr)))]
-    filnavn <- (as.matrix((filnavn[-(1:2), ])))
+    filnavn <- filterrawdata1[, which(as.numeric(filterrawdata1[1,]) > 0)]
+    filnavn <- as.matrix(filnavn[-(1:2), ])
     filnavn <- apply(filnavn, 2, function(x) as.numeric(gsub(",", ".", x)))
     class(filnavn) <- "numeric"
-    
+
     k <- nrow(filnavn)
     gr <- unlist(gr)
     da <- as.matrix(filnavn)
     m <- length(levels(as.factor(gr)))
     medgr <- as.numeric(levels(as.factor(unlist(gr))))
     
-    medgen <- c(1:k)               # all genes are included in the analysis
+    medgen <- c(1:k)                # all genes are included in the analysis
     
-    y1 <- log(da)                  # log of pcr values
+    y1 <- log(da)                   # log of pcr values
 
-    y <- y1[medgen, gr == (medgr[1])]
+    y <- y1[medgen, gr == medgr[1]]
     for (i in 2:m) {
-        y=cbind(y, y1[medgen, gr == (medgr[i])])
-    }                           # data rearranged according to group
+        y <- cbind(y, y1[medgen, gr == medgr[i]])
+    }                               # data rearranged according to group
 
     ngr <- rep(0, m)                # number of samples in each group
     for (i in 1:m) {
-        ngr[i] <- sum(gr == (medgr[i]))
+        ngr[i] <- sum(gr == medgr[i])
     }
     grny <- rep(c(1:m), ngr)        # group labels for data in y
     n <- sum(ngr)
