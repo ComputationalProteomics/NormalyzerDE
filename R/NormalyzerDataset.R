@@ -28,6 +28,8 @@ NormalyzerDataset <- setClass("NormalyzerDataset",
                                   medofdata = "numeric",
                                   meanofdata = "numeric",
                                   
+                                  retentionTimes = "numeric",
+                                  
                                   singleReplicateRun = "logical"
                               ),
                               prototype=prototype(jobName=NULL, 

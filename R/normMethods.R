@@ -6,10 +6,10 @@
 #' @return Returns Normalyzer results object with performed analyzes assigned
 #'  as attributes
 #' @export
-normMethods <- function(nds, currentjob, jobdir, forceAll=FALSE) {
+normMethods <- function(nds, currentjob, jobdir, forceAll=FALSE, normalizeRetentionTime=FALSE) {
 
     nr <- generateNormalyzerResultsObject(nds)
-    nr <- performNormalizations(nr, forceAll=forceAll)
+    nr <- performNormalizations(nr, forceAll=forceAll, rtNorm=normalizeRetentionTime)
     
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)

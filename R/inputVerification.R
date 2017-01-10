@@ -22,9 +22,6 @@ getVerifiedNormalyzerObject <- function(inputPath, jobName, threshold=15,
                                                         threshold=threshold, 
                                                         stopIfTooFew=!omitSamples)
     
-
-    
-    
     
     # If no samples left after omitting, stop
     
@@ -34,6 +31,11 @@ getVerifiedNormalyzerObject <- function(inputPath, jobName, threshold=15,
 
     # nds <- generateNormalyzerDataset(processedRawData, jobName)
     nds <- generateNormalyzerDataset(lowCountSampleFiltered, jobName)
+    
+    
+    print(head(rawData, 50))
+    print(head(nds@filterrawdata, 50))
+    stop("")
     
     
     nds

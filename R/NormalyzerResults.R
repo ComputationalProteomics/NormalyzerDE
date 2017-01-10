@@ -71,6 +71,8 @@ NormalyzerResults <- setClass("NormalyzerResults",
                                   data2ctrlog = "matrix",
                                   data2quantile = "matrix",
                                   
+                                  data2rt = "matrix",
+                                  
                                   data2ctr = "matrix",
                                   data2mad = "matrix"
                               ),
@@ -88,11 +90,14 @@ setGeneric(name="initializeResultsObject",
 #' Main function for executing normalizations
 #'
 #' @param nr Normalyzer results object.
+#' @param forceAll Ignore dataset size limits and run all normalizations
+#'  (only meant for testing purposes)
+#' @param rtNorm Perform retention time based normalizations
 #' @return None
 #' @rdname performNormalizations
 #' @export
 setGeneric(name="performNormalizations", 
-           function(nr, forceAll=FALSE) standardGeneric("performNormalizations"))
+           function(nr, forceAll=FALSE, rtNorm=FALSE) standardGeneric("performNormalizations"))
 
 #' Generate basic metrics normalizations
 #'
@@ -166,6 +171,15 @@ setGeneric(name="performGlobalRLRNormalization",
 setGeneric(name="performReplicateBasedNormalizations", 
            function(nr) standardGeneric("performReplicateBasedNormalizations"))
 
+#' Perform retention time normalizations
+#'
+#' @param nr Normalyzer results object.
+#' @return None
+#' @rdname performRTNormalizations
+#' @export
+setGeneric(name="performRTNormalizations", 
+           function(nr) standardGeneric("performRTNormalizations"))
+
 #' Get vector of labels for used methods
 #'
 #' @param nr Normalyzer results object.
@@ -216,7 +230,7 @@ setMethod("initializeResultsObject", "NormalyzerResults",
 
 #' @rdname performNormalizations
 setMethod("performNormalizations", "NormalyzerResults",
-          function(nr, forceAll=FALSE) {
+          function(nr, forceAll=FALSE, rtNorm=FALSE) {
               
               nds <- nr@nds
               nr <- basicMetricNormalizations(nr)
@@ -247,6 +261,13 @@ setMethod("performNormalizations", "NormalyzerResults",
                       print("Processing in single replicate mode, replicate based normalizations are omitted")
                   }
               }
+              
+              
+              if (rtNorm) {
+                  nr <- performRTNormalizations(nr)
+              }
+              
+              
               
               nr
           }
@@ -412,6 +433,17 @@ setMethod("performReplicateBasedNormalizations", "NormalyzerResults",
               
             nr
         })
+
+#' @rdname performRTNormalizations
+setMethod("performRTNormalizations", "NormalyzerResults",
+          function(nr) {
+              
+              
+              
+              stop("Retention time done")
+              
+              nr
+          })
 
 #' @rdname getUsedMethodNames
 setMethod("getUsedMethodNames", "NormalyzerResults",

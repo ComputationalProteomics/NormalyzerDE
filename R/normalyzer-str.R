@@ -28,7 +28,9 @@ normalyzer <- function(inputPath,
                        forceAllMethods=FALSE,
                        omitLowAbundSamples=FALSE,
                        sampleAbundThres=15,
-                       requireReplicates=TRUE) {
+                       requireReplicates=TRUE,
+                       normalizeRetentionTime=FALSE,
+                       retentionTimeWindow=0.1) {
     
     print('start')
     startTime <- Sys.time()
@@ -75,7 +77,8 @@ normalyzer <- function(inputPath,
     normalyzerResultsObject <- normMethods(normObj, 
                                            jobName, 
                                            jobDir, 
-                                           forceAll=forceAllMethods)
+                                           forceAll=forceAllMethods,
+                                           normalizeRetentionTime=normalizeRetentionTime)
     print("Finished Normalization")
     
     print("Analyzing results...")
