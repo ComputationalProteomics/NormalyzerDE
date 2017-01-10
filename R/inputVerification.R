@@ -22,10 +22,6 @@ getVerifiedNormalyzerObject <- function(inputPath, jobName, threshold=15,
                                                         threshold=threshold, 
                                                         stopIfTooFew=!omitSamples)
     
-
-    
-    
-    
     # If no samples left after omitting, stop
     
     verifyMultipleSamplesPresent(lowCountSampleFiltered, requireReplicates=requireReplicates)
@@ -74,15 +70,17 @@ verifyValidNumbers <- function(normalyzerDfAll) {
     normalyzerDf <- normalyzerDfAll[, which(normalyzerDfAll[1,] != "0"), 
                                     drop=FALSE]
     
-    validPatterns <- c("\\d+(\\.\\d+)?", "NA")
+    validPatterns <- c("\\d+(\\.\\d+)?", "NA", "\\d+\\.\\d+E\\d+")
     
     rawData <- normalyzerDf[-1:-2,]
     
     regexPattern <- sprintf("^(%s)$", paste(validPatterns, collapse="|"))
     matches <- grep(regexPattern, rawData, perl=TRUE, ignore.case=TRUE)
-    nonMatches <- rawData[-matches]
+    nonMatches <- na.omit(rawData[-matches])
     
-    if (length(na.omit(nonMatches) > 0)) {
+    print(nonMatches)
+    
+    if (length(nonMatches > 0)) {
         error_string <- paste(
             "Invalid values encountered in input data.",
             "Only valid data is numeric and NA- or na-fields",
