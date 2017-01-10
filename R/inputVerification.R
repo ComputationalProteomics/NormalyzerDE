@@ -11,6 +11,8 @@ getVerifiedNormalyzerObject <- function(inputPath, jobName, threshold=15,
 
     rawData <- loadRawDataFromFile(inputPath)
     
+    print(head(rawData))
+    
     verifyValidNumbers(rawData)
     
     repSortedRawData <- getReplicateSortedData(rawData)
@@ -26,7 +28,7 @@ getVerifiedNormalyzerObject <- function(inputPath, jobName, threshold=15,
     # If no samples left after omitting, stop
     verifyMultipleSamplesPresent(lowCountSampleFiltered, requireReplicates=requireReplicates)
     validateSampleReplication(lowCountSampleFiltered, requireReplicates=requireReplicates)
-
+    
     # nds <- generateNormalyzerDataset(processedRawData, jobName)
     nds <- generateNormalyzerDataset(lowCountSampleFiltered, jobName)
     
@@ -56,6 +58,7 @@ loadRawDataFromFile <- function(inputPath) {
             stop("Please provide a valid input file.")
         }
     )
+    
     rawData
 }
 
@@ -105,10 +108,12 @@ getReplicateSortedData <- function(rawData) {
     factor_levels <- levels(temp_df)
     temp_df <- NULL
 
+    # OK, this is the point to figure out. Get the negative RT first
+    # Or figure out more clever system
+    print(factor_levels)
+    stop("")
+    
     for (i in 1:length(factor_levels)) {
-        
-        print(paste("Iterating", i))
-        
         temp_df <- cbind(temp_df, rawData[, which(rawData[1,] == factor_levels[as.numeric(i)]), drop=FALSE])
     }
     

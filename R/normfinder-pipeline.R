@@ -31,7 +31,13 @@ normfinder <- function(nds) {
     filterrawdata1 <- nds@normfinderFilterRawData
     getEDdata <- nds@inputHeaderValues
     
-    gr <- getEDdata[-which(as.numeric(getEDdata) < 1)]
+    gr <- getEDdata[which(as.numeric(getEDdata) > 0)]
+    
+    # print(head(filterrawdata1))
+    # print(getEDdata)
+    # print(gr)
+    
+    # stop("")
     
     filnavn <- filterrawdata1[, which(as.numeric(filterrawdata1[1,]) > 0)]
     filnavn <- as.matrix(filnavn[-(1:2), ])

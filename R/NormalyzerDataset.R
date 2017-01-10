@@ -29,6 +29,7 @@ NormalyzerDataset <- setClass("NormalyzerDataset",
                                   meanofdata = "numeric",
                                   
                                   retentionTimes = "numeric",
+                                  annotationValues = "matrix",
                                   
                                   singleReplicateRun = "logical"
                               ),
@@ -46,6 +47,8 @@ setGeneric(name="setupValues", function(nds) standardGeneric("setupValues"))
 #' @rdname setupValues
 setMethod("setupValues", "NormalyzerDataset",
           function(nds) {
+              
+              
               
               # Detect single replicate, and assign related logical
               nonReplicatedSamples <- getNonReplicatedFromDf(nds@rawData)
@@ -76,21 +79,25 @@ setMethod("setupValues", "NormalyzerDataset",
               
               # Setup
               nds@inputHeaderValues <- nds@rawData[1, ]
-              
-              sampleRepStr <- nds@inputHeaderValues[-which(as.numeric(nds@inputHeaderValues) < 1)]
+              sampleRepStr <- nds@inputHeaderValues[which(as.numeric(nds@inputHeaderValues) > 0)]
               nds@sampleReplicateGroups <- as.numeric(sampleRepStr)
               
-              nds <- setupFilterRawData(nds)
+              nds@annotationValues <- nds@rawData[-1:-2, which(as.numeric(inputHeaderValues) < 1)]
               
+              print(head(nds@rawData))
+              print(inputHeaderValues)
+              print(as.numeric(inputHeaderValues) < 1)
+              print(head(nds@annotationValues))
+              stop("")
+
+              nds <- setupFilterRawData(nds)
               if (!nds@singleReplicateRun) {
                 nds <- setupNormfinderFilterRawData(nds)
               }
               
               nds@colsum <- colSums(nds@filterrawdata, na.rm=TRUE)
-              nds@medofdata <- apply(nds@filterrawdata, 2, 
-                                     FUN="median", na.rm=TRUE)
-              nds@meanofdata <- apply(nds@filterrawdata, 2, 
-                                      FUN="mean", na.rm=TRUE)
+              nds@medofdata <- apply(nds@filterrawdata, 2, FUN="median", na.rm=TRUE)
+              nds@meanofdata <- apply(nds@filterrawdata, 2, FUN="mean", na.rm=TRUE)
               
               # If present - extract RT column
               rt_annotations <- nds@inputHeaderValues[which(inputHeaderValues == "-1")]
@@ -105,10 +112,16 @@ setMethod("setupValues", "NormalyzerDataset",
                   print("RT annotation column found")
                   rtValues <- nds@rawData[, which(inputHeaderValues == "-1")][-1:-2]
                   
-                  print(as.numeric(rtValues))
+                  # print(as.numeric(rtValues))
                   
                   nds@retentionTimes <- as.numeric(rtValues)
               }
+              
+              print(head(nds@rawData))
+              print(head(nds@annotationValues))
+              stop("")
+              
+              
               
               nds
           }

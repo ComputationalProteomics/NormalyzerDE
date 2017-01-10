@@ -14,22 +14,45 @@ normMethods <- function(nds, currentjob, jobdir, forceAll=FALSE, normalizeRetent
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
 
+    annotationColumns 
+    
     for (sampleIndex in 1:length(methodnames)) {
         
-        utils::write.table(file=paste(jobdir, "/", 
-                                      methodnames[sampleIndex], 
-                                      "-normalized.txt", sep=""),
-                    cbind(nds@rawData[-(1:2), 1:(length(nds@inputHeaderValues) - length(nds@sampleReplicateGroups))],
-                          methodlist[[sampleIndex]]), sep="\t", row.names=FALSE, col.names=nds@rawData[2, ], quote=FALSE)
+        print(nds@rawData[2,])
+        print(head(nds@rawData))
+        
+        print(length(nds@inputHeaderValues) - length(nds@sampleReplicateGroups))
+        print(nds@inputHeaderValues)
+        print(nds@sampleReplicateGroups)
+        
+        filePath <- paste(jobdir, "/", methodnames[sampleIndex], "-normalized.txt", sep="")
+        outputTable <- methodlist[[sampleIndex]]
+        
+        utils::write.table(file=filePath, outputTable, sep="\t", row.names=FALSE, col.names=nds@rawData[2,], quote=FALSE)
+                
+                
+        # utils::write.table(file=paste(jobdir, "/", methodnames[sampleIndex], "-normalized.txt", sep=""),
+        #             cbind(nds@rawData[-(1:2), 1:(length(nds@inputHeaderValues) - length(nds@sampleReplicateGroups))], methodlist[[sampleIndex]]), 
+        #             sep="\t", row.names=FALSE, col.names=nds@rawData[2, ], quote=FALSE)
+        # cbind(nds@rawData[-(1:2), 1:(length(nds@inputHeaderValues) - length(nds@sampleReplicateGroups))],
+        #       methodlist[[sampleIndex]]), sep="\t", row.names=FALSE, col.names=nds@rawData[2, ], quote=FALSE)
+
+        # stop("")
+        
     }
     
     if (!all(is.na(nr@houseKeepingVars))) {
         utils::write.table(file=paste(jobdir, "/housekeeping-variables.txt", sep=""), nr@houseKeepingVars, sep="\t", row.names=FALSE, col.names=nds@rawData[2,], quote=FALSE)
     }
     
-    utils::write.table(file=paste(jobdir, "/submitted_rawdata.txt", sep=""), 
-                cbind(nds@rawData[-(1:2), 1:(length(nds@inputHeaderValues) - length(nds@sampleReplicateGroups))], nds@filterrawdata), sep="\t", row.names=FALSE,
-                col.names=nds@rawData[2, ], quote=FALSE)
+    rawFilePath <- paste(jobdir, "/submitted_rawdata.txt", sep="")
+    rawOutputTable <- nds@filterrawdata
+
+    utils::write.table(file=rawFilePath, rawOutputTable, col.names=nds@rawData[2,], quote=FALSE)
+        
+    # utils::write.table(file=paste(jobdir, "/submitted_rawdata.txt", sep=""), 
+    #             cbind(nds@rawData[-(1:2), 1:(length(nds@inputHeaderValues) - length(nds@sampleReplicateGroups))], nds@filterrawdata), sep="\t", row.names=FALSE,
+    #             col.names=nds@rawData[2, ], quote=FALSE)
 
     return(nr)
 }
