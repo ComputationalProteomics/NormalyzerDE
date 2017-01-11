@@ -104,7 +104,6 @@ generatePlots <- function(nr, jobdir) {
         plotDEPlots(nr, currentLayout, pageno)
     }
     
-    
     grDevices::dev.off()
 }
 

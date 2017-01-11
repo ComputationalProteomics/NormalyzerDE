@@ -13,23 +13,24 @@ normMethods <- function(nds, currentjob, jobdir, forceAll=FALSE, normalizeRetent
     
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
-
     annotationColumns <- nds@annotationValues
     
     for (sampleIndex in 1:length(methodnames)) {
         
         filePath <- paste(jobdir, "/", methodnames[sampleIndex], "-normalized.txt", sep="")
         outputTable <- cbind(annotationColumns, methodlist[[sampleIndex]])
-        
         utils::write.table(outputTable, file=filePath, sep="\t", row.names=FALSE, col.names=nds@rawData[2,], quote=FALSE)
-                
     }
     
     if (!all(is.na(nr@houseKeepingVars))) {
-        utils::write.table(file=paste(jobdir, "/housekeeping-variables.txt", sep=""), nr@houseKeepingVars, sep="\t", row.names=FALSE, col.names=nds@rawData[2,], quote=FALSE)
+        hkVarsName <- "housekeeping-variables.tsv"
+        hkFilePath <- paste(jobdir, "/", hkVarsName, sep="")
+        utils::write.table(file=hkFilePath, nr@houseKeepingVars, sep="\t", 
+                           row.names=FALSE, col.names=nds@rawData[2,], quote=FALSE)
     }
     
-    rawFilePath <- paste(jobdir, "/submitted_rawdata.txt", sep="")
+    rawdata_name <- "submitted_rawdata.tsv"
+    rawFilePath <- paste(jobdir, "/", rawdata_name, sep="")
     rawOutputTable <- cbind(annotationColumns, nds@filterrawdata)
 
     utils::write.table(rawOutputTable, file=rawFilePath, sep="\t", row.names=FALSE, col.names=nds@rawData[2,], quote=FALSE)

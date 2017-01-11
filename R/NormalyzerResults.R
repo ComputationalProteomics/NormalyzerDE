@@ -230,7 +230,7 @@ setMethod("initializeResultsObject", "NormalyzerResults",
 
 #' @rdname performNormalizations
 setMethod("performNormalizations", "NormalyzerResults",
-          function(nr, forceAll=FALSE, rtNorm=FALSE) {
+          function(nr, forceAll=FALSE) {
               
               nds <- nr@nds
               nr <- basicMetricNormalizations(nr)
@@ -263,7 +263,7 @@ setMethod("performNormalizations", "NormalyzerResults",
               }
               
               # TODO - Implement logic here
-              if (rtNorm) {
+              if (length(nds@retentionTimes) > 0) {
                   nr <- performRTNormalizations(nr)
               }
               
@@ -412,10 +412,6 @@ setMethod("performReplicateBasedNormalizations", "NormalyzerResults",
                 endColIndex <- lastIndices[sampleIndex]
                   
                 # Median based LR normalization
-                
-                # print(startColIndex)
-                # print(endColIndex)
-                
                 mediandata <- apply(nr@data2log2[, startColIndex:endColIndex], 1, "median", na.rm=TRUE)
                   
                 for (currentCol in startColIndex:endColIndex) {
