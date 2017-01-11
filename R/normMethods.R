@@ -14,7 +14,7 @@ normMethods <- function(nds, currentjob, jobdir, forceAll=FALSE, normalizeRetent
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
 
-    annotationColumns 
+    annotationColumns <- nds@annotationValues
     
     for (sampleIndex in 1:length(methodnames)) {
         
@@ -26,9 +26,9 @@ normMethods <- function(nds, currentjob, jobdir, forceAll=FALSE, normalizeRetent
         print(nds@sampleReplicateGroups)
         
         filePath <- paste(jobdir, "/", methodnames[sampleIndex], "-normalized.txt", sep="")
-        outputTable <- methodlist[[sampleIndex]]
+        outputTable <- cbind(annotationColumns, methodlist[[sampleIndex]])
         
-        utils::write.table(file=filePath, outputTable, sep="\t", row.names=FALSE, col.names=nds@rawData[2,], quote=FALSE)
+        utils::write.table(outputTable, file=filePath, sep="\t", row.names=FALSE, col.names=nds@rawData[2,], quote=FALSE)
                 
                 
         # utils::write.table(file=paste(jobdir, "/", methodnames[sampleIndex], "-normalized.txt", sep=""),
@@ -46,14 +46,16 @@ normMethods <- function(nds, currentjob, jobdir, forceAll=FALSE, normalizeRetent
     }
     
     rawFilePath <- paste(jobdir, "/submitted_rawdata.txt", sep="")
-    rawOutputTable <- nds@filterrawdata
+    rawOutputTable <- cbind(annotationColumns, nds@filterrawdata)
 
-    utils::write.table(file=rawFilePath, rawOutputTable, col.names=nds@rawData[2,], quote=FALSE)
+    utils::write.table(rawOutputTable, file=rawFilePath, sep="\t", row.names=FALSE, col.names=nds@rawData[2,], quote=FALSE)
         
     # utils::write.table(file=paste(jobdir, "/submitted_rawdata.txt", sep=""), 
     #             cbind(nds@rawData[-(1:2), 1:(length(nds@inputHeaderValues) - length(nds@sampleReplicateGroups))], nds@filterrawdata), sep="\t", row.names=FALSE,
     #             col.names=nds@rawData[2, ], quote=FALSE)
 
+    # stop("")
+    
     return(nr)
 }
 

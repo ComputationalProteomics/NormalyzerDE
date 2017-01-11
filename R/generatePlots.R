@@ -587,12 +587,33 @@ plotDensity <- function(nr, currentLayout, pageno) {
     graphics::par(mar=c(3, 2, 3, 1), oma=c(3, 2, 3, 2), xpd=NA)
     
     for (i in 1:length(methodlist)) {
-        datastore <- (methodlist[[i]])
+        datastore <- methodlist[[i]]
+        
+        # print(head(datastore))
+        # print(na.omit(datastore[,1]))
+        
         tempd <- stats::density(datastore[, 1], na.rm=TRUE)
-        graphics::plot(stats::density(datastore[, 1], na.rm=TRUE), xlab="", ylab="", ylim=c(min(tempd$y), max(tempd$y) * 1.5), main=methodnames[i], lty=2, lwd=1, col="darkgray")
+        graphics::plot(stats::density(datastore[, 1], na.rm=TRUE), xlab="", 
+                       ylab="", ylim=c(min(tempd$y), max(tempd$y) * 1.5), 
+                       main=methodnames[i], lty=2, lwd=1, col="darkgray")
+        
+        print(paste(i, "----------"))
         
         for (j in 2:ncol(datastore)) {
-            graphics::lines(stats::density(datastore[, j], na.rm=TRUE), , lty=2, lwd=1, col="darkgray")
+            
+            print(paste("j", j, "length", length(na.omit(datastore[,j])), "name", methodnames[j]))
+            # print(na.omit(datastore[, j]))
+            # print(paste("Length dataset: ", length(na.omit(datastore[,j]))))
+            # print(paste("Method name: ", methodnames[j]))
+            
+            if (methodnames[j] == "MedI-G") {
+                print(datastore[,j])
+            }
+            
+            graphics::lines(stats::density(datastore[, j], na.rm=TRUE), 
+                            , lty=2, lwd=1, col="darkgray")
+            
+            # print("after lines plot")
         }
     }
     

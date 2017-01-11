@@ -38,7 +38,7 @@ NormalyzerDataset <- setClass("NormalyzerDataset",
 
 #' Initialize values for dataset
 #'
-#' @param nds Normalyzer dataset.
+#' @param nds Normalyzer dataset
 #' @return None
 #' @rdname setupValues
 #' @export
@@ -48,8 +48,13 @@ setGeneric(name="setupValues", function(nds) standardGeneric("setupValues"))
 setMethod("setupValues", "NormalyzerDataset",
           function(nds) {
               
-              
-              
+              # print(paste("inputHeaderValues", paste(inputHeaderValues, collapse=" ")))
+              # print(paste("nds@rawData[1,]", nds@rawData[1,]))
+
+              # input
+                            
+              # stop("")
+                
               # Detect single replicate, and assign related logical
               nonReplicatedSamples <- getNonReplicatedFromDf(nds@rawData)
               if (length(nonReplicatedSamples) > 0) {
@@ -78,17 +83,22 @@ setMethod("setupValues", "NormalyzerDataset",
               }
               
               # Setup
-              nds@inputHeaderValues <- nds@rawData[1, ]
+              # nds@inputHeaderValues <- nds@rawData[1, ]
+              
+              nds@inputHeaderValues <- nds@rawData[1,]
+              
+              
+              
               sampleRepStr <- nds@inputHeaderValues[which(as.numeric(nds@inputHeaderValues) > 0)]
               nds@sampleReplicateGroups <- as.numeric(sampleRepStr)
               
-              nds@annotationValues <- nds@rawData[-1:-2, which(as.numeric(inputHeaderValues) < 1)]
+              nds@annotationValues <- nds@rawData[-1:-2, which(as.numeric(nds@inputHeaderValues) < 1)]
               
-              print(head(nds@rawData))
-              print(inputHeaderValues)
-              print(as.numeric(inputHeaderValues) < 1)
-              print(head(nds@annotationValues))
-              stop("")
+              # print(head(nds@rawData))
+              # print(nds@inputHeaderValues)
+              # print(as.numeric(nds@inputHeaderValues) < 1)
+              # print(head(nds@annotationValues))
+              # stop("")
 
               nds <- setupFilterRawData(nds)
               if (!nds@singleReplicateRun) {
@@ -100,7 +110,7 @@ setMethod("setupValues", "NormalyzerDataset",
               nds@meanofdata <- apply(nds@filterrawdata, 2, FUN="mean", na.rm=TRUE)
               
               # If present - extract RT column
-              rt_annotations <- nds@inputHeaderValues[which(inputHeaderValues == "-1")]
+              rt_annotations <- nds@inputHeaderValues[which(nds@inputHeaderValues == "-1")]
               
               if (length(rt_annotations) > 1) {
                   error_message <- paste(
@@ -110,16 +120,16 @@ setMethod("setupValues", "NormalyzerDataset",
               }
               else if (length(rt_annotations) == 1) {
                   print("RT annotation column found")
-                  rtValues <- nds@rawData[, which(inputHeaderValues == "-1")][-1:-2]
+                  rtValues <- nds@rawData[, which(nds@inputHeaderValues == "-1")][-1:-2]
                   
                   # print(as.numeric(rtValues))
                   
                   nds@retentionTimes <- as.numeric(rtValues)
               }
               
-              print(head(nds@rawData))
-              print(head(nds@annotationValues))
-              stop("")
+              # print(head(nds@rawData))
+              # print(head(nds@annotationValues))
+              # stop("")
               
               
               

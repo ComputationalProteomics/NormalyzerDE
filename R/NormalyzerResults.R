@@ -262,7 +262,7 @@ setMethod("performNormalizations", "NormalyzerResults",
                   }
               }
               
-              
+              # TODO - Implement logic here
               if (rtNorm) {
                   nr <- performRTNormalizations(nr)
               }
@@ -283,13 +283,19 @@ setMethod("basicMetricNormalizations", "NormalyzerResults",
             avgcolsum <- stats::median(nds@colsum)
             for (i in 1:nrow(nds@filterrawdata)) {
                 nr@data2GI[i, ] <- unlist(sapply(1:ncol(nds@filterrawdata), 
-                                                 function(zd) { (nds@filterrawdata[i, zd] / nds@colsum[zd]) * (avgcolsum) }))
+                                                 function(zd) { (nds@filterrawdata[i, zd] / nds@colsum[zd]) * avgcolsum }))
                 nr@data2med[i, ] <- unlist(sapply(1:ncol(nds@filterrawdata), 
                                                   function(zd) { (nds@filterrawdata[i, zd] / nds@medofdata[zd]) * mean(nds@medofdata) }))
                 nr@data2mean[i, ] <- unlist(sapply(1:ncol(nds@filterrawdata), 
                                                    function(zd) { (nds@filterrawdata[i, zd] / nds@meanofdata[zd]) * mean(nds@meanofdata) }))
-            } 
+            }
               
+            # print(avgcolsum)
+            # print(nds@medofdata)
+            # print(nds@meanofdata)
+            # print(nds@colsum)
+            # stop("")
+            
             nr@data2GI <- log2(nr@data2GI)
             nr@data2med <- log2(nr@data2med)
             nr@data2mean <- log2(nr@data2mean)
@@ -297,6 +303,11 @@ setMethod("basicMetricNormalizations", "NormalyzerResults",
             colnames(nr@data2med) <- colnames(nr@data2log2)
             colnames(nr@data2mean) <- colnames(nr@data2log2)
               
+            # print(head(nr@data2GI))
+            # print(head(nr@data2med))
+            # print(head(nr@data2mean))
+            # stop("")
+            
             nr
         }
 )
@@ -305,12 +316,24 @@ setMethod("basicMetricNormalizations", "NormalyzerResults",
 setMethod("calculateHKdataForNormObj", "NormalyzerResults",
         function(nr) {
               
+            # THIS IS WERE THE ISSUE IS
+            
             nds <- nr@nds
             filterrawdata <- nds@filterrawdata
-              
-            Hkvartemp <- as.matrix(nr@houseKeepingVars[, -(1:(length(nds@inputHeaderValues) - length(nds@sampleReplicateGroups)))])
-            class(Hkvartemp) <- "numeric"
-            colmedianctr <- apply(Hkvartemp, 2, FUN="mean")
+
+            print(-(1:(length(nds@inputHeaderValues) - length(nds@sampleReplicateGroups))))
+
+            print(head(nr@houseKeepingVars))
+            
+            # HKVarTemp <- as.matrix(nr@houseKeepingVars[, -(1:(length(nds@inputHeaderValues) - length(nds@sampleReplicateGroups)))])
+            HKVarTemp <- as.matrix(nr@houseKeepingVars[, which(as.numeric(nds@inputHeaderValues) > 0)])
+
+            print(head(HKVarTemp))
+                        
+            # stop("")
+            
+            class(HKVarTemp) <- "numeric"
+            colmedianctr <- apply(HKVarTemp, 2, FUN="mean")
               
             for(i in 1:nrow(filterrawdata)) {
                 nr@data2ctr[i,] <- unlist(sapply(1:ncol(filterrawdata), 
@@ -398,7 +421,10 @@ setMethod("performReplicateBasedNormalizations", "NormalyzerResults",
               
             sampleReplicateGroups <- nds@sampleReplicateGroups
             filterrawdata <- nds@filterrawdata
-              
+
+            # print(sampleReplicateGroups)
+            # stop("")
+            
             firstIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=FALSE)
             lastIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=TRUE)
               

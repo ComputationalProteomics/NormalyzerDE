@@ -103,20 +103,13 @@ verifyValidNumbers <- function(normalyzerDfAll) {
 #' @return rawData sorted on replicate
 getReplicateSortedData <- function(rawData) {
 
-    temp_df <- NULL
-    temp_df <- as.factor(rawData[1, ])
-    factor_levels <- levels(temp_df)
+    factor_levels <- sort(as.numeric(unique(rawData[1,])))
     temp_df <- NULL
 
-    # OK, this is the point to figure out. Get the negative RT first
-    # Or figure out more clever system
-    print(factor_levels)
-    stop("")
-    
     for (i in 1:length(factor_levels)) {
         temp_df <- cbind(temp_df, rawData[, which(rawData[1,] == factor_levels[as.numeric(i)]), drop=FALSE])
     }
-    
+
     temp_df
 }
 
@@ -152,7 +145,6 @@ getLowCountSampleFiltered <- function(dfWithNAs, threshold=15, stopIfTooFew=TRUE
         
         sampleIndex <- sampleIndices[i]
         numberOfValues[i] <- length(na.omit(rawData[,sampleIndex]))
-        print(paste("Number found: ", numberOfValues[i]))
     }
     
     notPassingThreshold <- which(numberOfValues < threshold)
