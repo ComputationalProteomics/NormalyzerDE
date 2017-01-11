@@ -24,22 +24,6 @@ generateNormalyzerResultsObject <- function(nds) {
     nr
 }
 
-#' Retrieve vector with tags for used global normalization methods
-#' 
-#' @param houseKeepingFlag Boolean telling whether house-keeing normalization 
-#' is used
-#' @return Vector with string names for normalization tags
-# getMethodNames <- function(houseKeepingFlag) {
-# 
-#     if (houseKeepingFlag) {
-#         methodnames <- c("Log2", "TI-G", "MedI-G", "AI-G", "NF-G")
-#     }
-#     else {
-#         methodnames <- c("Log2", "TI-G", "MedI-G", "AI-G")
-#     }
-#     methodnames
-# }
-
 #' Retrieve indices for first or last occurences in vector with replicated 
 #' elements
 #' 

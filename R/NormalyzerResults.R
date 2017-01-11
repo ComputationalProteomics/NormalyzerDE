@@ -437,6 +437,7 @@ setMethod("performReplicateBasedNormalizations", "NormalyzerResults",
 setMethod("performRTNormalizations", "NormalyzerResults",
           function(nr, stepSizeMinutes) {
               
+              
               print(stepSizeMinutes)
               
               nds <- nr@nds
@@ -451,24 +452,42 @@ setMethod("performRTNormalizations", "NormalyzerResults",
                   
                   windowEnd <- windowStart + stepSizeMinutes
                   sliceRows <- which(nds@retentionTimes >= windowStart & nds@retentionTimes < windowEnd)
-                  
                   rowNumbers <- c(rowNumbers, sliceRows)
                   
+                  currentRows <- nds@filterrawdata[sliceRows,]
+                  normalizedRow <- medianSortData(currentRows)
+
                   if (isFirstSample) {
-                      dataRows <- nds@filterrawdata[sliceRows,]
+                      dataRows <- normalizedRow
                       isFirstSample <- FALSE
                   }
                   else {
-                      dataRows <- rbind(dataRows, nds@filterrawdata[sliceRows,])
+                      dataRows <- rbind(dataRows, normalizedRow)
                   }
               }
+              
+              print(dataRows)
 
               # Keep track of original ordering
               orderedDataRows <- dataRows[order(rowNumbers),]
-              
               nr@data2rt <- orderedDataRows
               nr
           })
+
+medianSortData <- function(rawDf) {
+    
+    medOfData <- apply(rawDf, 2, FUN="median", na.rm=TRUE)
+    medSortDf <- matrix(ncol=ncol(rawDf), nrow=nrow(rawDf))
+    
+    for (i in 1:nrow(rawDf)) {
+        
+        medSortDf[i,] <- unlist(sapply(1:ncol(rawDf), 
+                                       function(zd) { (rawDf[i, zd] / medOfData[zd]) * mean(na.omit(medOfData)) }))
+            
+    }
+    
+    medSortDf
+}
 
 #' @rdname getUsedMethodNames
 setMethod("getUsedMethodNames", "NormalyzerResults",
