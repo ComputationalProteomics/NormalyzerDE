@@ -28,9 +28,9 @@ NormalyzerDataset <- setClass("NormalyzerDataset",
                                   medofdata = "numeric",
                                   meanofdata = "numeric",
                                   
-                                  retentionTimes = "numeric",
                                   annotationValues = "matrix",
-                                  
+                                  retentionTimes = "numeric",
+                                                                    
                                   singleReplicateRun = "logical"
                               ),
                               prototype=prototype(jobName=NULL, 
@@ -177,7 +177,9 @@ setMethod("setupRTColumn", "NormalyzerDataset",
               }
               else if (length(rt_annotations) == 1) {
                   print("RT annotation column found")
+                  
                   rtValues <- nds@rawData[, which(nds@inputHeaderValues == "-1")][-1:-2]
+                  filterRtValues <- nds@filterrawdata[, which(nds@inputHeaderValues == "-1")]
                   
                   nds@retentionTimes <- as.numeric(rtValues)
               }
@@ -205,11 +207,11 @@ setMethod("setupFilterRawData", "NormalyzerDataset",
               fullSampleHead <- nds@inputHeaderValues
               sampleDataWithHead <- nds@rawData[, which(as.numeric(fullSampleHead) > 0), drop=FALSE]
               
-              filterRawData <- as.matrix(sampleDataWithHead[-(1:2),, drop=FALSE ])
+              filterRawData <- as.matrix(sampleDataWithHead[-(1:2),, drop=FALSE])
               class(filterRawData) <- "numeric"
               
               nds@filterrawdata <- filterRawData
-              
+
               nds
           }
 )

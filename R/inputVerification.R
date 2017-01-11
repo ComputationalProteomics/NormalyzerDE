@@ -11,27 +11,20 @@ getVerifiedNormalyzerObject <- function(inputPath, jobName, threshold=15,
 
     rawData <- loadRawDataFromFile(inputPath)
     
-    print(head(rawData))
-    
     verifyValidNumbers(rawData)
     
     repSortedRawData <- getReplicateSortedData(rawData)
-    # verifySampleReplication(repSortedRawData)  # This is the way to do it!
     processedRawData <- preprocessData(repSortedRawData)
-    
     
     lowCountSampleFiltered <- getLowCountSampleFiltered(processedRawData, 
                                                         threshold=threshold, 
                                                         stopIfTooFew=!omitSamples)
     
-    
     # If no samples left after omitting, stop
     verifyMultipleSamplesPresent(lowCountSampleFiltered, requireReplicates=requireReplicates)
     validateSampleReplication(lowCountSampleFiltered, requireReplicates=requireReplicates)
     
-    # nds <- generateNormalyzerDataset(processedRawData, jobName)
     nds <- generateNormalyzerDataset(lowCountSampleFiltered, jobName)
-    
     
     nds
 }

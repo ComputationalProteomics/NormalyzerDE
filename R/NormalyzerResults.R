@@ -9,7 +9,8 @@ slotNames <- c("data2log2",
                "data2med",
                "data2mean",
                "data2ctrlog",
-               "data2quantile")
+               "data2quantile",
+               "data2rt")
 
 outputNames <- c("Log2",
                  "Loess-R",
@@ -22,7 +23,8 @@ outputNames <- c("Log2",
                  "MedI-G",
                  "AI-G",
                  "NF-G",
-                 "Quantile")
+                 "Quantile",
+                 "RT-test")
 
 #' S4 class to represent dataset information
 #' 
@@ -97,7 +99,7 @@ setGeneric(name="initializeResultsObject",
 #' @rdname performNormalizations
 #' @export
 setGeneric(name="performNormalizations", 
-           function(nr, forceAll=FALSE, rtNorm=FALSE) standardGeneric("performNormalizations"))
+           function(nr, forceAll, rtNorm, rtWindow) standardGeneric("performNormalizations"))
 
 #' Generate basic metrics normalizations
 #'
@@ -174,11 +176,12 @@ setGeneric(name="performReplicateBasedNormalizations",
 #' Perform retention time normalizations
 #'
 #' @param nr Normalyzer results object.
+#' @param stepSize Normalyzer results object.
 #' @return None
 #' @rdname performRTNormalizations
 #' @export
 setGeneric(name="performRTNormalizations", 
-           function(nr) standardGeneric("performRTNormalizations"))
+           function(nr, stepSizeMinutes) standardGeneric("performRTNormalizations"))
 
 #' Get vector of labels for used methods
 #'
@@ -230,10 +233,11 @@ setMethod("initializeResultsObject", "NormalyzerResults",
 
 #' @rdname performNormalizations
 setMethod("performNormalizations", "NormalyzerResults",
-          function(nr, forceAll=FALSE) {
+          function(nr, forceAll=FALSE, rtNorm=FALSE, rtWindow=0.1) {
               
               nds <- nr@nds
               nr <- basicMetricNormalizations(nr)
+              doRt <- length(nds@retentionTimes) > 0
               
               if (nrow(nds@normfinderFilterRawData) < nr@normfinderMaxThreshold || forceAll) {
                   
@@ -254,7 +258,7 @@ setMethod("performNormalizations", "NormalyzerResults",
                   nr <- performGlobalRLRNormalization(nr)
                   
                   ## NORMALIZATION within REPLICATES RLR, VSN and Loess
-                  if (!nds@singleReplicateRun) {
+                  if (!nds@singleReplicateRun && !doRt) {
                       nr <- performReplicateBasedNormalizations(nr)
                   }
                   else {
@@ -262,13 +266,10 @@ setMethod("performNormalizations", "NormalyzerResults",
                   }
               }
               
-              # TODO - Implement logic here
-              if (length(nds@retentionTimes) > 0) {
-                  nr <- performRTNormalizations(nr)
+              if (doRt) {
+                  nr <- performRTNormalizations(nr, rtWindow)
               }
-              
-              
-              
+
               nr
           }
 )
@@ -405,41 +406,67 @@ setMethod("performReplicateBasedNormalizations", "NormalyzerResults",
             nr@fittedLR <- matrix(, nrow=nrow(filterrawdata), ncol=0)
             nr@data2limloess <- matrix(, nrow=nrow(filterrawdata), ncol=0)
             nr@data2vsnrep <- matrix(, nrow=nrow(filterrawdata), ncol=0)
-              
+
             for (sampleIndex in 1:length(firstIndices)) {
-                  
+
                 startColIndex <- firstIndices[sampleIndex]
                 endColIndex <- lastIndices[sampleIndex]
-                  
+
                 # Median based LR normalization
                 mediandata <- apply(nr@data2log2[, startColIndex:endColIndex], 1, "median", na.rm=TRUE)
-                  
+
                 for (currentCol in startColIndex:endColIndex) {
-                      
+
                     LRfit <- MASS::rlm(as.matrix(nr@data2log2[, currentCol])~mediandata, na.action=stats::na.exclude)
                     LRcoeffs <- LRfit$coefficients
                     nr@fittedLR <- cbind(nr@fittedLR, (nr@data2log2[, currentCol] - LRcoeffs[1]) / LRcoeffs[2])
                 }
-                  
+
                 nr@data2limloess <- cbind(nr@data2limloess, limma::normalizeCyclicLoess(nr@data2log2[, startColIndex:endColIndex], method="fast"))
                 nr@data2vsnrep <- cbind(nr@data2vsnrep, vsn::justvsn(as.matrix(filterrawdata[, startColIndex:endColIndex])))
             }
-              
+
             colnames(nr@fittedLR) <- colnames(nr@data2log2)
             colnames(nr@data2limloess) <- colnames(nr@data2log2)
             colnames(nr@data2vsnrep) <- colnames(nr@data2log2)
-              
+
             nr
         })
 
 #' @rdname performRTNormalizations
 setMethod("performRTNormalizations", "NormalyzerResults",
-          function(nr) {
+          function(nr, stepSizeMinutes) {
               
+              print(stepSizeMinutes)
               
+              nds <- nr@nds
               
-              stop("Retention time done")
+              startVal <- min(na.omit(nds@retentionTimes))
+              endVal <- max(na.omit(nds@retentionTimes))
               
+              rowNumbers <- c()
+              isFirstSample <- TRUE
+              
+              for (windowStart in seq(startVal, endVal, stepSizeMinutes)) {
+                  
+                  windowEnd <- windowStart + stepSizeMinutes
+                  sliceRows <- which(nds@retentionTimes >= windowStart & nds@retentionTimes < windowEnd)
+                  
+                  rowNumbers <- c(rowNumbers, sliceRows)
+                  
+                  if (isFirstSample) {
+                      dataRows <- nds@filterrawdata[sliceRows,]
+                      isFirstSample <- FALSE
+                  }
+                  else {
+                      dataRows <- rbind(dataRows, nds@filterrawdata[sliceRows,])
+                  }
+              }
+
+              # Keep track of original ordering
+              orderedDataRows <- dataRows[order(rowNumbers),]
+              
+              nr@data2rt <- orderedDataRows
               nr
           })
 
@@ -497,4 +524,6 @@ setMethod("getNormalizationMatrices", "NormalyzerResults",
             
             methodDataList
         })
+
+
 

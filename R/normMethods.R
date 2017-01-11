@@ -6,35 +6,11 @@
 #' @return Returns Normalyzer results object with performed analyzes assigned
 #'  as attributes
 #' @export
-normMethods <- function(nds, currentjob, jobdir, forceAll=FALSE, normalizeRetentionTime=FALSE) {
+normMethods <- function(nds, currentjob, forceAll=FALSE, normalizeRetentionTime=FALSE, retentionTimeWindow=0.1) {
 
     nr <- generateNormalyzerResultsObject(nds)
-    nr <- performNormalizations(nr, forceAll=forceAll, rtNorm=normalizeRetentionTime)
+    nr <- performNormalizations(nr, forceAll=forceAll, rtNorm=normalizeRetentionTime, rtWindow=retentionTimeWindow)
     
-    methodnames <- getUsedMethodNames(nr)
-    methodlist <- getNormalizationMatrices(nr)
-    annotationColumns <- nds@annotationValues
-    
-    for (sampleIndex in 1:length(methodnames)) {
-        
-        filePath <- paste(jobdir, "/", methodnames[sampleIndex], "-normalized.txt", sep="")
-        outputTable <- cbind(annotationColumns, methodlist[[sampleIndex]])
-        utils::write.table(outputTable, file=filePath, sep="\t", row.names=FALSE, col.names=nds@rawData[2,], quote=FALSE)
-    }
-    
-    if (!all(is.na(nr@houseKeepingVars))) {
-        hkVarsName <- "housekeeping-variables.tsv"
-        hkFilePath <- paste(jobdir, "/", hkVarsName, sep="")
-        utils::write.table(file=hkFilePath, nr@houseKeepingVars, sep="\t", 
-                           row.names=FALSE, col.names=nds@rawData[2,], quote=FALSE)
-    }
-    
-    rawdata_name <- "submitted_rawdata.tsv"
-    rawFilePath <- paste(jobdir, "/", rawdata_name, sep="")
-    rawOutputTable <- cbind(annotationColumns, nds@filterrawdata)
-
-    utils::write.table(rawOutputTable, file=rawFilePath, sep="\t", row.names=FALSE, col.names=nds@rawData[2,], quote=FALSE)
-        
     return(nr)
 }
 
@@ -53,16 +29,16 @@ generateNormalyzerResultsObject <- function(nds) {
 #' @param houseKeepingFlag Boolean telling whether house-keeing normalization 
 #' is used
 #' @return Vector with string names for normalization tags
-getMethodNames <- function(houseKeepingFlag) {
-
-    if (houseKeepingFlag) {
-        methodnames <- c("Log2", "TI-G", "MedI-G", "AI-G", "NF-G")
-    }
-    else {
-        methodnames <- c("Log2", "TI-G", "MedI-G", "AI-G")
-    }
-    methodnames
-}
+# getMethodNames <- function(houseKeepingFlag) {
+# 
+#     if (houseKeepingFlag) {
+#         methodnames <- c("Log2", "TI-G", "MedI-G", "AI-G", "NF-G")
+#     }
+#     else {
+#         methodnames <- c("Log2", "TI-G", "MedI-G", "AI-G")
+#     }
+#     methodnames
+# }
 
 #' Retrieve indices for first or last occurences in vector with replicated 
 #' elements
@@ -102,6 +78,42 @@ getFirstIndicesInVector <- function(targetVector, reverse=FALSE) {
     }
     
     firstIndices
+}
+
+#' Write normalization matrices to file
+#' 
+#' @param nr Normalyzer results 
+#' @return None
+writeNormalizedDatasets <- function(nr, jobdir) {
+    
+    nds <- nr@nds
+    methodnames <- getUsedMethodNames(nr)
+    methodlist <- getNormalizationMatrices(nr)
+    annotationColumns <- nds@annotationValues
+    
+    # print(head(annotationColumns))
+    # stop("")
+    
+    for (sampleIndex in 1:length(methodnames)) {
+        
+        currentMethod <- methodnames[sampleIndex]
+        filePath <- paste(jobdir, "/", currentMethod, "-normalized.txt", sep="")
+        outputTable <- cbind(annotationColumns, methodlist[[sampleIndex]])
+        utils::write.table(outputTable, file=filePath, sep="\t", row.names=FALSE, col.names=nds@rawData[2,], quote=FALSE)
+    }
+    
+    if (!all(is.na(nr@houseKeepingVars))) {
+        hkVarsName <- "housekeeping-variables.tsv"
+        hkFilePath <- paste(jobdir, "/", hkVarsName, sep="")
+        utils::write.table(file=hkFilePath, nr@houseKeepingVars, sep="\t", 
+                           row.names=FALSE, col.names=nds@rawData[2,], quote=FALSE)
+    }
+    
+    rawdata_name <- "submitted_rawdata.tsv"
+    rawFilePath <- paste(jobdir, "/", rawdata_name, sep="")
+    rawOutputTable <- cbind(annotationColumns, nds@filterrawdata)
+    
+    utils::write.table(rawOutputTable, file=rawFilePath, sep="\t", row.names=FALSE, col.names=nds@rawData[2,], quote=FALSE)
 }
 
 
