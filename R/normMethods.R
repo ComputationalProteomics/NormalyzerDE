@@ -18,27 +18,11 @@ normMethods <- function(nds, currentjob, jobdir, forceAll=FALSE, normalizeRetent
     
     for (sampleIndex in 1:length(methodnames)) {
         
-        print(nds@rawData[2,])
-        print(head(nds@rawData))
-        
-        print(length(nds@inputHeaderValues) - length(nds@sampleReplicateGroups))
-        print(nds@inputHeaderValues)
-        print(nds@sampleReplicateGroups)
-        
         filePath <- paste(jobdir, "/", methodnames[sampleIndex], "-normalized.txt", sep="")
         outputTable <- cbind(annotationColumns, methodlist[[sampleIndex]])
         
         utils::write.table(outputTable, file=filePath, sep="\t", row.names=FALSE, col.names=nds@rawData[2,], quote=FALSE)
                 
-                
-        # utils::write.table(file=paste(jobdir, "/", methodnames[sampleIndex], "-normalized.txt", sep=""),
-        #             cbind(nds@rawData[-(1:2), 1:(length(nds@inputHeaderValues) - length(nds@sampleReplicateGroups))], methodlist[[sampleIndex]]), 
-        #             sep="\t", row.names=FALSE, col.names=nds@rawData[2, ], quote=FALSE)
-        # cbind(nds@rawData[-(1:2), 1:(length(nds@inputHeaderValues) - length(nds@sampleReplicateGroups))],
-        #       methodlist[[sampleIndex]]), sep="\t", row.names=FALSE, col.names=nds@rawData[2, ], quote=FALSE)
-
-        # stop("")
-        
     }
     
     if (!all(is.na(nr@houseKeepingVars))) {
@@ -50,12 +34,6 @@ normMethods <- function(nds, currentjob, jobdir, forceAll=FALSE, normalizeRetent
 
     utils::write.table(rawOutputTable, file=rawFilePath, sep="\t", row.names=FALSE, col.names=nds@rawData[2,], quote=FALSE)
         
-    # utils::write.table(file=paste(jobdir, "/submitted_rawdata.txt", sep=""), 
-    #             cbind(nds@rawData[-(1:2), 1:(length(nds@inputHeaderValues) - length(nds@sampleReplicateGroups))], nds@filterrawdata), sep="\t", row.names=FALSE,
-    #             col.names=nds@rawData[2, ], quote=FALSE)
-
-    # stop("")
-    
     return(nr)
 }
 

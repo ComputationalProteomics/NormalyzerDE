@@ -289,25 +289,14 @@ setMethod("basicMetricNormalizations", "NormalyzerResults",
                 nr@data2mean[i, ] <- unlist(sapply(1:ncol(nds@filterrawdata), 
                                                    function(zd) { (nds@filterrawdata[i, zd] / nds@meanofdata[zd]) * mean(nds@meanofdata) }))
             }
-              
-            # print(avgcolsum)
-            # print(nds@medofdata)
-            # print(nds@meanofdata)
-            # print(nds@colsum)
-            # stop("")
-            
+
             nr@data2GI <- log2(nr@data2GI)
             nr@data2med <- log2(nr@data2med)
             nr@data2mean <- log2(nr@data2mean)
             colnames(nr@data2GI) <- colnames(nr@data2log2)
             colnames(nr@data2med) <- colnames(nr@data2log2)
             colnames(nr@data2mean) <- colnames(nr@data2log2)
-              
-            # print(head(nr@data2GI))
-            # print(head(nr@data2med))
-            # print(head(nr@data2mean))
-            # stop("")
-            
+
             nr
         }
 )
@@ -316,22 +305,10 @@ setMethod("basicMetricNormalizations", "NormalyzerResults",
 setMethod("calculateHKdataForNormObj", "NormalyzerResults",
         function(nr) {
               
-            # THIS IS WERE THE ISSUE IS
-            
             nds <- nr@nds
             filterrawdata <- nds@filterrawdata
 
-            print(-(1:(length(nds@inputHeaderValues) - length(nds@sampleReplicateGroups))))
-
-            print(head(nr@houseKeepingVars))
-            
-            # HKVarTemp <- as.matrix(nr@houseKeepingVars[, -(1:(length(nds@inputHeaderValues) - length(nds@sampleReplicateGroups)))])
             HKVarTemp <- as.matrix(nr@houseKeepingVars[, which(as.numeric(nds@inputHeaderValues) > 0)])
-
-            print(head(HKVarTemp))
-                        
-            # stop("")
-            
             class(HKVarTemp) <- "numeric"
             colmedianctr <- apply(HKVarTemp, 2, FUN="mean")
               
@@ -388,9 +365,7 @@ setMethod("performGlobalRLRNormalization", "NormalyzerResults",
             isFirstSample <- TRUE
               
             for (j in 1:ncol(nr@data2log2)) {
-                  
-                # print(sprintf("Index: %i", j))
-                  
+
                 lrFit <- MASS::rlm(as.matrix(nr@data2log2[, j])~mediandata, na.action=stats::na.exclude)
                 coeffs <- lrFit$coefficients
                 coeffs2 <- coeffs[2]
@@ -422,9 +397,6 @@ setMethod("performReplicateBasedNormalizations", "NormalyzerResults",
             sampleReplicateGroups <- nds@sampleReplicateGroups
             filterrawdata <- nds@filterrawdata
 
-            # print(sampleReplicateGroups)
-            # stop("")
-            
             firstIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=FALSE)
             lastIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=TRUE)
               
