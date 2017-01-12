@@ -119,51 +119,6 @@ setGeneric(name="basicMetricNormalizations",
 setGeneric(name="calculateHKdataForNormObj", 
            function(nr) standardGeneric("calculateHKdataForNormObj"))
 
-#' Generate VSN normalization
-#'
-#' @param nr Normalyzer results object.
-#' @return None
-#' @rdname performVSNNormalization
-#' @export
-setGeneric(name="performVSNNormalization", 
-           function(nr) standardGeneric("performVSNNormalization"))
-
-#' Generate quantile normalization
-#'
-#' @param nr Normalyzer results object.
-#' @return None
-#' @rdname performQuantileNormalization
-#' @export
-setGeneric(name="performQuantileNormalization", 
-           function(nr) standardGeneric("performQuantileNormalization"))
-
-#' Generate SMAD normalization
-#'
-#' @param nr Normalyzer results object.
-#' @return None
-#' @rdname performSMADNormalization
-#' @export
-setGeneric(name="performSMADNormalization", 
-           function(nr) standardGeneric("performSMADNormalization"))
-
-#' Generate cyclic Loess normalization
-#'
-#' @param nr Normalyzer results object.
-#' @return None
-#' @rdname performCyclicLoessNormalization
-#' @export
-setGeneric(name="performCyclicLoessNormalization", 
-           function(nr) standardGeneric("performCyclicLoessNormalization"))
-
-#' Generate global RLR normalization
-#'
-#' @param nr Normalyzer results object.
-#' @return None
-#' @rdname performGlobalRLRNormalization
-#' @export
-setGeneric(name="performGlobalRLRNormalization", 
-           function(nr) standardGeneric("performGlobalRLRNormalization"))
-
 #' Generate replicate based normalizations
 #'
 #' @param nr Normalyzer results object.
@@ -218,14 +173,14 @@ setMethod("initializeResultsObject", "NormalyzerResults",
               nds <- nr@nds
               
               nr@data2log2 <- log2(nds@filterrawdata)
-              nr@data2GI <- matrix(nrow=nrow(nds@filterrawdata), 
-                                   ncol=ncol(nds@filterrawdata), byrow=TRUE)
-              nr@data2ctr <- matrix(nrow=nrow(nds@filterrawdata), 
+              # nr@data2GI <- matrix(nrow=nrow(nds@filterrawdata),
+              #                      ncol=ncol(nds@filterrawdata), byrow=TRUE)
+              nr@data2ctr <- matrix(nrow=nrow(nds@filterrawdata),
                                     ncol=ncol(nds@filterrawdata), byrow=TRUE)
-              nr@data2med <- matrix(nrow=nrow(nds@filterrawdata), 
-                                    ncol=ncol(nds@filterrawdata), byrow=TRUE) 
-              nr@data2mean <- matrix(nrow=nrow(nds@filterrawdata), 
-                                     ncol=ncol(nds@filterrawdata), byrow=TRUE)
+              # nr@data2med <- matrix(nrow=nrow(nds@filterrawdata),
+              #                       ncol=ncol(nds@filterrawdata), byrow=TRUE)
+              # nr@data2mean <- matrix(nrow=nrow(nds@filterrawdata),
+              #                        ncol=ncol(nds@filterrawdata), byrow=TRUE)
               
               nr
           }
@@ -251,17 +206,17 @@ setMethod("performNormalizations", "NormalyzerResults",
               }
               
               if (nrow(nds@filterrawdata) > nr@furtherNormalizationMinThreshold || forceAll) {
-                  nr <- performVSNNormalization(nr)
-                  nr <- performQuantileNormalization(nr)
-                  nr <- performSMADNormalization(nr)
-                  nr <- performCyclicLoessNormalization(nr)
-                  nr <- performGlobalRLRNormalization(nr)
                   
-                  ## NORMALIZATION within REPLICATES RLR, VSN and Loess
+                  nr@data2vsn <- performVSNNormalization(nds@filterrawdata)
+                  nr@data2quantile <- performQuantileNormalization(nds@filterrawdata)
+                  nr@data2mad <- performSMADNormalization(nds@filterrawdata)
+                  nr@data2loess <- performCyclicLoessNormalization(nds@filterrawdata)
+                  nr@globalfittedRLR <- performGlobalRLRNormalization(nds@filterrawdata)
+                  
                   if (!nds@singleReplicateRun && !doRt) {
                       nr <- performReplicateBasedNormalizations(nr)
                   }
-                  else {
+                  else if (nds@singleReplicateRun) {
                       print("Processing in single replicate mode, replicate based normalizations are omitted")
                   }
               }
@@ -278,54 +233,10 @@ setMethod("performNormalizations", "NormalyzerResults",
 setMethod("basicMetricNormalizations", "NormalyzerResults",
           function(nr) {
 
-            ## Normalizing using average sample sum, sample mean and sample median
-              
             nds <- nr@nds
-
-            # avgcolsum <- stats::median(nds@colsum)
-            # for (i in 1:nrow(nds@filterrawdata)) {
-            #     nr@data2GI[i, ] <- unlist(sapply(1:ncol(nds@filterrawdata), 
-            #                                      function(zd) { (nds@filterrawdata[i, zd] / nds@colsum[zd]) * avgcolsum }))
-            #     nr@data2med[i, ] <- unlist(sapply(1:ncol(nds@filterrawdata), 
-            #                                       function(zd) { (nds@filterrawdata[i, zd] / nds@medofdata[zd]) * mean(nds@medofdata) }))
-            #     nr@data2mean[i, ] <- unlist(sapply(1:ncol(nds@filterrawdata), 
-            #                                        function(zd) { (nds@filterrawdata[i, zd] / nds@meanofdata[zd]) * mean(nds@meanofdata) }))
-            # }
-
-            # nr@data2GI <- log2(nr@data2GI)
-            # nr@data2med <- log2(nr@data2med)
-            # nr@data2mean <- log2(nr@data2mean)
-            # colnames(nr@data2GI) <- colnames(nr@data2log2)
-            # colnames(nr@data2med) <- colnames(nr@data2log2)
-            # colnames(nr@data2mean) <- colnames(nr@data2log2)
-
             nr@data2GI <- globalIntensityNormalization(nds@filterrawdata)
             nr@data2med <- medianNormalization(nds@filterrawdata)
             nr@data2mean <- meanNormalization(nds@filterrawdata)
-            
-            # print("nr@data2GI")
-            # print(tail(nr@data2GI))
-            # 
-            # print("globIntNorm")
-            # globIntNorm <- globalIntensityNormalization(nds@filterrawdata)
-            # print(tail(globIntNorm))
-            # 
-            # print("nr@data2med")
-            # print(tail(nr@data2med))
-            # 
-            # print("medianNormalization")
-            # medianNorm <- medianNormalization(nds@filterrawdata)
-            # print(tail(medianNorm))
-            # 
-            # print("nr@data2mean")
-            # print(tail(nr@data2mean))
-            # 
-            # print("meanNormalization")
-            # meanNormalization <- meanNormalization(nds@filterrawdata)
-            # print(tail(meanNormalization))
-                        
-            # stop("")
-            
             nr
         }
 )
@@ -352,80 +263,6 @@ setMethod("calculateHKdataForNormObj", "NormalyzerResults",
             nr
         })
 
-#' @rdname performVSNNormalization
-setMethod("performVSNNormalization", "NormalyzerResults",
-        function(nr) {
-            nds <- nr@nds
-            filterrawdata <- nds@filterrawdata
-            nr@data2vsn <- vsn::justvsn(filterrawdata)
-            nr
-        })
-
-#' @rdname performQuantileNormalization
-setMethod("performQuantileNormalization", "NormalyzerResults",
-        function(nr) {
-            stopifnot(!is.null(nr@data2log2))
-              
-            nr@data2quantile <- preprocessCore::normalize.quantiles(nr@data2log2, copy=TRUE)
-            nr
-        })
-
-#' @rdname performSMADNormalization
-setMethod("performSMADNormalization", "NormalyzerResults",
-        function(nr) {
-            mediandata <- apply(nr@data2log2, 2, "median", na.rm=TRUE)
-            maddata <- apply(nr@data2log2, 2, function(x) stats::mad(x, na.rm=TRUE))
-            nr@data2mad <- t(apply(nr@data2log2, 1, function(x) ((x - mediandata) / maddata)))
-            
-            print(head(nr@data2mad))
-            
-            nr@data2mad <- nr@data2mad + mean(mediandata)
-            
-            # print(head(mediandata))
-            # print(head(maddata))
-            # print(head(nr@data2mad))
-            # 
-            # stop("")
-            
-            nr
-        })
-
-#' @rdname performCyclicLoessNormalization
-setMethod("performCyclicLoessNormalization", "NormalyzerResults",
-        function(nr) {
-            nr@data2loess <- limma::normalizeCyclicLoess(nr@data2log2, method="fast")
-            nr
-        })
-
-#' @rdname performGlobalRLRNormalization
-setMethod("performGlobalRLRNormalization", "NormalyzerResults",
-        function(nr) {
-            log2Median <- apply(nr@data2log2, 1, "median", na.rm=TRUE)
-            isFirstSample <- TRUE
-              
-            for (j in 1:ncol(nr@data2log2)) {
-
-                lrFit <- MASS::rlm(as.matrix(nr@data2log2[, j])~log2Median, na.action=stats::na.exclude)
-                coeffs <- lrFit$coefficients
-                coeffs2 <- coeffs[2]
-                coeffs1 <- coeffs[1]
-                  
-                if (isFirstSample) {
-                    value_to_assign <- (nr@data2log2[, j] - coeffs1) / coeffs2
-                    globalfittedRLR <- (nr@data2log2[, j] - coeffs1) / coeffs2
-                    isFirstSample <- FALSE
-                }
-                else {
-                    globalfittedRLR <- cbind(globalfittedRLR, (nr@data2log2[, j] - coeffs1) / coeffs2)
-                }
-            }
-              
-            nr@globalfittedRLR <- globalfittedRLR
-            colnames(nr@globalfittedRLR) <- colnames(nr@data2log2)
-              
-            nr
-        })
-
 #' @rdname performReplicateBasedNormalizations
 setMethod("performReplicateBasedNormalizations", "NormalyzerResults",
         function(nr) {
@@ -439,43 +276,39 @@ setMethod("performReplicateBasedNormalizations", "NormalyzerResults",
 
             firstIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=FALSE)
             lastIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=TRUE)
-              
             stopifnot(length(firstIndices) == length(lastIndices))
-              
-            nr@fittedLR <- matrix(, nrow=nrow(filterrawdata), ncol=0)
-            nr@data2limloess <- matrix(, nrow=nrow(filterrawdata), ncol=0)
-            nr@data2vsnrep <- matrix(, nrow=nrow(filterrawdata), ncol=0)
 
+            limloess <- matrix(, nrow=nrow(filterrawdata), ncol=0)
+            vsn <- matrix(, nrow=nrow(filterrawdata), ncol=0)
+            fittedLR <- matrix(, nrow=nrow(filterrawdata), ncol=0)
+            
             for (sampleIndex in 1:length(firstIndices)) {
 
                 startColIndex <- firstIndices[sampleIndex]
                 endColIndex <- lastIndices[sampleIndex]
-
-                # Median based LR normalization
-                mediandata <- apply(nr@data2log2[, startColIndex:endColIndex], 1, "median", na.rm=TRUE)
-
-                for (currentCol in startColIndex:endColIndex) {
-
-                    LRfit <- MASS::rlm(as.matrix(nr@data2log2[, currentCol])~mediandata, na.action=stats::na.exclude)
-                    LRcoeffs <- LRfit$coefficients
-                    nr@fittedLR <- cbind(nr@fittedLR, (nr@data2log2[, currentCol] - LRcoeffs[1]) / LRcoeffs[2])
-                }
-
-                nr@data2limloess <- cbind(nr@data2limloess, limma::normalizeCyclicLoess(nr@data2log2[, startColIndex:endColIndex], method="fast"))
-                nr@data2vsnrep <- cbind(nr@data2vsnrep, vsn::justvsn(as.matrix(filterrawdata[, startColIndex:endColIndex])))
+                
+                rawDataWindow <- filterrawdata[, startColIndex:endColIndex]
+                
+                LRWindow <- performGlobalRLRNormalization(rawDataWindow)
+                fittedLR <- cbind(fittedLR, LRWindow)
+                
+                loessDataWindow <- performCyclicLoessNormalization(rawDataWindow)
+                limloess <- cbind(limloess, loessDataWindow)
+                
+                vsnDataWindow <- performVSNNormalization(rawDataWindow)
+                vsn <- cbind(vsn, vsnDataWindow)
             }
 
-            colnames(nr@fittedLR) <- colnames(nr@data2log2)
-            colnames(nr@data2limloess) <- colnames(nr@data2log2)
-            colnames(nr@data2vsnrep) <- colnames(nr@data2log2)
-
+            nr@fittedLR <- fittedLR
+            nr@data2limloess <- limloess
+            nr@data2vsnrep <- vsn
+            
             nr
         })
 
 #' @rdname performRTNormalizations
 setMethod("performRTNormalizations", "NormalyzerResults",
           function(nr, stepSizeMinutes) {
-              
               
               print(stepSizeMinutes)
               

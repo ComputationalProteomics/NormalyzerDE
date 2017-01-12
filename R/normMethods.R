@@ -154,7 +154,7 @@ meanNormalization <- function(rawMatrix) {
 # Variance stabilizing
 performVSNNormalization <- function(rawMatrix) {
     normMatrix <- vsn::justvsn(rawMatrix)
-    colnames(normLog2Matrix) <- colnames(rawMatrix)
+    colnames(normMatrix) <- colnames(rawMatrix)
     normMatrix
 }
 
