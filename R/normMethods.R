@@ -6,31 +6,11 @@
 #' @return Returns Normalyzer results object with performed analyzes assigned
 #'  as attributes
 #' @export
-normMethods <- function(nds, currentjob, jobdir, forceAll=FALSE) {
+normMethods <- function(nds, currentjob, forceAll=FALSE, normalizeRetentionTime=FALSE, retentionTimeWindow=0.1) {
 
     nr <- generateNormalyzerResultsObject(nds)
-    nr <- performNormalizations(nr, forceAll=forceAll)
+    nr <- performNormalizations(nr, forceAll=forceAll, rtNorm=normalizeRetentionTime, rtWindow=retentionTimeWindow)
     
-    methodnames <- getUsedMethodNames(nr)
-    methodlist <- getNormalizationMatrices(nr)
-
-    for (sampleIndex in 1:length(methodnames)) {
-        
-        utils::write.table(file=paste(jobdir, "/", 
-                                      methodnames[sampleIndex], 
-                                      "-normalized.txt", sep=""),
-                    cbind(nds@rawData[-(1:2), 1:(length(nds@inputHeaderValues) - length(nds@sampleReplicateGroups))],
-                          methodlist[[sampleIndex]]), sep="\t", row.names=FALSE, col.names=nds@rawData[2, ], quote=FALSE)
-    }
-    
-    if (!all(is.na(nr@houseKeepingVars))) {
-        utils::write.table(file=paste(jobdir, "/housekeeping-variables.txt", sep=""), nr@houseKeepingVars, sep="\t", row.names=FALSE, col.names=nds@rawData[2,], quote=FALSE)
-    }
-    
-    utils::write.table(file=paste(jobdir, "/submitted_rawdata.txt", sep=""), 
-                cbind(nds@rawData[-(1:2), 1:(length(nds@inputHeaderValues) - length(nds@sampleReplicateGroups))], nds@filterrawdata), sep="\t", row.names=FALSE,
-                col.names=nds@rawData[2, ], quote=FALSE)
-
     return(nr)
 }
 
@@ -42,22 +22,6 @@ generateNormalyzerResultsObject <- function(nds) {
     nr <- NormalyzerResults(nds=nds)
     nr <- initializeResultsObject(nr)
     nr
-}
-
-#' Retrieve vector with tags for used global normalization methods
-#' 
-#' @param houseKeepingFlag Boolean telling whether house-keeing normalization 
-#' is used
-#' @return Vector with string names for normalization tags
-getMethodNames <- function(houseKeepingFlag) {
-
-    if (houseKeepingFlag) {
-        methodnames <- c("Log2", "TI-G", "MedI-G", "AI-G", "NF-G")
-    }
-    else {
-        methodnames <- c("Log2", "TI-G", "MedI-G", "AI-G")
-    }
-    methodnames
 }
 
 #' Retrieve indices for first or last occurences in vector with replicated 
@@ -99,5 +63,235 @@ getFirstIndicesInVector <- function(targetVector, reverse=FALSE) {
     
     firstIndices
 }
+
+#' Write normalization matrices to file
+#' 
+#' @param nr Normalyzer results 
+#' @return None
+writeNormalizedDatasets <- function(nr, jobdir) {
+    
+    nds <- nr@nds
+    methodnames <- getUsedMethodNames(nr)
+    methodlist <- getNormalizationMatrices(nr)
+    annotationColumns <- nds@annotationValues
+    
+    for (sampleIndex in 1:length(methodnames)) {
+        
+        currentMethod <- methodnames[sampleIndex]
+        filePath <- paste(jobdir, "/", currentMethod, "-normalized.txt", sep="")
+        outputTable <- cbind(annotationColumns, methodlist[[sampleIndex]])
+        utils::write.table(outputTable, file=filePath, sep="\t", row.names=FALSE, col.names=nds@rawData[2,], quote=FALSE)
+    }
+    
+    if (!all(is.na(nr@houseKeepingVars))) {
+        hkVarsName <- "housekeeping-variables.tsv"
+        hkFilePath <- paste(jobdir, "/", hkVarsName, sep="")
+        utils::write.table(file=hkFilePath, nr@houseKeepingVars, sep="\t", 
+                           row.names=FALSE, col.names=nds@rawData[2,], quote=FALSE)
+    }
+    
+    rawdata_name <- "submitted_rawdata.tsv"
+    rawFilePath <- paste(jobdir, "/", rawdata_name, sep="")
+    rawOutputTable <- cbind(annotationColumns, nds@filterrawdata)
+    
+    utils::write.table(rawOutputTable, file=rawFilePath, sep="\t", row.names=FALSE, col.names=nds@rawData[2,], quote=FALSE)
+}
+
+
+
+# Can this be ran on slices, or does it go weird?
+globalIntensityNormalization <- function(rawMatrix) {
+    
+    colsums <- colSums(rawMatrix, na.rm=TRUE)
+    avgcolsum <- stats::median(colsums)
+    normMatrix <- matrix(nrow=nrow(rawMatrix), ncol=ncol(rawMatrix), byrow=TRUE)
+    
+    normFunc <- function(zd) { (rawMatrix[i, zd] / colsums[zd]) * avgcolsum }
+    
+    for (i in 1:nrow(rawMatrix)) {
+        normMatrix[i, ] <- unlist(sapply(1:ncol(rawMatrix), normFunc))
+    }
+ 
+    normLog2Matrix <- log2(normMatrix)
+    colnames(normLog2Matrix) <- colnames(rawMatrix)
+    normLog2Matrix
+}
+
+medianNormalization <- function(rawMatrix) {
+    
+    colMedians <- apply(rawMatrix, 2, FUN="median", na.rm=TRUE)
+    avgColMedian <- mean(colMedians, na.rm=TRUE)
+    
+    normMatrix <- matrix(nrow=nrow(rawMatrix), ncol=ncol(rawMatrix), byrow=TRUE)
+    
+    normFunc <- function(zd) { (rawMatrix[i, zd] / colMedians[zd]) * avgColMedian }
+    
+    for (i in 1:nrow(rawMatrix)) {
+        normMatrix[i, ] <- unlist(sapply(1:ncol(rawMatrix), normFunc))
+    }
+    
+    normLog2Matrix <- log2(normMatrix)
+    colnames(normLog2Matrix) <- colnames(rawMatrix)
+    normLog2Matrix
+}
+
+meanNormalization <- function(rawMatrix) {
+    
+    colMeans <-apply(rawMatrix, 2, FUN="mean", na.rm=TRUE)
+    avgColMean <- mean(colMeans, na.rm=TRUE)
+    normMatrix <- matrix(nrow=nrow(rawMatrix), ncol=ncol(rawMatrix), byrow=TRUE)
+
+    normFunc <- function(zd) { (rawMatrix[i, zd] / colMeans[zd]) * avgColMean }
+
+    for (i in 1:nrow(rawMatrix)) {
+        normMatrix[i, ] <- unlist(sapply(1:ncol(rawMatrix), normFunc))
+    }
+    
+    normLog2Matrix <- log2(normMatrix)
+    colnames(normLog2Matrix) <- colnames(rawMatrix)
+    normLog2Matrix
+}
+
+# Variance stabilizing
+performVSNNormalization <- function(rawMatrix) {
+    normMatrix <- vsn::justvsn(rawMatrix)
+    colnames(normMatrix) <- colnames(rawMatrix)
+    normMatrix
+}
+
+performQuantileNormalization <- function(rawMatrix) {
+    
+    log2Matrix <- log2(rawMatrix)
+    normMatrix <- preprocessCore::normalize.quantiles(log2Matrix, copy=TRUE)
+    
+    colnames(normMatrix) <- colnames(rawMatrix)
+    normMatrix
+}
+
+# Median absolute normalization
+performSMADNormalization <- function(rawMatrix) {
+    
+    log2Matrix <- log2(rawMatrix)
+    sampleLog2Median <- apply(log2Matrix, 2, "median", na.rm=TRUE)
+    sampleMAD <- apply(log2Matrix, 2, function(x) stats::mad(x, na.rm=TRUE))
+    madMatrix <- t(apply(log2Matrix, 1, function(x) ((x - sampleLog2Median) / sampleMAD)))
+    
+    madPlusMedianMatrix <- madMatrix + mean(sampleLog2Median)
+    colnames(madPlusMedianMatrix) <- colnames(rawMatrix)
+    
+    madPlusMedianMatrix
+}
+
+performCyclicLoessNormalization <- function(rawMatrix) {
+    
+    log2Matrix <- log2(rawMatrix)
+    normMatrix <- limma::normalizeCyclicLoess(log2Matrix, method="fast")
+    colnames(normMatrix) <- colnames(rawMatrix)
+    
+    normMatrix
+}
+
+performGlobalRLRNormalization <- function(rawMatrix) {
+    
+    log2Matrix <- log2(rawMatrix)
+    sampleLog2Median <- apply(log2Matrix, 1, "median", na.rm=TRUE)
+    isFirstSample <- TRUE
+    
+    for (j in 1:ncol(log2Matrix)) {
+        
+        lrFit <- MASS::rlm(as.matrix(log2Matrix[, j])~sampleLog2Median, na.action=stats::na.exclude)
+        coeffs <- lrFit$coefficients
+        coeffs2 <- coeffs[2]
+        coeffs1 <- coeffs[1]
+        
+        if (isFirstSample) {
+            value_to_assign <- (log2Matrix[, j] - coeffs1) / coeffs2
+            globalFittedRLR <- (log2Matrix[, j] - coeffs1) / coeffs2
+            isFirstSample <- FALSE
+        }
+        else {
+            globalFittedRLR <- cbind(globalFittedRLR, (log2Matrix[, j] - coeffs1) / coeffs2)
+        }
+    }
+    
+    colnames(globalFittedRLR) <- colnames(rawMatrix)
+    
+    globalFittedRLR
+}
+
+# For debugging purposes
+performNoNormalization <- function(rawMatrix) {
+    rawMatrix
+}
+
+getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSizeMinutes, offset=FALSE) {
+    
+    startVal <- min(na.omit(retentionTimes))
+    endVal <- max(na.omit(retentionTimes))
+    rowNumbers <- c()
+
+    print(paste("Original start time", startVal))
+        
+    if (offset) {
+        startVal <- startVal - stepSizeMinutes / 2
+    }
+    
+    print(paste("New start time", startVal))
+    
+    processedRows <- matrix(, ncol=ncol(rawMatrix), nrow=0)
+    
+    for (windowStart in seq(startVal, endVal, stepSizeMinutes)) {
+        
+        print(paste("Window start: ", windowStart))
+        
+        windowEnd <- windowStart + stepSizeMinutes
+        sliceRows <- which(retentionTimes >= windowStart & retentionTimes < windowEnd)
+        rowNumbers <- c(rowNumbers, sliceRows)
+        
+        currentRows <- rawMatrix[sliceRows,, drop=FALSE]
+        
+        if (length(currentRows) > 0) {
+            
+            processedSlice <- normMethod(currentRows)
+            processedRows <- rbind(processedRows, processedSlice)
+        }
+    }
+    
+    orderedProcessedRows <- processedRows[order(rowNumbers), ]
+    orderedProcessedRows
+}
+
+getSmoothedRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSizeMinutes) {
+    
+    matrixWithoutOffset <- getRTNormalizedMatrix(rawMatrix, retentionTimes, normMethod, stepSizeMinutes, offset=FALSE)
+    matrixWithOffset <- getRTNormalizedMatrix(rawMatrix, retentionTimes, normMethod, stepSizeMinutes, offset=TRUE)
+
+    averagedMatrices <- (matrixWithOffset + matrixWithoutOffset) / 2
+    averagedMatrices
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

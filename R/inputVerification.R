@@ -14,23 +14,17 @@ getVerifiedNormalyzerObject <- function(inputPath, jobName, threshold=15,
     verifyValidNumbers(rawData)
     
     repSortedRawData <- getReplicateSortedData(rawData)
-    # verifySampleReplication(repSortedRawData)  # This is the way to do it!
     processedRawData <- preprocessData(repSortedRawData)
-    
     
     lowCountSampleFiltered <- getLowCountSampleFiltered(processedRawData, 
                                                         threshold=threshold, 
                                                         stopIfTooFew=!omitSamples)
     
     # If no samples left after omitting, stop
-    
     verifyMultipleSamplesPresent(lowCountSampleFiltered, requireReplicates=requireReplicates)
     validateSampleReplication(lowCountSampleFiltered, requireReplicates=requireReplicates)
     
-
-    # nds <- generateNormalyzerDataset(processedRawData, jobName)
     nds <- generateNormalyzerDataset(lowCountSampleFiltered, jobName)
-    
     
     nds
 }
@@ -57,6 +51,7 @@ loadRawDataFromFile <- function(inputPath) {
             stop("Please provide a valid input file.")
         }
     )
+    
     rawData
 }
 
@@ -67,10 +62,10 @@ loadRawDataFromFile <- function(inputPath) {
 #' @return Parsed rawdata where 0 values are replaced with NA
 verifyValidNumbers <- function(normalyzerDfAll) {
     
-    normalyzerDf <- normalyzerDfAll[, which(normalyzerDfAll[1,] != "0"), 
+    normalyzerDf <- normalyzerDfAll[, which(as.numeric(normalyzerDfAll[1,]) > 0), 
                                     drop=FALSE]
     
-    validPatterns <- c("\\d+(\\.\\d+)?", "NA", "\\d+\\.\\d+E\\d+")
+    validPatterns <- c("\\d+(\\.\\d+)?", "NA", "\\d+\\.\\d+e\\d+$")
     
     rawData <- normalyzerDf[-1:-2,]
     
@@ -103,18 +98,13 @@ verifyValidNumbers <- function(normalyzerDfAll) {
 #' @return rawData sorted on replicate
 getReplicateSortedData <- function(rawData) {
 
-    temp_df <- NULL
-    temp_df <- as.factor(rawData[1, ])
-    factor_levels <- levels(temp_df)
+    factor_levels <- sort(as.numeric(unique(rawData[1,])))
     temp_df <- NULL
 
     for (i in 1:length(factor_levels)) {
-        
-        print(paste("Iterating", i))
-        
         temp_df <- cbind(temp_df, rawData[, which(rawData[1,] == factor_levels[as.numeric(i)]), drop=FALSE])
     }
-    
+
     temp_df
 }
 
@@ -142,7 +132,7 @@ getLowCountSampleFiltered <- function(dfWithNAs, threshold=15, stopIfTooFew=TRUE
     
     rawData <- dfWithNAs[-1:-2,]
     header <- dfWithNAs[1,]
-    sampleIndices <- which(header != "0")
+    sampleIndices <- which(as.numeric(header) > 0)
     
     numberOfValues <- vector(length=length(sampleIndices), mode="numeric")
     
@@ -150,7 +140,6 @@ getLowCountSampleFiltered <- function(dfWithNAs, threshold=15, stopIfTooFew=TRUE
         
         sampleIndex <- sampleIndices[i]
         numberOfValues[i] <- length(na.omit(rawData[,sampleIndex]))
-        print(paste("Number found: ", numberOfValues[i]))
     }
     
     notPassingThreshold <- which(numberOfValues < threshold)
@@ -240,7 +229,7 @@ validateSampleReplication <- function(processedDf, requireReplicates=TRUE) {
 verifyMultipleSamplesPresent <- function(processedDf, requireReplicates=TRUE) {
     
     header <- processedDf[1,]
-    samples <- header[which(header != "0")]
+    samples <- header[which(as.numeric(header) > 0)]
     distinctSamples <- unique(samples)
 
     if (length(samples) < 2) {

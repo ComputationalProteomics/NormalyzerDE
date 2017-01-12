@@ -28,6 +28,9 @@ NormalyzerDataset <- setClass("NormalyzerDataset",
                                   medofdata = "numeric",
                                   meanofdata = "numeric",
                                   
+                                  annotationValues = "matrix",
+                                  retentionTimes = "numeric",
+                                                                    
                                   singleReplicateRun = "logical"
                               ),
                               prototype=prototype(jobName=NULL, 
@@ -35,7 +38,7 @@ NormalyzerDataset <- setClass("NormalyzerDataset",
 
 #' Initialize values for dataset
 #'
-#' @param nds Normalyzer dataset.
+#' @param nds Normalyzer dataset
 #' @return None
 #' @rdname setupValues
 #' @export
@@ -45,24 +48,68 @@ setGeneric(name="setupValues", function(nds) standardGeneric("setupValues"))
 setMethod("setupValues", "NormalyzerDataset",
           function(nds) {
               
-              # Detect single replicate, and assign related logical
-              nonReplicatedSamples <- getNonReplicatedFromDf(nds@rawData)
-              if (length(nonReplicatedSamples) > 0) {
-                  nds@singleReplicateRun = TRUE
-                  print(paste("Non replicated samples in dataset:",
-                        paste(nonReplicatedSamples, collapse=" "),
-                        "performing limited single-replicate run",
-                        sep="\n"))
+              singleReplicateRun <- detectSingleReplicate(nds)
+              singletonSamplePresent <- detectSingletonSample(nds)
+              
+              if (singleReplicateRun || singletonSamplePresent) {
+                  nds@singleReplicateRun <- TRUE
               }
               else {
-                  nds@singleReplicateRun = FALSE
+                  nds@singleReplicateRun <- FALSE
               }
               
-              # Detect single sample group
+              nds <- setupBasicValues(nds)
+              nds <- setupRTColumn(nds)
+
+              nds
+          }
+)
+
+#' Detect single replicate, and assign related logical
+#'
+#' @param nds Normalyzer dataset
+#' @return bool on whether sample contains only one sample group
+#' @rdname detectSingleReplicate
+setGeneric(name="detectSingleReplicate", 
+           function(nds) standardGeneric("detectSingleReplicate"))
+
+#' @rdname detectSingleReplicate
+setMethod("detectSingleReplicate", "NormalyzerDataset",
+          function(nds) {
+              
+              nonReplicatedSamples <- getNonReplicatedFromDf(nds@rawData)
+              if (length(nonReplicatedSamples) > 0) {
+                  singleReplicateRun <- TRUE
+                  print(paste("Non replicated samples in dataset:",
+                              paste(nonReplicatedSamples, collapse=" "),
+                              "performing limited single-replicate run",
+                              sep="\n"))
+              }
+              else {
+                  singleReplicateRun <- FALSE
+              }
+              
+              singleReplicateRun
+          }
+)
+
+#' Detect single sample group 
+#'
+#' @param nds Normalyzer dataset.
+#' @return None
+#' @rdname detectSingletonSample
+setGeneric(name="detectSingletonSample", 
+           function(nds) standardGeneric("detectSingletonSample"))
+
+#' @rdname detectSingletonSample
+setMethod("detectSingletonSample", "NormalyzerDataset",
+          function(nds) {
+              
               header <- nds@rawData[1,]
-              distinctSamples <- unique(header[which(header != "0")])
+              distinctSamples <- unique(header[which(as.numeric(header) > 0)])
+              singletonSamplePresent <- FALSE
               if (length(distinctSamples) == 1) {
-                  nds@singleReplicateRun = TRUE
+                  singletonSamplePresent <- TRUE
                   print(paste("Only one replicate group present.",
                               paste("Group: ", distinctSamples[1]),
                               "Proceeding with limited processing",
@@ -72,28 +119,75 @@ setMethod("setupValues", "NormalyzerDataset",
                   stop("No sample replicate groups found - Aborting.")
               }
               
+              singletonSamplePresent
+          }
+)
+
+#' Setup basic values for dataset
+#'
+#' @param nds Normalyzer dataset
+#' @return Updated dataset object
+#' @rdname setupBasicValues
+setGeneric(name="setupBasicValues", 
+           function(nds) standardGeneric("setupBasicValues"))
+
+#' @rdname setupBasicValues
+setMethod("setupBasicValues", "NormalyzerDataset",
+          function(nds) {
               
-              # Setup
-              nds@inputHeaderValues <- nds@rawData[1, ]
+              nds@inputHeaderValues <- nds@rawData[1,]
               
-              sampleRepStr <- nds@inputHeaderValues[-which(nds@inputHeaderValues < 1)]
+              sampleRepStr <- nds@inputHeaderValues[which(as.numeric(nds@inputHeaderValues) > 0)]
               nds@sampleReplicateGroups <- as.numeric(sampleRepStr)
               
-              nds <- setupFilterRawData(nds)
+              nds@annotationValues <- nds@rawData[-1:-2, which(as.numeric(nds@inputHeaderValues) < 1), drop=FALSE]
               
+              nds <- setupFilterRawData(nds)
               if (!nds@singleReplicateRun) {
-                nds <- setupNormfinderFilterRawData(nds)
+                  nds <- setupNormfinderFilterRawData(nds)
               }
               
               nds@colsum <- colSums(nds@filterrawdata, na.rm=TRUE)
-              nds@medofdata <- apply(nds@filterrawdata, 2, 
-                                     FUN="median", na.rm=TRUE)
-              nds@meanofdata <- apply(nds@filterrawdata, 2, 
-                                      FUN="mean", na.rm=TRUE)
+              nds@medofdata <- apply(nds@filterrawdata, 2, FUN="median", na.rm=TRUE)
+              nds@meanofdata <- apply(nds@filterrawdata, 2, FUN="mean", na.rm=TRUE)
               
               nds
           }
 )
+
+#' Check for and set up RT column if single -1 annotation present
+#'
+#' @param nds Normalyzer dataset
+#' @return Updated dataset object
+#' @rdname setupRTColumn
+setGeneric(name="setupRTColumn", 
+           function(nds) standardGeneric("setupRTColumn"))
+
+#' @rdname setupRTColumn
+setMethod("setupRTColumn", "NormalyzerDataset",
+          function(nds) {
+              
+              rt_annotations <- nds@inputHeaderValues[which(nds@inputHeaderValues == "-1")]
+              
+              if (length(rt_annotations) > 1) {
+                  error_message <- paste(
+                      "Only able to handle single RT column (marked with -1)",
+                      "Please set unwanted RT columns to 0")
+                  stop(error_message)
+              }
+              else if (length(rt_annotations) == 1) {
+                  print("RT annotation column found")
+                  
+                  rtValues <- nds@rawData[, which(nds@inputHeaderValues == "-1")][-1:-2]
+                  filterRtValues <- nds@filterrawdata[, which(nds@inputHeaderValues == "-1")]
+                  
+                  nds@retentionTimes <- as.numeric(rtValues)
+              }
+              
+              nds
+          }
+)
+
 
 #' Setup filtered raw data slot
 #'
@@ -111,17 +205,13 @@ setMethod("setupFilterRawData", "NormalyzerDataset",
               stopifnot(!is.null(nds@rawData))
               
               fullSampleHead <- nds@inputHeaderValues
-              filteredSampleHead <- nds@sampleReplicateGroups
-              nbrNonRepInHeader <- length(fullSampleHead) - length(filteredSampleHead)
+              sampleDataWithHead <- nds@rawData[, which(as.numeric(fullSampleHead) > 0), drop=FALSE]
               
-              annotTrimMatrix <- nds@rawData[, -(1:nbrNonRepInHeader), drop=FALSE]
-              colnames(annotTrimMatrix) <- nds@rawData[2, -(1:nbrNonRepInHeader)]
-              
-              filterRawData <- as.matrix(annotTrimMatrix[-(1:2),, drop=FALSE ])
+              filterRawData <- as.matrix(sampleDataWithHead[-(1:2),, drop=FALSE])
               class(filterRawData) <- "numeric"
-
-              nds@filterrawdata <- filterRawData
               
+              nds@filterrawdata <- filterRawData
+
               nds
           }
 )

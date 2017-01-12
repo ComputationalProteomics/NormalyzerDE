@@ -34,9 +34,9 @@ generatePlots <- function(nr, jobdir) {
         plotReplicateVariance(nr, currentLayout, pageno)
         
         # Stable variables plot and CV in percent difference
-        print("DEBUG: Plotting page 4")
-        pageno <- pageno + 1
-        plotReplicateVarAndStableVariables(nr, currentLayout, pageno)
+        # print("DEBUG: Plotting page 4")
+        # pageno <- pageno + 1
+        # plotReplicateVarAndStableVariables(nr, currentLayout, pageno)
     
         # CVvsintensityplot 
         print("DEBUG: Plotting page 5")
@@ -103,7 +103,6 @@ generatePlots <- function(nr, jobdir) {
         pageno <- pageno + 1
         plotDEPlots(nr, currentLayout, pageno)
     }
-    
     
     grDevices::dev.off()
 }
@@ -408,9 +407,6 @@ plotMA <- function(nr, currentLayout, pageno) {
     filterED <- nds@sampleReplicateGroups
     filterrawdata <- nds@filterrawdata
     
-    print(methodnames)
-    print(length(methodlist))
-    
     Malist <- list()
     for (i in 1:length(methodlist)) {
         
@@ -454,8 +450,6 @@ plotScatter <- function(nr, currentLayout, pageno) {
     tout <- rbind(c(1, 2, 3, 4), c(5, 6, 7, 8), c(9, 10, 11, 12))
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(3, 2, 3, 2), xpd=NA)
-    
-    # TODO, What is retrieved from datastore?
     
     for (i in 1:length(methodlist)) {
         datastore <- methodlist[[i]]
@@ -587,12 +581,17 @@ plotDensity <- function(nr, currentLayout, pageno) {
     graphics::par(mar=c(3, 2, 3, 1), oma=c(3, 2, 3, 2), xpd=NA)
     
     for (i in 1:length(methodlist)) {
-        datastore <- (methodlist[[i]])
+        
+        datastore <- methodlist[[i]]
         tempd <- stats::density(datastore[, 1], na.rm=TRUE)
-        graphics::plot(stats::density(datastore[, 1], na.rm=TRUE), xlab="", ylab="", ylim=c(min(tempd$y), max(tempd$y) * 1.5), main=methodnames[i], lty=2, lwd=1, col="darkgray")
+        graphics::plot(stats::density(datastore[, 1], na.rm=TRUE), xlab="", 
+                       ylab="", ylim=c(min(tempd$y), max(tempd$y) * 1.5), 
+                       main=methodnames[i], lty=2, lwd=1, col="darkgray")
         
         for (j in 2:ncol(datastore)) {
-            graphics::lines(stats::density(datastore[, j], na.rm=TRUE), , lty=2, lwd=1, col="darkgray")
+            
+            graphics::lines(stats::density(datastore[, j], na.rm=TRUE), 
+                            , lty=2, lwd=1, col="darkgray")
         }
     }
     
@@ -664,10 +663,6 @@ plotMeanSD <- function(nr, currentLayout, pageno) {
         # TODO: The main=methodnames[i] seemed to cause crash here // Jakob
         # meanSdPlot(datastore, xlab="", ylab="", main=methodnames[i])
     }
-    
-    
-    # Old, not sure it worked properly?    
-    # do.call("gridExtra::grid.arrange", c(sdPlots, nrow=3, ncol=4, padding=1, top=1))
     
     gridExtra::arrangeGrob(sdPlots, nrow=3, ncol=4, padding=1, top=1)
     grid::pushViewport(grid::viewport(layout=currentLayout))

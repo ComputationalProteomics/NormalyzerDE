@@ -28,7 +28,9 @@ normalyzer <- function(inputPath,
                        forceAllMethods=FALSE,
                        omitLowAbundSamples=FALSE,
                        sampleAbundThres=15,
-                       requireReplicates=TRUE) {
+                       requireReplicates=TRUE,
+                       normalizeRetentionTime=FALSE,
+                       retentionTimeWindow=0.1) {
     
     print('start')
     startTime <- Sys.time()
@@ -70,17 +72,17 @@ normalyzer <- function(inputPath,
                                            requireReplicates=requireReplicates)
     jobDir <- setupJobDir(jobName, outputDir)
     
-    
-    print("Normalizing data....")
+    print("Normalizing data...")
     normalyzerResultsObject <- normMethods(normObj, 
                                            jobName, 
-                                           jobDir, 
-                                           forceAll=forceAllMethods)
+                                           forceAll=forceAllMethods,
+                                           normalizeRetentionTime=normalizeRetentionTime,
+                                           retentionTimeWindow=retentionTimeWindow)
+    writeNormalizedDatasets(normalyzerResultsObject, jobDir)
     print("Finished Normalization")
     
     print("Analyzing results...")
-    normalyzerResultsObject <- analyzeNormalizations(normalyzerResultsObject, 
-                                                     jobName)
+    normalyzerResultsObject <- analyzeNormalizations(normalyzerResultsObject, jobName)
     print("Finished analysing results")
     
     print("Generating plots...")

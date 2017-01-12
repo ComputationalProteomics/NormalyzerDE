@@ -1,5 +1,4 @@
 #' Generate PDF grid page filling it with provided list of plots
-#' ! Needs refactoring to reduce redundancy in code
 #' 
 #' @param plotlist List of target plots to display.
 #' @param plotname List of names corresponding to the provided plot list.
