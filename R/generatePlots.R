@@ -34,9 +34,9 @@ generatePlots <- function(nr, jobdir) {
         plotReplicateVariance(nr, currentLayout, pageno)
         
         # Stable variables plot and CV in percent difference
-        # print("DEBUG: Plotting page 4")
-        # pageno <- pageno + 1
-        # plotReplicateVarAndStableVariables(nr, currentLayout, pageno)
+        print("DEBUG: Plotting page 4")
+        pageno <- pageno + 1
+        plotReplicateVarAndStableVariables(nr, currentLayout, pageno)
     
         # CVvsintensityplot 
         print("DEBUG: Plotting page 5")
