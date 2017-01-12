@@ -10,7 +10,9 @@ slotNames <- c("data2log2",
                "data2mean",
                "data2ctrlog",
                "data2quantile",
-               "data2rt")
+               "data2rtMed",
+               "data2rtMean",
+               "data2rtLoess")
 
 outputNames <- c("Log2",
                  "Loess-R",
@@ -24,7 +26,9 @@ outputNames <- c("Log2",
                  "AI-G",
                  "NF-G",
                  "Quantile",
-                 "RT-test")
+                 "RT-mean",
+                 "RT-med",
+                 "RT-Loess")
 
 #' S4 class to represent dataset information
 #' 
@@ -73,7 +77,9 @@ NormalyzerResults <- setClass("NormalyzerResults",
                                   data2ctrlog = "matrix",
                                   data2quantile = "matrix",
                                   
-                                  data2rt = "matrix",
+                                  data2rtMed = "matrix",
+                                  data2rtMean = "matrix",
+                                  data2rtLoess = "matrix",
                                   
                                   data2ctr = "matrix",
                                   data2mad = "matrix"
@@ -136,7 +142,7 @@ setGeneric(name="performReplicateBasedNormalizations",
 #' @rdname performRTNormalizations
 #' @export
 setGeneric(name="performRTNormalizations", 
-           function(nr, stepSizeMinutes) standardGeneric("performRTNormalizations"))
+           function(nr, stepSizeMinutes, overlapWindows) standardGeneric("performRTNormalizations"))
 
 #' Get vector of labels for used methods
 #'
@@ -173,15 +179,8 @@ setMethod("initializeResultsObject", "NormalyzerResults",
               nds <- nr@nds
               
               nr@data2log2 <- log2(nds@filterrawdata)
-              # nr@data2GI <- matrix(nrow=nrow(nds@filterrawdata),
-              #                      ncol=ncol(nds@filterrawdata), byrow=TRUE)
               nr@data2ctr <- matrix(nrow=nrow(nds@filterrawdata),
                                     ncol=ncol(nds@filterrawdata), byrow=TRUE)
-              # nr@data2med <- matrix(nrow=nrow(nds@filterrawdata),
-              #                       ncol=ncol(nds@filterrawdata), byrow=TRUE)
-              # nr@data2mean <- matrix(nrow=nrow(nds@filterrawdata),
-              #                        ncol=ncol(nds@filterrawdata), byrow=TRUE)
-              
               nr
           }
 )
@@ -192,7 +191,7 @@ setMethod("performNormalizations", "NormalyzerResults",
               
               nds <- nr@nds
               nr <- basicMetricNormalizations(nr)
-              doRt <- length(nds@retentionTimes) > 0
+              rtColPresent <- length(nds@retentionTimes) > 0
               
               if (nrow(nds@normfinderFilterRawData) < nr@normfinderMaxThreshold || forceAll) {
                   
@@ -213,7 +212,7 @@ setMethod("performNormalizations", "NormalyzerResults",
                   nr@data2loess <- performCyclicLoessNormalization(nds@filterrawdata)
                   nr@globalfittedRLR <- performGlobalRLRNormalization(nds@filterrawdata)
                   
-                  if (!nds@singleReplicateRun && !doRt) {
+                  if (!nds@singleReplicateRun && !rtColPresent) {
                       nr <- performReplicateBasedNormalizations(nr)
                   }
                   else if (nds@singleReplicateRun) {
@@ -221,9 +220,10 @@ setMethod("performNormalizations", "NormalyzerResults",
                   }
               }
               
-              if (doRt) {
+              if (rtNorm && rtColPresent) {
                   nr <- performRTNormalizations(nr, rtWindow)
               }
+
 
               nr
           }
@@ -278,9 +278,9 @@ setMethod("performReplicateBasedNormalizations", "NormalyzerResults",
             lastIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=TRUE)
             stopifnot(length(firstIndices) == length(lastIndices))
 
-            limloess <- matrix(, nrow=nrow(filterrawdata), ncol=0)
-            vsn <- matrix(, nrow=nrow(filterrawdata), ncol=0)
-            fittedLR <- matrix(, nrow=nrow(filterrawdata), ncol=0)
+            limLoessMatrix <- matrix(, nrow=nrow(filterrawdata), ncol=0)
+            vsnMatrix <- matrix(, nrow=nrow(filterrawdata), ncol=0)
+            fittedLRMatrix <- matrix(, nrow=nrow(filterrawdata), ncol=0)
             
             for (sampleIndex in 1:length(firstIndices)) {
 
@@ -290,76 +290,43 @@ setMethod("performReplicateBasedNormalizations", "NormalyzerResults",
                 rawDataWindow <- filterrawdata[, startColIndex:endColIndex]
                 
                 LRWindow <- performGlobalRLRNormalization(rawDataWindow)
-                fittedLR <- cbind(fittedLR, LRWindow)
+                fittedLRMatrix <- cbind(fittedLRMatrix, LRWindow)
                 
                 loessDataWindow <- performCyclicLoessNormalization(rawDataWindow)
-                limloess <- cbind(limloess, loessDataWindow)
+                limLoessMatrix <- cbind(limLoessMatrix, loessDataWindow)
                 
                 vsnDataWindow <- performVSNNormalization(rawDataWindow)
-                vsn <- cbind(vsn, vsnDataWindow)
+                vsnMatrix <- cbind(vsnMatrix, vsnDataWindow)
             }
 
-            nr@fittedLR <- fittedLR
-            nr@data2limloess <- limloess
-            nr@data2vsnrep <- vsn
+            nr@fittedLR <- fittedLRMatrix
+            nr@data2limloess <- limLoessMatrix
+            nr@data2vsnrep <- vsnMatrix
             
             nr
         })
 
 #' @rdname performRTNormalizations
 setMethod("performRTNormalizations", "NormalyzerResults",
-          function(nr, stepSizeMinutes) {
-              
-              print(stepSizeMinutes)
+          function(nr, stepSizeMinutes, overlapWindows=FALSE) {
               
               nds <- nr@nds
               
-              startVal <- min(na.omit(nds@retentionTimes))
-              endVal <- max(na.omit(nds@retentionTimes))
+              smoothedRTMed <- getSmoothedRTNormalizedMatrix(nds@filterrawdata, nds@retentionTimes, medianNormalization, stepSizeMinutes)
+              smoothedRTMean <- getSmoothedRTNormalizedMatrix(nds@filterrawdata, nds@retentionTimes, meanNormalization, stepSizeMinutes)
+              smoothedRTLoess <- getSmoothedRTNormalizedMatrix(nds@filterrawdata, nds@retentionTimes, performCyclicLoessNormalization, stepSizeMinutes)
               
-              rowNumbers <- c()
-              isFirstSample <- TRUE
+              # newRTMedTest <- getRTNormalizedMatrix(nds@filterrawdata, nds@retentionTimes, medianNormalization, stepSizeMinutes)
+              # newRTMeanTest <- getRTNormalizedMatrix(nds@filterrawdata, nds@retentionTimes, meanNormalization, stepSizeMinutes)
+              # newRTLoessTest <- getRTNormalizedMatrix(nds@filterrawdata, nds@retentionTimes, performCyclicLoessNormalization, stepSizeMinutes)
+              # 
+              # rtMedOffset <- getRTNormalizedMatrix(nds@filterrawdata, nds@retentionTimes, medianNormalization, stepSizeMinutes, offset=TRUE)
               
-              for (windowStart in seq(startVal, endVal, stepSizeMinutes)) {
-                  
-                  windowEnd <- windowStart + stepSizeMinutes
-                  sliceRows <- which(nds@retentionTimes >= windowStart & nds@retentionTimes < windowEnd)
-                  rowNumbers <- c(rowNumbers, sliceRows)
-                  
-                  currentRows <- nds@filterrawdata[sliceRows,]
-                  normalizedRow <- medianSortData(currentRows)
-
-                  if (isFirstSample) {
-                      dataRows <- normalizedRow
-                      isFirstSample <- FALSE
-                  }
-                  else {
-                      dataRows <- rbind(dataRows, normalizedRow)
-                  }
-              }
-              
-              print(dataRows)
-
-              # Keep track of original ordering
-              orderedDataRows <- dataRows[order(rowNumbers),]
-              nr@data2rt <- orderedDataRows
+              nr@data2rtMed <- smoothedRTMed
+              nr@data2rtMean <- smoothedRTMean
+              nr@data2rtLoess <- smoothedRTLoess
               nr
           })
-
-medianSortData <- function(rawDf) {
-    
-    medOfData <- apply(rawDf, 2, FUN="median", na.rm=TRUE)
-    medSortDf <- matrix(ncol=ncol(rawDf), nrow=nrow(rawDf))
-    
-    for (i in 1:nrow(rawDf)) {
-        
-        medSortDf[i,] <- unlist(sapply(1:ncol(rawDf), 
-                                       function(zd) { (rawDf[i, zd] / medOfData[zd]) * mean(na.omit(medOfData)) }))
-            
-    }
-    
-    medSortDf
-}
 
 #' @rdname getUsedMethodNames
 setMethod("getUsedMethodNames", "NormalyzerResults",

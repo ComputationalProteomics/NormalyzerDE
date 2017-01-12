@@ -112,13 +112,3 @@ setupNormalizationEvaluationObject <- function(nr) {
     ner
 }
 
-
-
-
-
-
-
-
-
-
-

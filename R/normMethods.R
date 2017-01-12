@@ -120,7 +120,8 @@ globalIntensityNormalization <- function(rawMatrix) {
 medianNormalization <- function(rawMatrix) {
     
     colMedians <- apply(rawMatrix, 2, FUN="median", na.rm=TRUE)
-    avgColMedian <- mean(colMedians)
+    avgColMedian <- mean(colMedians, na.rm=TRUE)
+    
     normMatrix <- matrix(nrow=nrow(rawMatrix), ncol=ncol(rawMatrix), byrow=TRUE)
     
     normFunc <- function(zd) { (rawMatrix[i, zd] / colMedians[zd]) * avgColMedian }
@@ -137,7 +138,7 @@ medianNormalization <- function(rawMatrix) {
 meanNormalization <- function(rawMatrix) {
     
     colMeans <-apply(rawMatrix, 2, FUN="mean", na.rm=TRUE)
-    avgColMean <- mean(colMeans)
+    avgColMean <- mean(colMeans, na.rm=TRUE)
     normMatrix <- matrix(nrow=nrow(rawMatrix), ncol=ncol(rawMatrix), byrow=TRUE)
 
     normFunc <- function(zd) { (rawMatrix[i, zd] / colMeans[zd]) * avgColMean }
@@ -218,11 +219,56 @@ performGlobalRLRNormalization <- function(rawMatrix) {
     globalFittedRLR
 }
 
+# For debugging purposes
+performNoNormalization <- function(rawMatrix) {
+    rawMatrix
+}
 
+getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSizeMinutes, offset=FALSE) {
+    
+    startVal <- min(na.omit(retentionTimes))
+    endVal <- max(na.omit(retentionTimes))
+    rowNumbers <- c()
 
+    print(paste("Original start time", startVal))
+        
+    if (offset) {
+        startVal <- startVal - stepSizeMinutes / 2
+    }
+    
+    print(paste("New start time", startVal))
+    
+    processedRows <- matrix(, ncol=ncol(rawMatrix), nrow=0)
+    
+    for (windowStart in seq(startVal, endVal, stepSizeMinutes)) {
+        
+        print(paste("Window start: ", windowStart))
+        
+        windowEnd <- windowStart + stepSizeMinutes
+        sliceRows <- which(retentionTimes >= windowStart & retentionTimes < windowEnd)
+        rowNumbers <- c(rowNumbers, sliceRows)
+        
+        currentRows <- rawMatrix[sliceRows,, drop=FALSE]
+        
+        if (length(currentRows) > 0) {
+            
+            processedSlice <- normMethod(currentRows)
+            processedRows <- rbind(processedRows, processedSlice)
+        }
+    }
+    
+    orderedProcessedRows <- processedRows[order(rowNumbers), ]
+    orderedProcessedRows
+}
 
+getSmoothedRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSizeMinutes) {
+    
+    matrixWithoutOffset <- getRTNormalizedMatrix(rawMatrix, retentionTimes, normMethod, stepSizeMinutes, offset=FALSE)
+    matrixWithOffset <- getRTNormalizedMatrix(rawMatrix, retentionTimes, normMethod, stepSizeMinutes, offset=TRUE)
 
-
+    averagedMatrices <- (matrixWithOffset + matrixWithoutOffset) / 2
+    averagedMatrices
+}
 
 
 

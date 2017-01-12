@@ -65,7 +65,7 @@ verifyValidNumbers <- function(normalyzerDfAll) {
     normalyzerDf <- normalyzerDfAll[, which(as.numeric(normalyzerDfAll[1,]) > 0), 
                                     drop=FALSE]
     
-    validPatterns <- c("\\d+(\\.\\d+)?", "NA")
+    validPatterns <- c("\\d+(\\.\\d+)?", "NA", "\\d+\\.\\d+e\\d+$")
     
     rawData <- normalyzerDf[-1:-2,]
     
