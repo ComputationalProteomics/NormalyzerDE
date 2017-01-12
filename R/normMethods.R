@@ -99,7 +99,10 @@ writeNormalizedDatasets <- function(nr, jobdir) {
 
 
 
-# Can this be ran on slices, or does it go weird?
+#' Normalization adjusting based on total sample intensity
+#' 
+#' @param rawMatrix Target matrix to be normalized
+#' @return Normalized and log-transformed matrix
 globalIntensityNormalization <- function(rawMatrix) {
     
     colsums <- colSums(rawMatrix, na.rm=TRUE)
@@ -117,6 +120,10 @@ globalIntensityNormalization <- function(rawMatrix) {
     normLog2Matrix
 }
 
+#' Normalization adjusting towards sample median intensity
+#' 
+#' @param rawMatrix Target matrix to be normalized
+#' @return Normalized and log-transformed matrix
 medianNormalization <- function(rawMatrix) {
     
     colMedians <- apply(rawMatrix, 2, FUN="median", na.rm=TRUE)
@@ -135,6 +142,10 @@ medianNormalization <- function(rawMatrix) {
     normLog2Matrix
 }
 
+#' Normalization adjusting towards sample mean intensity
+#' 
+#' @param rawMatrix Target matrix to be normalized
+#' @return Normalized and log-transformed matrix
 meanNormalization <- function(rawMatrix) {
     
     colMeans <-apply(rawMatrix, 2, FUN="mean", na.rm=TRUE)
@@ -152,13 +163,22 @@ meanNormalization <- function(rawMatrix) {
     normLog2Matrix
 }
 
-# Variance stabilizing
+#' Perform Variance Stabilizing Normalization
+#' 
+#' @param rawMatrix Target matrix to be normalized
+#' @return Normalized matrix
 performVSNNormalization <- function(rawMatrix) {
     normMatrix <- vsn::justvsn(rawMatrix)
     colnames(normMatrix) <- colnames(rawMatrix)
     normMatrix
 }
 
+#' Perform quantile normalization, where overall distribution is assumed
+#' to be the same, and using a 'average' distribution as measure to normalize
+#' again
+#' 
+#' @param rawMatrix Target matrix to be normalized
+#' @return Normalized matrix
 performQuantileNormalization <- function(rawMatrix) {
     
     log2Matrix <- log2(rawMatrix)
@@ -168,7 +188,12 @@ performQuantileNormalization <- function(rawMatrix) {
     normMatrix
 }
 
-# Median absolute normalization
+#' Median absolute deviation normalization
+#' Scales values with MAD and adds it with logged sample median
+#' TODO: Dig into this one a bit more
+#' 
+#' @param rawMatrix Target matrix to be normalized
+#' @return Normalized matrix
 performSMADNormalization <- function(rawMatrix) {
     
     log2Matrix <- log2(rawMatrix)
@@ -182,6 +207,11 @@ performSMADNormalization <- function(rawMatrix) {
     madPlusMedianMatrix
 }
 
+#' Cyclic Loess normalization
+#' Local regression based on k-nearest-neighbor model
+#' 
+#' @param rawMatrix Target matrix to be normalized
+#' @return Normalized matrix
 performCyclicLoessNormalization <- function(rawMatrix) {
     
     log2Matrix <- log2(rawMatrix)
@@ -191,6 +221,10 @@ performCyclicLoessNormalization <- function(rawMatrix) {
     normMatrix
 }
 
+#' Global linear regression normalization
+#' 
+#' @param rawMatrix Target matrix to be normalized
+#' @return Normalized matrix
 performGlobalRLRNormalization <- function(rawMatrix) {
     
     log2Matrix <- log2(rawMatrix)
@@ -219,11 +253,23 @@ performGlobalRLRNormalization <- function(rawMatrix) {
     globalFittedRLR
 }
 
-# For debugging purposes
+#' Do no normalization (For debugging purposes)
+#' 
+#' @param rawMatrix Target matrix to be normalized
+#' @return Normalized matrix
 performNoNormalization <- function(rawMatrix) {
     rawMatrix
 }
 
+#' Perform desired normalization on time-windows, before summing together
+#' The idea is to reduce noise introduced from LC fluctuations
+#' 
+#' @param rawMatrix Target matrix to be normalized
+#' @param retentionTimes Vector of retention times corresponding to rawMatrix
+#' @param normMethod The normalization method to apply to the time windows
+#' @param stepSizeMinutes Size of windows to be normalized
+#' @param offset Whether time window should shifted half step size
+#' @return Normalized matrix
 getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSizeMinutes, offset=FALSE) {
     
     startVal <- min(na.omit(retentionTimes))
@@ -261,6 +307,15 @@ getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSiz
     orderedProcessedRows
 }
 
+#' Generate two RT time-window normalized matrices where one is shifted.
+#' Then return the mean of these matrices.
+#' 
+#' @param rawMatrix Target matrix to be normalized
+#' @param retentionTimes Vector of retention times corresponding to rawMatrix
+#' @param normMethod The normalization method to apply to the time windows
+#' @param stepSizeMinutes Size of windows to be normalized
+#' @param offset Whether time window should shifted half step size
+#' @return Normalized matrix
 getSmoothedRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSizeMinutes) {
     
     matrixWithoutOffset <- getRTNormalizedMatrix(rawMatrix, retentionTimes, normMethod, stepSizeMinutes, offset=FALSE)
@@ -269,29 +324,5 @@ getSmoothedRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod,
     averagedMatrices <- (matrixWithOffset + matrixWithoutOffset) / 2
     averagedMatrices
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
