@@ -277,27 +277,55 @@ setMethod("performNormalizations", "NormalyzerResults",
 #' @rdname basicMetricNormalizations
 setMethod("basicMetricNormalizations", "NormalyzerResults",
           function(nr) {
+
             ## Normalizing using average sample sum, sample mean and sample median
               
             nds <- nr@nds
 
-            avgcolsum <- stats::median(nds@colsum)
-            for (i in 1:nrow(nds@filterrawdata)) {
-                nr@data2GI[i, ] <- unlist(sapply(1:ncol(nds@filterrawdata), 
-                                                 function(zd) { (nds@filterrawdata[i, zd] / nds@colsum[zd]) * avgcolsum }))
-                nr@data2med[i, ] <- unlist(sapply(1:ncol(nds@filterrawdata), 
-                                                  function(zd) { (nds@filterrawdata[i, zd] / nds@medofdata[zd]) * mean(nds@medofdata) }))
-                nr@data2mean[i, ] <- unlist(sapply(1:ncol(nds@filterrawdata), 
-                                                   function(zd) { (nds@filterrawdata[i, zd] / nds@meanofdata[zd]) * mean(nds@meanofdata) }))
-            }
+            # avgcolsum <- stats::median(nds@colsum)
+            # for (i in 1:nrow(nds@filterrawdata)) {
+            #     nr@data2GI[i, ] <- unlist(sapply(1:ncol(nds@filterrawdata), 
+            #                                      function(zd) { (nds@filterrawdata[i, zd] / nds@colsum[zd]) * avgcolsum }))
+            #     nr@data2med[i, ] <- unlist(sapply(1:ncol(nds@filterrawdata), 
+            #                                       function(zd) { (nds@filterrawdata[i, zd] / nds@medofdata[zd]) * mean(nds@medofdata) }))
+            #     nr@data2mean[i, ] <- unlist(sapply(1:ncol(nds@filterrawdata), 
+            #                                        function(zd) { (nds@filterrawdata[i, zd] / nds@meanofdata[zd]) * mean(nds@meanofdata) }))
+            # }
 
-            nr@data2GI <- log2(nr@data2GI)
-            nr@data2med <- log2(nr@data2med)
-            nr@data2mean <- log2(nr@data2mean)
-            colnames(nr@data2GI) <- colnames(nr@data2log2)
-            colnames(nr@data2med) <- colnames(nr@data2log2)
-            colnames(nr@data2mean) <- colnames(nr@data2log2)
+            # nr@data2GI <- log2(nr@data2GI)
+            # nr@data2med <- log2(nr@data2med)
+            # nr@data2mean <- log2(nr@data2mean)
+            # colnames(nr@data2GI) <- colnames(nr@data2log2)
+            # colnames(nr@data2med) <- colnames(nr@data2log2)
+            # colnames(nr@data2mean) <- colnames(nr@data2log2)
 
+            nr@data2GI <- globalIntensityNormalization(nds@filterrawdata)
+            nr@data2med <- medianNormalization(nds@filterrawdata)
+            nr@data2mean <- meanNormalization(nds@filterrawdata)
+            
+            # print("nr@data2GI")
+            # print(tail(nr@data2GI))
+            # 
+            # print("globIntNorm")
+            # globIntNorm <- globalIntensityNormalization(nds@filterrawdata)
+            # print(tail(globIntNorm))
+            # 
+            # print("nr@data2med")
+            # print(tail(nr@data2med))
+            # 
+            # print("medianNormalization")
+            # medianNorm <- medianNormalization(nds@filterrawdata)
+            # print(tail(medianNorm))
+            # 
+            # print("nr@data2mean")
+            # print(tail(nr@data2mean))
+            # 
+            # print("meanNormalization")
+            # meanNormalization <- meanNormalization(nds@filterrawdata)
+            # print(tail(meanNormalization))
+                        
+            # stop("")
+            
             nr
         }
 )
@@ -348,7 +376,17 @@ setMethod("performSMADNormalization", "NormalyzerResults",
             mediandata <- apply(nr@data2log2, 2, "median", na.rm=TRUE)
             maddata <- apply(nr@data2log2, 2, function(x) stats::mad(x, na.rm=TRUE))
             nr@data2mad <- t(apply(nr@data2log2, 1, function(x) ((x - mediandata) / maddata)))
+            
+            print(head(nr@data2mad))
+            
             nr@data2mad <- nr@data2mad + mean(mediandata)
+            
+            # print(head(mediandata))
+            # print(head(maddata))
+            # print(head(nr@data2mad))
+            # 
+            # stop("")
+            
             nr
         })
 
@@ -362,12 +400,12 @@ setMethod("performCyclicLoessNormalization", "NormalyzerResults",
 #' @rdname performGlobalRLRNormalization
 setMethod("performGlobalRLRNormalization", "NormalyzerResults",
         function(nr) {
-            mediandata <- apply(nr@data2log2, 1, "median", na.rm=TRUE)
+            log2Median <- apply(nr@data2log2, 1, "median", na.rm=TRUE)
             isFirstSample <- TRUE
               
             for (j in 1:ncol(nr@data2log2)) {
 
-                lrFit <- MASS::rlm(as.matrix(nr@data2log2[, j])~mediandata, na.action=stats::na.exclude)
+                lrFit <- MASS::rlm(as.matrix(nr@data2log2[, j])~log2Median, na.action=stats::na.exclude)
                 coeffs <- lrFit$coefficients
                 coeffs2 <- coeffs[2]
                 coeffs1 <- coeffs[1]
@@ -391,8 +429,9 @@ setMethod("performGlobalRLRNormalization", "NormalyzerResults",
 #' @rdname performReplicateBasedNormalizations
 setMethod("performReplicateBasedNormalizations", "NormalyzerResults",
         function(nr) {
+            
             ## NORMALIZATION within REPLICATES RLR, VSN and Loess
-              
+            
             nds <- nr@nds
               
             sampleReplicateGroups <- nds@sampleReplicateGroups
