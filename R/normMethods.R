@@ -282,13 +282,9 @@ getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSiz
         startVal <- startVal - stepSizeMinutes / 2
     }
     
-    print(paste("New start time", startVal))
-    
     processedRows <- matrix(, ncol=ncol(rawMatrix), nrow=0)
     
     for (windowStart in seq(startVal, endVal, stepSizeMinutes)) {
-        
-        print(paste("Window start: ", windowStart))
         
         windowEnd <- windowStart + stepSizeMinutes
         sliceRows <- which(retentionTimes >= windowStart & retentionTimes < windowEnd)

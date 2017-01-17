@@ -93,8 +93,9 @@ normalyzer <- function(inputPath,
     print(paste("Done! Results are stored in ", jobDir))
     
     endTime <- Sys.time()
-    elapsedTime <- elapsedSecondsBetweenSystimes(startTime, endTime)
-    print(paste("Processing took", elapsedTime, "seconds"))
+    print(difftime(endTime, startTime))
+    # elapsedTime <- elapsedSecondsBetweenSystimes(startTime, endTime)
+    # print(paste("Processing took", elapsedTime, "seconds"))
 }
 
 

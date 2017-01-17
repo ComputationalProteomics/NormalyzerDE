@@ -73,8 +73,6 @@ verifyValidNumbers <- function(normalyzerDfAll) {
     matches <- grep(regexPattern, rawData, perl=TRUE, ignore.case=TRUE)
     nonMatches <- na.omit(rawData[-matches])
     
-    print(nonMatches)
-    
     if (length(nonMatches > 0)) {
         error_string <- paste(
             "Invalid values encountered in input data.",
@@ -176,9 +174,6 @@ getLowCountSampleFiltered <- function(dfWithNAs, threshold=15, stopIfTooFew=TRUE
             warning(error_string)
         }
     }
-    
-    print(length(notPassingThreshold))
-    print(length(numberOfValues))
     
     if (length(notPassingThreshold > 0)) {
         naSamplesOmittedDf <- dfWithNAs[, -sampleIndices[notPassingThreshold]]
