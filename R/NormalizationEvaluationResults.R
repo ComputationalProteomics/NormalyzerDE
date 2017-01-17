@@ -254,12 +254,6 @@ setMethod("calculateSignificanceMeasures", "NormalizationEvaluationResults",
                   lowlyVariableFeatures <- which(anovaFDR[, 1] >= min(utils::head(rev(sort(anovaFDR[, 1])), n=(5 * nrow(anovaFDR) / 100))))
               }
 
-              # print(head(anovaFDR))
-              # print(head(anovaFDR[, 1]))
-              # print(lowlyVariableFeatures)
-              # stop("")
-              
-                            
               nonsiganfdrlistcv <- vector()
               for (mlist in 1:methodCount) {
                   tmpdata <- methodList[[mlist]][lowlyVariableFeatures, ]
