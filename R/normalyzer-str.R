@@ -30,7 +30,7 @@ normalyzer <- function(inputPath,
                        sampleAbundThres=15,
                        requireReplicates=TRUE,
                        normalizeRetentionTime=FALSE,
-                       retentionTimeWindow=0.1) {
+                       retentionTimeWindow=1) {
     
     print('start')
     startTime <- Sys.time()
@@ -64,6 +64,8 @@ normalyzer <- function(inputPath,
     source("utils.R")
     source("inputVerification.R")
     source("analyzeResults.R")
+
+    source("evaluationUtils.R")
     
     normObj <- getVerifiedNormalyzerObject(inputPath, 
                                            jobName,

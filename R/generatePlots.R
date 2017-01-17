@@ -118,10 +118,10 @@ setupPlotting <- function(currentjob, jobdir) {
                          "blueviolet", "darkslateblue", "darkviolet", "gray", 
                          "bisque4", "brown", "cadetblue4", "darkgreen", 
                          "darkcyan", "darkmagenta", "darkgoldenrod4", "coral1"))
-    
-    grDevices::pdf(file=paste(jobdir, "/Norm_report-", 
-                              currentjob, ".pdf", sep=""), 
+
+    grDevices::pdf(file=paste(jobdir, "/Norm_report-", currentjob, ".pdf", sep=""), 
                    paper="a4r", width=0, height=0)    
+
     theme_norm <- ggplot2::theme_set(ggplot2::theme_bw())
     theme_norm <- ggplot2::theme_update(panel.grid.minor=ggplot2::element_blank(), 
                                         axis.text=ggplot2::element_text(size=7), 

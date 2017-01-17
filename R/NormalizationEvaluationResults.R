@@ -251,12 +251,18 @@ setMethod("calculateSignificanceMeasures", "NormalizationEvaluationResults",
               # Finds to 5% of least DE variables in log2 data based on ANOVA
               # Generates error if it doesn't find least DE peptides
               if (sum(anovaFDR[, 1] >= min(utils::head(rev(sort(anovaFDR[, 1])), n=(5 * nrow(anovaFDR) / 100)))) > 0) {
-                  nonsiganfdrlist <- which(anovaFDR[, 1] >= min(utils::head(rev(sort(anovaFDR[, 1])), n=(5 * nrow(anovaFDR) / 100))))
+                  lowlyVariableFeatures <- which(anovaFDR[, 1] >= min(utils::head(rev(sort(anovaFDR[, 1])), n=(5 * nrow(anovaFDR) / 100))))
               }
+
+              # print(head(anovaFDR))
+              # print(head(anovaFDR[, 1]))
+              # print(lowlyVariableFeatures)
+              # stop("")
               
+                            
               nonsiganfdrlistcv <- vector()
               for (mlist in 1:methodCount) {
-                  tmpdata <- methodList[[mlist]][nonsiganfdrlist, ]
+                  tmpdata <- methodList[[mlist]][lowlyVariableFeatures, ]
                   nonsiganfdrlistcv[mlist] <- mean(apply(tmpdata, 1, function(sampleIndex) raster::cv(sampleIndex, na.rm=TRUE)), na.rm=TRUE)
               }
               
