@@ -276,7 +276,7 @@ getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSiz
     endVal <- max(na.omit(retentionTimes))
     rowNumbers <- c()
 
-    print(paste("Original start time", startVal))
+    # print(paste("Original start time", startVal))
         
     if (offset) {
         startVal <- startVal - stepSizeMinutes / 2
