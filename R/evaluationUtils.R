@@ -50,10 +50,10 @@ run_review_data_test <- function(subset=FALSE, output_path=NULL, verbose=FALSE, 
         rt_windows <- c(0.2, 0.5, 0.75, 1, 1.5, 2, 2.5, 3, 4, 5, 6, 7, 8, 9, 10, 13, 16, 20)
     }
     
-    result_m <- perform_normalyzer_run(norm_obj, job_name, default_rt_window, output_path=output_path, 
+    result_df <- perform_normalyzer_run(norm_obj, job_name, default_rt_window, output_path=output_path, 
                                         rt_windows=rt_windows, verbose=verbose, do_normal_run=do_normal_run, do_rt_run=do_rt_run)
     
-    result_dfs <- slice_results_to_dfs(result_m)
+    result_dfs <- slice_results_to_dfs(result_df)
     
 
     if (is.null(plot_path)) {
@@ -91,7 +91,7 @@ perform_normalyzer_run <- function(norm_obj, job_name, default_rt_size, output_p
     print(output)
     
     fdr_thres <- 0.1
-    p_thres <- 0.05
+    p_thres <- 0.03
     
     if (do_normal_run) {
         for (i in 1:length(used_methods_names)) {
