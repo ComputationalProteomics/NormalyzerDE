@@ -32,18 +32,18 @@ generatePlots <- function(nr, jobdir) {
         print("DEBUG: Plotting page 3")
         pageno <- pageno + 1
         plotReplicateVariance(nr, currentLayout, pageno)
-        
+
         # Stable variables plot and CV in percent difference
         print("DEBUG: Plotting page 4")
         pageno <- pageno + 1
         plotReplicateVarAndStableVariables(nr, currentLayout, pageno)
-    
-        # CVvsintensityplot 
+
+        # CVvsintensityplot
         print("DEBUG: Plotting page 5")
         pageno <- pageno + 1
         plotCVvsIntensity(nr, currentLayout, pageno)
     }
-    
+
     # MA plots
     print("DEBUG: Plotting page 6!")
     pageno <- pageno + 1
@@ -53,22 +53,22 @@ generatePlots <- function(nr, jobdir) {
     print("DEBUG: Plotting page 7")
     pageno <- pageno + 1
     plotScatter(nr, currentLayout, pageno)
-    
+
     # QQplot
     print("DEBUG: Plotting page 8")
     pageno <- pageno + 1
     plotQQ(nr, currentLayout, pageno)
-    
+
     # Boxplot
     print("DEBUG: Plotting page 9")
     pageno <- pageno + 1
     plotBoxPlot(nr, currentLayout, pageno)
-    
+
     # RLE plots
     print("DEBUG: Plotting page 10")
     pageno <- pageno + 1
     plotRLE(nr, currentLayout, pageno)
-    
+
     # Density plots
     print("DEBUG: Plotting page 11")
     pageno <- pageno + 1
@@ -78,7 +78,7 @@ generatePlots <- function(nr, jobdir) {
     print("DEBUG: Plotting page 12")
     pageno <- pageno + 1
     plotMDS(nr, currentLayout, pageno)
-    
+
     if (!isLimitedRun) {   
         
         # meanSDplot
@@ -96,8 +96,8 @@ generatePlots <- function(nr, jobdir) {
     print("DEBUG: Plotting page 16")
     pageno <- pageno + 1
     plotDendrograms(nr, currentLayout, pageno)
-        
-    if (!isLimitedRun) {   
+
+    if (!isLimitedRun) {
         # DE plots
         print("DEBUG: Plotting page 17")
         pageno <- pageno + 1
@@ -527,8 +527,15 @@ plotBoxPlot <- function(nr, currentLayout, pageno) {
     
     for (i in 1:length(methodlist)) {   
         graphics::par(mar=c(5, 1, 1, 1))
-        graphics::boxplot(methodlist[[i]], cex=0.1, cex.axis=0.7, las=2, main=methodnames[i], col=(filterED), outcol="lightgray", 
-                          ylim=c(mindata - 1, maxdata + 1), names=substr(colnames(methodlist[[i]]), 1, 10))
+        graphics::boxplot(methodlist[[i]], 
+                          cex=0.1, 
+                          cex.axis=0.7, 
+                          las=2, 
+                          main=methodnames[i], 
+                          col=(filterED), 
+                          outcol="lightgray", 
+                          ylim=c(mindata - 1, maxdata + 1), 
+                          names=substr(colnames(methodlist[[i]]), 1, 10))
     }
     
     grid::pushViewport(grid::viewport(layout=currentLayout))
@@ -556,7 +563,9 @@ plotRLE <- function(nr, currentLayout, pageno) {
     
     for (i in 1:length(methodlist)) {
         deviations = methodlist[[i]] - Biobase::rowMedians(methodlist[[i]], na.rm=TRUE)
-        graphics::boxplot(deviations, outcol="lightgray", cex=0.1, cex.axis=0.7, las=2, main=methodnames[i], col=(filterED), names=substr(colnames(methodlist[[i]]), 1, 6))
+        graphics::boxplot(deviations, outcol="lightgray", cex=0.1, cex.axis=0.7, 
+                          las=2, main=methodnames[i], col=(filterED), 
+                          names=substr(colnames(methodlist[[i]]), 1, 6))
     }
     
     grid::pushViewport(grid::viewport(layout=currentLayout))
@@ -620,7 +629,10 @@ plotMDS <- function(nr, currentLayout, pageno) {
     graphics::par(mar=c(2, 2, 2, 1), oma=c(3, 2, 3, 2), xpd=NA)
     
     for (i in 1:length(methodlist)) {
-        datastore <- (methodlist[[i]])
+        
+        print(i)
+        
+        datastore <- methodlist[[i]]
         d <- stats::dist(scale(t(stats::na.omit(datastore)), center=TRUE, scale=TRUE))
         fit <- stats::cmdscale(d, eig=TRUE, k=2)
         x <- fit$points[, 1]
@@ -631,6 +643,8 @@ plotMDS <- function(nr, currentLayout, pageno) {
     
     grid::pushViewport(grid::viewport(layout=currentLayout))
     printMeta(paste("MDS plots - Built from", ncol(d), "variables with non-missing data", sep=" "), pageno, currentjob)
+    
+    # stop("MDS plot part")
 }
 
 #' Visualize standard deviation over (expression?) for different values
@@ -656,17 +670,18 @@ plotMeanSD <- function(nr, currentLayout, pageno) {
         
         msd <- vsn::meanSdPlot(datastore, xlab="", ylab="", plot=FALSE)
         
-        sdPlots[[i]] <- msd$gg + 
-            ggplot2::ggtitle(methodnames[i]) + 
+        sdPlots[[i]] <- msd$gg + ggplot2::ggtitle(methodnames[i]) +
             ggplot2::theme(legend.position="none", plot.margin=ggplot2::unit(c(1,0,0,0), "cm"))
         
         # TODO: The main=methodnames[i] seemed to cause crash here // Jakob
         # meanSdPlot(datastore, xlab="", ylab="", main=methodnames[i])
     }
     
-    gridExtra::arrangeGrob(sdPlots, nrow=3, ncol=4, padding=1, top=1)
+    grid::grid.newpage()
     grid::pushViewport(grid::viewport(layout=currentLayout))
-    printMeta("MeanSDplots", pageno, currentjob)
+    printPlots(sdPlots, "MeanSDplots", pageno, currentjob)  
+
+    print(paste("Current page:", pageno))
 }
 
 #' Visualize correlations for plots

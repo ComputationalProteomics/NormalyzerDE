@@ -35,17 +35,18 @@ normalyzer <- function(inputPath,
     print('start')
     startTime <- Sys.time()
     
-    # require(Rcmdr)  # RcmdrMisc::numSummary, CRAN
-    # require(vsn)    # Used for justvsn, BioConductor
+    # require(Rcmdr)        # RcmdrMisc::numSummary, CRAN
+    # require(vsn)          # Used for justvsn, BioConductor
     # require(preprocessCore)     # Used for quantile normalization, BC
-    # require(limma)  # Used for normalizeCyclicLoess, BioConductor
-    # require(MASS)   # Used for rlm, BioConductor
-    # require(ape)    # ape::as.phylo
-    # require(raster) # Used for raster::cv - Coefficient of variation
-    # require(car)    # Used for car::showLabels, BioConductor
-    # require(gridExtra)  # gridExtra::arrange, CRAN
-    # require(ggplot2)  # Extensively used for plotting, CRAN
-    # require(grid)     # grid::grid.layout, and much more for plotting, base
+    # require(limma)        # Used for normalizeCyclicLoess, BioConductor
+    # require(MASS)         # Used for rlm, BioConductor
+    # require(ape)          # ape::as.phylo
+    # require(raster)       # Used for raster::cv - Coefficient of variation
+    # require(car)          # Used for car::showLabels, BioConductor
+    # require(gridExtra)    # gridExtra::arrange, CRAN
+    # require(ggplot2)      # Extensively used for plotting, CRAN
+    # require(grid)         # grid::grid.layout, and much more for plotting, base
+    # require(hexbin)       # Needed for the meanSdPlot
     
     
     # Biobase::rowMedians ??

@@ -193,16 +193,16 @@ setMethod("performNormalizations", "NormalyzerResults",
               nr <- basicMetricNormalizations(nr)
               rtColPresent <- length(nds@retentionTimes) > 0
               
-              # if (nrow(nds@normfinderFilterRawData) < nr@normfinderMaxThreshold || forceAll) {
-              #     
-              #     if (!nds@singleReplicateRun) {
-              #         nr@houseKeepingVars <- normfinder(nds)
-              #         nr <- calculateHKdataForNormObj(nr)
-              #     }
-              #     else {
-              #         print("Processing in single replicate mode, Normfinder is omitted")
-              #     }
-              # }
+              if (nrow(nds@normfinderFilterRawData) < nr@normfinderMaxThreshold || forceAll) {
+
+                  if (!nds@singleReplicateRun) {
+                      nr@houseKeepingVars <- normfinder(nds)
+                      nr <- calculateHKdataForNormObj(nr)
+                  }
+                  else {
+                      print("Processing in single replicate mode, Normfinder is omitted")
+                  }
+              }
               
               if (nrow(nds@filterrawdata) > nr@furtherNormalizationMinThreshold || forceAll) {
                   
