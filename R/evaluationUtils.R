@@ -17,6 +17,10 @@ source("analyzeResults.R")
 source("normMethods.R")
 source("normfinder-pipeline.R")
 
+suppressPackageStartupMessages("ggplot2")
+library("ggplot2")
+
+
 full_report <- "FeatureReport_MQP_20140828-fornormalyzer.txt"
 subset_report <- "MQP.subset_500.tsv"
 # subset_report <- "BA_MQP.subset_500.tsv"
@@ -26,6 +30,53 @@ HUMAN_PAT <- "^hum"
 SAMPLE_PAT <- "dilA_[23]"
 COMBINED_PATTERN <- paste0("(", POT_PAT, "|", HUMAN_PAT, ")")
 custom_replicate_groups <- c(2,2,2,2,2,2,2,3,3,3,3,3,3,3)
+
+
+
+
+header <- c("method", "tot_na_reduced", "rt_settings", "potato_tot", "potato_sig", "back_tot", "back_sig")
+
+EntryRow <- function(norm_method, tot_rows, target_tot, target_sign, 
+                     background_tot, background_sign, rt_settings=NULL) {
+    
+    me <- list(
+        norm_method = norm_method,
+        tot_rows = tot_rows,
+        target_tot = target_tot,
+        target_sign = target_sign,
+        background_tot = background_tot,
+        background_sign = background_sign,
+        rt_settings = rt_settings
+    )
+    
+    class(me) <- append(class(me), "EntryRow")
+    return(me)
+}
+
+get_entry_vector <- function(e) {
+    
+    base <- c(e$norm_method,
+      e$tot_rows,
+      e$target_tot,
+      e$target_sign,
+      e$background_tot,
+      e$background_sign)
+    
+    if (!is.null(e$rt_settings)) {
+        base <- c(base, e$rt_settings)
+    }
+    
+    base
+}
+
+get_entry_header <- function(e) {
+    
+    header <- c("method", "tot_na_reduced", "rt_settings", "potato_tot", "potato_sig", "back_tot", "back_sig")
+    if (!is.null(e$rt_settings)) {
+        header <- c(header, e$rt_settings)
+    }
+    header
+}
 
 run_review_data_test <- function(subset=FALSE, output_path=NULL, verbose=FALSE, plot_path=NULL, do_normal_run=TRUE, do_rt_run=TRUE) {
     
@@ -39,8 +90,6 @@ run_review_data_test <- function(subset=FALSE, output_path=NULL, verbose=FALSE, 
     job_name <- "review_evaluation"
     norm_obj <- getVerifiedNormalyzerObject(review_data_path, job_name)
 
-    # file_name <- paste0("normalyzer_eval_rt_size_", rt_window)
-    print("Before run")
     default_rt_window <- 2
     
     if (subset) {
@@ -50,8 +99,15 @@ run_review_data_test <- function(subset=FALSE, output_path=NULL, verbose=FALSE, 
         rt_windows <- c(0.2, 0.5, 0.75, 1, 1.5, 2, 2.5, 3, 4, 5, 6, 7, 8, 9, 10, 13, 16, 20)
     }
     
-    result_df <- perform_normalyzer_run(norm_obj, job_name, default_rt_window, output_path=output_path, 
-                                        rt_windows=rt_windows, verbose=verbose, do_normal_run=do_normal_run, do_rt_run=do_rt_run)
+    nr <- normMethods(norm_obj, job_name, normalizeRetentionTime=FALSE, runNormfinder=FALSE)
+    
+    normal_run_entries <- generate_normal_run_results(nr, adjust_fdr=FALSE)
+    rt_run_entries <- generate_rt_run_results(nr, rt_windows, adjust_fdr=FALSE)
+    
+    print(paste("Normal entries:", length(normal_run_entries)))
+    print(paste("RT entries:", length(rt_run_entries)))
+    
+    stop("Testing - for now")
     
     result_dfs <- slice_results_to_dfs(result_df)
     
@@ -71,134 +127,212 @@ run_review_data_test <- function(subset=FALSE, output_path=NULL, verbose=FALSE, 
     print(paste("Start:", start_time, "End:", end_time))
 }
 
-perform_normalyzer_run <- function(norm_obj, job_name, default_rt_size, output_path=NULL, rt_windows=c(), 
-                                   verbose=FALSE, do_normal_run=TRUE, do_rt_run=TRUE) {
-    
-    nr <- normMethods(norm_obj, job_name, normalizeRetentionTime=FALSE)
+generate_normal_run_results <- function(nr, sig_thres=0.1, adjust_fdr=TRUE) {
     
     used_methods_names <- getUsedMethodNames(nr)
     normalization_matrices <- getNormalizationMatrices(nr)
     
-    header <- c("method", "tot_na_reduced", "rt_settings", 
-                "potato_tot", "pot_nbr_sig_p", "pot_frac_p", "pot_nbr_sig_fdr", "pot_frac_fdr",  
-                "back_tot", "back_nbr_sig_p", "back_frac_p", "back_nbr_sig_fdr", "back_frac_fdr")
-
-    short_header <- c("method", "tot_na_reduced", "rt_settings", "pot_or_back",
-                      "tot", "nbr_sig_p", "frac_p", "nbr_sig_fdr", "frac_fdr")
-
-    output <- data.frame(matrix(ncol=length(short_header), nrow=0))
+    # header <- c("method", "tot_na_reduced", "rt_settings", "potato_tot", "potato_sig", "back_tot", "back_sig")
     
-    print(output)
+    # results_matrix <- data.frame(matrix(ncol=length(header), nrow=0))
+    run_entries <- c()
     
-    fdr_thres <- 0.1
-    p_thres <- 0.03
-    
-    if (do_normal_run) {
-        for (i in 1:length(used_methods_names)) {
-            print(paste("Method: ", used_methods_names[[i]]))
-            run_results <- get_analysis_vector(nr, normalization_matrices[[i]], used_methods_names[[i]], 
-                                               POT_PAT, HUMAN_PAT, p_thres=p_thres, fdr_thres=fdr_thres)
-            output <- rbind(output, run_results)
-        }
-    }
-
-    normalyzer_filterraw <- nr@nds@filterrawdata
-    retention_times <- nr@nds@retentionTimes
-    
-    if (do_rt_run) {
-        for (rt_window in rt_windows) {
-            
-            print(paste("Method: RTs, window size:", rt_window))
-            
-            median_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw, retention_times, medianNormalization, rt_window)
-            output <- get_analysis_vector(output, nr, median_rt, "RT-median", POT_PAT, HUMAN_PAT, short_header, p_thres=p_thres, fdr_thres=fdr_thres, rt_settings=rt_window)
-
-            mean_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw, retention_times, meanNormalization, rt_window)
-            output <- get_analysis_vector(output, nr, mean_rt, "RT-mean", POT_PAT, HUMAN_PAT, short_header, p_thres=p_thres, fdr_thres=fdr_thres, rt_settings=rt_window)
-
-            loess_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw, retention_times, performCyclicLoessNormalization, rt_window)
-            output <- get_analysis_vector(output, nr, loess_rt, "RT-loess", POT_PAT, HUMAN_PAT, short_header, p_thres=p_thres, fdr_thres=fdr_thres, rt_settings=rt_window)
-        }
-    }
-    
-    colnames(output) <- short_header
-    print(output)
-
-    if (verbose) {
-        print(output)
-    }
+    for (i in 1:length(used_methods_names)) {
+        print(paste("Method: ", used_methods_names[[i]]))
+        run_result <- get_run_entry_pair(nr, normalization_matrices[[i]], used_methods_names[[i]], 
+                                           POT_PAT, HUMAN_PAT, sig_thres=sig_thres, adjust_fdr=adjust_fdr)
         
-    if (!is.null(output_path)) {
-        write.csv(output, file=output_path, quote=FALSE)
+        run_entries <- c(run_entries, run_result)
     }
-    
-    output
+    run_entries
 }
 
-get_analysis_vector <- function(return_m, nr, method_data, name, potato_pattern, human_pattern, header_string, p_thres=0.05, fdr_thres=0.1, rt_settings=-1) {
+generate_rt_run_results <- function(nr, rt_windows, sig_thres=0.1, adjust_fdr=TRUE) {
+    
+    used_methods_names <- getUsedMethodNames(nr)
+    normalization_matrices <- getNormalizationMatrices(nr)
+    
+    normalyzer_filterraw <- nr@nds@filterrawdata
+    retention_times <- nr@nds@retentionTimes
+
+    run_entries <- c()
+    
+    print("Performing RT runs")
+
+    for (rt_window in rt_windows) {
+
+        print(paste("Method: RTs, window size:", rt_window))
+
+        median_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw, retention_times, medianNormalization, rt_window)
+        median_entry <- get_run_entry(nr, median_rt, "RT-median", POT_PAT, HUMAN_PAT, sig_thres=sig_thres, adjust_fdr=adjust_fdr, rt_settings=rt_window)
+
+        mean_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw, retention_times, meanNormalization, rt_window)
+        mean_entry <- get_run_entry(nr, mean_rt, "RT-mean", POT_PAT, HUMAN_PAT, sig_thres=sig_thres, adjust_fdr=adjust_fdr, rt_settings=rt_window)
+
+        loess_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw, retention_times, performCyclicLoessNormalization, rt_window)
+        loess_entry <- get_run_entry(nr, loess_rt, "RT-loess", POT_PAT, HUMAN_PAT, sig_thres=sig_thres, adjust_fdr=adjust_fdr, rt_settings=rt_window)
+        
+        run_entries <- c(run_entries, median_entry, mean_entry, loess_entry)
+    }
+    
+    run_entries
+}
+
+# perform_normalyzer_run <- function(norm_obj, job_name, default_rt_size, output_path=NULL, rt_windows=c(), 
+#                                    verbose=FALSE, do_normal_run=TRUE, do_rt_run=TRUE) {
+#     
+#     print("Within perform_normalyzer_run")
+#     
+#     nr <- normMethods(norm_obj, job_name, normalizeRetentionTime=FALSE, runNormfinder=FALSE)
+#     
+#     used_methods_names <- getUsedMethodNames(nr)
+#     normalization_matrices <- getNormalizationMatrices(nr)
+#     
+#     header <- c("method", "tot_na_reduced", "rt_settings", 
+#                 "potato_tot", "pot_nbr_sig_p", "pot_frac_p", "pot_nbr_sig_fdr", "pot_frac_fdr",  
+#                 "back_tot", "back_nbr_sig_p", "back_frac_p", "back_nbr_sig_fdr", "back_frac_fdr")
+# 
+#     short_header <- c("method", "tot_na_reduced", "rt_settings", "pot_or_back",
+#                       "tot", "nbr_sig_p", "frac_p", "nbr_sig_fdr", "frac_fdr")
+# 
+#     output <- data.frame(matrix(ncol=length(short_header), nrow=0))
+#     
+#     print(output)
+#     
+#     fdr_thres <- 0.1
+#     p_thres <- 0.03
+#     
+#     if (do_normal_run) {
+#         
+#         print("Performing normal runs")
+#         for (i in 1:length(used_methods_names)) {
+#             print(paste("Method: ", used_methods_names[[i]]))
+#             run_results <- get_analysis_vector(nr, normalization_matrices[[i]], used_methods_names[[i]], 
+#                                                POT_PAT, HUMAN_PAT, p_thres=p_thres, fdr_thres=fdr_thres)
+#             output <- rbind(output, run_results)
+#         }
+#     }
+# 
+#     normalyzer_filterraw <- nr@nds@filterrawdata
+#     retention_times <- nr@nds@retentionTimes
+#     
+#     if (do_rt_run) {
+#         
+#         print("Performing RT runs")
+#         
+#         for (rt_window in rt_windows) {
+#             
+#             print(paste("Method: RTs, window size:", rt_window))
+#             
+#             median_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw, retention_times, medianNormalization, rt_window)
+#             output <- get_analysis_vector(output, nr, median_rt, "RT-median", POT_PAT, HUMAN_PAT, short_header, p_thres=p_thres, fdr_thres=fdr_thres, rt_settings=rt_window)
+# 
+#             mean_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw, retention_times, meanNormalization, rt_window)
+#             output <- get_analysis_vector(output, nr, mean_rt, "RT-mean", POT_PAT, HUMAN_PAT, short_header, p_thres=p_thres, fdr_thres=fdr_thres, rt_settings=rt_window)
+# 
+#             loess_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw, retention_times, performCyclicLoessNormalization, rt_window)
+#             output <- get_analysis_vector(output, nr, loess_rt, "RT-loess", POT_PAT, HUMAN_PAT, short_header, p_thres=p_thres, fdr_thres=fdr_thres, rt_settings=rt_window)
+#         }
+#     }
+#     
+#     colnames(output) <- short_header
+#     print(output)
+# 
+#     if (verbose) {
+#         print(output)
+#     }
+#         
+#     if (!is.null(output_path)) {
+#         write.csv(output, file=output_path, quote=FALSE)
+#     }
+#     
+#     print(output)
+#     stop("")
+#     
+#     output
+# }
+
+# run_results <- get_analysis_vector(nr, normalization_matrices[[i]], used_methods_names[[i]], 
+#                                    POT_PAT, HUMAN_PAT, sig_thres=sig_thres, adjust_fdr=adjust_fdr)
+
+
+# Generate entry object containing information on number of total and DE found in target pattern and background
+get_run_entry <- function(nr, method_data, name, potato_pattern, human_pattern, sig_thres, adjust_fdr, rt_settings=NULL) {
     
     combined_pattern <- paste0("(", potato_pattern, "|", human_pattern, ")")
     row_name_col <- 3
+    
+    col_pattern <- SAMPLE_PAT
 
-    prepared_df <- get_prepared_normalyzer_sheet(nr, method_data, SAMPLE_PAT, row_name_col)
+    prepared_df <- get_prepared_normalyzer_sheet(nr, method_data, col_pattern, row_name_col)
     na_filter_df <- na_filter(prepared_df)
     anova_pval <- get_anova_pvals(na_filter_df, custom_replicate_groups)
-    anova_fdr <- stats::p.adjust(anova_pval, method="BH")
     
-    tot_passing <- nrow(na_filter_df)
-
-    potato_vector <- get_significance_vector(name, tot_passing, rt_settings, anova_pval, anova_fdr, potato_pattern, p_thres, fdr_thres, pot_or_back=1, inverse_match=FALSE)
-    background_vector <- get_significance_vector(name, tot_passing, rt_settings, anova_pval, anova_fdr, combined_pattern, p_thres, fdr_thres, pot_or_back=0, inverse_match=TRUE)
+    if (adjust_fdr) {
+        anova_fdr <- stats::p.adjust(anova_pval, method="BH")
+        target_anova <- anova_fdr
+    }
+    else {
+        target_anova <- anova_pval
+    }
     
-    return_m <- rbind(return_m, potato_vector, stringsAsFactors=FALSE)
-    return_m <- rbind(return_m, background_vector, stringsAsFactors=FALSE)
+    potato_sig <- target_anova[which(grepl(potato_pattern, names(target_anova)))]
+    nbr_potato_tot <- length(potato_sig)
+    nbr_potato_sig <- length(nbr_potato_tot[which(potato_sig <= sig_thres)])
+    
+    back_sig <- target_anova[which(!grepl(combined_pattern, names(target_anova)))]
+    nbr_back_tot <- length(back_sig)
+    nbr_back_sig <- length(nbr_back_tot[which(back_sig <= sig_thres)])
 
-    return_m
+    tot_passing_na_check <- nrow(na_filter_df)
+    potato_entry <- EntryRow(norm_method=name, 
+                             tot_rows=tot_passing_na_check,
+                             target_tot=nbr_potato_tot,
+                             target_sign=nbr_potato_sig,
+                             background_tot=nbr_back_tot,
+                             background_sign=nbr_back_sig,
+                             rt_settings=NULL)
+    potato_entry
 }
 
 
-# Returns vector on the form: short_header <- c("method", "tot_na_reduced", "rt_settings", "pot_or_back",
-# "tot", "nbr_sig_p", "frac_p", "nbr_sig_fdr", "frac_fdr")
-get_significance_vector <- function(analysis_name, tot_na_reduced, rt_settings, p_vals, fdr_vals, sub_pattern, p_thres, fdr_thres, pot_or_back, inverse_match=FALSE) {
-
-    if (!inverse_match) {
-        sub_pval <- p_vals[which(grepl(sub_pattern, names(p_vals)))]
-    }
-    else {
-        sub_pval <- p_vals[which(!grepl(sub_pattern, names(p_vals)))]
-    }
-    
-    tot_sub <- length(sub_pval)
-    sub_n_p <- length(sub_pval[which(sub_pval <= p_thres)])
-    sub_p_frac <- round(100 * sub_n_p / tot_sub, 1)
-
-    if (!inverse_match) {
-        sub_fdr <- fdr_vals[which(grepl(sub_pattern, names(fdr_vals)))]
-    }
-    else {
-        sub_fdr <- fdr_vals[which(!grepl(sub_pattern, names(fdr_vals)))]
-    }
-    
-    sub_n_fdr <- length(sub_fdr[which(sub_fdr <= fdr_thres)])
-    sub_fdr_frac <- round(100 * sub_n_fdr / tot_sub, 1)
-    
-    result_vector <- c(analysis_name, tot_na_reduced, rt_settings, pot_or_back, tot_sub, sub_n_p, sub_p_frac, sub_n_fdr, sub_fdr_frac)
-}
-
+# # Returns vector on the form: short_header <- c("method", "tot_na_reduced", "rt_settings", "pot_or_back",
+# # "tot", "nbr_sig_p", "frac_p", "nbr_sig_fdr", "frac_fdr")
+# get_significance_vector <- function(analysis_name, tot_na_reduced, anova_vals, sub_pattern, sig_thres, pot_or_back, inverse_match=FALSE, rt_settings=NULL) {
+# 
+#     if (!inverse_match) {
+#         sub_sig <- anova_vals[which(grepl(sub_pattern, names(anova_vals)))]
+#     }
+#     else {
+#         sub_sig <- anova_vals[which(!grepl(sub_pattern, names(anova_vals)))]
+#     }
+#     
+#     tot_sub <- length(sub_sig)
+#     sub_n_sig <- length(sub_sig[which(sub_sig <= sig_thres)])
+#     sub_sig_frac <- round(100 * sub_n_sig / tot_sub, 1)
+# 
+#     if (!is.null(rt_settings)) {
+#         result_vector <- c(analysis_name, tot_na_reduced, rt_settings, tot_sub, sub_n_sig, sub_sig_frac)
+#     }
+#     else {
+#         result_vector <- c(analysis_name, tot_na_reduced, tot_sub, sub_n_sig, sub_sig_frac)
+#     }
+# }
 
 
 get_prepared_normalyzer_sheet <- function(nr, df, col_pattern, row_name_col) {
-    
+
     raw_data <- nr@nds@rawData
-    
     header_row <- 2
     names <- raw_data[-1:-2, row_name_col] 
+    
     target_cols <- which(grepl(col_pattern, raw_data[header_row,]))
-    
-    
+
     parsed_df <- df[, target_cols]
+
     rownames(parsed_df) <- names
     colnames(parsed_df) <- custom_replicate_groups
+    
     parsed_df
 }
 

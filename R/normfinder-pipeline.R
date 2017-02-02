@@ -49,9 +49,8 @@ normfinder <- function(nds) {
     da <- as.matrix(filnavn)
     m <- length(levels(as.factor(gr)))
     medgr <- as.numeric(levels(as.factor(unlist(gr))))
-    
+
     medgen <- c(1:k)                # all genes are included in the analysis
-    
     y1 <- log(da)                   # log of pcr values
 
     y <- y1[medgen, gr == medgr[1]]
@@ -142,10 +141,17 @@ normfinder <- function(nds) {
     for (j in 1:m) {
         va[j,] <- va[j,] / ngr[j]}
     
+    print(paste("dif: ", dif))
+    print(paste("dif: ", m))
+    print(paste("dif: ", k))
+    print(paste("dif: ", va))
+
+    stop("")
+        
     tau <- -1
     
     tau <- sum(dif * dif) / ((m-1) * (k-1)) - mean(va)
-
+    
     if (tau < 0) {
         tau <- 0
     }

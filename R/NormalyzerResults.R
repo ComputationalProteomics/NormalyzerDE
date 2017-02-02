@@ -105,7 +105,7 @@ setGeneric(name="initializeResultsObject",
 #' @rdname performNormalizations
 #' @export
 setGeneric(name="performNormalizations", 
-           function(nr, forceAll, rtNorm, rtWindow) standardGeneric("performNormalizations"))
+           function(nr, forceAll, rtNorm, rtWindow, runNormfinder) standardGeneric("performNormalizations"))
 
 #' Generate basic metrics normalizations
 #'
@@ -187,13 +187,13 @@ setMethod("initializeResultsObject", "NormalyzerResults",
 
 #' @rdname performNormalizations
 setMethod("performNormalizations", "NormalyzerResults",
-          function(nr, forceAll=FALSE, rtNorm=FALSE, rtWindow=0.1) {
+          function(nr, forceAll=FALSE, rtNorm=FALSE, rtWindow=0.1, runNormfinder=TRUE) {
               
               nds <- nr@nds
               nr <- basicMetricNormalizations(nr)
               rtColPresent <- length(nds@retentionTimes) > 0
               
-              if (nrow(nds@normfinderFilterRawData) < nr@normfinderMaxThreshold || forceAll) {
+              if (nrow(nds@normfinderFilterRawData) < nr@normfinderMaxThreshold && runNormfinder || forceAll) {
 
                   if (!nds@singleReplicateRun) {
                       nr@houseKeepingVars <- normfinder(nds)
