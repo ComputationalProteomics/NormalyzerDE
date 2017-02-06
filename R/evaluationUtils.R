@@ -107,10 +107,13 @@ run_review_data_test <- function(subset=FALSE, output_path=NULL, verbose=FALSE, 
     print(paste("Normal entries:", length(normal_run_entries)))
     print(paste("RT entries:", length(rt_run_entries)))
     
+    # stop("Testing - for now")
+    
+    new_visualize_results(plot_path, normal_run_entries, rt_run_entries)
+
     stop("Testing - for now")
-    
+        
     result_dfs <- slice_results_to_dfs(result_df)
-    
 
     if (is.null(plot_path)) {
         print("No plot path specified - No plotting")
@@ -135,14 +138,14 @@ generate_normal_run_results <- function(nr, sig_thres=0.1, adjust_fdr=TRUE) {
     # header <- c("method", "tot_na_reduced", "rt_settings", "potato_tot", "potato_sig", "back_tot", "back_sig")
     
     # results_matrix <- data.frame(matrix(ncol=length(header), nrow=0))
-    run_entries <- c()
+    run_entries <- list()
     
     for (i in 1:length(used_methods_names)) {
         print(paste("Method: ", used_methods_names[[i]]))
-        run_result <- get_run_entry_pair(nr, normalization_matrices[[i]], used_methods_names[[i]], 
+        run_result <- get_run_entry(nr, normalization_matrices[[i]], used_methods_names[[i]], 
                                            POT_PAT, HUMAN_PAT, sig_thres=sig_thres, adjust_fdr=adjust_fdr)
         
-        run_entries <- c(run_entries, run_result)
+        run_entries[[i]] <- run_result
     }
     run_entries
 }
@@ -155,10 +158,11 @@ generate_rt_run_results <- function(nr, rt_windows, sig_thres=0.1, adjust_fdr=TR
     normalyzer_filterraw <- nr@nds@filterrawdata
     retention_times <- nr@nds@retentionTimes
 
-    run_entries <- c()
+    run_entries <- list()
     
     print("Performing RT runs")
 
+    # run_entries_base_index <- 1
     for (rt_window in rt_windows) {
 
         print(paste("Method: RTs, window size:", rt_window))
@@ -171,90 +175,18 @@ generate_rt_run_results <- function(nr, rt_windows, sig_thres=0.1, adjust_fdr=TR
 
         loess_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw, retention_times, performCyclicLoessNormalization, rt_window)
         loess_entry <- get_run_entry(nr, loess_rt, "RT-loess", POT_PAT, HUMAN_PAT, sig_thres=sig_thres, adjust_fdr=adjust_fdr, rt_settings=rt_window)
+
+        run_entries_base_index <- length(run_entries) + 1
+          
+        run_entries[[run_entries_base_index]] <- median_entry
+        run_entries[[run_entries_base_index + 1]] <- mean_entry
+        run_entries[[run_entries_base_index + 2]] <- loess_entry
         
-        run_entries <- c(run_entries, median_entry, mean_entry, loess_entry)
+        # run_entries <- c(run_entries, median_entry, mean_entry, loess_entry)
     }
     
     run_entries
 }
-
-# perform_normalyzer_run <- function(norm_obj, job_name, default_rt_size, output_path=NULL, rt_windows=c(), 
-#                                    verbose=FALSE, do_normal_run=TRUE, do_rt_run=TRUE) {
-#     
-#     print("Within perform_normalyzer_run")
-#     
-#     nr <- normMethods(norm_obj, job_name, normalizeRetentionTime=FALSE, runNormfinder=FALSE)
-#     
-#     used_methods_names <- getUsedMethodNames(nr)
-#     normalization_matrices <- getNormalizationMatrices(nr)
-#     
-#     header <- c("method", "tot_na_reduced", "rt_settings", 
-#                 "potato_tot", "pot_nbr_sig_p", "pot_frac_p", "pot_nbr_sig_fdr", "pot_frac_fdr",  
-#                 "back_tot", "back_nbr_sig_p", "back_frac_p", "back_nbr_sig_fdr", "back_frac_fdr")
-# 
-#     short_header <- c("method", "tot_na_reduced", "rt_settings", "pot_or_back",
-#                       "tot", "nbr_sig_p", "frac_p", "nbr_sig_fdr", "frac_fdr")
-# 
-#     output <- data.frame(matrix(ncol=length(short_header), nrow=0))
-#     
-#     print(output)
-#     
-#     fdr_thres <- 0.1
-#     p_thres <- 0.03
-#     
-#     if (do_normal_run) {
-#         
-#         print("Performing normal runs")
-#         for (i in 1:length(used_methods_names)) {
-#             print(paste("Method: ", used_methods_names[[i]]))
-#             run_results <- get_analysis_vector(nr, normalization_matrices[[i]], used_methods_names[[i]], 
-#                                                POT_PAT, HUMAN_PAT, p_thres=p_thres, fdr_thres=fdr_thres)
-#             output <- rbind(output, run_results)
-#         }
-#     }
-# 
-#     normalyzer_filterraw <- nr@nds@filterrawdata
-#     retention_times <- nr@nds@retentionTimes
-#     
-#     if (do_rt_run) {
-#         
-#         print("Performing RT runs")
-#         
-#         for (rt_window in rt_windows) {
-#             
-#             print(paste("Method: RTs, window size:", rt_window))
-#             
-#             median_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw, retention_times, medianNormalization, rt_window)
-#             output <- get_analysis_vector(output, nr, median_rt, "RT-median", POT_PAT, HUMAN_PAT, short_header, p_thres=p_thres, fdr_thres=fdr_thres, rt_settings=rt_window)
-# 
-#             mean_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw, retention_times, meanNormalization, rt_window)
-#             output <- get_analysis_vector(output, nr, mean_rt, "RT-mean", POT_PAT, HUMAN_PAT, short_header, p_thres=p_thres, fdr_thres=fdr_thres, rt_settings=rt_window)
-# 
-#             loess_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw, retention_times, performCyclicLoessNormalization, rt_window)
-#             output <- get_analysis_vector(output, nr, loess_rt, "RT-loess", POT_PAT, HUMAN_PAT, short_header, p_thres=p_thres, fdr_thres=fdr_thres, rt_settings=rt_window)
-#         }
-#     }
-#     
-#     colnames(output) <- short_header
-#     print(output)
-# 
-#     if (verbose) {
-#         print(output)
-#     }
-#         
-#     if (!is.null(output_path)) {
-#         write.csv(output, file=output_path, quote=FALSE)
-#     }
-#     
-#     print(output)
-#     stop("")
-#     
-#     output
-# }
-
-# run_results <- get_analysis_vector(nr, normalization_matrices[[i]], used_methods_names[[i]], 
-#                                    POT_PAT, HUMAN_PAT, sig_thres=sig_thres, adjust_fdr=adjust_fdr)
-
 
 # Generate entry object containing information on number of total and DE found in target pattern and background
 get_run_entry <- function(nr, method_data, name, potato_pattern, human_pattern, sig_thres, adjust_fdr, rt_settings=NULL) {
@@ -291,7 +223,7 @@ get_run_entry <- function(nr, method_data, name, potato_pattern, human_pattern, 
                              target_sign=nbr_potato_sig,
                              background_tot=nbr_back_tot,
                              background_sign=nbr_back_sig,
-                             rt_settings=NULL)
+                             rt_settings=rt_settings)
     potato_entry
 }
 
@@ -362,7 +294,6 @@ na_filter <- function(df) {
     df_na_removed
 }
 
-
 get_anova_pvals <- function(df, replicate_groups) {
     
     anova_func <- function(sampleIndex) {
@@ -374,70 +305,120 @@ get_anova_pvals <- function(df, replicate_groups) {
 }
 
 
-visualize_results <- function(result_dfs, output_path, x_col, y_col, 
-                              title="Default title", xlab="Default xlab", ylab="Default ylab") {
-
+new_visualize_results <- function(output_path, normal_objects, rt_objects, title="[title]", xlab="[xlab]", ylab="[ylab]") {
+    
+    # Visualize normal entry with ggplot
+    
     dark_colors <- c("darkgreen", "darkblue", "darkred")
     bright_colors <- c("green", "blue", "red")
     
     all_colors <- c("green", "darkgreen", "blue", "darkblue", "red", "darkred")
     techniques <- c("Loess, background", "Loess, potato", "Mean, background", "Mean, potato", "Median, background", "Median, potato")
     
-    plt <- ggplot() + scale_colour_manual(labels=techniques, values=all_colors)
+    plt <- ggplot() #+ scale_colour_manual(labels=techniques, values=all_colors)
     plt <- plt + ggtitle(title)
     plt <- plt + xlab(xlab)
     plt <- plt + ylab(ylab)
     
-    for (result_df in result_dfs) {
+    full_df <- data.frame(matrix(nrow=0, ncol=3))
+    colnames(full_df) <- c("x", "y_level", "norm_method")
+    
+    # RT plotting
+    
+    for (i in 1:length(rt_objects)) {
         
-        plt <- plt + geom_line(data=result_df, aes_string(x=x_col, y=y_col, colour="method_and_settings"))
-        plt <- plt + geom_point(data=result_df, aes_string(x=x_col, y=y_col, colour="method_and_settings"))
+        rt_obj <- rt_objects[[i]]
+        
+        print(paste("Target obj:", rt_obj))
+        
+        y_level <- rt_obj$target_sign / rt_obj$target_tot
+        
+        x <- rt_obj$rt_settings
+        print(x)
+        
+        # norm_method <- paste(rt_obj$norm_method, rt_obj$rt_settings, sep="_")
+        
+        print(paste("Norm method: ", rt_obj$norm_method))
+        
+        df <- data.frame(x, y_level, rt_obj$norm_method)
+        colnames(df) <- c("x", "y_level", "norm_method")
+        
+        full_df <- rbind(full_df, df)
+        
     }
     
-    ggsave(output_path)
-}
-
-slice_results_to_dfs <- function(result_m) {
+    # Normal plotting
     
-    result_dfs <- list()
-
-    convert_to_numericals <- c("tot_na_reduced", "rt_settings", "pot_or_back",
-                               "tot", "nbr_sig_p", "frac_p", "nbr_sig_fdr", "frac_fdr")
+    min_rt_setting <- min(sapply(rt_run_entries, function(x) {x$rt_settings}))
+    max_rt_setting <- max(sapply(rt_run_entries, function(x) {x$rt_settings}))
+    x <- c(min_rt_setting, max_rt_setting)
     
-    method_settings_col <- paste0(result_m$method, result_m$pot_or_back)
-    result_m <- cbind(result_m, method_and_settings=method_settings_col)
-
-    unique_techniques <- unique(result_m$method_and_settings)
-    
-    list_index <- 1
-    for (tech in unique_techniques) {
+    for (i in 1:length(normal_objects)) {
         
-        tmp_df <- result_m[which(result_m$method_and_settings == tech),]
-        tmp_df[["rt_settings"]] <- as.numeric(tmp_df[["rt_settings"]])
-        
-        for (field in convert_to_numericals) {
-            tmp_df[[field]] <- as.numeric(tmp_df[[field]])
-        }
-        
-        result_dfs[[list_index]] <- tmp_df
-        list_index <- list_index + 1
+        obj <- normal_objects[[i]]
+        y_level <- obj$target_sign / obj$target_tot
+        df <- data.frame(x, y_level, obj$norm_method)
+        colnames(df) <- c("x", "y_level", "norm_method")
+        full_df <- rbind(full_df, df)
     }
+
+    plt <- plt + geom_line(data=full_df, aes_string(x="x", y="y_level", colour="norm_method"))
+    plt <- plt + geom_point(data=full_df, aes_string(x="x", y="y_level", colour="norm_method"))
     
-    result_dfs
+    plt
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
+# visualize_results <- function(result_dfs, output_path, x_col, y_col, 
+#                               title="Default title", xlab="Default xlab", ylab="Default ylab") {
+# 
+#     dark_colors <- c("darkgreen", "darkblue", "darkred")
+#     bright_colors <- c("green", "blue", "red")
+#     
+#     all_colors <- c("green", "darkgreen", "blue", "darkblue", "red", "darkred")
+#     techniques <- c("Loess, background", "Loess, potato", "Mean, background", "Mean, potato", "Median, background", "Median, potato")
+#     
+#     plt <- ggplot() + scale_colour_manual(labels=techniques, values=all_colors)
+#     plt <- plt + ggtitle(title)
+#     plt <- plt + xlab(xlab)
+#     plt <- plt + ylab(ylab)
+#     
+#     for (result_df in result_dfs) {
+#         
+#         plt <- plt + geom_line(data=result_df, aes_string(x=x_col, y=y_col, colour="method_and_settings"))
+#         plt <- plt + geom_point(data=result_df, aes_string(x=x_col, y=y_col, colour="method_and_settings"))
+#     }
+#     
+#     ggsave(output_path)
+# }
+# 
+# slice_results_to_dfs <- function(result_m) {
+#     
+#     result_dfs <- list()
+# 
+#     convert_to_numericals <- c("tot_na_reduced", "rt_settings", "pot_or_back",
+#                                "tot", "nbr_sig_p", "frac_p", "nbr_sig_fdr", "frac_fdr")
+#     
+#     method_settings_col <- paste0(result_m$method, result_m$pot_or_back)
+#     result_m <- cbind(result_m, method_and_settings=method_settings_col)
+# 
+#     unique_techniques <- unique(result_m$method_and_settings)
+#     
+#     list_index <- 1
+#     for (tech in unique_techniques) {
+#         
+#         tmp_df <- result_m[which(result_m$method_and_settings == tech),]
+#         tmp_df[["rt_settings"]] <- as.numeric(tmp_df[["rt_settings"]])
+#         
+#         for (field in convert_to_numericals) {
+#             tmp_df[[field]] <- as.numeric(tmp_df[[field]])
+#         }
+#         
+#         result_dfs[[list_index]] <- tmp_df
+#         list_index <- list_index + 1
+#     }
+#     
+#     result_dfs
+# }
 
 
 
