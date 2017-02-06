@@ -37,7 +37,9 @@ custom_replicate_groups <- c(2,2,2,2,2,2,2,3,3,3,3,3,3,3)
 
 run_review_data_test <- function(subset=FALSE, output_path=NULL, verbose=FALSE, 
                                  plot_path=NULL, do_normal_run=TRUE, do_rt_run=TRUE,
-                                 measure_type="fscore") {
+                                 measure_type="fscore", sig_thres=0.1, do_fdr=TRUE) {
+    
+    print(paste("Evaluation run with sig_thres:", sig_thres, "and FDR setting:", do_fdr))
     
     if (measure_type == "fscore") {
         plot_ylabs <- "F-score"
@@ -82,8 +84,8 @@ run_review_data_test <- function(subset=FALSE, output_path=NULL, verbose=FALSE,
     
     nr <- normMethods(norm_obj, job_name, normalizeRetentionTime=FALSE, runNormfinder=FALSE)
     
-    normal_run_entries <- generate_normal_run_results(nr, adjust_fdr=FALSE)
-    rt_run_entries <- generate_rt_run_results(nr, rt_windows, adjust_fdr=FALSE)
+    normal_run_entries <- generate_normal_run_results(nr, adjust_fdr=do_fdr, sig_thres=sig_thres)
+    rt_run_entries <- generate_rt_run_results(nr, rt_windows, adjust_fdr=do_fdr, sig_thres=sig_thres)
     
     print(paste("Normal entries:", length(normal_run_entries)))
     print(paste("RT entries:", length(rt_run_entries)))
@@ -99,38 +101,43 @@ run_review_data_test <- function(subset=FALSE, output_path=NULL, verbose=FALSE,
         }
     }
     
-    if (is.null(plot_path)) {
-        print("No plot path specified - No plotting")
-    }
-    else {
-        print("Visualizing results...")
+    print("Visualizing results...")
+    print(length(score_funcs))
+    
+    plots <- list()
+    for (i in 1:length(score_funcs)) {
         
-        print(length(score_funcs))
+        score_func <- score_funcs[[i]]
+        y_lab <- plot_ylabs[i]
         
-        for (i in 1:length(score_funcs)) {
-            
-            score_func <- score_funcs[[i]]
-            y_lab <- plot_ylabs[i]
-            
-            print(paste("Plotting", y_lab))
-            
-            print(y_lab)
-            print(tolower(y_lab))
-            print(plot_path)
-            print(paste(tolower(y_lab), plot_path))
-            
-            visualize_results_new(paste(plot_path, tolower(y_lab), "png", sep="."), 
-                                  normal_run_entries, 
-                                  rt_run_entries,
-                                  score_func,
-                                  title="Normalization evaluation",
-                                  xlab="RT window size (minutes)",
-                                  ylab=y_lab,
-                                  verbose=verbose)
+        sub_plot_path <- paste(plot_path, tolower(y_lab), "png", sep=".")
+        
+        include_legend <- TRUE
+        if (i != length(score_funcs)) {
+            include_legend <- FALSE
         }
         
+        plt <- visualize_results_new(sub_plot_path,
+                              normal_run_entries,
+                              rt_run_entries,
+                              score_func,
+                              title=y_lab,
+                              xlab="RT window size (minutes)",
+                              ylab=y_lab,
+                              verbose=verbose,
+                              include_legend=include_legend,
+                              multiplot=TRUE)
+        plots[[i]] <- plt
     }
-    
+
+    plot_path <- paste(plot_path, "png", sep=".")
+    png(plot_path)
+    # multiplot(p1, p2, p3, p4, cols=2)
+    # multiplot(plotlist=plots, cols=length(plots))
+    grid_arrange_shared_legend(plots=plots, ncol=length(plots))
+    dev.off()
+    # ggsave(plot_path)
+
     end_time <- Sys.time()
     print(difftime(end_time, start_time))
     print(paste("Start:", start_time, "End:", end_time))
@@ -164,8 +171,6 @@ generate_rt_run_results <- function(nr, rt_windows, sig_thres=0.1, adjust_fdr=TR
     retention_times <- nr@nds@retentionTimes
 
     run_entries <- list()
-    
-    # run_entries_base_index <- 1
     for (rt_window in rt_windows) {
 
         print(paste("Method: RTs, window size:", rt_window))
