@@ -7,34 +7,57 @@
 #' @param stepSizeMinutes Size of windows to be normalized
 #' @param offset Whether time window should shifted half step size
 #' @return Normalized matrix
-getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSizeMinutes, offset=0) {
+getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSizeMinutes, windowMinCount=1, offset=0) {
+    
+    sortedRT <- sort(retentionTimes)
     
     startVal <- min(na.omit(retentionTimes))
     endVal <- max(na.omit(retentionTimes))
     rowNumbers <- c()
     
-    # print(paste("Original start time", startVal))
-    
     if (offset) {
         startVal <- startVal - stepSizeMinutes * offset
-        # startVal <- startVal - stepSizeMinutes / 2
     }
     
     processedRows <- matrix(, ncol=ncol(rawMatrix), nrow=0)
+    windowStart <- startVal
+    windowEnd <- startVal + stepSizeMinutes
     
-    for (windowStart in seq(startVal, endVal, stepSizeMinutes)) {
+    while (windowEnd < endVal) {
         
         windowEnd <- windowStart + stepSizeMinutes
-        sliceRows <- which(retentionTimes >= windowStart & retentionTimes < windowEnd)
-        rowNumbers <- c(rowNumbers, sliceRows)
+        firstTimeSlicedIndices <- which(retentionTimes >= windowStart & retentionTimes < windowEnd)
         
-        currentRows <- rawMatrix[sliceRows,, drop=FALSE]
-        
-        if (length(currentRows) > 0) {
+        if (length(firstTimeSlicedIndices) < windowMinCount) {
             
-            processedSlice <- normMethod(currentRows)
-            processedRows <- rbind(processedRows, processedSlice)
+            startPos <- which(sortedRT >= windowStart)[1]
+            if (startPos + windowMinCount < endVal) {
+                endPos <- startPos + windowMinCount
+            }
+            else {
+                endPos <- length(retentionTimes)
+            }
+            
+            windowStart <- sortedRT[startPos]
+            windowEnd <- sortedRT[endPos]
+            nextWindowStart <- sortedRT[endPos + 1]
+            
+            fixSlicedIndices <- c(startPos:endPos)
+            posSliced <- sortedRT[fixSlicedIndices]
+            timeSlicedIndices <- match(posSliced, retentionTimes)
         }
+        else {
+            timeSlicedIndices <- firstTimeSlicedIndices
+            nextWindowStart <- windowEnd
+        }
+
+        rowNumbers <- c(rowNumbers, timeSlicedIndices)
+        currentRows <- rawMatrix[timeSlicedIndices,, drop=FALSE]
+        
+        processedSlice <- normMethod(currentRows)
+        processedRows <- rbind(processedRows, processedSlice)
+        
+        windowStart <- nextWindowStart
     }
     
     orderedProcessedRows <- processedRows[order(rowNumbers), ]
@@ -56,7 +79,7 @@ getSmoothedRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod,
 
     for (i in 1:frame_shifts) {
         frac_shift <- (i - 1) * 1 / frame_shifts
-        matrices[[i]] <- getRTNormalizedMatrix(rawMatrix, retentionTimes, normMethod, stepSizeMinutes, frac_shift)
+        matrices[[i]] <- getRTNormalizedMatrix(rawMatrix, retentionTimes, normMethod, stepSizeMinutes, windowMinCount=4, offset=frac_shift)
     }
     
     # mean, median, anonymous...

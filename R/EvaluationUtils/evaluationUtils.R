@@ -66,8 +66,14 @@ run_review_data_test <- function(output_base,
     else        rt_windows <- c(0.2, 0.5, 0.75, 1, 1.5, 2, 2.5, 3, 4, 5, 6, 7, 8, 9, 10, 13, 16, 20)
     
     nr <- normMethods(norm_obj, job_name, normalizeRetentionTime=FALSE, runNormfinder=FALSE)
-    normal_run_entries <- generate_normal_run_results(nr, adjust_fdr=do_fdr, sig_thres=sig_thres)
-    rt_run_entries <- generate_rt_run_results(nr, rt_windows, adjust_fdr=do_fdr, sig_thres=sig_thres, frame_shifts=frame_shifts)
+    
+    if (do_normal_run){
+        normal_run_entries <- generate_normal_run_results(nr, adjust_fdr=do_fdr, sig_thres=sig_thres)
+    }
+    
+    if (do_rt_run) {
+        rt_run_entries <- generate_rt_run_results(nr, rt_windows, adjust_fdr=do_fdr, sig_thres=sig_thres, frame_shifts=frame_shifts)
+    }
     
     print(paste("Normal entries:", length(normal_run_entries)))
     print(paste("RT entries:", length(rt_run_entries)))
@@ -260,7 +266,6 @@ get_prepared_normalyzer_sheet <- function(nr, df, col_pattern, row_name_col) {
     names <- raw_data[-1:-2, row_name_col] 
     
     target_cols <- which(grepl(col_pattern, raw_data[header_row,]))
-
     parsed_df <- df[, target_cols]
 
     rownames(parsed_df) <- names
