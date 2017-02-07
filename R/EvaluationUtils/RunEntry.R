@@ -1,4 +1,5 @@
-header <- c("method", "tot_na_reduced", "rt_settings", "potato_tot", "potato_sig", "back_tot", "back_sig")
+header <- c("method", "tot_na_reduced", "potato_tot", "potato_sig", "back_tot", "back_sig", "rt_settings")
+header_without_rt <- c("method", "tot_na_reduced", "potato_tot", "potato_sig", "back_tot", "back_sig")
 
 EntryRow <- function(norm_method, tot_rows, target_tot, target_sign, 
                      background_tot, background_sign, rt_settings=NULL) {
@@ -35,11 +36,12 @@ get_entry_vector <- function(e) {
 
 get_entry_header <- function(e) {
     
-    header <- c("method", "tot_na_reduced", "rt_settings", "potato_tot", "potato_sig", "back_tot", "back_sig")
     if (!is.null(e$rt_settings)) {
-        header <- c(header, e$rt_settings)
+        header
     }
-    header
+    else {
+        header_without_rt
+    }
 }
 
 get_precision <- function(e) {

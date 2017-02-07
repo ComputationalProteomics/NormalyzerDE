@@ -63,8 +63,8 @@ run_review_data_test <- function(output_base,
     norm_obj <- getVerifiedNormalyzerObject(review_data_path, job_name)
 
     if (subset) rt_windows <- c(1, 2, 3)
-
     else        rt_windows <- c(0.2, 0.5, 0.75, 1, 1.5, 2, 2.5, 3, 4, 5, 6, 7, 8, 9, 10, 13, 16, 20)
+    
     nr <- normMethods(norm_obj, job_name, normalizeRetentionTime=FALSE, runNormfinder=FALSE)
     normal_run_entries <- generate_normal_run_results(nr, adjust_fdr=do_fdr, sig_thres=sig_thres)
     rt_run_entries <- generate_rt_run_results(nr, rt_windows, adjust_fdr=do_fdr, sig_thres=sig_thres, frame_shifts=frame_shifts)
@@ -92,8 +92,6 @@ run_review_data_test <- function(output_base,
         score_func <- score_funcs[[i]]
         y_lab <- plot_ylabs[i]
         
-        # sub_plot_path <- paste(plot_path, tolower(y_lab), "png", sep=".")
-        
         include_legend <- TRUE
         if (i != length(score_funcs)) {
             include_legend <- FALSE
@@ -103,10 +101,15 @@ run_review_data_test <- function(output_base,
                               rt_run_entries,
                               score_func,
                               title=y_lab,
-                              xlab="RT window size (minutes)",
+                              xlab="RT window size (min)",
                               ylab=y_lab,
                               verbose=verbose)
         plots[[i]] <- plt
+        
+        norm_sub_path <- paste(plot_path, tolower(y_lab), "norm", "csv", sep=".")
+        rt_sub_path <- paste(plot_path, tolower(y_lab), "rt", "csv", sep=".")
+        write_entries_to_file(norm_sub_path, normal_run_entries)
+        write_entries_to_file(rt_sub_path, rt_run_entries)
     }
 
     plot_path <- paste(plot_path, "png", sep=".")
@@ -167,8 +170,6 @@ generate_normal_run_results <- function(nr, sig_thres=0.1, adjust_fdr=TRUE) {
     used_methods_names <- getUsedMethodNames(nr)
     normalization_matrices <- getNormalizationMatrices(nr)
     
-    # header <- c("method", "tot_na_reduced", "rt_settings", "potato_tot", "potato_sig", "back_tot", "back_sig")
-    # results_matrix <- data.frame(matrix(ncol=length(header), nrow=0))
     run_entries <- list()
     
     for (i in 1:length(used_methods_names)) {
@@ -302,6 +303,46 @@ get_anova_pvals <- function(df, replicate_groups) {
     anovaPVal <- apply(df, 1, anova_func)
     anovaPVal
 }
+
+write_entries_to_file <- function(out_path, run_entries) {
+    
+    first_entry_v <- get_entry_vector(run_entries[[1]])
+    out_strs <- matrix(ncol=length(first_entry_v), nrow=0)
+    first_entry_head <- get_entry_header(run_entries[[1]])
+    
+    print(first_entry_v)
+    print(first_entry_head)
+    
+    colnames(out_strs) <- get_entry_header(run_entries[[1]])
+    
+    for (i in 1:length(run_entries)) {
+        
+        entry <- run_entries[[i]]
+        out_strs <- rbind(out_strs, get_entry_vector(entry))
+    }
+    
+    
+    print(out_strs)
+    
+    write.csv(out_strs, file=out_path, quote=FALSE, row.names=FALSE)
+    
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
