@@ -1,6 +1,6 @@
 library("ggplot2")
 
-visualize_results_new <- function(output_path, normal_objects, rt_objects, target_measure_func,
+visualize_results_new <- function(normal_objects, rt_objects, target_measure_func,
                                   title="[title]", xlab="[xlab]", ylab="[ylab]",
                                   verbose=FALSE) {
     
@@ -16,7 +16,7 @@ visualize_results_new <- function(output_path, normal_objects, rt_objects, targe
     max_rt_setting <- max(sapply(rt_objects, function(x) { x$rt_settings }))
     x_lim <- c(min_rt_setting, max_rt_setting)
     
-    print(target_measure_func)
+    # print(target_measure_func)
     
     rt_df <- get_rt_plotting_df(rt_objects, target_measure_func)
     normal_df <- get_normal_plotting_df(normal_objects, x_lim, target_measure_func)
@@ -30,7 +30,7 @@ visualize_results_new <- function(output_path, normal_objects, rt_objects, targe
     }
     
     plt <- plt + geom_line(data=full_df, aes_string(x="x", y="y_level", colour="norm_method")) + ylim(0, 1)
-    plt <- plt + geom_point(data=full_df, aes_string(x="x", y="y_level", colour="norm_method")) + ylim(0, 1)
+    plt <- plt + geom_point(data=full_df, aes_string(x="x", y="y_level", colour="norm_method"))
 
     plt
 }

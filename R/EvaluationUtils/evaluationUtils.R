@@ -15,6 +15,7 @@ source("utils.R")
 source("inputVerification.R")
 source("analyzeResults.R")
 source("normMethods.R")
+source("higherOrderNormMethods.R")
 source("normfinder-pipeline.R")
 
 source("EvaluationUtils/evaluationPlotting.R")
@@ -35,32 +36,21 @@ COMBINED_PATTERN <- paste0("(", POT_PAT, "|", HUMAN_PAT, ")")
 custom_replicate_groups <- c(2,2,2,2,2,2,2,3,3,3,3,3,3,3)
 
 
-run_review_data_test <- function(subset=FALSE, output_path=NULL, verbose=FALSE, 
-                                 plot_path=NULL, do_normal_run=TRUE, do_rt_run=TRUE,
-                                 measure_type="fscore", sig_thres=0.1, do_fdr=TRUE) {
+run_review_data_test <- function(output_base, 
+                                 subset=FALSE,
+                                 do_normal_run=TRUE, 
+                                 do_rt_run=TRUE, 
+                                 verbose=FALSE,
+                                 measure_type="all", 
+                                 sig_thres=0.1, 
+                                 do_fdr=TRUE,
+                                 frame_shifts=3) {
     
+    output_path <- paste(output_base, "csv", sep=".")
+    plot_path <- paste(output_base, "png", sep=".")
     print(paste("Evaluation run with sig_thres:", sig_thres, "and FDR setting:", do_fdr))
-    
-    if (measure_type == "fscore") {
-        plot_ylabs <- "F-score"
-        score_funcs <- get_f_score
-    }
-    else if (measure_type == "precision") {
-        plot_ylabs <- "Precision"
-        score_funcs <- get_precision
-    }
-    else if (measure_type == "recall") {
-        plot_ylabs <- "Recall"
-        score_funcs <- get_recall
-    }
-    else if (measure_type == "all") {
-        plot_ylabs <- c("F-score", "Precision", "Recall")
-        score_funcs <- list(get_f_score, get_precision, get_recall)
-    }
-    else {
-        stop(paste("Unknown measure_type:", measure_type))
-    }
-    
+    plot_ylabs <- get_y_label(measure_type)
+    score_funcs <- get_norm_methods(measure_type)
     print(paste("Processing using measure:", measure_type))
     
     start_time <- Sys.time()
@@ -69,23 +59,15 @@ run_review_data_test <- function(subset=FALSE, output_path=NULL, verbose=FALSE,
     else review_data_path <- paste("../tests/data", full_report, sep="/")
     
     print(paste("Processing dataset:", review_data_path))
-    
     job_name <- "review_evaluation"
     norm_obj <- getVerifiedNormalyzerObject(review_data_path, job_name)
 
-    default_rt_window <- 2
-    
-    if (subset) {
-        rt_windows <- c(1, 2, 3)
-    }
-    else {
-        rt_windows <- c(0.2, 0.5, 0.75, 1, 1.5, 2, 2.5, 3, 4, 5, 6, 7, 8, 9, 10, 13, 16, 20)
-    }
-    
+    if (subset) rt_windows <- c(1, 2, 3)
+
+    else        rt_windows <- c(0.2, 0.5, 0.75, 1, 1.5, 2, 2.5, 3, 4, 5, 6, 7, 8, 9, 10, 13, 16, 20)
     nr <- normMethods(norm_obj, job_name, normalizeRetentionTime=FALSE, runNormfinder=FALSE)
-    
     normal_run_entries <- generate_normal_run_results(nr, adjust_fdr=do_fdr, sig_thres=sig_thres)
-    rt_run_entries <- generate_rt_run_results(nr, rt_windows, adjust_fdr=do_fdr, sig_thres=sig_thres)
+    rt_run_entries <- generate_rt_run_results(nr, rt_windows, adjust_fdr=do_fdr, sig_thres=sig_thres, frame_shifts=frame_shifts)
     
     print(paste("Normal entries:", length(normal_run_entries)))
     print(paste("RT entries:", length(rt_run_entries)))
@@ -110,37 +92,74 @@ run_review_data_test <- function(subset=FALSE, output_path=NULL, verbose=FALSE,
         score_func <- score_funcs[[i]]
         y_lab <- plot_ylabs[i]
         
-        sub_plot_path <- paste(plot_path, tolower(y_lab), "png", sep=".")
+        # sub_plot_path <- paste(plot_path, tolower(y_lab), "png", sep=".")
         
         include_legend <- TRUE
         if (i != length(score_funcs)) {
             include_legend <- FALSE
         }
         
-        plt <- visualize_results_new(sub_plot_path,
-                              normal_run_entries,
+        plt <- visualize_results_new(normal_run_entries,
                               rt_run_entries,
                               score_func,
                               title=y_lab,
                               xlab="RT window size (minutes)",
                               ylab=y_lab,
-                              verbose=verbose,
-                              include_legend=include_legend,
-                              multiplot=TRUE)
+                              verbose=verbose)
         plots[[i]] <- plt
     }
 
     plot_path <- paste(plot_path, "png", sep=".")
     png(plot_path)
-    # multiplot(p1, p2, p3, p4, cols=2)
     # multiplot(plotlist=plots, cols=length(plots))
     grid_arrange_shared_legend(plots=plots, ncol=length(plots))
     dev.off()
-    # ggsave(plot_path)
 
     end_time <- Sys.time()
     print(difftime(end_time, start_time))
     print(paste("Start:", start_time, "End:", end_time))
+}
+
+get_y_label <- function(measure_type) {
+    
+    if (measure_type == "fscore") {
+        plot_ylabs <- "F-score"
+    }
+    else if (measure_type == "precision") {
+        plot_ylabs <- "Precision"
+    }
+    else if (measure_type == "recall") {
+        plot_ylabs <- "Recall"
+    }
+    else if (measure_type == "all") {
+        plot_ylabs <- c("F-score", "Precision", "Recall")
+    }
+    else {
+        stop(paste("Unknown measure_type:", measure_type))
+    }
+    
+    plot_ylabs    
+}
+
+get_norm_methods <- function(measure_type) {
+    
+    if (measure_type == "fscore") {
+        score_funcs <- get_f_score
+    }
+    else if (measure_type == "precision") {
+        score_funcs <- get_precision
+    }
+    else if (measure_type == "recall") {
+        score_funcs <- get_recall
+    }
+    else if (measure_type == "all") {
+        score_funcs <- list(get_f_score, get_precision, get_recall)
+    }
+    else {
+        stop(paste("Unknown measure_type:", measure_type))
+    }
+    
+    score_funcs
 }
 
 generate_normal_run_results <- function(nr, sig_thres=0.1, adjust_fdr=TRUE) {
@@ -162,7 +181,7 @@ generate_normal_run_results <- function(nr, sig_thres=0.1, adjust_fdr=TRUE) {
     run_entries
 }
 
-generate_rt_run_results <- function(nr, rt_windows, sig_thres=0.1, adjust_fdr=TRUE) {
+generate_rt_run_results <- function(nr, rt_windows, sig_thres=0.1, adjust_fdr=TRUE, frame_shifts=3) {
     
     used_methods_names <- getUsedMethodNames(nr)
     normalization_matrices <- getNormalizationMatrices(nr)
@@ -175,13 +194,13 @@ generate_rt_run_results <- function(nr, rt_windows, sig_thres=0.1, adjust_fdr=TR
 
         print(paste("Method: RTs, window size:", rt_window))
 
-        median_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw, retention_times, medianNormalization, rt_window)
+        median_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw, retention_times, medianNormalization, rt_window, frame_shifts=frame_shifts)
         median_entry <- get_run_entry(nr, median_rt, "RT-median", POT_PAT, HUMAN_PAT, sig_thres=sig_thres, adjust_fdr=adjust_fdr, rt_settings=rt_window)
 
-        mean_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw, retention_times, meanNormalization, rt_window)
+        mean_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw, retention_times, meanNormalization, rt_window, frame_shifts=frame_shifts)
         mean_entry <- get_run_entry(nr, mean_rt, "RT-mean", POT_PAT, HUMAN_PAT, sig_thres=sig_thres, adjust_fdr=adjust_fdr, rt_settings=rt_window)
 
-        loess_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw, retention_times, performCyclicLoessNormalization, rt_window)
+        loess_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw, retention_times, performCyclicLoessNormalization, rt_window, frame_shifts=frame_shifts)
         loess_entry <- get_run_entry(nr, loess_rt, "RT-loess", POT_PAT, HUMAN_PAT, sig_thres=sig_thres, adjust_fdr=adjust_fdr, rt_settings=rt_window)
 
         run_entries_base_index <- length(run_entries) + 1

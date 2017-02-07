@@ -55,6 +55,7 @@ normalyzer <- function(inputPath,
     source("generatePlots.R")
     source("normfinder-pipeline.R")
     source("normMethods.R")
+    source("higherOrderNormMethods.R")
     source("printMeta.R")
     source("printPlots.R")
     

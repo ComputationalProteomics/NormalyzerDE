@@ -151,6 +151,7 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL, single_lege
 
 grid_arrange_shared_legend <- function(plots, ncol = length(list(...)), nrow = 1, position = c("bottom", "right")) {
     
+    library(grid)
     library(gridExtra)
     
     # plots <- list(...)
