@@ -177,3 +177,9 @@ grid_arrange_shared_legend <- function(plots, ncol = length(list(...)), nrow = 1
     
 }
 
+get_datestamp_string <- function() {
+    format(Sys.time(), "%Y%m%d_%H%M%S")
+}
+
+
+

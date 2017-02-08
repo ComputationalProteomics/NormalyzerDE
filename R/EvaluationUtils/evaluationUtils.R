@@ -44,7 +44,10 @@ run_review_data_test <- function(output_base,
                                  measure_type="all", 
                                  sig_thres=0.1, 
                                  do_fdr=TRUE,
-                                 frame_shifts=3) {
+                                 frame_shifts=3,
+                                 lowest_window_size=1,
+                                 window_merge_method="median",
+                                 custom_rt_windows=NULL) {
     
     output_path <- paste(output_base, "csv", sep=".")
     plot_path <- paste(output_base, "png", sep=".")
@@ -62,8 +65,9 @@ run_review_data_test <- function(output_base,
     job_name <- "review_evaluation"
     norm_obj <- getVerifiedNormalyzerObject(review_data_path, job_name)
 
-    if (subset) rt_windows <- c(1, 2, 3)
-    else        rt_windows <- c(0.2, 0.5, 0.75, 1, 1.5, 2, 2.5, 3, 4, 5, 6, 7, 8, 9, 10, 13, 16, 20)
+    if (!is.null(custom_rt_windows))    rt_windows <- custom_rt_windows
+    else if (subset)                    rt_windows <- c(1, 2, 3)
+    else                                rt_windows <- c(0.2, 0.5, 0.75, 1, 1.5, 2, 2.5, 3, 4, 5, 6, 7, 8, 9, 10, 13, 16, 20)
     
     nr <- normMethods(norm_obj, job_name, normalizeRetentionTime=FALSE, runNormfinder=FALSE)
     
@@ -188,7 +192,7 @@ generate_normal_run_results <- function(nr, sig_thres=0.1, adjust_fdr=TRUE) {
     run_entries
 }
 
-generate_rt_run_results <- function(nr, rt_windows, sig_thres=0.1, adjust_fdr=TRUE, frame_shifts=3) {
+generate_rt_run_results <- function(nr, rt_windows, sig_thres=0.1, adjust_fdr=TRUE, frame_shifts=3, win_size_min=1) {
     
     used_methods_names <- getUsedMethodNames(nr)
     normalization_matrices <- getNormalizationMatrices(nr)
@@ -314,10 +318,6 @@ write_entries_to_file <- function(out_path, run_entries) {
     first_entry_v <- get_entry_vector(run_entries[[1]])
     out_strs <- matrix(ncol=length(first_entry_v), nrow=0)
     first_entry_head <- get_entry_header(run_entries[[1]])
-    
-    print(first_entry_v)
-    print(first_entry_head)
-    
     colnames(out_strs) <- get_entry_header(run_entries[[1]])
     
     for (i in 1:length(run_entries)) {
@@ -325,9 +325,6 @@ write_entries_to_file <- function(out_path, run_entries) {
         entry <- run_entries[[i]]
         out_strs <- rbind(out_strs, get_entry_vector(entry))
     }
-    
-    
-    print(out_strs)
     
     write.csv(out_strs, file=out_path, quote=FALSE, row.names=FALSE)
     

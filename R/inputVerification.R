@@ -25,7 +25,6 @@ getVerifiedNormalyzerObject <- function(inputPath, jobName, threshold=15,
     validateSampleReplication(lowCountSampleFiltered, requireReplicates=requireReplicates)
     
     nds <- generateNormalyzerDataset(lowCountSampleFiltered, jobName)
-    
     nds
 }
 

@@ -73,18 +73,17 @@ getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSiz
 #' @param stepSizeMinutes Size of windows to be normalized
 #' @param offset Whether time window should shifted half step size
 #' @return Normalized matrix
-getSmoothedRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSizeMinutes, frame_shifts=2) {
+getSmoothedRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSizeMinutes, frame_shifts=2, win_size_min=1) {
     
     matrices <- list()
 
     for (i in 1:frame_shifts) {
         frac_shift <- (i - 1) * 1 / frame_shifts
-        matrices[[i]] <- getRTNormalizedMatrix(rawMatrix, retentionTimes, normMethod, stepSizeMinutes, windowMinCount=4, offset=frac_shift)
+        matrices[[i]] <- getRTNormalizedMatrix(rawMatrix, retentionTimes, normMethod, stepSizeMinutes, windowMinCount=win_size_min, offset=frac_shift)
     }
     
     # mean, median, anonymous...
     combinedMatrices <- getCombinedMatrix(matrices, median)
-    
     combinedMatrices
 }
 
