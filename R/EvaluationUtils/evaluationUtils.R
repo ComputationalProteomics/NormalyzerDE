@@ -76,7 +76,13 @@ run_review_data_test <- function(output_base,
     }
     
     if (do_rt_run) {
-        rt_run_entries <- generate_rt_run_results(nr, rt_windows, adjust_fdr=do_fdr, sig_thres=sig_thres, frame_shifts=frame_shifts)
+        rt_run_entries <- generate_rt_run_results(nr, 
+                                                  rt_windows, 
+                                                  adjust_fdr=do_fdr, 
+                                                  sig_thres=sig_thres, 
+                                                  frame_shifts=frame_shifts, 
+                                                  window_merge_method=window_merge_method,
+                                                  win_size_min=lowest_window_size)
     }
     
     print(paste("Normal entries:", length(normal_run_entries)))
@@ -122,7 +128,7 @@ run_review_data_test <- function(output_base,
         write_entries_to_file(rt_sub_path, rt_run_entries)
     }
 
-    plot_path <- paste(plot_path, "png", sep=".")
+    # plot_path <- paste(plot_path, "png", sep=".")
     png(plot_path)
     # multiplot(plotlist=plots, cols=length(plots))
     grid_arrange_shared_legend(plots=plots, ncol=length(plots))
@@ -192,7 +198,7 @@ generate_normal_run_results <- function(nr, sig_thres=0.1, adjust_fdr=TRUE) {
     run_entries
 }
 
-generate_rt_run_results <- function(nr, rt_windows, sig_thres=0.1, adjust_fdr=TRUE, frame_shifts=3, win_size_min=1) {
+generate_rt_run_results <- function(nr, rt_windows, sig_thres=0.1, adjust_fdr=TRUE, frame_shifts=3, win_size_min=1, window_merge_method="mean") {
     
     used_methods_names <- getUsedMethodNames(nr)
     normalization_matrices <- getNormalizationMatrices(nr)
@@ -205,13 +211,28 @@ generate_rt_run_results <- function(nr, rt_windows, sig_thres=0.1, adjust_fdr=TR
 
         print(paste("Method: RTs, window size:", rt_window))
 
-        median_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw, retention_times, medianNormalization, rt_window, frame_shifts=frame_shifts)
+        median_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw, 
+                                                   retention_times, 
+                                                   medianNormalization, 
+                                                   rt_window, 
+                                                   frame_shifts=frame_shifts,
+                                                   win_size_min=win_size_min)
         median_entry <- get_run_entry(nr, median_rt, "RT-median", POT_PAT, HUMAN_PAT, sig_thres=sig_thres, adjust_fdr=adjust_fdr, rt_settings=rt_window)
 
-        mean_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw, retention_times, meanNormalization, rt_window, frame_shifts=frame_shifts)
+        mean_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw, 
+                                                 retention_times, 
+                                                 meanNormalization, 
+                                                 rt_window, 
+                                                 frame_shifts=frame_shifts,
+                                                 win_size_min=win_size_min)
         mean_entry <- get_run_entry(nr, mean_rt, "RT-mean", POT_PAT, HUMAN_PAT, sig_thres=sig_thres, adjust_fdr=adjust_fdr, rt_settings=rt_window)
 
-        loess_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw, retention_times, performCyclicLoessNormalization, rt_window, frame_shifts=frame_shifts)
+        loess_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw, 
+                                                  retention_times, 
+                                                  performCyclicLoessNormalization, 
+                                                  rt_window, 
+                                                  frame_shifts=frame_shifts,
+                                                  win_size_min=win_size_min)
         loess_entry <- get_run_entry(nr, loess_rt, "RT-loess", POT_PAT, HUMAN_PAT, sig_thres=sig_thres, adjust_fdr=adjust_fdr, rt_settings=rt_window)
 
         run_entries_base_index <- length(run_entries) + 1

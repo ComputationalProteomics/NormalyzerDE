@@ -37,10 +37,7 @@ visualize_results_new <- function(normal_objects, rt_objects, target_measure_fun
 
 get_rt_plotting_df <- function(rt_objects, target_measure_func) {
     
-    print("RT plotting df")
-    
     rt_df <- data.frame(matrix(nrow=0, ncol=3))
-    
     for (i in 1:length(rt_objects)) {
         
         rt_obj <- rt_objects[[i]]
@@ -56,10 +53,7 @@ get_rt_plotting_df <- function(rt_objects, target_measure_func) {
 
 get_normal_plotting_df <- function(normal_objects, x_lim, target_measure_func) {
     
-    print("Normal plotting df")
-    
     normal_df <- data.frame(matrix(nrow=0, ncol=3))
-    
     for (i in 1:length(normal_objects)) {
         
         obj <- normal_objects[[i]]

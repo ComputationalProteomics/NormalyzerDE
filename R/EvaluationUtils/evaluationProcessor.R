@@ -55,7 +55,6 @@ do_multiple_runs <- function(run_setting_list, max_cores) {
     current_run <- 1
     while (current_run <= total_runs) {
 
-        print(paste("Starting processing run:", current_run, "/", total_runs, "at", Sys.time()))
         running_procs <- list()
         
         for (core in 1:max_cores) {
@@ -64,8 +63,7 @@ do_multiple_runs <- function(run_setting_list, max_cores) {
             current_runsetting <- run_setting_list[[current_run]]
             
             # stop("")
-            
-            
+            print(paste("Starting processing run:", current_run, "/", total_runs, "at", Sys.time()))
             running_procs[[core]] <- mcparallel(do_run_from_runsetting(current_runsetting), detached=current_runsetting$quiet)
             
             current_run <- current_run + 1
@@ -141,15 +139,15 @@ hardcoded_screen_values <- function(do_full_run) {
         subset <- FALSE
     }
     else {
-        sig_thres <- c(0.1, 0.5)
+        sig_thres <- c(0.1)
         do_fdrs <- c(FALSE)
         rt_windows <- c(1,2,3)
-        nbr_frame_shifts <- c(2)
-        fix_window_bottom <- c(1)
-        merge_method <- c("mean")
-        max_cores <- 2
+        nbr_frame_shifts <- c(1, 3)
+        fix_window_bottom <- c(1, 5)
+        merge_method <- c("mean", "median")
+        max_cores <- 4
         quiet <- FALSE
-        subset <- TRUE
+        subset <- FALSE
     }
     
     screen_values(sig_thresholds = sig_thres,

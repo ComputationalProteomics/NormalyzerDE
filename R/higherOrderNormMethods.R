@@ -73,17 +73,31 @@ getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSiz
 #' @param stepSizeMinutes Size of windows to be normalized
 #' @param offset Whether time window should shifted half step size
 #' @return Normalized matrix
-getSmoothedRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSizeMinutes, frame_shifts=2, win_size_min=1) {
+getSmoothedRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSizeMinutes, 
+                                          frame_shifts=2, win_size_min=1, merge_method="mean", verbose=FALSE) {
     
     matrices <- list()
 
+    if (verbose) {
+        print(paste("win_size_min", win_size_min, "frame_shifts", frame_shifts, "merge_method", merge_method))
+    }
+    
     for (i in 1:frame_shifts) {
         frac_shift <- (i - 1) * 1 / frame_shifts
         matrices[[i]] <- getRTNormalizedMatrix(rawMatrix, retentionTimes, normMethod, stepSizeMinutes, windowMinCount=win_size_min, offset=frac_shift)
     }
     
     # mean, median, anonymous...
-    combinedMatrices <- getCombinedMatrix(matrices, median)
+    if (merge_method == "mean") {
+        combinedMatrices <- getCombinedMatrix(matrices, mean)
+    }
+    else if (merge_method == "median") {
+        combinedMatrices <- getCombinedMatrix(matrices, median)
+    }
+    else {
+        stop(paste("Unknown merge method:", merge_method))
+    }
+    
     combinedMatrices
 }
 
