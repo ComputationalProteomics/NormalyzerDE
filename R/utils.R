@@ -70,7 +70,7 @@ createDirectory <- function(targetPath) {
         stop("Directory already exists")
     } 
     else {
-        dir.create(targetPath)
+        dir.create(targetPath, recursive=TRUE)
     }
 }
 

@@ -5,7 +5,8 @@ source("EvaluationUtils/evaluationUtils.R")
 
 
 RunSetting <- function(sig_thres, do_fdr, rt_windows, window_shifts,
-                       lowest_window_size, window_merge_method, quiet=FALSE, subset=FALSE) {
+                       lowest_window_size, window_merge_method, quiet=FALSE, subset=FALSE,
+                       super_dirname=NULL) {
     
     me <- list(
         sig_thres = sig_thres,
@@ -15,7 +16,8 @@ RunSetting <- function(sig_thres, do_fdr, rt_windows, window_shifts,
         lowest_window_size = lowest_window_size,
         window_merge_method = window_merge_method,
         quiet = quiet,
-        subset = subset
+        subset = subset,
+        super_dirname = super_dirname
     )
     
     class(me) <- append(class(me), "RunSetting")
@@ -29,13 +31,20 @@ get_run_setting_descr_string <- function(rs) {
 do_run_from_runsetting <- function(rs) {
     
     descr_string <- get_run_setting_descr_string(rs)
-    out_dir <- generate_output_dir(descr_string, create_dir=TRUE)
+    
+    # descr_string <- paste(rs$super_dirname, "/", orig_descr_string, sep="")
+
+    out_dir <- generate_output_dir(descr_string, rs$super_dirname, create_dir=TRUE)
+    
     run_base <- paste(out_dir, "/", descr_string, sep="")
-    
+
+    # print(out_dir)
+    # print(run_base)
+        
     # run_review_data_test()
+    # stop("")
     
-    print("WIll do run!")
-    
+    print("Will do run!")
     run_review_data_test(run_base, 
                          subset=rs$subset,
                          measure_type="all",
@@ -43,5 +52,6 @@ do_run_from_runsetting <- function(rs) {
                          do_fdr=rs$do_fdr,
                          frame_shifts=rs$window_shifts,
                          lowest_window_size=rs$lowest_window_size,
-                         window_merge_method=rs$window_merge_method)
+                         window_merge_method=rs$window_merge_method,
+                         custom_rt_windows=rs$rt_windows)
 }
