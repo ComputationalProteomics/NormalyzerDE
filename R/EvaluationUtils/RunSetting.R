@@ -1,11 +1,8 @@
 source("EvaluationUtils/evaluationUtils.R")
 
 
-
-
-
 RunSetting <- function(sig_thres, do_fdr, rt_windows, window_shifts,
-                       lowest_window_size, window_merge_method, quiet=FALSE, subset=FALSE,
+                       lowest_window_size, window_merge_method, sample_comp, stat_test, quiet=FALSE, subset=FALSE,
                        super_dirname=NULL) {
     
     me <- list(
@@ -17,7 +14,9 @@ RunSetting <- function(sig_thres, do_fdr, rt_windows, window_shifts,
         window_merge_method = window_merge_method,
         quiet = quiet,
         subset = subset,
-        super_dirname = super_dirname
+        super_dirname = super_dirname,
+        sample_comp = sample_comp,
+        stat_test = stat_test
     )
     
     class(me) <- append(class(me), "RunSetting")
@@ -25,7 +24,7 @@ RunSetting <- function(sig_thres, do_fdr, rt_windows, window_shifts,
 }
 
 get_run_setting_descr_string <- function(rs) {
-    paste(rs$sig_thres, rs$do_fdr, rs$window_shifts, rs$lowest_window_size, rs$window_merge_method, sep="_")
+    paste(rs$sig_thres, rs$do_fdr, rs$window_shifts, rs$lowest_window_size, rs$window_merge_method, rs$stat_test, paste(rs$sample_comp, sep="", collapse="vs"), sep="_")
 }
 
 do_run_from_runsetting <- function(rs) {
@@ -38,12 +37,6 @@ do_run_from_runsetting <- function(rs) {
     
     run_base <- paste(out_dir, "/", descr_string, sep="")
 
-    # print(out_dir)
-    # print(run_base)
-        
-    # run_review_data_test()
-    # stop("")
-    
     print("Will do run!")
     run_review_data_test(run_base, 
                          subset=rs$subset,
@@ -53,5 +46,12 @@ do_run_from_runsetting <- function(rs) {
                          frame_shifts=rs$window_shifts,
                          lowest_window_size=rs$lowest_window_size,
                          window_merge_method=rs$window_merge_method,
-                         custom_rt_windows=rs$rt_windows)
+                         custom_rt_windows=rs$rt_windows,
+                         target_replicates=rs$sample_comp,
+                         stat_test=rs$stat_test)
 }
+
+
+
+
+

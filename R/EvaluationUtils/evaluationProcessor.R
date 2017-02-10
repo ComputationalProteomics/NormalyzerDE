@@ -5,9 +5,9 @@ source("EvaluationUtils/RunSetting.R")
 source("utils.R")
 
 
-do_small_run <- function(out_path="EvaluationUtils/automated_tests") {
+do_small_run <- function(out_path="EvaluationUtils/regular_tests") {
     
-    run_dir <- generate_output_dir("small")
+    run_dir <- generate_output_dir("small", out_path)
     run_base <- paste(run_dir, "/", "small_out", sep="")
     
     print(paste("Writing content to:", run_dir))
@@ -52,7 +52,9 @@ do_multiple_runs <- function(run_setting_list, max_cores, testrun_only=FALSE) {
     # print(length(run_setting_list))
     
     if (testrun_only) {
-        do_run_from_runsetting(run_setting_list[[1]])
+        for (i in length(run_setting_list)) {
+            do_run_from_runsetting(run_setting_list[[i]])
+        }
         stop("")
     }
     
@@ -84,8 +86,9 @@ do_multiple_runs <- function(run_setting_list, max_cores, testrun_only=FALSE) {
 
 
 screen_values <- function(sig_thresholds, do_fdr, rt_windows, window_shifts, 
-                          lowest_window_size, window_merge_method, small_run=FALSE, max_cores=1,
-                          quiet_processing=TRUE, subset=FALSE, super_dirname=NULL) {
+                          lowest_window_size, window_merge_method, stat_test=c("anova"), small_run=FALSE, max_cores=1,
+                          quiet_processing=TRUE, subset=FALSE, super_dirname=NULL, sample_comparisons=list(c(2,3)),
+                          debug=F) {
     
     index <- 1
     total_runs <- length(sig_thresholds) * length(do_fdr) * length(window_shifts) * length(lowest_window_size) * length(window_merge_method)
@@ -100,53 +103,60 @@ screen_values <- function(sig_thresholds, do_fdr, rt_windows, window_shifts,
             for (win_shift in window_shifts) {
                 for (low_win_size in lowest_window_size) {
                     for (merge_method in window_merge_method) {
-                        
-                        # print(paste("Screening sig", sig, "fdr", fdr, "win_shift", win_shift, "low_win_size", low_win_size, "merge_method", merge_method))
+                        for (sample_comp in sample_comparisons) {
+                            for (test in stat_test) {
+                                # print(paste("Screening sig", sig, "fdr", fdr, "win_shift", win_shift, "low_win_size", low_win_size, "merge_method", merge_method))
+                                
+                                run_settings[[index]] <- RunSetting(sig_thres=sig, 
+                                                                    do_fdr=fdr, 
+                                                                    rt_windows=rt_windows, 
+                                                                    window_shifts=win_shift, 
+                                                                    lowest_window_size=low_win_size, 
+                                                                    window_merge_method=merge_method,
+                                                                    quiet=quiet_processing,
+                                                                    subset=subset,
+                                                                    super_dirname=super_dirname,
+                                                                    sample_comp=sample_comp,
+                                                                    stat_test=test)
 
-                        run_settings[[index]] <- RunSetting(sig_thres=sig, 
-                                                            do_fdr=fdr, 
-                                                            rt_windows=rt_windows, 
-                                                            window_shifts=win_shift, 
-                                                            lowest_window_size=low_win_size, 
-                                                            window_merge_method=merge_method,
-                                                            quiet=quiet_processing,
-                                                            subset=subset,
-                                                            super_dirname=super_dirname)
-                        
-                        index <- index + 1       
+                                index <- index + 1
+                            }
+                        }
                     }
                 }
             }
         }
     }
     
-    do_multiple_runs(run_settings, max_cores)
+    do_multiple_runs(run_settings, max_cores, testrun_only = debug)
     # print(paste("Total screened: ", index - 1))
 }
 
-hardcoded_screen_values <- function(do_full_run, super_dirname) {
+hardcoded_screen_values <- function(do_full_run, super_dirname, subset=T, debug=F) {
     
     if (do_full_run) {
-        sig_thres <- c(0.01, 0.05, 0.1, 0.2)
+        sig_thres <- c(0.05, 0.1)
         do_fdrs <- c(TRUE, FALSE)
-        rt_windows <- c(seq(0.2, 1, 0.2), seq(2, 5, 0.5), seq(5, 20, 1), seq(22, 30, 2))
-        nbr_frame_shifts <- c(1, 3, 5)
-        fix_window_bottom <- c(1, 2, 5, 10, 20)
+        rt_windows <- c(seq(0.5, 5, 0.5), seq(5, 15, 1))
+        nbr_frame_shifts <- c(2, 4)
+        fix_window_bottom <- c(20, 50, 100)
         merge_method <- c("mean", "median")
         max_cores <- 7
+        sample_comparisons <- list(c(1,2), c(1,3), c(1,4), c(2,3), c(2,4), c(3,4), c(3,5), c(4,5))
+        stat_test <- c("anova", "welch")
         quiet <- FALSE
-        subset <- FALSE
     }
     else {
         sig_thres <- c(0.1)
-        do_fdrs <- c(FALSE)
+        do_fdrs <- c(TRUE)
         rt_windows <- c(1,2,3)
-        nbr_frame_shifts <- c(1, 3)
-        fix_window_bottom <- c(1, 5)
+        nbr_frame_shifts <- c(3)
+        fix_window_bottom <- c(20)
         merge_method <- c("mean", "median")
         max_cores <- 4
+        sample_comparisons <- list(c(1,2), c(2,3), c(1,3))
+        stat_test <- c("anova", "welch")
         quiet <- FALSE
-        subset <- TRUE
     }
     
     screen_values(sig_thresholds = sig_thres,
@@ -158,7 +168,10 @@ hardcoded_screen_values <- function(do_full_run, super_dirname) {
                   max_cores = max_cores,
                   quiet_processing = quiet,
                   subset = subset,
-                  super_dirname = super_dirname)
+                  super_dirname = super_dirname,
+                  sample_comparisons = sample_comparisons,
+                  stat_test = stat_test,
+                  debug = debug)
 }
 
 
