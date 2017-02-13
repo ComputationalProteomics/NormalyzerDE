@@ -137,8 +137,9 @@ hardcoded_screen_values <- function(do_full_run, super_dirname, subset=T, debug=
     if (do_full_run) {
         sig_thres <- c(0.05, 0.1)
         do_fdrs <- c(TRUE, FALSE)
-        rt_windows <- c(seq(0.5, 5, 0.5), seq(5, 15, 1))
-        nbr_frame_shifts <- c(2, 4)
+        # rt_windows <- c(1,2)
+        rt_windows <- c(seq(0.5, 5, 0.5), seq(6, 15, 1))
+        nbr_frame_shifts <- c(3)
         fix_window_bottom <- c(20, 50, 100)
         merge_method <- c("mean", "median")
         max_cores <- 7
@@ -148,14 +149,14 @@ hardcoded_screen_values <- function(do_full_run, super_dirname, subset=T, debug=
     }
     else {
         sig_thres <- c(0.1)
-        do_fdrs <- c(TRUE)
+        do_fdrs <- c(FALSE)
         rt_windows <- c(1,2,3)
         nbr_frame_shifts <- c(3)
         fix_window_bottom <- c(20)
         merge_method <- c("mean", "median")
         max_cores <- 4
-        sample_comparisons <- list(c(1,2), c(2,3), c(1,3))
-        stat_test <- c("anova", "welch")
+        sample_comparisons <- list(c(2,3), c(1,3))
+        stat_test <- c("welch")
         quiet <- FALSE
     }
     

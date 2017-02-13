@@ -84,7 +84,8 @@ getSmoothedRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod,
     
     for (i in 1:frame_shifts) {
         frac_shift <- (i - 1) * 1 / frame_shifts
-        matrices[[i]] <- getRTNormalizedMatrix(rawMatrix, retentionTimes, normMethod, stepSizeMinutes, windowMinCount=win_size_min, offset=frac_shift)
+        matrices[[i]] <- getRTNormalizedMatrix(rawMatrix, retentionTimes, normMethod, 
+                                               stepSizeMinutes, windowMinCount=win_size_min, offset=frac_shift)
     }
     
     # mean, median, anonymous...

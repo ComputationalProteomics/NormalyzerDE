@@ -20,11 +20,13 @@ source("normfinder-pipeline.R")
 
 source("EvaluationUtils/evaluationPlotting.R")
 source("EvaluationUtils/RunEntry.R")
+# source("EvaluationUtils/RunSetting.R")
 
 suppressPackageStartupMessages("ggplot2")
 library("ggplot2")
 
 
+path_base <- "../tests/data"
 full_report <- "FeatureReport_MQP_20140828-fornormalyzer.txt"
 subset_report <- "MQP.subset_500.tsv"
 # subset_report <- "BA_MQP.subset_500.tsv"
@@ -38,13 +40,15 @@ COMBINED_PATTERN <- paste0("(", POT_PAT, "|", HUMAN_PAT, ")")
 # custom_replicate_groups <- c(2,2,2,2,2,2,2,3,3,3,3,3,3,3)
 
 
-run_review_data_test <- function(output_base, 
+# run_review_data_test <- function(rs) {
+
+run_review_data_test <- function(super_dirname,
                                  subset=FALSE,
-                                 do_normal_run=TRUE, 
-                                 do_rt_run=TRUE, 
+                                 do_normal_run=TRUE,
+                                 do_rt_run=TRUE,
                                  verbose=FALSE,
-                                 measure_type="all", 
-                                 sig_thres=0.1, 
+                                 measure_type="all",
+                                 sig_thres=0.1,
                                  do_fdr=TRUE,
                                  frame_shifts=3,
                                  lowest_window_size=1,
@@ -52,18 +56,31 @@ run_review_data_test <- function(output_base,
                                  custom_rt_windows=NULL,
                                  target_replicates=c(1,3),
                                  stat_test="anova") {
+
+    rs <- RunSetting(sig_thres=sig_thres,
+                     do_fdr=do_fdr,
+                     rt_windows=custom_rt_windows,
+                     window_shifts=frame_shifts,
+                     lowest_window_size=lowest_window_size,
+                     window_merge_method=window_merge_method,
+                     quiet=!verbose,
+                     subset=subset,
+                     super_dirname=super_dirname,
+                     sample_comp=target_replicates,
+                     stat_test=stat_test
+                     )
     
+    output_base <- get_run_setting_base(rs)
     output_path <- paste(output_base, "csv", sep=".")
     plot_path <- paste(output_base, "png", sep=".")
-    print(paste("Evaluation run with sig_thres:", sig_thres, "and FDR setting:", do_fdr))
-    plot_ylabs <- get_y_label(measure_type)
-    score_funcs <- get_norm_methods(measure_type)
-    print(paste("Processing using measure:", measure_type))
-    
+    print(paste("Evaluation run with sig_thres:", rs$sig_thres, "and FDR setting:", rs$do_fdr))
+    plot_ylabs <- get_y_label("all")
+    score_funcs <- get_norm_methods("all")
+
     start_time <- Sys.time()
     
-    if (subset) review_data_path <- paste("../tests/data", subset_report, sep="/")
-    else review_data_path <- paste("../tests/data", full_report, sep="/")
+    if (subset) review_data_path <- paste(path_base, subset_report, sep="/")
+    else review_data_path <- paste(path_base, full_report, sep="/")
     
     print(paste("Processing dataset:", review_data_path))
     job_name <- "review_evaluation"
@@ -76,19 +93,11 @@ run_review_data_test <- function(output_base,
     nr <- normMethods(norm_obj, job_name, normalizeRetentionTime=FALSE, runNormfinder=FALSE)
     
     if (do_normal_run) {
-        normal_run_entries <- generate_normal_run_results(nr, rep_nbrs=target_replicates, adjust_fdr=do_fdr, sig_thres=sig_thres, stat_test=stat_test)
+        normal_run_entries <- generate_normal_run_results(nr, rs)
     }
     
     if (do_rt_run) {
-        rt_run_entries <- generate_rt_run_results(nr, 
-                                                  rep_nbrs=target_replicates,
-                                                  rt_windows, 
-                                                  adjust_fdr=do_fdr, 
-                                                  sig_thres=sig_thres, 
-                                                  frame_shifts=frame_shifts, 
-                                                  window_merge_method=window_merge_method,
-                                                  win_size_min=lowest_window_size,
-                                                  stat_test=stat_test)
+        rt_run_entries <- generate_rt_run_results(nr, rs)
     }
     
     print(paste("Normal entries:", length(normal_run_entries)))
@@ -187,27 +196,24 @@ get_norm_methods <- function(measure_type) {
     score_funcs
 }
 
-generate_normal_run_results <- function(nr, rep_nbrs, stat_test="anova", sig_thres=0.1, adjust_fdr=TRUE) {
-    
+generate_normal_run_results <- function(nr, rs) {
+
     used_methods_names <- getUsedMethodNames(nr)
     normalization_matrices <- getNormalizationMatrices(nr)
     
     run_entries <- list()
-    
     for (i in 1:length(used_methods_names)) {
         print(paste("Method: ", used_methods_names[[i]]))
         run_result <- get_run_entry(nr, normalization_matrices[[i]], used_methods_names[[i]], 
-                                    POT_PAT, HUMAN_PAT, sig_thres=sig_thres, adjust_fdr=adjust_fdr, replicate_nbrs=rep_nbrs, stat_test=stat_test)
-        
+                                    POT_PAT, HUMAN_PAT, rs)
+
         run_entries[[i]] <- run_result
     }
     run_entries
 }
 
-generate_rt_run_results <- function(nr, rt_windows, rep_nbrs, stat_test="anova", 
-                                    sig_thres=0.1, adjust_fdr=TRUE, frame_shifts=3, 
-                                    win_size_min=1, window_merge_method="mean") {
-    
+generate_rt_run_results <- function(nr, rs) {
+
     used_methods_names <- getUsedMethodNames(nr)
     normalization_matrices <- getNormalizationMatrices(nr)
     
@@ -215,37 +221,40 @@ generate_rt_run_results <- function(nr, rt_windows, rep_nbrs, stat_test="anova",
     retention_times <- nr@nds@retentionTimes
 
     run_entries <- list()
-    for (rt_window in rt_windows) {
+    for (rt_window in rs$rt_windows) {
 
         print(paste("Method: RTs, window size:", rt_window))
 
+        frame_shifts <- rs$window_shifts
+        win_size_min <- rs$lowest_window_size
+        merge_method <- rs$window_merge_method
+        
         median_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw, 
                                                    retention_times, 
                                                    medianNormalization, 
                                                    rt_window, 
                                                    frame_shifts=frame_shifts,
                                                    win_size_min=win_size_min,
-                                                   merge_method=window_merge_method)
-        median_entry <- get_run_entry(nr, median_rt, "RT-median", POT_PAT, HUMAN_PAT, 
-                                      sig_thres=sig_thres, adjust_fdr=adjust_fdr, rt_settings=rt_window, replicate_nbrs=rep_nbrs, stat_test=stat_test)
+                                                   merge_method=merge_method)
+        median_entry <- get_run_entry(nr, median_rt, "RT-median", POT_PAT, HUMAN_PAT, rs, current_rt_setting=rt_window)
 
-        mean_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw, 
-                                                 retention_times, 
-                                                 meanNormalization, 
-                                                 rt_window, 
+        mean_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw,
+                                                 retention_times,
+                                                 meanNormalization,
+                                                 rt_window,
                                                  frame_shifts=frame_shifts,
-                                                 win_size_min=win_size_min)
-        mean_entry <- get_run_entry(nr, mean_rt, "RT-mean", POT_PAT, HUMAN_PAT, 
-                                    sig_thres=sig_thres, adjust_fdr=adjust_fdr, rt_settings=rt_window, replicate_nbrs=rep_nbrs, stat_test=stat_test)
+                                                 win_size_min=win_size_min,
+                                                 merge_method=merge_method)
+        mean_entry <- get_run_entry(nr, mean_rt, "RT-mean", POT_PAT, HUMAN_PAT, rs, current_rt_setting=rt_window)
 
-        loess_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw, 
-                                                  retention_times, 
-                                                  performCyclicLoessNormalization, 
-                                                  rt_window, 
+        loess_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw,
+                                                  retention_times,
+                                                  performCyclicLoessNormalization,
+                                                  rt_window,
                                                   frame_shifts=frame_shifts,
-                                                  win_size_min=win_size_min)
-        loess_entry <- get_run_entry(nr, loess_rt, "RT-loess", POT_PAT, HUMAN_PAT, 
-                                     sig_thres=sig_thres, adjust_fdr=adjust_fdr, rt_settings=rt_window, replicate_nbrs=rep_nbrs, stat_test=stat_test)
+                                                  win_size_min=win_size_min,
+                                                  merge_method=merge_method)
+        loess_entry <- get_run_entry(nr, loess_rt, "RT-loess", POT_PAT, HUMAN_PAT, rs, current_rt_setting=rt_window)
 
         run_entries_base_index <- length(run_entries) + 1
         run_entries[[run_entries_base_index]] <- median_entry
@@ -257,14 +266,17 @@ generate_rt_run_results <- function(nr, rt_windows, rep_nbrs, stat_test="anova",
 }
 
 # Generate entry object containing information on number of total and DE found in target pattern and background
-get_run_entry <- function(nr, method_data, name, potato_pattern, human_pattern, sig_thres, adjust_fdr, replicate_nbrs, stat_test="anova", rt_settings=NULL) {
-    
+get_run_entry <- function(nr, method_data, name, potato_pattern, human_pattern, rs, current_rt_setting=NULL) {
+
+    sig_thres <- rs$sig_thres
+    adjust_fdr <- rs$do_fdr
+    replicate_nbrs <- rs$sample_comp
+    stat_test <- rs$stat_test
+
     combined_pattern <- paste0("(", potato_pattern, "|", human_pattern, ")")
     row_name_col <- 3
     
     col_pattern <- paste0(SAMPLE_PAT_BASE, "[", paste(replicate_nbrs, sep="", collapse=""), SAMPLE_PAT_END)
-    # SAMPLE_PAT <- "dilA_[23]"
-    
 
     all_replicates <- nr@nds@sampleReplicateGroups
     custom_replicate_groups <- all_replicates[which(all_replicates %in% replicate_nbrs)]
@@ -296,7 +308,7 @@ get_run_entry <- function(nr, method_data, name, potato_pattern, human_pattern, 
                              target_sign=nbr_potato_sig,
                              background_tot=nbr_back_tot,
                              background_sign=nbr_back_sig,
-                             rt_settings=rt_settings)
+                             rt_settings=current_rt_setting)
     potato_entry
 }
 
@@ -338,7 +350,7 @@ get_normalyzer_df_subset <- function(nr, df, col_pattern, row_pattern, row_name_
 }
 
 
-na_filter <- function(df, max_na=3) {
+na_filter <- function(df, max_na=2) {
     na_per_line <- rowSums(is.na(df))
     df_na_removed <- df[na_per_line <= max_na, ]
     # df_na_removed <- df[na_per_line < ncol(df) / 2, ]
@@ -346,26 +358,17 @@ na_filter <- function(df, max_na=3) {
 }
 
 get_anova_pvals <- function(df, replicate_groups, stat_test="anova") {
-    
-    # replicate_groups <- unique(replicate_groups)
-    
+
+    # Is this needed?    
     replicate_groups <- as.factor(replicate_groups)
-    
-    # print(replicate_groups)
-    # print(head(df))
     
     if (stat_test == "anova") {
         anova_func <- function(sampleIndex) {
-            # print(replicate_groups)
-            # print(unlist(sampleIndex))
             t.test(unlist(sampleIndex)~replicate_groups, var.equal=TRUE)$p.value
-            # summary(stats::aov(unlist(sampleIndex)~replicate_groups))[[1]][[5]][1]
         }
     }
     else if (stat_test == "welch") {
         anova_func <- function(sampleIndex) {
-            # print(replicate_groups)
-            # print(unlist(sampleIndex))
             t.test(unlist(sampleIndex)~replicate_groups)$p.value
         }
     }
@@ -373,17 +376,12 @@ get_anova_pvals <- function(df, replicate_groups, stat_test="anova") {
         stop(paste("Unknown test type: ", stat_test))
     }
     
-    # print(df)
-    # apply(df, 1, function(x) {print(paste("line", x))})
-    # stop("")
-    
-    # print(df)
-    
     anovaPVal <- apply(df, 1, anova_func)
     anovaPVal
 }
 
 write_entries_to_file <- function(out_path, run_entries) {
+    
     
     first_entry_v <- get_entry_vector(run_entries[[1]])
     out_strs <- matrix(ncol=length(first_entry_v), nrow=0)
