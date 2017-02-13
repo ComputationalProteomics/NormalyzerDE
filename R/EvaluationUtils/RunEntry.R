@@ -2,7 +2,7 @@ header <- c("method", "tot_na_reduced", "potato_tot", "potato_sig", "back_tot", 
 header_without_rt <- c("method", "tot_na_reduced", "potato_tot", "potato_sig", "back_tot", "back_sig")
 
 EntryRow <- function(norm_method, tot_rows, target_tot, target_sign, 
-                     background_tot, background_sign, rt_settings=NULL) {
+                     background_tot, background_sign, rt_settings=NULL, sig_df=NULL) {
     
     me <- list(
         norm_method = norm_method,
@@ -11,7 +11,8 @@ EntryRow <- function(norm_method, tot_rows, target_tot, target_sign,
         target_sign = target_sign,
         background_tot = background_tot,
         background_sign = background_sign,
-        rt_settings = rt_settings
+        rt_settings = rt_settings,
+        sig_df = sig_df
     )
     
     class(me) <- append(class(me), "EntryRow")

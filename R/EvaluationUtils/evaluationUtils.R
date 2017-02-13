@@ -40,8 +40,6 @@ COMBINED_PATTERN <- paste0("(", POT_PAT, "|", HUMAN_PAT, ")")
 # custom_replicate_groups <- c(2,2,2,2,2,2,2,3,3,3,3,3,3,3)
 
 
-# run_review_data_test <- function(rs) {
-
 run_review_data_test <- function(super_dirname,
                                  subset=FALSE,
                                  do_normal_run=TRUE,
@@ -95,7 +93,7 @@ run_review_data_test <- function(super_dirname,
     if (do_normal_run) {
         normal_run_entries <- generate_normal_run_results(nr, rs)
     }
-    
+        
     if (do_rt_run) {
         rt_run_entries <- generate_rt_run_results(nr, rs)
     }
@@ -149,6 +147,10 @@ run_review_data_test <- function(super_dirname,
     grid_arrange_shared_legend(plots=plots, ncol=length(plots))
     dev.off()
 
+    sign_out_path <- paste(plot_path, "sign_matrix", "tsv", sep=".")
+    print(paste("Writing significance entries to:", sign_out_path))
+    write_significance_matrix(sign_out_path, c(normal_run_entries, rt_run_entries))
+    
     end_time <- Sys.time()
     print(difftime(end_time, start_time))
     print(paste("Start:", start_time, "End:", end_time))
@@ -287,17 +289,21 @@ get_run_entry <- function(nr, method_data, name, potato_pattern, human_pattern, 
     
     if (adjust_fdr) {
         anova_fdr <- stats::p.adjust(anova_pval, method="BH")
-        target_anova <- anova_fdr
+        target_sig_val <- anova_fdr
     }
     else {
-        target_anova <- anova_pval
+        target_sig_val <- anova_pval
     }
-    
-    potato_sig <- target_anova[which(grepl(potato_pattern, names(target_anova)))]
+
+    # str(target_sig_val)
+    # print(head(target_sig_val))
+    # stop("")
+        
+    potato_sig <- target_sig_val[which(grepl(potato_pattern, names(target_sig_val)))]
     nbr_potato_tot <- length(potato_sig)
     nbr_potato_sig <- length(nbr_potato_tot[which(potato_sig <= sig_thres)])
     
-    back_sig <- target_anova[which(!grepl(combined_pattern, names(target_anova)))]
+    back_sig <- target_sig_val[which(!grepl(combined_pattern, names(target_sig_val)))]
     nbr_back_tot <- length(back_sig)
     nbr_back_sig <- length(nbr_back_tot[which(back_sig <= sig_thres)])
 
@@ -308,7 +314,8 @@ get_run_entry <- function(nr, method_data, name, potato_pattern, human_pattern, 
                              target_sign=nbr_potato_sig,
                              background_tot=nbr_back_tot,
                              background_sign=nbr_back_sig,
-                             rt_settings=current_rt_setting)
+                             rt_settings=current_rt_setting,
+                             sig_df=target_sig_val)
     potato_entry
 }
 
@@ -382,7 +389,6 @@ get_anova_pvals <- function(df, replicate_groups, stat_test="anova") {
 
 write_entries_to_file <- function(out_path, run_entries) {
     
-    
     first_entry_v <- get_entry_vector(run_entries[[1]])
     out_strs <- matrix(ncol=length(first_entry_v), nrow=0)
     first_entry_head <- get_entry_header(run_entries[[1]])
@@ -395,10 +401,42 @@ write_entries_to_file <- function(out_path, run_entries) {
     }
     
     write.csv(out_strs, file=out_path, quote=FALSE, row.names=FALSE)
-    
 }
 
+write_significance_matrix <- function(sign_out_path, entries) {
+    
+    nbr_features <- entries[[1]]$tot_rows
+    nbr_methods <- length(entries)
+    
+    sign_matrix <- data.frame(matrix(nrow=nbr_features, ncol=0))
+    entry_names <- NULL
+    
+    for (i in 1:nbr_methods) {
+        
+        entry <- entries[[i]]
+        
+        if (is.null(entry_names)) {
+            entry_names <- names(entry$sig_df)
+        }
+        
+        entry_col <- entry$sig_df
 
+        if (!is.null(entry$rt_settings)) {
+            name <- paste(entry$norm_method, entry$rt_settings, sep="_")
+        }
+        else {
+            name <- entry$norm_method
+        }
+        
+        sign_matrix[name] <- entry_col
+    }
+
+    feature_names <- entry_names
+    unique_rownames <- paste(feature_names, seq(1, entries[[1]]$tot_rows), sep="_")
+    rownames(sign_matrix) <- unique_rownames
+      
+    write.table(sign_matrix, file=sign_out_path, sep="\t", quote=FALSE, col.names=NA)
+}
 
 
 
