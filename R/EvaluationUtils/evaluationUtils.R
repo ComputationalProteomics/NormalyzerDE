@@ -51,13 +51,13 @@ run_review_data_test <- function(super_dirname,
                                  frame_shifts=3,
                                  lowest_window_size=1,
                                  window_merge_method="median",
-                                 custom_rt_windows=NULL,
+                                 rt_windows=NULL,
                                  target_replicates=c(1,3),
-                                 stat_test="anova") {
+                                 stat_test="welch") {
 
     rs <- RunSetting(sig_thres=sig_thres,
                      do_fdr=do_fdr,
-                     rt_windows=custom_rt_windows,
+                     rt_windows=rt_windows,
                      window_shifts=frame_shifts,
                      lowest_window_size=lowest_window_size,
                      window_merge_method=window_merge_method,
@@ -84,10 +84,6 @@ run_review_data_test <- function(super_dirname,
     job_name <- "review_evaluation"
     norm_obj <- getVerifiedNormalyzerObject(review_data_path, job_name)
 
-    if (!is.null(custom_rt_windows))    rt_windows <- custom_rt_windows
-    else if (subset)                    rt_windows <- c(1, 2, 3)
-    else                                rt_windows <- c(0.2, 0.5, 0.75, 1, 1.5, 2, 2.5, 3, 4, 5, 6, 7, 8, 9, 10, 13, 16, 20)
-    
     nr <- normMethods(norm_obj, job_name, normalizeRetentionTime=FALSE, runNormfinder=FALSE)
     
     if (do_normal_run) {
@@ -97,6 +93,8 @@ run_review_data_test <- function(super_dirname,
     if (do_rt_run) {
         rt_run_entries <- generate_rt_run_results(nr, rs)
     }
+    
+    # Postfiltering to match and remove lines only present in some matrices
     
     print(paste("Normal entries:", length(normal_run_entries)))
     print(paste("RT entries:", length(rt_run_entries)))
@@ -206,6 +204,7 @@ generate_normal_run_results <- function(nr, rs) {
     run_entries <- list()
     for (i in 1:length(used_methods_names)) {
         print(paste("Method: ", used_methods_names[[i]]))
+        
         run_result <- get_run_entry(nr, normalization_matrices[[i]], used_methods_names[[i]], 
                                     POT_PAT, HUMAN_PAT, rs)
 
@@ -238,6 +237,7 @@ generate_rt_run_results <- function(nr, rs) {
                                                    frame_shifts=frame_shifts,
                                                    win_size_min=win_size_min,
                                                    merge_method=merge_method)
+        
         median_entry <- get_run_entry(nr, median_rt, "RT-median", POT_PAT, HUMAN_PAT, rs, current_rt_setting=rt_window)
 
         mean_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw,
@@ -275,6 +275,8 @@ get_run_entry <- function(nr, method_data, name, potato_pattern, human_pattern, 
     replicate_nbrs <- rs$sample_comp
     stat_test <- rs$stat_test
 
+    print(paste("sig:", sig_thres, "fdr:", adjust_fdr, "repl", replicate_nbrs, "stat test", stat_test))
+    
     combined_pattern <- paste0("(", potato_pattern, "|", human_pattern, ")")
     row_name_col <- 3
     
@@ -282,10 +284,21 @@ get_run_entry <- function(nr, method_data, name, potato_pattern, human_pattern, 
 
     all_replicates <- nr@nds@sampleReplicateGroups
     custom_replicate_groups <- all_replicates[which(all_replicates %in% replicate_nbrs)]
-    
+
+    print("custom_replicate_groups")
+    print(custom_replicate_groups)
+
     prepared_df <- get_prepared_normalyzer_sheet(nr, method_data, col_pattern, row_name_col, replicate_nbrs)
+    
+    str(prepared_df)
+    
     na_filter_df <- na_filter(prepared_df)
+    
+    str(na_filter_df)
+    
     anova_pval <- get_anova_pvals(na_filter_df, custom_replicate_groups, stat_test=stat_test)
+    
+    str(anova_pval)
     
     if (adjust_fdr) {
         anova_fdr <- stats::p.adjust(anova_pval, method="BH")
@@ -295,10 +308,8 @@ get_run_entry <- function(nr, method_data, name, potato_pattern, human_pattern, 
         target_sig_val <- anova_pval
     }
 
-    # str(target_sig_val)
-    # print(head(target_sig_val))
-    # stop("")
-        
+    print(paste("Number names", length(names(target_sig_val))))
+    
     potato_sig <- target_sig_val[which(grepl(potato_pattern, names(target_sig_val)))]
     nbr_potato_tot <- length(potato_sig)
     nbr_potato_sig <- length(nbr_potato_tot[which(potato_sig <= sig_thres)])
@@ -308,6 +319,15 @@ get_run_entry <- function(nr, method_data, name, potato_pattern, human_pattern, 
     nbr_back_sig <- length(nbr_back_tot[which(back_sig <= sig_thres)])
 
     tot_passing_na_check <- nrow(na_filter_df)
+    
+    print(paste("nbr_potato_tot", length(potato_sig)))
+    print(paste("nbr_back_tot", length(back_sig)))
+    print(paste("actual tot?", length(potato_sig) + length(back_sig)))
+        
+    stop("NEED TO INVESTIGATE THIS PART TOO")
+    
+    
+    
     potato_entry <- EntryRow(norm_method=name, 
                              tot_rows=tot_passing_na_check,
                              target_tot=nbr_potato_tot,
@@ -339,25 +359,30 @@ get_prepared_normalyzer_sheet <- function(nr, df, col_pattern, row_name_col, rep
 }
 
 
-get_normalyzer_df_subset <- function(nr, df, col_pattern, row_pattern, row_name_col, 
-                                     inverse_name_pattern=FALSE) {
-    
-    raw_data <- nr@nds@rawData
+# get_normalyzer_df_subset <- function(nr, df, col_pattern, row_pattern, row_name_col, 
+#                                      inverse_name_pattern=FALSE) {
+#     
+#     raw_data <- nr@nds@rawData
+# 
+#     header_row <- 2
+#     if (inverse_name_pattern) {
+#         target_rows <- which(!grepl(row_pattern, raw_data[-1:-2, row_name_col]))
+#     }
+#     else {
+#         target_rows <- which(grepl(row_pattern, raw_data[-1:-2, row_name_col]))
+#     }
+# 
+#     target_cols <- which(grepl(col_pattern, raw_data[header_row,]))
+#     df[target_rows, target_cols]
+# }
 
-    header_row <- 2
-    if (inverse_name_pattern) {
-        target_rows <- which(!grepl(row_pattern, raw_data[-1:-2, row_name_col]))
-    }
-    else {
-        target_rows <- which(grepl(row_pattern, raw_data[-1:-2, row_name_col]))
-    }
 
-    target_cols <- which(grepl(col_pattern, raw_data[header_row,]))
-    df[target_rows, target_cols]
-}
-
-
+# Filter out lines with high NA abundance - based on log matrix for comparability
 na_filter <- function(df, max_na=2) {
+    
+    # log2_data <- nr@data2log2
+    
+    # na_per_line <- rowSums(is.na(log2_data))
     na_per_line <- rowSums(is.na(df))
     df_na_removed <- df[na_per_line <= max_na, ]
     # df_na_removed <- df[na_per_line < ncol(df) / 2, ]
@@ -427,6 +452,10 @@ write_significance_matrix <- function(sign_out_path, entries) {
         else {
             name <- entry$norm_method
         }
+        
+        # print(head(sign_matrix))
+        # print(head(entry_col))
+        print(paste(name, length(entry_col)))
         
         sign_matrix[name] <- entry_col
     }

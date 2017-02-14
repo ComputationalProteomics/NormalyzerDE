@@ -7,7 +7,169 @@
 #' @param stepSizeMinutes Size of windows to be normalized
 #' @param offset Whether time window should shifted half step size
 #' @return Normalized matrix
-getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSizeMinutes, windowMinCount=1, offset=0) {
+getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSizeMinutes, windowMinCount=5, offset=0) {
+    
+    sortedRT <- sort(retentionTimes)
+    
+    print(paste("Nbr sortedRT", length(sortedRT)))
+    
+    startVal <- min(na.omit(retentionTimes))
+    endVal <- max(na.omit(retentionTimes))
+    rowNumbers <- c()
+    
+    if (offset) {
+        startVal <- startVal - stepSizeMinutes * offset
+    }
+    
+    processedRows <- matrix(, ncol=ncol(rawMatrix), nrow=0)
+    # windowStart <- startVal
+    # windowEnd <- startVal + stepSizeMinutes
+    
+    print(paste("Start:", startVal, "End:", endVal))
+    
+    for (windowStart in seq(startVal, endVal, stepSizeMinutes)) {
+        
+        windowEnd <- windowStart + stepSizeMinutes
+        
+        print(paste("windowStart", windowStart, "windowEnd", windowEnd))
+        
+        normalizationStartRT <- windowStart
+        normalizationEndRT <- windowEnd
+        
+        targetSliceIndices <- which(retentionTimes >= windowStart & retentionTimes < windowEnd)
+        
+        print(paste("targetSliceIndices length:", length(targetSliceIndices)))
+        
+        if (length(targetSliceIndices) == 0) {
+            print(paste("No values found, skipping window from", windowStart, "to", windowEnd))
+            next
+        }
+        else if (length(targetSliceIndices) < windowMinCount) {
+            normalizationRange <- getWidenedRTRange(windowStart, windowEnd, windowMinCount, retentionTimes)
+            normalizationStartRT <- normalizationRange[1]
+            normalizationEndRT <- normalizationRange[2]
+        }
+        
+        # Maybe I have to do this directly on indices?
+        normalizationSliceIndices <- which(retentionTimes > normalizationStartRT & retentionTimes <= normalizationEndRT)
+        
+        normalizationRows <- rawMatrix[normalizationSliceIndices,, drop=FALSE]
+        processedNormalizationRows <- normMethod(normalizationRows)
+        
+        if (length(targetSliceIndices < normalizationSliceIndices)) {
+            indicesOfInterest <- which(targetSliceIndices %in% normalizationSliceIndices)
+            normalizedTargetRows <- processedNormalizationRows[indicesOfInterest,]
+        }
+        else {
+            normalizedTargetRows <- processedNormalizationRows
+        }
+        
+        rowNumbers <- c(rowNumbers, targetSliceIndices)
+        processedRows <- rbind(processedRows, normalizedTargetRows)
+        
+        # normSliceStart <- normalizationStart
+        
+    }
+    
+    
+    # is_stepping <- FALSE
+    # while (windowEnd < endVal) {
+    #     
+    #     if (!is_stepping) {
+    #         windowEnd <- windowStart + stepSizeMinutes
+    #     }
+    #     else {
+    #         is_stepping <- FALSE
+    #     }
+    #     
+    #     firstTimeSlicedIndices <- which(retentionTimes >= windowStart & retentionTimes < windowEnd)
+    #     if (length(firstTimeSlicedIndices) < windowMinCount && windowEnd + stepSizeMinutes <= endVal) {
+    #         
+    #         print(paste("stepping, win end:", windowEnd, "step size:", stepSizeMinutes))
+    #         windowEnd <- windowEnd + stepSizeMinutes
+    #         
+    #         if (windowEnd < endVal) {
+    #             is_stepping <- TRUE
+    #             next
+    #         }
+    #     }
+    #     
+    #     print(paste("Slice window:", windowStart, "to", windowEnd))
+    #     
+    #     timeSlicedIndices <- firstTimeSlicedIndices
+    #     nextWindowStart <- windowEnd
+    #     rowNumbers <- c(rowNumbers, timeSlicedIndices)
+    #     
+    #     if (length(timeSlicedIndices) > 0) {
+    #         currentRows <- rawMatrix[timeSlicedIndices,, drop=FALSE]
+    #         processedSlice <- normMethod(currentRows)
+    #         processedRows <- rbind(processedRows, processedSlice)
+    #     }
+    #     
+    #     windowStart <- nextWindowStart
+    #     
+    #     if (windowEnd > endVal && length(timeSlicedIndices) == 0) {
+    #         # print("Aborted & done!")
+    #         break
+    #     }
+    # }
+    
+    orderedProcessedRows <- processedRows[order(rowNumbers), ]
+    orderedProcessedRows
+}
+
+
+getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes) {
+    
+    sortedRts <- sort(retentionTimes)
+    
+    currentRTSlice <- sortedRts[sortedRts > rtStart & sortedRts <= rtEnd] 
+    
+    startIndex <- which(sortedRts == min(currentRTSlice))
+    endIndex <- which(sortedRts == max(currentRTSlice))
+
+    currentCount <- length(currentRTSlice)
+    remainingCount <- minimumDatapoints - currentCount
+    
+    pickBefore <- floor(remainingCount / 2)
+    pickAfter <- ceiling(remainingCount / 2)
+    
+    totalBefore <- length(sortedRts[sortedRts <= rtStart])
+    totalAfter <- length(sortedRts[sortedRts > rtEnd])
+    
+    stopifnot(remainingCount == pickBefore + pickAfter)
+    stopifnot(totalBefore + totalAfter + length(currentRTSlice) == length(retentionTimes))
+    
+    if (pickBefore > totalBefore && pickAfter > totalAfter) {
+        stop("Not enough values in dataset to do RT normalization with current 
+             minimum datapoints setting - Please adjust settings")
+    }
+    else if (pickBefore > totalBefore) {
+        diff <- pickBefore - totalBefore
+        pickAfter <- pickAfter + diff
+        pickBefore <- pickBefore - diff
+    }
+    else if (pickAfter > totalAfter) {
+        diff <- pickAfter - totalAfter
+        pickBefore <- pickBefore + diff
+        pickAfter <- pickAfter - diff
+    }
+    
+    newStartRtIndex <- startIndex - pickBefore
+    newEndRtIndex <- endIndex + pickAfter
+    
+    widenedSlice <- sortedRts[newStartRtIndex:newEndRtIndex]
+
+    stopifnot(length(widenedSlice) == minimumDatapoints)
+
+    widenedStartRt <- min(widenedSlice)
+    widenedEndRt <- max(widenedSlice)
+            
+    c(widenedStartRt, widenedEndRt)
+}
+
+
+getRTAndFixNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSizeMinutes, windowMinCount=1, offset=0) {
     
     sortedRT <- sort(retentionTimes)
     
@@ -50,7 +212,7 @@ getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSiz
             timeSlicedIndices <- firstTimeSlicedIndices
             nextWindowStart <- windowEnd
         }
-
+        
         rowNumbers <- c(rowNumbers, timeSlicedIndices)
         currentRows <- rawMatrix[timeSlicedIndices,, drop=FALSE]
         
@@ -63,6 +225,7 @@ getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSiz
     orderedProcessedRows <- processedRows[order(rowNumbers), ]
     orderedProcessedRows
 }
+
 
 #' Generate two RT time-window normalized matrices where one is shifted.
 #' Then return the mean of these matrices.

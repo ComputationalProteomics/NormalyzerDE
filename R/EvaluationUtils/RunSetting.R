@@ -60,12 +60,20 @@ do_run_from_runsetting <- function(rs) {
                          frame_shifts=rs$window_shifts,
                          lowest_window_size=rs$lowest_window_size,
                          window_merge_method=rs$window_merge_method,
-                         custom_rt_windows=rs$rt_windows,
+                         rt_windows=rs$rt_windows,
                          target_replicates=rs$sample_comp,
                          stat_test=rs$stat_test)
 }
 
 
+generate_output_dir <- function(description, out_path, create_dir=TRUE) {
+    datestamp <- get_datestamp_string()
+    run_dir <- paste(out_path, "/", datestamp, "_", description, sep="")
+    if (create_dir) {
+        createDirectory(run_dir)
+    }
+    run_dir
+}
 
 
 

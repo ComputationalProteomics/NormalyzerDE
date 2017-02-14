@@ -34,15 +34,6 @@ do_large_run <- function() {
 }
 
 
-generate_output_dir <- function(description, out_path, create_dir=TRUE) {
-    datestamp <- get_datestamp_string()
-    run_dir <- paste(out_path, "/", datestamp, "_", description, sep="")
-    if (create_dir) {
-        createDirectory(run_dir)
-    }
-    run_dir
-}
-
 do_multiple_runs <- function(run_setting_list, max_cores, testrun_only=FALSE) {
     
     library("parallel")
@@ -148,14 +139,15 @@ hardcoded_screen_values <- function(do_full_run, super_dirname, subset=T, debug=
         quiet <- FALSE
     }
     else {
-        sig_thres <- c(0.1)
-        do_fdrs <- c(FALSE)
+        sig_thres <- c(0.05, 0.1)
+        do_fdrs <- c(TRUE)
+        # rt_windows <- c(seq(0.5, 5, 0.5), seq(6, 15, 1))
         rt_windows <- c(1,2,3)
         nbr_frame_shifts <- c(3)
-        fix_window_bottom <- c(20)
+        fix_window_bottom <- c(50)
         merge_method <- c("mean", "median")
         max_cores <- 4
-        sample_comparisons <- list(c(2,3), c(1,3))
+        sample_comparisons <- list(c(2,4))
         stat_test <- c("welch")
         quiet <- FALSE
     }

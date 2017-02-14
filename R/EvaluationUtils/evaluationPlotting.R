@@ -16,8 +16,6 @@ visualize_results_new <- function(normal_objects, rt_objects, target_measure_fun
     max_rt_setting <- max(sapply(rt_objects, function(x) { x$rt_settings }))
     x_lim <- c(min_rt_setting, max_rt_setting)
     
-    # print(target_measure_func)
-    
     rt_df <- get_rt_plotting_df(rt_objects, target_measure_func)
     normal_df <- get_normal_plotting_df(normal_objects, x_lim, target_measure_func)
     full_df <- rbind(full_df, rt_df, normal_df)
