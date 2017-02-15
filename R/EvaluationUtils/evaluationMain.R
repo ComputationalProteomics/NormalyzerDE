@@ -1,12 +1,3 @@
-
-
-# Input: Normalized matrices
-
-# We want to target particular 7 vs 7 columns
-# Also, we want to slice out potato-named rows into a distinctly separate dataframe
-
-# Let's test this first in an R terminal
-
 source("NormalyzerDataset.R")
 source("NormalizationEvaluationResults.R")
 source("NormalyzerResults.R")
@@ -35,9 +26,9 @@ POT_PAT <- "^sol"
 HUMAN_PAT <- "^hum"
 SAMPLE_PAT_BASE <- "dilA_"
 SAMPLE_PAT_END <- "]_\\d\\d"
-# SAMPLE_PAT_BASE <- "dilA_[23]"
 COMBINED_PATTERN <- paste0("(", POT_PAT, "|", HUMAN_PAT, ")")
-# custom_replicate_groups <- c(2,2,2,2,2,2,2,3,3,3,3,3,3,3)
+
+NAME_FILTER <- "[,]"
 
 
 run_review_data_test <- function(super_dirname,
@@ -133,8 +124,8 @@ run_review_data_test <- function(super_dirname,
                               verbose=verbose)
         plots[[i]] <- plt
         
-        norm_sub_path <- paste(plot_path, tolower(y_lab), "norm", "csv", sep=".")
-        rt_sub_path <- paste(plot_path, tolower(y_lab), "rt", "csv", sep=".")
+        norm_sub_path <- paste(output_base, tolower(y_lab), "norm", "csv", sep=".")
+        rt_sub_path <- paste(output_base, tolower(y_lab), "rt", "csv", sep=".")
         write_entries_to_file(norm_sub_path, normal_run_entries)
         write_entries_to_file(rt_sub_path, rt_run_entries)
     }
@@ -145,7 +136,7 @@ run_review_data_test <- function(super_dirname,
     grid_arrange_shared_legend(plots=plots, ncol=length(plots))
     dev.off()
 
-    sign_out_path <- paste(plot_path, "sign_matrix", "tsv", sep=".")
+    sign_out_path <- paste(output_base, "sign_matrix", "tsv", sep=".")
     print(paste("Writing significance entries to:", sign_out_path))
     write_significance_matrix(sign_out_path, c(normal_run_entries, rt_run_entries))
     
@@ -224,7 +215,7 @@ generate_rt_run_results <- function(nr, rs) {
     run_entries <- list()
     for (rt_window in rs$rt_windows) {
 
-        print(paste("Method: RTs, window size:", rt_window))
+        # print(paste("Method: RTs, window size:", rt_window))
 
         frame_shifts <- rs$window_shifts
         win_size_min <- rs$lowest_window_size
@@ -268,14 +259,14 @@ generate_rt_run_results <- function(nr, rs) {
 }
 
 # Generate entry object containing information on number of total and DE found in target pattern and background
-get_run_entry <- function(nr, method_data, name, potato_pattern, human_pattern, rs, current_rt_setting=NULL) {
+get_run_entry <- function(nr, method_data, name, potato_pattern, human_pattern, rs, current_rt_setting=NULL, omit_na=TRUE) {
 
     sig_thres <- rs$sig_thres
     adjust_fdr <- rs$do_fdr
     replicate_nbrs <- rs$sample_comp
     stat_test <- rs$stat_test
 
-    print(paste("sig:", sig_thres, "fdr:", adjust_fdr, "repl", replicate_nbrs, "stat test", stat_test))
+    # print(paste("sig:", sig_thres, "fdr:", adjust_fdr, "repl", replicate_nbrs, "stat test", stat_test))
     
     combined_pattern <- paste0("(", potato_pattern, "|", human_pattern, ")")
     row_name_col <- 3
@@ -285,22 +276,22 @@ get_run_entry <- function(nr, method_data, name, potato_pattern, human_pattern, 
     all_replicates <- nr@nds@sampleReplicateGroups
     custom_replicate_groups <- all_replicates[which(all_replicates %in% replicate_nbrs)]
 
-    # print("custom_replicate_groups")
-    # print(custom_replicate_groups)
-
     prepared_df <- get_prepared_normalyzer_sheet(nr, method_data, col_pattern, row_name_col, replicate_nbrs)
     
-    # str(prepared_df)
-
     #### Skip this, and let test return NA instead if invalid?
-    na_filter_df <- prepared_df
-    # na_filter_df <- na_filter(prepared_df)
+    # print(head(prepared_df))
+    # print(head(rownames(prepared_df)))
     
+    filter_df <- prepared_df[which(!grepl(NAME_FILTER, rownames(prepared_df))),]
+    
+    # na_filter_df <- na_filter(prepared_df)
+    # print(na_filter_df)
+    # print(paste("Length before:", length(prepared_df[,1])))
+    # print(paste("Length after:", length(na_filter_df[,1])))
+    # stop("")
     # str(na_filter_df)
     
-    anova_pval <- get_anova_pvals(na_filter_df, custom_replicate_groups, stat_test=stat_test)
-    
-    # str(anova_pval)
+    anova_pval <- get_anova_pvals(filter_df, custom_replicate_groups, stat_test=stat_test)
     
     if (adjust_fdr) {
         anova_fdr <- stats::p.adjust(anova_pval, method="BH")
@@ -310,26 +301,26 @@ get_run_entry <- function(nr, method_data, name, potato_pattern, human_pattern, 
         target_sig_val <- anova_pval
     }
 
-    print(paste("Number names", length(names(target_sig_val))))
-    
     potato_sig <- target_sig_val[which(grepl(potato_pattern, names(target_sig_val)))]
-    nbr_potato_tot <- length(potato_sig)
-    nbr_potato_sig <- length(nbr_potato_tot[which(potato_sig <= sig_thres)])
-    
     back_sig <- target_sig_val[which(!grepl(combined_pattern, names(target_sig_val)))]
-    nbr_back_tot <- length(back_sig)
-    nbr_back_sig <- length(nbr_back_tot[which(back_sig <= sig_thres)])
-
-    tot_passing_na_check <- nrow(na_filter_df)
     
-    print(paste("nbr_potato_tot", length(potato_sig)))
-    print(paste("nbr_back_tot", length(back_sig)))
-    print(paste("actual tot?", length(potato_sig) + length(back_sig)))
-        
-    # stop("NEED TO INVESTIGATE THIS PART TOO")
+    if (omit_na) {
+        nbr_potato_tot <- length(na.omit(potato_sig))
+        nbr_potato_sig <- length(na.omit(potato_sig[which(potato_sig <= sig_thres)]))
+        nbr_back_tot <- length(na.omit(back_sig))
+        nbr_back_sig <- length(na.omit(back_sig[which(back_sig <= sig_thres)]))
+    }
+    else {
+        nbr_potato_tot <- length(potato_sig)
+        nbr_potato_sig <- length(potato_sig[which(potato_sig <= sig_thres)])
+        nbr_back_tot <- length(back_sig)
+        nbr_back_sig <- length(back_sig[which(back_sig <= sig_thres)])
+    }
+
+    total_rows <- length(na.omit(potato_sig)) + length(na.omit(back_sig))
     
     potato_entry <- EntryRow(norm_method=name, 
-                             tot_rows=tot_passing_na_check,
+                             tot_rows=total_rows,
                              target_tot=nbr_potato_tot,
                              target_sign=nbr_potato_sig,
                              background_tot=nbr_back_tot,
@@ -359,35 +350,17 @@ get_prepared_normalyzer_sheet <- function(nr, df, col_pattern, row_name_col, rep
 }
 
 
-# get_normalyzer_df_subset <- function(nr, df, col_pattern, row_pattern, row_name_col, 
-#                                      inverse_name_pattern=FALSE) {
-#     
-#     raw_data <- nr@nds@rawData
-# 
-#     header_row <- 2
-#     if (inverse_name_pattern) {
-#         target_rows <- which(!grepl(row_pattern, raw_data[-1:-2, row_name_col]))
-#     }
-#     else {
-#         target_rows <- which(grepl(row_pattern, raw_data[-1:-2, row_name_col]))
-#     }
-# 
-#     target_cols <- which(grepl(col_pattern, raw_data[header_row,]))
-#     df[target_rows, target_cols]
-# }
-
-
 # Filter out lines with high NA abundance - based on log matrix for comparability
-na_filter <- function(df, max_na=2) {
-    
-    # log2_data <- nr@data2log2
-    
-    # na_per_line <- rowSums(is.na(log2_data))
-    na_per_line <- rowSums(is.na(df))
-    df_na_removed <- df[na_per_line <= max_na, ]
-    # df_na_removed <- df[na_per_line < ncol(df) / 2, ]
-    df_na_removed
-}
+# na_filter <- function(df, max_na=2) {
+#     
+#     # log2_data <- nr@data2log2
+#     
+#     # na_per_line <- rowSums(is.na(log2_data))
+#     na_per_line <- rowSums(is.na(df))
+#     df_na_removed <- df[na_per_line <= max_na, ]
+#     # df_na_removed <- df[na_per_line < ncol(df) / 2, ]
+#     df_na_removed
+# }
 
 get_anova_pvals <- function(df, replicate_groups, stat_test="anova") {
 
@@ -436,8 +409,12 @@ write_entries_to_file <- function(out_path, run_entries) {
 
 write_significance_matrix <- function(sign_out_path, entries) {
     
-    nbr_features <- entries[[1]]$tot_rows
+    # nbr_features <- entries[[1]]$target_tot + entries[[1]]$background_tot
+    nbr_features <- length(entries[[1]]$sig_df)
     nbr_methods <- length(entries)
+    
+    # print(paste("nbr_features", nbr_features))
+    # stop("")
     
     sign_matrix <- data.frame(matrix(nrow=nbr_features, ncol=0))
     entry_names <- NULL
@@ -445,13 +422,11 @@ write_significance_matrix <- function(sign_out_path, entries) {
     for (i in 1:nbr_methods) {
         
         entry <- entries[[i]]
-        
         if (is.null(entry_names)) {
             entry_names <- names(entry$sig_df)
         }
         
         entry_col <- entry$sig_df
-
         if (!is.null(entry$rt_settings)) {
             name <- paste(entry$norm_method, entry$rt_settings, sep="_")
         }
@@ -459,15 +434,17 @@ write_significance_matrix <- function(sign_out_path, entries) {
             name <- entry$norm_method
         }
         
-        # print(head(sign_matrix))
-        # print(head(entry_col))
         print(paste(name, length(entry_col)))
-        
         sign_matrix[name] <- entry_col
     }
 
     feature_names <- entry_names
-    unique_rownames <- paste(feature_names, seq(1, entries[[1]]$tot_rows), sep="_")
+    unique_rownames <- paste(feature_names, seq(1, nbr_features), sep="_")
+    
+    n_t <- table(unique_rownames)
+    print(n_t[n_t > 1])
+    print(length(n_t))
+    
     rownames(sign_matrix) <- unique_rownames
       
     write.table(sign_matrix, file=sign_out_path, sep="\t", quote=FALSE, col.names=NA)

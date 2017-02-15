@@ -39,6 +39,7 @@ getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSiz
             next
         }
         else if (length(targetSliceIndices) < windowMinCount) {
+            
             normalizationRange <- getWidenedRTRange(windowStart, windowEnd, windowMinCount, retentionTimes)
             normalizationStartRT <- normalizationRange[1]
             normalizationEndRT <- normalizationRange[2]
@@ -74,8 +75,7 @@ getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSiz
 getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes) {
     
     sortedRts <- sort(retentionTimes)
-    
-    currentRTSlice <- sortedRts[sortedRts > rtStart & sortedRts <= rtEnd] 
+    currentRTSlice <- sortedRts[sortedRts >= rtStart & sortedRts < rtEnd] 
     
     startIndex <- which(sortedRts == min(currentRTSlice))
     endIndex <- which(sortedRts == max(currentRTSlice))
@@ -86,8 +86,8 @@ getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes)
     pickBefore <- floor(remainingCount / 2)
     pickAfter <- ceiling(remainingCount / 2)
     
-    totalBefore <- length(sortedRts[sortedRts <= rtStart])
-    totalAfter <- length(sortedRts[sortedRts > rtEnd])
+    totalBefore <- length(sortedRts[sortedRts < rtStart])
+    totalAfter <- length(sortedRts[sortedRts >= rtEnd])
     
     stopifnot(remainingCount == pickBefore + pickAfter)
     stopifnot(totalBefore + totalAfter + length(currentRTSlice) == length(retentionTimes))
@@ -189,7 +189,7 @@ getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes)
 #' @param offset Whether time window should shifted half step size
 #' @return Normalized matrix
 getSmoothedRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSizeMinutes, 
-                                          frame_shifts=2, win_size_min=1, merge_method="mean", verbose=FALSE) {
+                                          frame_shifts=2, win_size_min=50, merge_method="mean", verbose=FALSE) {
     
     matrices <- list()
 
@@ -199,6 +199,7 @@ getSmoothedRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod,
     
     for (i in 1:frame_shifts) {
         frac_shift <- (i - 1) * 1 / frame_shifts
+        
         matrices[[i]] <- getRTNormalizedMatrix(rawMatrix, retentionTimes, normMethod, 
                                                stepSizeMinutes, windowMinCount=win_size_min, offset=frac_shift)
     }
