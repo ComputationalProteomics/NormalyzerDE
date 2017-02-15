@@ -20,7 +20,7 @@ source("normfinder-pipeline.R")
 
 source("EvaluationUtils/evaluationPlotting.R")
 source("EvaluationUtils/RunEntry.R")
-# source("EvaluationUtils/RunSetting.R")
+source("EvaluationUtils/RunSetting.R")
 
 suppressPackageStartupMessages("ggplot2")
 library("ggplot2")
@@ -49,7 +49,7 @@ run_review_data_test <- function(super_dirname,
                                  sig_thres=0.1,
                                  do_fdr=TRUE,
                                  frame_shifts=3,
-                                 lowest_window_size=1,
+                                 lowest_window_size=50,
                                  window_merge_method="median",
                                  rt_windows=NULL,
                                  target_replicates=c(1,3),
@@ -285,20 +285,22 @@ get_run_entry <- function(nr, method_data, name, potato_pattern, human_pattern, 
     all_replicates <- nr@nds@sampleReplicateGroups
     custom_replicate_groups <- all_replicates[which(all_replicates %in% replicate_nbrs)]
 
-    print("custom_replicate_groups")
-    print(custom_replicate_groups)
+    # print("custom_replicate_groups")
+    # print(custom_replicate_groups)
 
     prepared_df <- get_prepared_normalyzer_sheet(nr, method_data, col_pattern, row_name_col, replicate_nbrs)
     
-    str(prepared_df)
+    # str(prepared_df)
+
+    #### Skip this, and let test return NA instead if invalid?
+    na_filter_df <- prepared_df
+    # na_filter_df <- na_filter(prepared_df)
     
-    na_filter_df <- na_filter(prepared_df)
-    
-    str(na_filter_df)
+    # str(na_filter_df)
     
     anova_pval <- get_anova_pvals(na_filter_df, custom_replicate_groups, stat_test=stat_test)
     
-    str(anova_pval)
+    # str(anova_pval)
     
     if (adjust_fdr) {
         anova_fdr <- stats::p.adjust(anova_pval, method="BH")
@@ -324,9 +326,7 @@ get_run_entry <- function(nr, method_data, name, potato_pattern, human_pattern, 
     print(paste("nbr_back_tot", length(back_sig)))
     print(paste("actual tot?", length(potato_sig) + length(back_sig)))
         
-    stop("NEED TO INVESTIGATE THIS PART TOO")
-    
-    
+    # stop("NEED TO INVESTIGATE THIS PART TOO")
     
     potato_entry <- EntryRow(norm_method=name, 
                              tot_rows=tot_passing_na_check,
@@ -394,21 +394,27 @@ get_anova_pvals <- function(df, replicate_groups, stat_test="anova") {
     # Is this needed?    
     replicate_groups <- as.factor(replicate_groups)
     
-    if (stat_test == "anova") {
-        anova_func <- function(sampleIndex) {
-            t.test(unlist(sampleIndex)~replicate_groups, var.equal=TRUE)$p.value
+    stat_test_func <- function(sampleIndex) {
+        
+        rep_counts <- table(names(na.omit(sampleIndex)))
+        
+        if (length(rep_counts) == 2 && min(rep_counts > 1)) {
+            if (stat_test == "anova") {
+                t.test(unlist(sampleIndex)~replicate_groups, var.equal=TRUE)$p.value
+            }
+            else if (stat_test == "welch") {
+                t.test(unlist(sampleIndex)~replicate_groups)$p.value
+            }
+            else {
+                stop(paste("Unknown test type:", stat_test))
+            }
         }
-    }
-    else if (stat_test == "welch") {
-        anova_func <- function(sampleIndex) {
-            t.test(unlist(sampleIndex)~replicate_groups)$p.value
+        else {
+            NA
         }
-    }
-    else {
-        stop(paste("Unknown test type: ", stat_test))
     }
     
-    anovaPVal <- apply(df, 1, anova_func)
+    anovaPVal <- apply(df, 1, stat_test_func)
     anovaPVal
 }
 
