@@ -28,7 +28,8 @@ SAMPLE_PAT_BASE <- "dilA_"
 SAMPLE_PAT_END <- "]_\\d\\d"
 COMBINED_PATTERN <- paste0("(", POT_PAT, "|", HUMAN_PAT, ")")
 
-NAME_FILTER <- "[,]"
+NAME_FILTER <- "[, ]"
+# ANNOTATION_FILTER <- "[,| ]"
 
 
 run_review_data_test <- function(super_dirname,
@@ -269,7 +270,8 @@ get_run_entry <- function(nr, method_data, name, potato_pattern, human_pattern, 
     # print(paste("sig:", sig_thres, "fdr:", adjust_fdr, "repl", replicate_nbrs, "stat test", stat_test))
     
     combined_pattern <- paste0("(", potato_pattern, "|", human_pattern, ")")
-    row_name_col <- 3
+    row_name_col <- c(2,3)
+    # annot_col <- 2
     
     col_pattern <- paste0(SAMPLE_PAT_BASE, "[", paste(replicate_nbrs, sep="", collapse=""), SAMPLE_PAT_END)
 
@@ -277,22 +279,14 @@ get_run_entry <- function(nr, method_data, name, potato_pattern, human_pattern, 
     custom_replicate_groups <- all_replicates[which(all_replicates %in% replicate_nbrs)]
 
     prepared_df <- get_prepared_normalyzer_sheet(nr, method_data, col_pattern, row_name_col, replicate_nbrs)
-    
-    #### Skip this, and let test return NA instead if invalid?
-    # print(head(prepared_df))
-    # print(head(rownames(prepared_df)))
-    
     filter_df <- prepared_df[which(!grepl(NAME_FILTER, rownames(prepared_df))),]
     
-    # na_filter_df <- na_filter(prepared_df)
-    # print(na_filter_df)
-    # print(paste("Length before:", length(prepared_df[,1])))
-    # print(paste("Length after:", length(na_filter_df[,1])))
+    print(paste("Lengh before:", length(prepared_df[,1])))
+    print(paste("Lengh after:", length(filter_df[,1])))
+    # print(head(filter_df))
     # stop("")
-    # str(na_filter_df)
     
     anova_pval <- get_anova_pvals(filter_df, custom_replicate_groups, stat_test=stat_test)
-    
     if (adjust_fdr) {
         anova_fdr <- stats::p.adjust(anova_pval, method="BH")
         target_sig_val <- anova_fdr
@@ -331,12 +325,14 @@ get_run_entry <- function(nr, method_data, name, potato_pattern, human_pattern, 
 }
 
 
-get_prepared_normalyzer_sheet <- function(nr, df, col_pattern, row_name_col, replicate_nbrs) {
+get_prepared_normalyzer_sheet <- function(nr, df, col_pattern, row_name_cols, replicate_nbrs) {
 
     raw_data <- nr@nds@rawData
     header_row <- raw_data[2,]
-    names <- raw_data[-1:-2, row_name_col] 
-
+    
+    names_cols <- raw_data[-1:-2, row_name_cols]
+    names <- paste(names_cols[,2], names_cols[,1], sep="|")
+    
     target_cols <- which(grepl(col_pattern, header_row))
     parsed_df <- df[, target_cols]
 
@@ -349,18 +345,6 @@ get_prepared_normalyzer_sheet <- function(nr, df, col_pattern, row_name_col, rep
     parsed_df
 }
 
-
-# Filter out lines with high NA abundance - based on log matrix for comparability
-# na_filter <- function(df, max_na=2) {
-#     
-#     # log2_data <- nr@data2log2
-#     
-#     # na_per_line <- rowSums(is.na(log2_data))
-#     na_per_line <- rowSums(is.na(df))
-#     df_na_removed <- df[na_per_line <= max_na, ]
-#     # df_na_removed <- df[na_per_line < ncol(df) / 2, ]
-#     df_na_removed
-# }
 
 get_anova_pvals <- function(df, replicate_groups, stat_test="anova") {
 

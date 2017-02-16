@@ -67,7 +67,7 @@ normalyzer <- function(inputPath,
     source("inputVerification.R")
     source("analyzeResults.R")
 
-    source("evaluationUtils.R")
+    # source("evaluationMain.R")
     
     normObj <- getVerifiedNormalyzerObject(inputPath, 
                                            jobName,

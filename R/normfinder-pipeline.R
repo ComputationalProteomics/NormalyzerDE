@@ -141,15 +141,7 @@ normfinder <- function(nds) {
     for (j in 1:m) {
         va[j,] <- va[j,] / ngr[j]}
     
-    print(paste("dif: ", dif))
-    print(paste("dif: ", m))
-    print(paste("dif: ", k))
-    print(paste("dif: ", va))
-
-    stop("")
-        
     tau <- -1
-    
     tau <- sum(dif * dif) / ((m-1) * (k-1)) - mean(va)
     
     if (tau < 0) {

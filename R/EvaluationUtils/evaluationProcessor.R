@@ -127,42 +127,44 @@ hardcoded_screen_values <- function(do_full_run, super_dirname, subset=T, debug=
     
     if (do_full_run) {
         sig_thres <- c(0.05, 0.1)
-        do_fdrs <- c(TRUE, FALSE)
+        do_fdr <- c(TRUE, FALSE)
         # rt_windows <- c(1,2)
-        rt_windows <- c(seq(0.5, 5, 0.5), seq(6, 15, 1))
-        nbr_frame_shifts <- c(3)
-        fix_window_bottom <- c(20, 50, 100)
-        merge_method <- c("mean", "median")
+        rt_windows <- c(seq(1, 5, 1), seq(7, 15, 2))
+        frame_shifts <- c(3)
+        lowest_window_size <- c(100)
+        window_merge_method <- c("median")
         max_cores <- 7
-        sample_comparisons <- list(c(1,2), c(1,3), c(1,4), c(2,3), c(2,4), c(3,4), c(3,5), c(4,5))
-        stat_test <- c("anova", "welch")
-        quiet <- FALSE
-    }
-    else {
-        sig_thres <- c(0.1)
-        do_fdrs <- c(TRUE, FALSE)
-        # rt_windows <- c(seq(0.5, 5, 0.5), seq(6, 15, 1))
-        rt_windows <- c(1,2,3)
-        nbr_frame_shifts <- c(1)
-        fix_window_bottom <- c(50)
-        merge_method <- c("median")
-        max_cores <- 4
-        sample_comparisons <- list(c(2,4))
+        target_replicates <- list(c(2,4), c(2,3), c(1,3), c(1,4), c(1,2), c(3,4))
         stat_test <- c("welch")
         quiet <- FALSE
     }
+    else {
+        sig_thres <- c(0.05, 0.1)
+        do_fdr <- c(TRUE)
+        # rt_windows <- c(seq(0.5, 5, 0.5), seq(6, 15, 1))
+        rt_windows <- c(1,2,3)
+        frame_shifts <- c(1)
+        lowest_window_size <- c(50)
+        window_merge_method <- c("median")
+        max_cores <- 4
+        target_replicates <- list(c(1,3), c(2,4))
+        stat_test <- c("welch")
+        quiet <- FALSE
+        
+        verbose <- TRUE
+    }
     
     screen_values(sig_thresholds = sig_thres,
-                  do_fdr = do_fdrs,
+                  do_fdr = do_fdr,
                   rt_windows = rt_windows,
-                  window_shifts = nbr_frame_shifts,
-                  lowest_window_size = fix_window_bottom,
-                  window_merge_method = merge_method,
+                  window_shifts = frame_shifts,
+                  lowest_window_size = lowest_window_size,
+                  window_merge_method = window_merge_method,
                   max_cores = max_cores,
                   quiet_processing = quiet,
                   subset = subset,
                   super_dirname = super_dirname,
-                  sample_comparisons = sample_comparisons,
+                  sample_comparisons = target_replicates,
                   stat_test = stat_test,
                   debug = debug)
 }

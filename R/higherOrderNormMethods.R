@@ -35,7 +35,7 @@ getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSiz
         targetSliceIndices <- which(retentionTimes >= windowStart & retentionTimes < windowEnd)
 
         if (length(targetSliceIndices) == 0) {
-            print(paste("No values found, skipping window from", windowStart, "to", windowEnd))
+            # print(paste("No values found, skipping window from", windowStart, "to", windowEnd))
             next
         }
         else if (length(targetSliceIndices) < windowMinCount) {
@@ -199,7 +199,6 @@ getSmoothedRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod,
     
     for (i in 1:frame_shifts) {
         frac_shift <- (i - 1) * 1 / frame_shifts
-        
         matrices[[i]] <- getRTNormalizedMatrix(rawMatrix, retentionTimes, normMethod, 
                                                stepSizeMinutes, windowMinCount=win_size_min, offset=frac_shift)
     }

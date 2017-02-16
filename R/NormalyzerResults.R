@@ -189,6 +189,8 @@ setMethod("initializeResultsObject", "NormalyzerResults",
 setMethod("performNormalizations", "NormalyzerResults",
           function(nr, forceAll=FALSE, rtNorm=FALSE, rtWindow=0.1, runNormfinder=TRUE) {
               
+              runNormfinder = FALSE
+              
               nds <- nr@nds
               nr <- basicMetricNormalizations(nr)
               rtColPresent <- length(nds@retentionTimes) > 0
