@@ -62,7 +62,7 @@ run_review_data_test <- function(super_dirname,
     
     output_base <- get_run_setting_base(rs)
     output_path <- paste(output_base, "csv", sep=".")
-    plot_path <- paste(output_base, "png", sep=".")
+    plot_path <- paste(output_base, "pdf", sep=".")
     print(paste("Evaluation run with sig_thres:", rs$sig_thres, "and FDR setting:", rs$do_fdr))
     plot_ylabs <- get_y_label("all")
     score_funcs <- get_norm_methods("all")
@@ -132,7 +132,7 @@ run_review_data_test <- function(super_dirname,
     }
 
     # plot_path <- paste(plot_path, "png", sep=".")
-    png(plot_path)
+    pdf(plot_path)
     # multiplot(plotlist=plots, cols=length(plots))
     grid_arrange_shared_legend(plots=plots, ncol=length(plots))
     dev.off()

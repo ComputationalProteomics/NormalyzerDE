@@ -66,8 +66,6 @@ do_multiple_runs <- function(run_setting_list, max_cores, testrun_only=FALSE) {
             if (current_run > total_runs) {
                 break
             }
-            
-            # Sys.sleep(2)
         }
 
         print("Waiting for running processes to finish...")
@@ -84,9 +82,6 @@ screen_values <- function(sig_thresholds, do_fdr, rt_windows, window_shifts,
     index <- 1
     total_runs <- length(sig_thresholds) * length(do_fdr) * length(window_shifts) * length(lowest_window_size) * length(window_merge_method)
 
-    # ongoing_runs <- list()
-    # for (core in 1:max_cores) {
-        
     run_settings <- list()
         
     for (sig in sig_thresholds) {
@@ -129,12 +124,12 @@ hardcoded_screen_values <- function(do_full_run, super_dirname, subset=T, debug=
         sig_thres <- c(0.05, 0.1)
         do_fdr <- c(TRUE, FALSE)
         # rt_windows <- c(1,2)
-        rt_windows <- c(seq(1, 5, 1), seq(7, 15, 2))
+        rt_windows <- c(seq(0.2, 2, 0.2), seq(3, 5, 0.5))
         frame_shifts <- c(3)
-        lowest_window_size <- c(100)
+        lowest_window_size <- c(100, 1000)
         window_merge_method <- c("median")
         max_cores <- 7
-        target_replicates <- list(c(2,4), c(2,3), c(1,3), c(1,4), c(1,2), c(3,4))
+        target_replicates <- list(c(2,4), c(2,3), c(1,3))
         stat_test <- c("welch")
         quiet <- FALSE
     }
