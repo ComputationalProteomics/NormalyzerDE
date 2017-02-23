@@ -12,6 +12,7 @@ source("normfinder-pipeline.R")
 source("EvaluationUtils/evaluationPlotting.R")
 source("EvaluationUtils/RunEntry.R")
 source("EvaluationUtils/RunSetting.R")
+source("EvaluationUtils/evaluationUtils.R")
 
 suppressPackageStartupMessages("ggplot2")
 library("ggplot2")
@@ -117,12 +118,12 @@ run_review_data_test <- function(super_dirname,
         }
         
         plt <- visualize_results_new(normal_run_entries,
-                              rt_run_entries,
-                              score_func,
-                              title=y_lab,
-                              xlab="RT window size (min)",
-                              ylab=y_lab,
-                              verbose=verbose)
+                                     rt_run_entries,
+                                     score_func,
+                                     title=y_lab,
+                                     xlab="RT window size (min)",
+                                     ylab=y_lab,
+                                     verbose=verbose)
         plots[[i]] <- plt
         
         norm_sub_path <- paste(output_base, tolower(y_lab), "norm", "csv", sep=".")
@@ -130,6 +131,8 @@ run_review_data_test <- function(super_dirname,
         write_entries_to_file(norm_sub_path, normal_run_entries)
         write_entries_to_file(rt_sub_path, rt_run_entries)
     }
+    
+    write_data_matrices(output_base, normal_run_entries, rt_run_entries, nr)
 
     # plot_path <- paste(plot_path, "png", sep=".")
     pdf(plot_path)
@@ -146,47 +149,6 @@ run_review_data_test <- function(super_dirname,
     print(paste("Start:", start_time, "End:", end_time))
 }
 
-get_y_label <- function(measure_type) {
-    
-    if (measure_type == "fscore") {
-        plot_ylabs <- "F-score"
-    }
-    else if (measure_type == "precision") {
-        plot_ylabs <- "Precision"
-    }
-    else if (measure_type == "recall") {
-        plot_ylabs <- "Recall"
-    }
-    else if (measure_type == "all") {
-        plot_ylabs <- c("F-score", "Precision", "Recall")
-    }
-    else {
-        stop(paste("Unknown measure_type:", measure_type))
-    }
-    
-    plot_ylabs    
-}
-
-get_norm_methods <- function(measure_type) {
-    
-    if (measure_type == "fscore") {
-        score_funcs <- get_f_score
-    }
-    else if (measure_type == "precision") {
-        score_funcs <- get_precision
-    }
-    else if (measure_type == "recall") {
-        score_funcs <- get_recall
-    }
-    else if (measure_type == "all") {
-        score_funcs <- list(get_f_score, get_precision, get_recall)
-    }
-    else {
-        stop(paste("Unknown measure_type:", measure_type))
-    }
-    
-    score_funcs
-}
 
 generate_normal_run_results <- function(nr, rs) {
 
@@ -213,6 +175,34 @@ generate_rt_run_results <- function(nr, rs) {
     normalyzer_filterraw <- nr@nds@filterrawdata
     retention_times <- nr@nds@retentionTimes
 
+    
+    
+    
+    ###################
+    # row_name_cols <- c(2,3)
+    # 
+    # raw_data <- nr@nds@rawData
+    # header_row <- raw_data[2,]
+    # 
+    # names_cols <- raw_data[-1:-2, row_name_cols]
+    # names <- paste(names_cols[,2], names_cols[,1], sep="|")
+    # 
+    # target_cols <- which(grepl(col_pattern, header_row))
+    # parsed_df <- df[, target_cols]
+    # 
+    # all_replicates <- nr@nds@sampleReplicateGroups
+    # target_replicates <- all_replicates[which(all_replicates %in% replicate_nbrs)]
+    
+    # rownames(parsed_df) <- names
+    # colnames(parsed_df) <- target_replicates
+    ####################
+    
+    
+    
+    row_names <- get_rownames(nr, c(2,3))
+    col_names <- get_colnames(nr)
+    
+    
     run_entries <- list()
     for (rt_window in rs$rt_windows) {
 
@@ -222,13 +212,21 @@ generate_rt_run_results <- function(nr, rs) {
         win_size_min <- rs$lowest_window_size
         merge_method <- rs$window_merge_method
         
+        
+        
+        
+        
+        
+        
         median_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw, 
                                                    retention_times, 
                                                    medianNormalization, 
                                                    rt_window, 
                                                    frame_shifts=frame_shifts,
                                                    win_size_min=win_size_min,
-                                                   merge_method=merge_method)
+                                                   merge_method=merge_method,
+                                                   debug_matrix_header=col_names,
+                                                   debug_matrix_rownames=row_names)
         
         median_entry <- get_run_entry(nr, median_rt, "RT-median", POT_PAT, HUMAN_PAT, rs, current_rt_setting=rt_window)
 
@@ -267,22 +265,17 @@ get_run_entry <- function(nr, method_data, name, potato_pattern, human_pattern, 
     replicate_nbrs <- rs$sample_comp
     stat_test <- rs$stat_test
 
-    # print(paste("sig:", sig_thres, "fdr:", adjust_fdr, "repl", replicate_nbrs, "stat test", stat_test))
-    
     combined_pattern <- paste0("(", potato_pattern, "|", human_pattern, ")")
     row_name_col <- c(2,3)
-    # annot_col <- 2
-    
     col_pattern <- paste0(SAMPLE_PAT_BASE, "[", paste(replicate_nbrs, sep="", collapse=""), SAMPLE_PAT_END)
-
     all_replicates <- nr@nds@sampleReplicateGroups
     custom_replicate_groups <- all_replicates[which(all_replicates %in% replicate_nbrs)]
 
     prepared_df <- get_prepared_normalyzer_sheet(nr, method_data, col_pattern, row_name_col, replicate_nbrs)
     filter_df <- prepared_df[which(!grepl(NAME_FILTER, rownames(prepared_df))),]
     
-    print(paste("Lengh before:", length(prepared_df[,1])))
-    print(paste("Lengh after:", length(filter_df[,1])))
+    # print(paste("Lengh before:", length(prepared_df[,1])))
+    # print(paste("Lengh after:", length(filter_df[,1])))
     # print(head(filter_df))
     # stop("")
     
@@ -313,7 +306,9 @@ get_run_entry <- function(nr, method_data, name, potato_pattern, human_pattern, 
 
     total_rows <- length(na.omit(potato_sig)) + length(na.omit(back_sig))
     
-    potato_entry <- EntryRow(norm_method=name, 
+    potato_entry <- EntryRow(nr=nr,
+                             method_data=filter_df,
+                             norm_method=name, 
                              tot_rows=total_rows,
                              target_tot=nbr_potato_tot,
                              target_sign=nbr_potato_sig,
@@ -434,7 +429,26 @@ write_significance_matrix <- function(sign_out_path, entries) {
     write.table(sign_matrix, file=sign_out_path, sep="\t", quote=FALSE, col.names=NA)
 }
 
+write_data_matrices <- function(output_base, normal_run_entries, rt_run_entries, nr) {
+    
+    for (run_entry in normal_run_entries) {
+        
+        out_df <- cbind(run_entry$sig_df, run_entry$method_data)
 
+        output_path <- paste0(output_base, "_", run_entry$norm_method, ".data.tsv")
+        # print(paste("Will try writing to:", output_path))
+        write.table(out_df, file=output_path, sep="\t", quote=FALSE, col.names=NA)
+    }
+    
+    for (run_entry in rt_run_entries) {
+        
+        out_df <- cbind(run_entry$sig_df, run_entry$method_data)
+        
+        output_path <- paste0(output_base, "_", run_entry$norm_method, run_entry$rt_settings, ".data.tsv")
+        # print(paste("Will try writing to:", output_path))
+        write.table(out_df, file=output_path, sep="\t", quote=FALSE, col.names=NA)
+    }
+}
 
 
 

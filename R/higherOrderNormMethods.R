@@ -189,7 +189,12 @@ getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes)
 #' @param offset Whether time window should shifted half step size
 #' @return Normalized matrix
 getSmoothedRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSizeMinutes, 
-                                          frame_shifts=2, win_size_min=50, merge_method="mean", verbose=FALSE) {
+                                          frame_shifts=2, win_size_min=50, merge_method="mean", 
+                                          verbose=FALSE, debug_matrix_header=NULL, debug_matrix_rownames=NULL) {
+    
+    # print(debug_matrix_header)
+    # print(debug_matrix_rownames)
+    # stop("")
     
     matrices <- list()
 
@@ -201,7 +206,23 @@ getSmoothedRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod,
         frac_shift <- (i - 1) * 1 / frame_shifts
         matrices[[i]] <- getRTNormalizedMatrix(rawMatrix, retentionTimes, normMethod, 
                                                stepSizeMinutes, windowMinCount=win_size_min, offset=frac_shift)
+        
+        
+        # print(head(rawMatrix))
+        current_matrix <- matrices[[i]]
+
+        # print(paste("Matrix rows:", nrow(current_matrix), "matrix cols", ncol(current_matrix)))
+        # print(paste("Rownames:", length(debug_matrix_rownames), "colnames", length(debug_matrix_header)))
+        # 
+        # print(debug_matrix_header)
+        
+        rownames(current_matrix) <- debug_matrix_rownames
+        colnames(current_matrix) <- debug_matrix_header[2:length(debug_matrix_header)]
+        
+        # print(head(current_matrix))
+        print(current_matrix["sol35|AASDLVPVLSSFK",which(grepl("dilA_[24]_", colnames(current_matrix))), drop=F])
     }
+    stop("")
     
     # mean, median, anonymous...
     if (merge_method == "mean") {
