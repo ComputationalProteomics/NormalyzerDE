@@ -121,64 +121,6 @@ getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes)
 }
 
 
-# getRTAndFixNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSizeMinutes, windowMinCount=1, offset=0) {
-#     
-#     sortedRT <- sort(retentionTimes)
-#     
-#     startVal <- min(na.omit(retentionTimes))
-#     endVal <- max(na.omit(retentionTimes))
-#     rowNumbers <- c()
-#     
-#     if (offset) {
-#         startVal <- startVal - stepSizeMinutes * offset
-#     }
-#     
-#     processedRows <- matrix(, ncol=ncol(rawMatrix), nrow=0)
-#     windowStart <- startVal
-#     windowEnd <- startVal + stepSizeMinutes
-#     
-#     while (windowEnd < endVal) {
-#         
-#         windowEnd <- windowStart + stepSizeMinutes
-#         firstTimeSlicedIndices <- which(retentionTimes >= windowStart & retentionTimes < windowEnd)
-#         
-#         if (length(firstTimeSlicedIndices) < windowMinCount) {
-#             
-#             startPos <- which(sortedRT >= windowStart)[1]
-#             if (startPos + windowMinCount < endVal) {
-#                 endPos <- startPos + windowMinCount
-#             }
-#             else {
-#                 endPos <- length(retentionTimes)
-#             }
-#             
-#             windowStart <- sortedRT[startPos]
-#             windowEnd <- sortedRT[endPos]
-#             nextWindowStart <- sortedRT[endPos + 1]
-#             
-#             fixSlicedIndices <- c(startPos:endPos)
-#             posSliced <- sortedRT[fixSlicedIndices]
-#             timeSlicedIndices <- match(posSliced, retentionTimes)
-#         }
-#         else {
-#             timeSlicedIndices <- firstTimeSlicedIndices
-#             nextWindowStart <- windowEnd
-#         }
-#         
-#         rowNumbers <- c(rowNumbers, timeSlicedIndices)
-#         currentRows <- rawMatrix[timeSlicedIndices,, drop=FALSE]
-#         
-#         processedSlice <- normMethod(currentRows)
-#         processedRows <- rbind(processedRows, processedSlice)
-#         
-#         windowStart <- nextWindowStart
-#     }
-#     
-#     orderedProcessedRows <- processedRows[order(rowNumbers), ]
-#     orderedProcessedRows
-# }
-
-
 #' Generate two RT time-window normalized matrices where one is shifted.
 #' Then return the mean of these matrices.
 #' 
@@ -190,11 +132,8 @@ getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes)
 #' @return Normalized matrix
 getSmoothedRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSizeMinutes, 
                                           frame_shifts=2, win_size_min=50, merge_method="mean", 
-                                          verbose=FALSE, debug_matrix_header=NULL, debug_matrix_rownames=NULL) {
-    
-    # print(debug_matrix_header)
-    # print(debug_matrix_rownames)
-    # stop("")
+                                          verbose=FALSE, debug_matrix_header=NULL, debug_matrix_rownames=NULL,
+                                          debug_id=NULL, debug_samples=NULL) {
     
     matrices <- list()
 
@@ -203,27 +142,20 @@ getSmoothedRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod,
     }
     
     for (i in 1:frame_shifts) {
+        
         frac_shift <- (i - 1) * 1 / frame_shifts
         matrices[[i]] <- getRTNormalizedMatrix(rawMatrix, retentionTimes, normMethod, 
                                                stepSizeMinutes, windowMinCount=win_size_min, offset=frac_shift)
         
-        
-        # print(head(rawMatrix))
         current_matrix <- matrices[[i]]
 
-        # print(paste("Matrix rows:", nrow(current_matrix), "matrix cols", ncol(current_matrix)))
-        # print(paste("Rownames:", length(debug_matrix_rownames), "colnames", length(debug_matrix_header)))
-        # 
-        # print(debug_matrix_header)
-        
         rownames(current_matrix) <- debug_matrix_rownames
         colnames(current_matrix) <- debug_matrix_header[2:length(debug_matrix_header)]
         
-        # print(head(current_matrix))
-        print(current_matrix["sol35|AASDLVPVLSSFK",which(grepl("dilA_[24]_", colnames(current_matrix))), drop=F])
+        debug_sample_pattern <- paste0("dilA_[", paste(debug_samples, collapse=""), "]_")
+        print(current_matrix[debug_id,which(grepl(debug_sample_pattern, colnames(current_matrix))), drop=F])
     }
-    stop("")
-    
+
     # mean, median, anonymous...
     if (merge_method == "mean") {
         combinedMatrices <- getCombinedMatrix(matrices, mean)

@@ -47,11 +47,8 @@ getFirstIndicesInVector <- function(targetVector, reverse=FALSE) {
     
     for (i in startIndex:endIndex) {
         targetValue <- targetVector[i]
-        
         if (!is.element(targetValue, encounteredNumbers)) {
-            
             encounteredNumbers <- append(encounteredNumbers, targetValue)
-            
             if (!reverse) {
                 firstIndices <- append(firstIndices, i)
             }

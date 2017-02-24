@@ -177,7 +177,6 @@ setMethod("initializeResultsObject", "NormalyzerResults",
           function(nr) {
               
               nds <- nr@nds
-              
               nr@data2log2 <- log2(nds@filterrawdata)
               nr@data2ctr <- matrix(nrow=nrow(nds@filterrawdata),
                                     ncol=ncol(nds@filterrawdata), byrow=TRUE)
@@ -225,7 +224,6 @@ setMethod("performNormalizations", "NormalyzerResults",
               if (rtNorm && rtColPresent) {
                   nr <- performRTNormalizations(nr, rtWindow)
               }
-
 
               nr
           }

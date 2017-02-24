@@ -61,6 +61,8 @@ run_review_data_test <- function(super_dirname,
                      stat_test=stat_test
                      )
     
+    print(paste("Running replicates: ", paste(target_replicates, collapse=",")))
+    
     output_base <- get_run_setting_base(rs)
     output_path <- paste(output_base, "csv", sep=".")
     plot_path <- paste(output_base, "pdf", sep=".")
@@ -212,12 +214,24 @@ generate_rt_run_results <- function(nr, rs) {
         win_size_min <- rs$lowest_window_size
         merge_method <- rs$window_merge_method
         
+        debug_id <- "sol35|AASDLVPVLSSFK"
+        debug_sample_pattern <- "dilA_[24]_"
+        debug_samples <- c(2,4)
         
+        # write.csv(nr@data2log2, file="/home/jakob/Desktop/log2_eval.csv")
+        # stop("")
         
+        raw_copy <- nr@data2log2
+        # raw_copy <- log2(normalyzer_filterraw)
         
+        rownames(raw_copy) <- row_names
+        colnames(raw_copy) <- col_names[2:length(col_names)]
         
-        
-        
+        target <- raw_copy[debug_id, which(grepl(debug_sample_pattern, colnames(raw_copy))), drop=F]
+        print("log2 global")
+        print(target)
+
+        print("median rt")
         median_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw, 
                                                    retention_times, 
                                                    medianNormalization, 
@@ -226,26 +240,38 @@ generate_rt_run_results <- function(nr, rs) {
                                                    win_size_min=win_size_min,
                                                    merge_method=merge_method,
                                                    debug_matrix_header=col_names,
-                                                   debug_matrix_rownames=row_names)
+                                                   debug_matrix_rownames=row_names,
+                                                   debug_id=debug_id,
+                                                   debug_samples=debug_samples)
         
         median_entry <- get_run_entry(nr, median_rt, "RT-median", POT_PAT, HUMAN_PAT, rs, current_rt_setting=rt_window)
 
+        print("mean rt")
         mean_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw,
                                                  retention_times,
                                                  meanNormalization,
                                                  rt_window,
                                                  frame_shifts=frame_shifts,
                                                  win_size_min=win_size_min,
-                                                 merge_method=merge_method)
+                                                 merge_method=merge_method,
+                                                 debug_matrix_header=col_names,
+                                                 debug_matrix_rownames=row_names,
+                                                 debug_id=debug_id,
+                                                 debug_samples=debug_samples)
         mean_entry <- get_run_entry(nr, mean_rt, "RT-mean", POT_PAT, HUMAN_PAT, rs, current_rt_setting=rt_window)
 
+        print("loess rt")
         loess_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw,
                                                   retention_times,
                                                   performCyclicLoessNormalization,
                                                   rt_window,
                                                   frame_shifts=frame_shifts,
                                                   win_size_min=win_size_min,
-                                                  merge_method=merge_method)
+                                                  merge_method=merge_method,
+                                                  debug_matrix_header=col_names,
+                                                  debug_matrix_rownames=row_names,
+                                                  debug_id=debug_id,
+                                                  debug_samples=debug_samples)
         loess_entry <- get_run_entry(nr, loess_rt, "RT-loess", POT_PAT, HUMAN_PAT, rs, current_rt_setting=rt_window)
 
         run_entries_base_index <- length(run_entries) + 1
@@ -268,12 +294,18 @@ get_run_entry <- function(nr, method_data, name, potato_pattern, human_pattern, 
     combined_pattern <- paste0("(", potato_pattern, "|", human_pattern, ")")
     row_name_col <- c(2,3)
     col_pattern <- paste0(SAMPLE_PAT_BASE, "[", paste(replicate_nbrs, sep="", collapse=""), SAMPLE_PAT_END)
+    
     all_replicates <- nr@nds@sampleReplicateGroups
     custom_replicate_groups <- all_replicates[which(all_replicates %in% replicate_nbrs)]
 
     prepared_df <- get_prepared_normalyzer_sheet(nr, method_data, col_pattern, row_name_col, replicate_nbrs)
-    filter_df <- prepared_df[which(!grepl(NAME_FILTER, rownames(prepared_df))),]
     
+    
+    filter_df <- prepared_df[which(!grepl(NAME_FILTER, rownames(prepared_df))),]
+    # print("Omitting filtering for now!")
+    # filter_df <- prepared_df
+    
+        
     # print(paste("Lengh before:", length(prepared_df[,1])))
     # print(paste("Lengh after:", length(filter_df[,1])))
     # print(head(filter_df))
@@ -323,12 +355,28 @@ get_run_entry <- function(nr, method_data, name, potato_pattern, human_pattern, 
 get_prepared_normalyzer_sheet <- function(nr, df, col_pattern, row_name_cols, replicate_nbrs) {
 
     raw_data <- nr@nds@rawData
-    header_row <- raw_data[2,]
+    sample_header_row <- raw_data[2,which(as.integer(raw_data[1,]) > 0)]
     
     names_cols <- raw_data[-1:-2, row_name_cols]
     names <- paste(names_cols[,2], names_cols[,1], sep="|")
     
-    target_cols <- which(grepl(col_pattern, header_row))
+    # print(header_row)
+    # stop("")
+    
+    # print(sample_header_row)
+    
+    target_cols <- which(grepl(col_pattern, sample_header_row))
+    
+    # print(head(df))
+    
+    # print(target_cols)
+    # print(head(df))
+    # print(sample_header_row)
+    # 
+    # print(length(sample_header_row))
+    # print(length(df[1,]))
+    # stop("")
+    
     parsed_df <- df[, target_cols]
 
     all_replicates <- nr@nds@sampleReplicateGroups
@@ -413,7 +461,7 @@ write_significance_matrix <- function(sign_out_path, entries) {
             name <- entry$norm_method
         }
         
-        print(paste(name, length(entry_col)))
+        # print(paste(name, length(entry_col)))
         sign_matrix[name] <- entry_col
     }
 
@@ -425,7 +473,7 @@ write_significance_matrix <- function(sign_out_path, entries) {
     print(length(n_t))
     
     rownames(sign_matrix) <- unique_rownames
-      
+
     write.table(sign_matrix, file=sign_out_path, sep="\t", quote=FALSE, col.names=NA)
 }
 
@@ -433,19 +481,15 @@ write_data_matrices <- function(output_base, normal_run_entries, rt_run_entries,
     
     for (run_entry in normal_run_entries) {
         
-        out_df <- cbind(run_entry$sig_df, run_entry$method_data)
-
+        out_df <- cbind(sig_val=run_entry$sig_df, run_entry$method_data)
         output_path <- paste0(output_base, "_", run_entry$norm_method, ".data.tsv")
-        # print(paste("Will try writing to:", output_path))
         write.table(out_df, file=output_path, sep="\t", quote=FALSE, col.names=NA)
     }
     
     for (run_entry in rt_run_entries) {
         
-        out_df <- cbind(run_entry$sig_df, run_entry$method_data)
-        
+        out_df <- cbind(sig_val=run_entry$sig_df, run_entry$method_data)
         output_path <- paste0(output_base, "_", run_entry$norm_method, run_entry$rt_settings, ".data.tsv")
-        # print(paste("Will try writing to:", output_path))
         write.table(out_df, file=output_path, sep="\t", quote=FALSE, col.names=NA)
     }
 }
