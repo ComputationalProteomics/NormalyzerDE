@@ -304,18 +304,8 @@ get_run_entry <- function(nr, method_data, name, potato_pattern, human_pattern, 
     custom_replicate_groups <- all_replicates[which(all_replicates %in% replicate_nbrs)]
 
     prepared_df <- get_prepared_normalyzer_sheet(nr, method_data, col_pattern, row_name_col, replicate_nbrs)
-    
-    
     filter_df <- prepared_df[which(!grepl(NAME_FILTER, rownames(prepared_df))),]
-    # print("Omitting filtering for now!")
-    # filter_df <- prepared_df
-    
-        
-    # print(paste("Lengh before:", length(prepared_df[,1])))
-    # print(paste("Lengh after:", length(filter_df[,1])))
-    # print(head(filter_df))
-    # stop("")
-    
+
     anova_pval <- get_anova_pvals(filter_df, custom_replicate_groups, stat_test=stat_test)
     if (adjust_fdr) {
         anova_fdr <- stats::p.adjust(anova_pval, method="BH")
@@ -365,23 +355,7 @@ get_prepared_normalyzer_sheet <- function(nr, df, col_pattern, row_name_cols, re
     names_cols <- raw_data[-1:-2, row_name_cols]
     names <- paste(names_cols[,2], names_cols[,1], sep="|")
     
-    # print(header_row)
-    # stop("")
-    
-    # print(sample_header_row)
-    
     target_cols <- which(grepl(col_pattern, sample_header_row))
-    
-    # print(head(df))
-    
-    # print(target_cols)
-    # print(head(df))
-    # print(sample_header_row)
-    # 
-    # print(length(sample_header_row))
-    # print(length(df[1,]))
-    # stop("")
-    
     parsed_df <- df[, target_cols]
 
     all_replicates <- nr@nds@sampleReplicateGroups
@@ -441,12 +415,8 @@ write_entries_to_file <- function(out_path, run_entries) {
 
 write_significance_matrix <- function(sign_out_path, entries) {
     
-    # nbr_features <- entries[[1]]$target_tot + entries[[1]]$background_tot
     nbr_features <- length(entries[[1]]$sig_df)
     nbr_methods <- length(entries)
-    
-    # print(paste("nbr_features", nbr_features))
-    # stop("")
     
     sign_matrix <- data.frame(matrix(nrow=nbr_features, ncol=0))
     entry_names <- NULL
@@ -466,7 +436,6 @@ write_significance_matrix <- function(sign_out_path, entries) {
             name <- entry$norm_method
         }
         
-        # print(paste(name, length(entry_col)))
         sign_matrix[name] <- entry_col
     }
 

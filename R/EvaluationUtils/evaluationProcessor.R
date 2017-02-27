@@ -118,10 +118,10 @@ screen_values <- function(sig_thresholds, do_fdr, rt_windows, window_shifts,
 hardcoded_screen_values <- function(do_full_run, super_dirname, subset=T, debug=F) {
     
     if (do_full_run) {
-        sig_thres <- c(0.1)
+        sig_thres <- c(0.05, 0.1)
         do_fdr <- c(TRUE)
         # rt_windows <- c(1,2)
-        rt_windows <- c(seq(0.5, 2, 0.5), seq(3, 5, 1))
+        rt_windows <- c(seq(0.5, 2, 0.5), seq(3, 20, 1))
         frame_shifts <- c(1,3)
         lowest_window_size <- c(100, 500)
         window_merge_method <- c("median")
@@ -134,7 +134,7 @@ hardcoded_screen_values <- function(do_full_run, super_dirname, subset=T, debug=
         sig_thres <- c(0.1)
         do_fdr <- c(TRUE)
         # rt_windows <- c(seq(0.5, 5, 0.5), seq(6, 15, 1))
-        rt_windows <- c(1, 3, 5, 7)
+        rt_windows <- c(3)
         frame_shifts <- c(1)
         lowest_window_size <- c(50, 250, 500)
         window_merge_method <- c("median")

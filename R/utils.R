@@ -172,7 +172,7 @@ grid_arrange_shared_legend <- function(plots, ncol = length(list(...)), nrow = 1
                                              legend,
                                              ncol = 2,
                                              widths = unit.c(unit(1, "npc") - lwidth, lwidth)))
-    grid.newpage()
+    # grid.newpage()
     grid.draw(combined)
     
 }
