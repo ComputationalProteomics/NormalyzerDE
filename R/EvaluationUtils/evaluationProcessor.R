@@ -39,8 +39,6 @@ do_multiple_runs <- function(run_setting_list, max_cores, testrun_only=FALSE) {
     
     print(paste("Will process", length(run_setting_list), "entries on", max_cores, "cores"))
     
-    # print(length(run_setting_list))
-    
     if (testrun_only) {
         for (i in length(run_setting_list)) {
             do_run_from_runsetting(run_setting_list[[i]])
@@ -137,10 +135,10 @@ hardcoded_screen_values <- function(do_full_run, super_dirname, subset=T, debug=
         do_fdr <- c(TRUE)
         # rt_windows <- c(seq(0.5, 5, 0.5), seq(6, 15, 1))
         rt_windows <- c(1, 3, 5, 7)
-        frame_shifts <- c(3)
-        lowest_window_size <- c(50, 250)
+        frame_shifts <- c(1)
+        lowest_window_size <- c(50, 250, 500)
         window_merge_method <- c("median")
-        max_cores <- 4
+        max_cores <- 6
         target_replicates <- list(c(2,3), c(2,4))
         stat_test <- c("welch")
         quiet <- FALSE

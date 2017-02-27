@@ -86,7 +86,7 @@ run_review_data_test <- function(super_dirname,
     }
         
     if (do_rt_run) {
-        rt_run_entries <- generate_rt_run_results(nr, rs)
+        rt_run_entries <- generate_rt_run_results(nr, rs, name_col=3)
     }
     
     # Postfiltering to match and remove lines only present in some matrices
@@ -169,7 +169,7 @@ generate_normal_run_results <- function(nr, rs) {
     run_entries
 }
 
-generate_rt_run_results <- function(nr, rs) {
+generate_rt_run_results <- function(nr, rs, name_col=NULL) {
 
     used_methods_names <- getUsedMethodNames(nr)
     normalization_matrices <- getNormalizationMatrices(nr)
@@ -177,6 +177,9 @@ generate_rt_run_results <- function(nr, rs) {
     normalyzer_filterraw <- nr@nds@filterrawdata
     retention_times <- nr@nds@retentionTimes
 
+    if (!is.null(name_col)) {
+        rownames(normalyzer_filterraw) <- nr@nds@rawData[-1:-2, name_col]
+    }
     
     
     
@@ -231,6 +234,8 @@ generate_rt_run_results <- function(nr, rs) {
         print("log2 global")
         print(target)
 
+        print(paste("Current rt setting:", rt_window))
+        
         print("median rt")
         median_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw, 
                                                    retention_times, 

@@ -14,18 +14,29 @@ getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSiz
     #                              if target slice isn't containing enough data
     # indicesOfInterest - Target indices within the normalization slice window
     
+    # write.csv(rawMatrix, file="/home/jakob/Desktop/rt_debug/rawMatrix.csv")
+    
+    
+    
     sortedRT <- sort(retentionTimes)
     
     startVal <- min(na.omit(retentionTimes))
     endVal <- max(na.omit(retentionTimes))
     rowNumbers <- c()
-    
+
+    # m <- rawMatrix
+    # name_list <- rownames(rawMatrix)
+    #     
+    # str(rawMatrix)
+
     if (offset) {
         startVal <- startVal - stepSizeMinutes * offset
     }
     
     processedRows <- matrix(, ncol=ncol(rawMatrix), nrow=0)
 
+    # print("TESTPRINT")
+    
     for (windowStart in seq(startVal, endVal, stepSizeMinutes)) {
         
         windowEnd <- windowStart + stepSizeMinutes
@@ -33,6 +44,8 @@ getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSiz
         normalizationEndRT <- windowEnd
         
         targetSliceIndices <- which(retentionTimes >= windowStart & retentionTimes < windowEnd)
+        
+        # debug_slice_matrix <- rawMatrix[targetSliceIndices,]
 
         if (length(targetSliceIndices) == 0) {
             # print(paste("No values found, skipping window from", windowStart, "to", windowEnd))
@@ -45,12 +58,24 @@ getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSiz
             normalizationEndRT <- normalizationRange[2]
         }
         
+        # Likely issue: Retrieving wrong values (although the number seems OK)
         normalizationSliceIndices <- which(retentionTimes >= normalizationStartRT & retentionTimes <= normalizationEndRT)
         normalizationRows <- rawMatrix[normalizationSliceIndices,, drop=FALSE]
         processedNormalizationRows <- normMethod(normalizationRows)
         
+        rownames(processedNormalizationRows) <- rownames(normalizationRows)
+        
+        
         if (length(targetSliceIndices) < length(normalizationSliceIndices)) {
-            indicesOfInterest <- which(targetSliceIndices %in% normalizationSliceIndices)
+            
+            # THIS WILL ALWAYS RETURN LIST OF NUMBERS CORRESPONDING TO LENGTH OF targetSliceIndices !!!
+            # indicesOfInterest <- which(targetSliceIndices %in% normalizationSliceIndices)
+            indicesOfInterest <- which(normalizationSliceIndices %in% targetSliceIndices)
+            
+            # print(paste("targetSliceIndices:", paste(targetSliceIndices, collapse=",")))
+            # print(paste("normalizationSliceIndices:", paste(normalizationSliceIndices, collapse=",")))
+            # print(paste("indicesOfInterest:", paste(indicesOfInterest, collapse=",")))
+            
             normalizedTargetRows <- processedNormalizationRows[indicesOfInterest,]
         }
         else {
@@ -61,7 +86,13 @@ getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSiz
         processedRows <- rbind(processedRows, normalizedTargetRows)
     }
     
+    # write.csv(processedRows, file="/home/jakob/Desktop/rt_debug/processedRows.csv")
+    
     orderedProcessedRows <- processedRows[order(rowNumbers), ]
+    
+    # write.csv(orderedProcessedRows, file="/home/jakob/Desktop/rt_debug/orderedProcessedRows.csv")
+    
+    # stop("")
     orderedProcessedRows
 }
 
