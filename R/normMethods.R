@@ -65,9 +65,11 @@ getFirstIndicesInVector <- function(targetVector, reverse=FALSE) {
 #' 
 #' @param nr Normalyzer results 
 #' @return None
-writeNormalizedDatasets <- function(nr, jobdir) {
+writeNormalizedDatasets <- function(nr, jobdir, include_pvals=FALSE, include_pairwise_comparisons=FALSE) {
     
     nds <- nr@nds
+    ner <- nr@ner
+    
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
     annotationColumns <- nds@annotationValues
@@ -76,8 +78,39 @@ writeNormalizedDatasets <- function(nr, jobdir) {
         
         currentMethod <- methodnames[sampleIndex]
         filePath <- paste(jobdir, "/", currentMethod, "-normalized.txt", sep="")
+
         outputTable <- cbind(annotationColumns, methodlist[[sampleIndex]])
-        utils::write.table(outputTable, file=filePath, sep="\t", row.names=FALSE, col.names=nds@rawData[2,], quote=FALSE)
+        out_numbering <- nds@rawData[1,]
+        out_colnames <- nds@rawData[2,]
+        
+        if (include_pvals) {
+            # outputTable <- cbind(annotationColumns, methodlist[[sampleIndex]])
+            # out_colnames <- nds@rawData[2,]
+            
+            anova_col <- ner@anfdr[,sampleIndex]
+            kw_col <- ner@kwfdr[,sampleIndex]
+            
+            outputTable <- cbind(outputTable, anova_col, kw_col)
+            out_numbering <- c(out_numbering, 0, 0)
+            out_colnames <- c(out_colnames, 'anova', 'kruskal_wallis')
+        }
+        
+        if (include_pairwise_comparisons) {
+            
+            for (comp in names(nr@ner@pairwise_comps)) {
+                
+                out_numbering <- c(out_numbering, 0)
+                out_colnames <- c(out_colnames, paste("comp", comp, sep="_"))
+                
+                comp_col <- ner@pairwise_comps[[comp]][,sampleIndex]
+                
+                outputTable <- cbind(outputTable, comp_col)
+            }
+        }
+
+        outputTable <- rbind(out_numbering, out_colnames, outputTable)
+        utils::write.table(outputTable, file=filePath, sep="\t", row.names=FALSE, col.names=FALSE, quote=FALSE)
+        # utils::write.table(outputTable, file=filePath, sep="\t", row.names=FALSE, col.names=out_colnames, quote=FALSE)
     }
     
     if (!all(is.na(nr@houseKeepingVars))) {

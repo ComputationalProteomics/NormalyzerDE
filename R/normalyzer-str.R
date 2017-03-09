@@ -30,7 +30,9 @@ normalyzer <- function(inputPath,
                        sampleAbundThres=15,
                        requireReplicates=TRUE,
                        normalizeRetentionTime=FALSE,
-                       retentionTimeWindow=1) {
+                       retentionTimeWindow=1,
+                       include_pvals=FALSE,
+                       pairwise_comparisons=NULL) {
     
     print('start')
     startTime <- Sys.time()
@@ -82,13 +84,15 @@ normalyzer <- function(inputPath,
                                            forceAll=forceAllMethods,
                                            normalizeRetentionTime=normalizeRetentionTime,
                                            retentionTimeWindow=retentionTimeWindow)
-    writeNormalizedDatasets(normalyzerResultsObject, jobDir)
     print("Finished Normalization")
     
     print("Analyzing results...")
-    normalyzerResultsObject <- analyzeNormalizations(normalyzerResultsObject, jobName)
+    normalyzerResultsObject <- analyzeNormalizations(normalyzerResultsObject, jobName, comparisons=pairwise_comparisons)
     print("Finished analysing results")
-    
+
+    print("Writing matrices to file")
+    writeNormalizedDatasets(normalyzerResultsObject, jobDir, include_pvals=include_pvals, include_pairwise_comparisons=!is.null(pairwise_comparisons))
+        
     print("Generating plots...")
     generatePlots(normalyzerResultsObject, jobDir)
     

@@ -5,15 +5,12 @@
 #'
 #' @return Normalyzer results with attached evaluation results object.
 #' @export
-analyzeNormalizations <- function(nr, name) {
+analyzeNormalizations <- function(nr, name, comparisons=NULL) {
     
     print("DEBUG: analyzeAndPlot entered")
-
     nds <- nr@nds
-    nr@ner <- setupNormalizationEvaluationObject(nr)
-
+    nr@ner <- setupNormalizationEvaluationObject(nr, comparisons = comparisons)
     print("Analysis finished. Next, preparing plots and report.")
-    
     nr
 }
 
@@ -95,7 +92,7 @@ filterLinesWithEmptySamples <- function(dataMatrix, replicateHeader) {
 #' 
 #' @param nr Normalyzer results object to be evaluated
 #' @return Normalization evaluation object
-setupNormalizationEvaluationObject <- function(nr) {
+setupNormalizationEvaluationObject <- function(nr, comparisons=NULL) {
     
     ner <- NormalizationEvaluationResults()
     ner <- calculateCV(ner, nr)
@@ -106,6 +103,9 @@ setupNormalizationEvaluationObject <- function(nr) {
         ner <- calculateMAD(ner, nr)
         ner <- calculateAvgVar(ner, nr)
         ner <- calculateSignificanceMeasures(ner, nr)
+        if (!is.null(comparisons)) {
+            ner <- calculatePairwiseComparisons(ner, nr, comparisons)
+        }
     }
     
     ner <- calculateCorrelations(nr, ner)

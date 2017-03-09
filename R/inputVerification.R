@@ -64,6 +64,7 @@ verifyValidNumbers <- function(normalyzerDfAll) {
     normalyzerDf <- normalyzerDfAll[, which(as.numeric(normalyzerDfAll[1,]) > 0), 
                                     drop=FALSE]
     
+    # Fields expected to contain numbers in decimal or scientific notation, or containing NA or null
     validPatterns <- c("\\d+(\\.\\d+)?", "NA", "null", "\\d+\\.\\d+[eE]([\\+\\-])?\\d+$")
     
     rawData <- normalyzerDf[-1:-2,]
