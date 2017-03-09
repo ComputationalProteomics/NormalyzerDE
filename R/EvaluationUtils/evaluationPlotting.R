@@ -12,19 +12,33 @@ visualize_results_new <- function(normal_objects, rt_objects, target_measure_fun
     full_df <- data.frame(matrix(nrow=0, ncol=3))
     colnames(full_df) <- c("x", "y_level", "norm_method")
     
-    min_rt_setting <- min(sapply(rt_objects, function(x) { x$rt_settings }))
-    max_rt_setting <- max(sapply(rt_objects, function(x) { x$rt_settings }))
-    x_lim <- c(min_rt_setting, max_rt_setting)
+    if (length(rt_objects) > 0) {
+        min_rt_setting <- min(sapply(rt_objects, function(x) { x$rt_settings }))
+        max_rt_setting <- max(sapply(rt_objects, function(x) { x$rt_settings }))
+        x_lim <- c(min_rt_setting, max_rt_setting)
+        rt_df <- get_rt_plotting_df(rt_objects, target_measure_func)
+    }
+    else {
+        x_lim <- c(0,1)
+    }
     
-    rt_df <- get_rt_plotting_df(rt_objects, target_measure_func)
     normal_df <- get_normal_plotting_df(normal_objects, x_lim, target_measure_func)
-    full_df <- rbind(full_df, rt_df, normal_df)
+    
+    if (length(rt_objects) > 0) {
+        full_df <- rbind(full_df, rt_df, normal_df)
+    }
+    else {
+        full_df <- rbind(full_df, normal_df)
+    }
 
     if (verbose) {
         print("--- Normal entries ---")
         print(normal_df)
-        print("--- RT entries ---")
-        print(rt_df)
+        
+        if (length(rt_objects) > 0) {
+            print("--- RT entries ---")
+            print(rt_df)
+        }
     }
     
     plt <- plt + geom_line(data=full_df, aes_string(x="x", y="y_level", colour="norm_method")) + ylim(0, 1)

@@ -118,28 +118,28 @@ screen_values <- function(sig_thresholds, do_fdr, rt_windows, window_shifts,
 hardcoded_screen_values <- function(do_full_run, super_dirname, subset=T, debug=F) {
     
     if (do_full_run) {
-        sig_thres <- c(0.05, 0.1)
+        sig_thres <- c(0.1, 0.05)
         do_fdr <- c(TRUE)
         # rt_windows <- c(1,2)
-        rt_windows <- c(seq(0.5, 2, 0.5), seq(3, 20, 1))
-        frame_shifts <- c(1,3)
-        lowest_window_size <- c(100, 500)
+        rt_windows <- c(seq(1,20,2))
+        frame_shifts <- c(1, 3, 5)
+        lowest_window_size <- c(100, 200, 500)
         window_merge_method <- c("median")
         max_cores <- 7
-        target_replicates <- list(c(2,4), c(2,3), c(1,3), c(1,4))
+        target_replicates <- list(c(2,3))
         stat_test <- c("welch")
         quiet <- FALSE
     }
     else {
         sig_thres <- c(0.1)
-        do_fdr <- c(TRUE)
+        do_fdr <- c(FALSE)
         # rt_windows <- c(seq(0.5, 5, 0.5), seq(6, 15, 1))
-        rt_windows <- c(3)
+        rt_windows <- c(2)
         frame_shifts <- c(1)
-        lowest_window_size <- c(50, 250, 500)
+        lowest_window_size <- c(200)
         window_merge_method <- c("median")
         max_cores <- 6
-        target_replicates <- list(c(2,3), c(2,4))
+        target_replicates <- list(c(1,2), c(1,3), c(1,4), c(1,5), c(2,3), c(2,4), c(2,5), c(3,4), c(3,5), c(4,5))
         stat_test <- c("welch")
         quiet <- FALSE
         

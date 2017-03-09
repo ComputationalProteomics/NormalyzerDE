@@ -149,7 +149,7 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL, single_lege
 }
 
 
-grid_arrange_shared_legend <- function(plots, ncol = length(list(...)), nrow = 1, position = c("bottom", "right")) {
+grid_arrange_shared_legend <- function(plots, ncol = length(list(...)), nrow = 1, position = c("bottom", "right"), plot_info="[no extra info]") {
     
     library(grid)
     library(gridExtra)
@@ -171,9 +171,14 @@ grid_arrange_shared_legend <- function(plots, ncol = length(list(...)), nrow = 1
                        "right" = arrangeGrob(do.call(arrangeGrob, gl),
                                              legend,
                                              ncol = 2,
-                                             widths = unit.c(unit(1, "npc") - lwidth, lwidth)))
+                                             widths = unit.c(unit(1, "npc") - lwidth, lwidth)),
+                       top = textGrob("test", vjust = 1, gp = gpar(fontface = "bold", cex = 1.5)))
     # grid.newpage()
+    
+    
+    
     grid.draw(combined)
+    grid.text(plot_info, x=0.1, y=0.9, just="left")
     
 }
 

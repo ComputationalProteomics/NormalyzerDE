@@ -51,6 +51,13 @@ do_run_from_runsetting <- function(rs) {
     out_dir <- generate_output_dir(descr_string, rs$super_dirname, create_dir=TRUE)
     # run_base <- paste(out_dir, "/", descr_string, sep="")
 
+    if (length(rs$rt_windows) > 0) {
+        do_rt_run <- TRUE
+    }
+    else {
+        do_rt_run <- FALSE
+    }
+    
     print("Will do run!")
     run_review_data_test(rs$super_dirname, 
                          subset=rs$subset,
@@ -62,7 +69,8 @@ do_run_from_runsetting <- function(rs) {
                          window_merge_method=rs$window_merge_method,
                          rt_windows=rs$rt_windows,
                          target_replicates=rs$sample_comp,
-                         stat_test=rs$stat_test)
+                         stat_test=rs$stat_test,
+                         do_rt_run=do_rt_run)
 }
 
 

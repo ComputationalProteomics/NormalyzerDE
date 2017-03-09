@@ -45,7 +45,7 @@ get_rownames <- function(nr, row_name_cols) {
     
     raw_data <- nr@nds@rawData
     names_cols <- raw_data[-1:-2, row_name_cols]
-    row_names <- paste(names_cols[,2], names_cols[,1], sep="|")
+    row_names <- paste(names_cols[,1], names_cols[,2], sep="|")
     row_names
 }
 

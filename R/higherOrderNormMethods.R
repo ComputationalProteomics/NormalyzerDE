@@ -183,8 +183,8 @@ getSmoothedRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod,
         rownames(current_matrix) <- debug_matrix_rownames
         colnames(current_matrix) <- debug_matrix_header[2:length(debug_matrix_header)]
         
-        debug_sample_pattern <- paste0("dilA_[", paste(debug_samples, collapse=""), "]_")
-        print(current_matrix[debug_id,which(grepl(debug_sample_pattern, colnames(current_matrix))), drop=F])
+        # debug_sample_pattern <- paste0("dilA_[", paste(debug_samples, collapse=""), "]_")
+        # print(current_matrix[debug_id,which(grepl(debug_sample_pattern, colnames(current_matrix))), drop=F])
     }
 
     # mean, median, anonymous...

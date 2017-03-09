@@ -19,8 +19,18 @@ library("ggplot2")
 
 
 path_base <- "../tests/data"
-full_report <- "FeatureReport_MQP_20140828-fornormalyzer.txt"
-subset_report <- "MQP.subset_500.tsv"
+
+use_max_quant_proteios_data <- TRUE
+
+if (use_max_quant_proteios_data) {
+    full_report <- "FeatureReport_MQP_20140828-fornormalyzer.txt"
+    subset_report <- "MQP.subset_500.tsv"
+    NAME_COLUMNS <- c(3,2)
+} else {
+    full_report <- "SpikeIn_Results_Progenesis_20130322_REFORMAT.NORMALYZER.txt"
+    subset_report <- "progenesis.subset_500.tsv"
+    NAME_COLUMNS <- c(2,1)
+}
 # subset_report <- "BA_MQP.subset_500.tsv"
 
 POT_PAT <- "^sol"
@@ -82,26 +92,31 @@ run_review_data_test <- function(super_dirname,
     nr <- normMethods(norm_obj, job_name, normalizeRetentionTime=FALSE, runNormfinder=FALSE)
     
     if (do_normal_run) {
-        normal_run_entries <- generate_normal_run_results(nr, rs)
+        normal_run_entries <- generate_normal_run_results(nr, rs, row_name_cols=NAME_COLUMNS)
     }
         
     if (do_rt_run) {
-        rt_run_entries <- generate_rt_run_results(nr, rs, name_col=3)
+        rt_run_entries <- generate_rt_run_results(nr, rs, name_col=3, row_name_cols=NAME_COLUMNS)
     }
     
     # Postfiltering to match and remove lines only present in some matrices
     
     print(paste("Normal entries:", length(normal_run_entries)))
-    print(paste("RT entries:", length(rt_run_entries)))
+    if (do_rt_run) {
+        print(paste("RT entries:", length(rt_run_entries)))
+    }
     
     if (verbose) {
         print("--- Normal entries ---")
         for (entry in normal_run_entries) {
             print(get_entry_string(entry))
         }
-        print("--- RT entries ---")
-        for (entry in rt_run_entries) {
-            print(get_entry_string(entry))
+        
+        if (do_rt_run) {
+            print("--- RT entries ---")
+            for (entry in rt_run_entries) {
+                print(get_entry_string(entry))
+            }
         }
     }
     
@@ -119,6 +134,10 @@ run_review_data_test <- function(super_dirname,
             include_legend <- FALSE
         }
         
+        if (!do_rt_run) {
+            rt_run_entries <- c()
+        }
+        
         plt <- visualize_results_new(normal_run_entries,
                                      rt_run_entries,
                                      score_func,
@@ -131,7 +150,10 @@ run_review_data_test <- function(super_dirname,
         norm_sub_path <- paste(output_base, tolower(y_lab), "norm", "csv", sep=".")
         rt_sub_path <- paste(output_base, tolower(y_lab), "rt", "csv", sep=".")
         write_entries_to_file(norm_sub_path, normal_run_entries)
-        write_entries_to_file(rt_sub_path, rt_run_entries)
+        
+        if (do_rt_run) {
+            write_entries_to_file(rt_sub_path, rt_run_entries)
+        }
     }
     
     write_data_matrices(output_base, normal_run_entries, rt_run_entries, nr)
@@ -139,7 +161,7 @@ run_review_data_test <- function(super_dirname,
     # plot_path <- paste(plot_path, "png", sep=".")
     pdf(plot_path)
     # multiplot(plotlist=plots, cols=length(plots))
-    grid_arrange_shared_legend(plots=plots, ncol=length(plots))
+    grid_arrange_shared_legend(plots=plots, ncol=length(plots), plot_info=gsub(".*\\/", "", output_base))
     dev.off()
 
     sign_out_path <- paste(output_base, "sign_matrix", "tsv", sep=".")
@@ -152,24 +174,29 @@ run_review_data_test <- function(super_dirname,
 }
 
 
-generate_normal_run_results <- function(nr, rs) {
+generate_normal_run_results <- function(nr, rs, row_name_cols) {
 
     used_methods_names <- getUsedMethodNames(nr)
     normalization_matrices <- getNormalizationMatrices(nr)
+    
+    # row_names <- get_rownames(nr, NAME_COLUMNS)
+    # col_names <- get_colnames(nr)
     
     run_entries <- list()
     for (i in 1:length(used_methods_names)) {
         print(paste("Method: ", used_methods_names[[i]]))
         
         run_result <- get_run_entry(nr, normalization_matrices[[i]], used_methods_names[[i]], 
-                                    POT_PAT, HUMAN_PAT, rs)
+                                    POT_PAT, HUMAN_PAT, rs, row_name_cols=row_name_cols)
+        
+        # rownames(run_result$method_data) <- get_rownames(nr, NAME_COLUMNS)
 
         run_entries[[i]] <- run_result
     }
     run_entries
 }
 
-generate_rt_run_results <- function(nr, rs, name_col=NULL) {
+generate_rt_run_results <- function(nr, rs, row_name_cols, name_col=NULL) {
 
     used_methods_names <- getUsedMethodNames(nr)
     normalization_matrices <- getNormalizationMatrices(nr)
@@ -181,30 +208,7 @@ generate_rt_run_results <- function(nr, rs, name_col=NULL) {
         rownames(normalyzer_filterraw) <- nr@nds@rawData[-1:-2, name_col]
     }
     
-    
-    
-    ###################
-    # row_name_cols <- c(2,3)
-    # 
-    # raw_data <- nr@nds@rawData
-    # header_row <- raw_data[2,]
-    # 
-    # names_cols <- raw_data[-1:-2, row_name_cols]
-    # names <- paste(names_cols[,2], names_cols[,1], sep="|")
-    # 
-    # target_cols <- which(grepl(col_pattern, header_row))
-    # parsed_df <- df[, target_cols]
-    # 
-    # all_replicates <- nr@nds@sampleReplicateGroups
-    # target_replicates <- all_replicates[which(all_replicates %in% replicate_nbrs)]
-    
-    # rownames(parsed_df) <- names
-    # colnames(parsed_df) <- target_replicates
-    ####################
-    
-    
-    
-    row_names <- get_rownames(nr, c(2,3))
+    row_names <- get_rownames(nr, NAME_COLUMNS)
     col_names <- get_colnames(nr)
     
     
@@ -220,9 +224,6 @@ generate_rt_run_results <- function(nr, rs, name_col=NULL) {
         debug_id <- "sol35|AASDLVPVLSSFK"
         debug_sample_pattern <- "dilA_[24]_"
         debug_samples <- c(2,4)
-        
-        # write.csv(nr@data2log2, file="/home/jakob/Desktop/log2_eval.csv")
-        # stop("")
         
         raw_copy <- nr@data2log2
         # raw_copy <- log2(normalyzer_filterraw)
@@ -249,7 +250,7 @@ generate_rt_run_results <- function(nr, rs, name_col=NULL) {
                                                    debug_id=debug_id,
                                                    debug_samples=debug_samples)
         
-        median_entry <- get_run_entry(nr, median_rt, "RT-median", POT_PAT, HUMAN_PAT, rs, current_rt_setting=rt_window)
+        median_entry <- get_run_entry(nr, median_rt, "RT-median", POT_PAT, HUMAN_PAT, rs, current_rt_setting=rt_window, row_name_cols=row_name_cols)
 
         print("mean rt")
         mean_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw,
@@ -263,7 +264,7 @@ generate_rt_run_results <- function(nr, rs, name_col=NULL) {
                                                  debug_matrix_rownames=row_names,
                                                  debug_id=debug_id,
                                                  debug_samples=debug_samples)
-        mean_entry <- get_run_entry(nr, mean_rt, "RT-mean", POT_PAT, HUMAN_PAT, rs, current_rt_setting=rt_window)
+        mean_entry <- get_run_entry(nr, mean_rt, "RT-mean", POT_PAT, HUMAN_PAT, rs, current_rt_setting=rt_window, row_name_cols=row_name_cols)
 
         print("loess rt")
         loess_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw,
@@ -277,7 +278,7 @@ generate_rt_run_results <- function(nr, rs, name_col=NULL) {
                                                   debug_matrix_rownames=row_names,
                                                   debug_id=debug_id,
                                                   debug_samples=debug_samples)
-        loess_entry <- get_run_entry(nr, loess_rt, "RT-loess", POT_PAT, HUMAN_PAT, rs, current_rt_setting=rt_window)
+        loess_entry <- get_run_entry(nr, loess_rt, "RT-loess", POT_PAT, HUMAN_PAT, rs, current_rt_setting=rt_window, row_name_cols=row_name_cols)
 
         run_entries_base_index <- length(run_entries) + 1
         run_entries[[run_entries_base_index]] <- median_entry
@@ -289,7 +290,7 @@ generate_rt_run_results <- function(nr, rs, name_col=NULL) {
 }
 
 # Generate entry object containing information on number of total and DE found in target pattern and background
-get_run_entry <- function(nr, method_data, name, potato_pattern, human_pattern, rs, current_rt_setting=NULL, omit_na=TRUE) {
+get_run_entry <- function(nr, method_data, name, potato_pattern, human_pattern, rs, row_name_cols, current_rt_setting=NULL, omit_na=TRUE) {
 
     sig_thres <- rs$sig_thres
     adjust_fdr <- rs$do_fdr
@@ -297,13 +298,13 @@ get_run_entry <- function(nr, method_data, name, potato_pattern, human_pattern, 
     stat_test <- rs$stat_test
 
     combined_pattern <- paste0("(", potato_pattern, "|", human_pattern, ")")
-    row_name_col <- c(2,3)
+    # row_name_col <- c(2,3)
     col_pattern <- paste0(SAMPLE_PAT_BASE, "[", paste(replicate_nbrs, sep="", collapse=""), SAMPLE_PAT_END)
     
     all_replicates <- nr@nds@sampleReplicateGroups
     custom_replicate_groups <- all_replicates[which(all_replicates %in% replicate_nbrs)]
 
-    prepared_df <- get_prepared_normalyzer_sheet(nr, method_data, col_pattern, row_name_col, replicate_nbrs)
+    prepared_df <- get_prepared_normalyzer_sheet(nr, method_data, col_pattern, row_name_cols, replicate_nbrs)
     filter_df <- prepared_df[which(!grepl(NAME_FILTER, rownames(prepared_df))),]
 
     anova_pval <- get_anova_pvals(filter_df, custom_replicate_groups, stat_test=stat_test)
@@ -351,31 +352,50 @@ get_prepared_normalyzer_sheet <- function(nr, df, col_pattern, row_name_cols, re
 
     raw_data <- nr@nds@rawData
     sample_header_row <- raw_data[2,which(as.integer(raw_data[1,]) > 0)]
+
+    # print(head(raw_data))
+    # print(sample_header_row)
+    # print(col_pattern)
     
     names_cols <- raw_data[-1:-2, row_name_cols]
-    names <- paste(names_cols[,2], names_cols[,1], sep="|")
+    names <- paste(names_cols[,1], names_cols[,2], sep="|")
     
     target_cols <- which(grepl(col_pattern, sample_header_row))
+    
+    # print(head(df))
+    
     parsed_df <- df[, target_cols]
 
+    # print(target_cols)
+    
     all_replicates <- nr@nds@sampleReplicateGroups
     target_replicates <- all_replicates[which(all_replicates %in% replicate_nbrs)]
 
+    # print(all_replicates)
+    # print(target_replicates)
+    
     rownames(parsed_df) <- names
     colnames(parsed_df) <- target_replicates
-    
+
+    # stop("")
+        
     parsed_df
 }
 
 
 get_anova_pvals <- function(df, replicate_groups, stat_test="anova") {
 
+    # print(head(df))
+    # print(replicate_groups)
+    
     # Is this needed?    
     replicate_groups <- as.factor(replicate_groups)
     
     stat_test_func <- function(sampleIndex) {
         
         rep_counts <- table(names(na.omit(sampleIndex)))
+        # print(rep_counts)
+        # stop("")
         
         if (length(rep_counts) == 2 && min(rep_counts > 1)) {
             if (stat_test == "anova") {
@@ -402,6 +422,10 @@ write_entries_to_file <- function(out_path, run_entries) {
     first_entry_v <- get_entry_vector(run_entries[[1]])
     out_strs <- matrix(ncol=length(first_entry_v), nrow=0)
     first_entry_head <- get_entry_header(run_entries[[1]])
+    
+    print(out_strs)
+    print(get_entry_header(run_entries[[1]]))
+    
     colnames(out_strs) <- get_entry_header(run_entries[[1]])
     
     for (i in 1:length(run_entries)) {
