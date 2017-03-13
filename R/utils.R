@@ -188,3 +188,119 @@ get_datestamp_string <- function() {
 
 
 
+#' Retrieve indices for first or last occurences in vector with replicated 
+#' elements
+#' 
+#' @param targetVector Input vector with replicated elements.
+#' @param reverse Look for first or last occurence for each element.
+#'  By default looks for the first occurence.
+#' @return Vector with indices for each first occurence.
+getFirstIndicesInVector <- function(targetVector, reverse=FALSE) {
+    
+    encounteredNumbers <- c()
+    firstIndices <- c()
+    
+    if (!reverse) {
+        startIndex <- 1
+        endIndex <- length(targetVector)
+    }
+    else {
+        startIndex <- length(targetVector)
+        endIndex <- 1
+    }
+    
+    for (i in startIndex:endIndex) {
+        targetValue <- targetVector[i]
+        if (!is.element(targetValue, encounteredNumbers)) {
+            encounteredNumbers <- append(encounteredNumbers, targetValue)
+            if (!reverse) {
+                firstIndices <- append(firstIndices, i)
+            }
+            else {
+                firstIndices <- append(i, firstIndices)
+            }
+        }
+    }
+    
+    firstIndices
+}
+
+
+
+#' Removes rows from matrix where replicates aren't represented by at least
+#' one value
+#' 
+#' @param dataMatrix Matrix with expression values for entities in replicate 
+#'  samples.
+#' @param replicateHeader Header showing how samples in matrix are replicated.
+#' @return Reduced matrix where rows without any number are excluded.
+filterLinesWithEmptySamples <- function(dataMatrix, replicateHeader) {
+    
+    replicatesHaveDataCtr <- getAllSamplesHaveValuesContrast(dataMatrix, replicateHeader)
+    dataMatrix[replicatesHaveDataCtr, ]
+}
+
+
+#' Get contrast vector (TRUE/FALSE-values) indicating whether all samples
+#' specified in replicateHeader have at least one non-NA value
+#' 
+#' @param dataMatrix Matrix with expression values for entities in replicate 
+#'  samples.
+#' @param replicateHeader Header showing how samples in matrix are replicated.
+#' @return Contrast vector
+getAllSamplesHaveValuesContrast <- function(dataMatrix, replicateHeader) {
+    
+    firstIndices <- getFirstIndicesInVector(replicateHeader)
+    lastIndices <- getFirstIndicesInVector(replicateHeader, reverse=TRUE)
+    replicatesHaveData <- rep(TRUE, nrow(dataMatrix))
+    
+    for (i in 1:length(firstIndices)) {
+        
+        firstIndex <- firstIndices[i]
+        lastIndex <- lastIndices[i]
+        
+        nbrNAperReplicate <- rowSums(is.na(dataMatrix[, firstIndex:lastIndex, drop=FALSE]))
+        nbrReplicates <- lastIndex - firstIndex + 1
+        replicatesHaveData <- (nbrNAperReplicate < nbrReplicates & replicatesHaveData)
+    }
+    
+    replicatesHaveData
+}
+
+
+#' Get contrast vector (TRUE/FALSE-values) indicating whether at least half
+#' of values in row have non-NA values
+#' 
+#' @param dataMatrix Matrix with expression values for entities in replicate 
+#'  samples.
+#' @param replicateHeader Header showing how samples in matrix are replicated.
+#' @return Contrast vector
+getLowNALinesContrast <- function(dataMatrix, replicateHeader) {
+    
+    nbsNAperLine <- rowSums(is.na(dataMatrix))
+    enoughNAContrast <- (nbsNAperLine < ncol(dataMatrix) / 2)
+    
+    enoughNAContrast
+}
+
+
+#' Get contrast vector (TRUE/FALSE-values) indicating whether both at least
+#' half values are present, and each sample has at least one non-NA value
+#' 
+#' @param dataMatrix Matrix with expression values for entities in replicate 
+#'  samples.
+#' @param replicateHeader Header showing how samples in matrix are replicated.
+#' @return Contrast vector
+getRowNAFilterContrast <- function(dataMatrix, replicateHeader) {
+    
+    lowNALinesContrast <- getLowNALinesContrast(dataMatrix, replicateHeader)
+    samplesHaveValuesContrast <- getAllSamplesHaveValuesContrast(dataMatrix, replicateHeader)
+
+    return (lowNALinesContrast & samplesHaveValuesContrast)
+}
+
+
+
+
+
+

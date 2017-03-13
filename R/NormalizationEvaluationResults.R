@@ -35,8 +35,11 @@ NormalizationEvaluationResults <- setClass("NormalizationEvaluationResults",
                                                
                                                anfdr = "matrix",
                                                kwfdr = "matrix",
+                                               anovaFDRWithNA = "matrix",
+                                               krusWalFDRWithNA = "matrix",
                                                
                                                pairwise_comps = "list",
+                                               pairwise_comps_fdr = "list",
                                                
                                                avgpercorsum = "list",
                                                avgspecorsum = "list"
@@ -213,12 +216,13 @@ setMethod("calculateSignificanceMeasures", "NormalizationEvaluationResults",
               sampleReplicateGroups <- nr@nds@sampleReplicateGroups
               methodCount <- length(getUsedMethodNames(nr))
               methodList <- getNormalizationMatrices(nr)
-              rowCount <- length(levels(as.factor(unlist(sampleReplicateGroups))))
-              
-              anovaPVal <- vector()
-              krusWalPVal <- vector()
-              anovaFDR <- vector()
-              krusValFDR <- vector()
+
+              anovaPVals <- vector()
+              anovaFDRs <- vector()
+              anovaFDRsWithNA <- matrix(NA, ncol=methodCount, nrow=nrow(methodList[[1]]))
+              krusWalPVals <- vector()
+              krusValFDRs <- vector()
+              krusWalFDRsWithNA <- matrix(NA, ncol=methodCount, nrow=nrow(methodList[[1]]))
               
               firstIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=FALSE)
               lastIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=TRUE)
@@ -226,36 +230,27 @@ setMethod("calculateSignificanceMeasures", "NormalizationEvaluationResults",
               for (methodIndex in 1:methodCount) {
                   
                   processedDataMatrix <- methodList[[methodIndex]]
-                  rowNonNACount <- vector()
                   
-                  for (sampleIndex in 1:length(firstIndices)) {
-                      
-                      startColIndex <- firstIndices[sampleIndex]
-                      endColIndex <- lastIndices[sampleIndex]
-                      
-                      rowNonNACount <- apply(processedDataMatrix[, startColIndex:endColIndex], 1, function(x) { sum(!is.na(x)) }) - 1
-                  }
-                  
-                  # ANOVA
-                  nbsNAperLine <- rowSums(is.na(processedDataMatrix))
-                  
-                  # Retrieving lines where at least half is non-NAs
-                  datastoretmp <- processedDataMatrix[nbsNAperLine < ncol(processedDataMatrix) / 2, ]
-                  dataStoreReplicateNAFiltered <- filterLinesWithEmptySamples(datastoretmp, sampleReplicateGroups)
-                  
-                  # browser()
-                  
-                  anovaPVal <- cbind(anovaPVal, apply(dataStoreReplicateNAFiltered, 1, function(sampleIndex) summary(stats::aov(unlist(sampleIndex)~sampleReplicateGroups))[[1]][[5]][1]))
-                  anovaFDR <- cbind(anovaFDR, stats::p.adjust(anovaPVal[, methodIndex], method="BH"))
+                  naFilterContrast <- getRowNAFilterContrast(processedDataMatrix, sampleReplicateGroups)
+                  dataStoreReplicateNAFiltered <- processedDataMatrix[naFilterContrast,]
 
-                  krusWalPVal <- cbind(krusWalPVal, apply(dataStoreReplicateNAFiltered, 1, function(sampleIndex) stats::kruskal.test(unlist(sampleIndex)~sampleReplicateGroups, na.action="na.exclude")[[3]][1]))
-                  krusValFDR <- cbind(krusValFDR, stats::p.adjust(krusWalPVal[, methodIndex], method="BH"))
+                  anovaPValCol <- apply(dataStoreReplicateNAFiltered, 1, function(sampleIndex) summary(stats::aov(unlist(sampleIndex)~sampleReplicateGroups))[[1]][[5]][1])
+                  anovaPVals <- cbind(anovaPVals, anovaPValCol)
+                  anovaFDRCol <- stats::p.adjust(anovaPVals[, methodIndex], method="BH")
+                  anovaFDRs <- cbind(anovaFDRs, anovaFDRCol)
+                  anovaFDRsWithNA[naFilterContrast, methodIndex] <- anovaFDRCol
+                  
+                  krusWalPValCol <- apply(dataStoreReplicateNAFiltered, 1, function(sampleIndex) stats::kruskal.test(unlist(sampleIndex)~sampleReplicateGroups, na.action="na.exclude")[[3]][1])
+                  krusWalPVals <- cbind(krusWalPVals, krusWalPValCol)
+                  krusWalFDRCol <- stats::p.adjust(krusWalPVals[, methodIndex], method="BH")
+                  krusValFDRs <- cbind(krusValFDRs, krusWalFDRCol)
+                  krusWalFDRsWithNA[naFilterContrast, methodIndex] <- krusWalFDRCol
               }
               
               # Finds to 5% of least DE variables in log2 data based on ANOVA
               # Generates error if it doesn't find least DE peptides
-              if (sum(anovaFDR[, 1] >= min(utils::head(rev(sort(anovaFDR[, 1])), n=(5 * nrow(anovaFDR) / 100)))) > 0) {
-                  lowlyVariableFeatures <- which(anovaFDR[, 1] >= min(utils::head(rev(sort(anovaFDR[, 1])), n=(5 * nrow(anovaFDR) / 100))))
+              if (sum(anovaFDRs[, 1] >= min(utils::head(rev(sort(anovaFDRs[, 1])), n=(5 * nrow(anovaFDRs) / 100)))) > 0) {
+                  lowlyVariableFeatures <- which(anovaFDRs[, 1] >= min(utils::head(rev(sort(anovaFDRs[, 1])), n=(5 * nrow(anovaFDRs) / 100))))
               }
 
               nonsiganfdrlistcv <- vector()
@@ -268,9 +263,11 @@ setMethod("calculateSignificanceMeasures", "NormalizationEvaluationResults",
               
               ner@nonsiganfdrlist <- nonsiganfdrlistcv
               ner@nonsiganfdrlistcvpdiff <- nonsiganfdrlistcvpdiff
-              ner@anfdr <- anovaFDR
-              ner@kwfdr <- krusValFDR
-              
+              ner@anfdr <- anovaFDRs
+              ner@kwfdr <- krusValFDRs
+              ner@anovaFDRWithNA = anovaFDRsWithNA
+              ner@krusWalFDRWithNA = krusWalFDRsWithNA
+
               ner
           }
 )
@@ -292,41 +289,34 @@ setMethod("calculatePairwiseComparisons", "NormalizationEvaluationResults",
               sampleReplicateGroups <- nr@nds@sampleReplicateGroups
               methodCount <- length(getUsedMethodNames(nr))
               methodList <- getNormalizationMatrices(nr)
-              rowCount <- length(levels(as.factor(unlist(sampleReplicateGroups))))
-              
+
               firstIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=FALSE)
               lastIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=TRUE)
               
               pairwisePList <- list()
               pairwiseFDRList <- list()
               for (comp in comparisons) {
-                  pairwisePList[[comp]] <- vector()
-                  pairwiseFDRList[[comp]] <- vector()
+                  pairwisePList[[comp]] <- matrix(NA, ncol=methodCount, nrow=nrow(methodList[[1]]))
+                  pairwiseFDRList[[comp]] <- matrix(NA, ncol=methodCount, nrow=nrow(methodList[[1]]))
               }
-              
+
+              do_t_test <- function(c1_vals, c2_vals, default=NA) {
+                  if (length(na.omit(c1_vals)) > 1 && length(na.omit(c2_vals)) > 1) {
+                      tryCatch(stats::t.test(c1_vals, c2_vals)[[3]],
+                               error=function(x) NA)
+                  }
+                  else {
+                      NA
+                  }
+              }
+                            
               for (methodIndex in 1:methodCount) {
                   
                   processedDataMatrix <- methodList[[methodIndex]]
-                  rowNonNACount <- vector()
-                  
-                  for (sampleIndex in 1:length(firstIndices)) {
-                      
-                      startColIndex <- firstIndices[sampleIndex]
-                      endColIndex <- lastIndices[sampleIndex]
-                      rowNonNACount <- apply(processedDataMatrix[, startColIndex:endColIndex], 1, function(x) { sum(!is.na(x)) }) - 1
-                  }
-                  
-                  # ANOVA
-                  nbsNAperLine <- rowSums(is.na(processedDataMatrix))
-
-                  # Retrieving lines where at least half is non-NAs
-                  datastoretmp <- processedDataMatrix[nbsNAperLine < ncol(processedDataMatrix) / 2, ]
-                  dataStoreReplicateNAFiltered <- filterLinesWithEmptySamples(datastoretmp, sampleReplicateGroups)
+                  naFilterContrast <- getRowNAFilterContrast(processedDataMatrix, sampleReplicateGroups)
+                  dataStoreReplicateNAFiltered <- processedDataMatrix[naFilterContrast,]
                   
                   for (comp in comparisons) {
-                      
-                      currWelchPVals <- pairwisePList[[comp]]
-                      currWelchFDRVals <- pairwiseFDRList[[comp]]
                       
                       sample1 <- strtoi(substr(comp, 1, 1))
                       sample2 <- strtoi(substr(comp, 2, 2))
@@ -336,54 +326,20 @@ setMethod("calculatePairwiseComparisons", "NormalizationEvaluationResults",
                       s2start <- firstIndices[sample2]
                       s2end <- lastIndices[sample2]
                       
-                      # browser()
-                      do_t_test <- function(c1_vals, c2_vals, default=NA) {
-                          if (length(na.omit(c1_vals)) > 1 && length(na.omit(c2_vals)) > 1) {
-                              # Return p-value for test
-                              print(paste("c1", paste(c1_vals, collapse=","), "c2", paste(c2_vals, collapse=",")))
-                              
-                              tryCatch(stats::t.test(c1_vals, c2_vals)[[3]],
-                                       error=function(x) NA)
-                              
-                              
-                              # pv.list <- apply(table[,2:9],1, function(x) tryCatch( 
-                              #     t.test(x[1:4],x[5:8],paired=TRUE)$p.value, error=function(x) NA ))
-                          }
-                          else {
-                              NA
-                          }
-                      }
                       
-                      currWelchPVals <- cbind(currWelchPVals, apply(dataStoreReplicateNAFiltered, 1, function(row) do_t_test(row[s1start:s1end], row[s1start:s2end], default=NA)))
-                      # anovaPVal <- cbind(anovaPVal, apply(dataStoreReplicateNAFiltered, 1, function(sampleIndex) summary(stats::aov(unlist(sampleIndex)~sampleReplicateGroups))[[1]][[5]][1]))
-                      
-                      # browser()
-                      
-                      print(paste("Current method index:", methodIndex))
-                      print(paste("Current comparison:", comp))
-                      # print(head(currWelchPVals))
-                      
-                      currWelchFDRVals <- cbind(currWelchFDRVals, stats::p.adjust(currWelchPVals[, methodIndex], method="BH"))
-                      
-                      pairwisePList[[comp]] <- currWelchPVals
-                      pairwiseFDRList[[comp]] <- currWelchFDRVals
+                      welchPValCol <- apply(dataStoreReplicateNAFiltered, 1, function(row) do_t_test(row[s1start:s1end], row[s2start:s2end], default=NA))
+                      welchFDRCol <- stats::p.adjust(welchPValCol, method="BH")
+
+                      pairwisePList[[comp]][naFilterContrast, methodIndex] <- welchPValCol
+                      pairwiseFDRList[[comp]][naFilterContrast, methodIndex] <- welchFDRCol
                   }
               }
               
               ner@pairwise_comps <- pairwisePList
+              ner@pairwise_comps_fdr <- pairwiseFDRList
               ner
           }
 )
-
-
-
-
-
-
-
-
-
-
 
 
 

@@ -316,12 +316,6 @@ setMethod("performRTNormalizations", "NormalyzerResults",
               smoothedRTMean <- getSmoothedRTNormalizedMatrix(nds@filterrawdata, nds@retentionTimes, meanNormalization, stepSizeMinutes)
               smoothedRTLoess <- getSmoothedRTNormalizedMatrix(nds@filterrawdata, nds@retentionTimes, performCyclicLoessNormalization, stepSizeMinutes)
               
-              # newRTMedTest <- getRTNormalizedMatrix(nds@filterrawdata, nds@retentionTimes, medianNormalization, stepSizeMinutes)
-              # newRTMeanTest <- getRTNormalizedMatrix(nds@filterrawdata, nds@retentionTimes, meanNormalization, stepSizeMinutes)
-              # newRTLoessTest <- getRTNormalizedMatrix(nds@filterrawdata, nds@retentionTimes, performCyclicLoessNormalization, stepSizeMinutes)
-              # 
-              # rtMedOffset <- getRTNormalizedMatrix(nds@filterrawdata, nds@retentionTimes, medianNormalization, stepSizeMinutes, offset=TRUE)
-              
               nr@data2rtMed <- smoothedRTMed
               nr@data2rtMean <- smoothedRTMean
               nr@data2rtLoess <- smoothedRTLoess

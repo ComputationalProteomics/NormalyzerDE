@@ -7,7 +7,6 @@
 #' @export
 analyzeNormalizations <- function(nr, name, comparisons=NULL) {
     
-    print("DEBUG: analyzeAndPlot entered")
     nds <- nr@nds
     nr@ner <- setupNormalizationEvaluationObject(nr, comparisons = comparisons)
     print("Analysis finished. Next, preparing plots and report.")
@@ -60,34 +59,6 @@ calculateCorrelations <- function(nr, ner) {
 }
 
 
-#' Removes rows from matrix where replicates aren't represented by at least
-#' one value
-#' 
-#' @param dataMatrix Matrix with expression values for entities in replicate 
-#'  samples.
-#' @param replicateHeader Header showing how samples in matrix are replicated.
-#' @return Reduced matrix where rows without any number are excluded.
-filterLinesWithEmptySamples <- function(dataMatrix, replicateHeader) {
-    
-    firstIndices <- getFirstIndicesInVector(replicateHeader)
-    lastIndices <- getFirstIndicesInVector(replicateHeader, reverse=TRUE)
-    
-    replicatesHaveData <- rep(TRUE, nrow(dataMatrix))
-    
-    for (i in 1:length(firstIndices)) {
-        
-        firstIndex <- firstIndices[i]
-        lastIndex <- lastIndices[i]
-        
-        nbrNAperReplicate <- rowSums(is.na(dataMatrix[, firstIndex:lastIndex]))
-        nbrReplicates <- lastIndex - firstIndex + 1
-        replicatesHaveData <- (nbrNAperReplicate < nbrReplicates & replicatesHaveData)
-    }
-    
-    dataMatrix[replicatesHaveData, ]
-}
-
-
 #' Setup normalization evaluation object 
 #' 
 #' @param nr Normalyzer results object to be evaluated
@@ -103,6 +74,7 @@ setupNormalizationEvaluationObject <- function(nr, comparisons=NULL) {
         ner <- calculateMAD(ner, nr)
         ner <- calculateAvgVar(ner, nr)
         ner <- calculateSignificanceMeasures(ner, nr)
+        
         if (!is.null(comparisons)) {
             ner <- calculatePairwiseComparisons(ner, nr, comparisons)
         }

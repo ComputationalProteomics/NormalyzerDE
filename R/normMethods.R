@@ -7,7 +7,7 @@
 #'  as attributes
 #' @export
 normMethods <- function(nds, currentjob, forceAll=FALSE, normalizeRetentionTime=FALSE, retentionTimeWindow=0.1, runNormfinder=TRUE) {
-
+    
     nr <- generateNormalyzerResultsObject(nds)
     nr <- performNormalizations(nr, forceAll=forceAll, rtNorm=normalizeRetentionTime, rtWindow=retentionTimeWindow, runNormfinder=runNormfinder)
     
@@ -24,73 +24,39 @@ generateNormalyzerResultsObject <- function(nds) {
     nr
 }
 
-#' Retrieve indices for first or last occurences in vector with replicated 
-#' elements
-#' 
-#' @param targetVector Input vector with replicated elements.
-#' @param reverse Look for first or last occurence for each element.
-#'  By default looks for the first occurence.
-#' @return Vector with indices for each first occurence.
-getFirstIndicesInVector <- function(targetVector, reverse=FALSE) {
-    
-    encounteredNumbers <- c()
-    firstIndices <- c()
-    
-    if (!reverse) {
-        startIndex <- 1
-        endIndex <- length(targetVector)
-    }
-    else {
-        startIndex <- length(targetVector)
-        endIndex <- 1
-    }
-    
-    for (i in startIndex:endIndex) {
-        targetValue <- targetVector[i]
-        if (!is.element(targetValue, encounteredNumbers)) {
-            encounteredNumbers <- append(encounteredNumbers, targetValue)
-            if (!reverse) {
-                firstIndices <- append(firstIndices, i)
-            }
-            else {
-                firstIndices <- append(i, firstIndices)
-            }
-        }
-    }
-    
-    firstIndices
-}
-
 #' Write normalization matrices to file
 #' 
 #' @param nr Normalyzer results 
 #' @return None
 writeNormalizedDatasets <- function(nr, jobdir, include_pvals=FALSE, include_pairwise_comparisons=FALSE) {
-    
+
     nds <- nr@nds
     ner <- nr@ner
-    
+
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
     annotationColumns <- nds@annotationValues
-    
+
     for (sampleIndex in 1:length(methodnames)) {
-        
+
         currentMethod <- methodnames[sampleIndex]
         filePath <- paste(jobdir, "/", currentMethod, "-normalized.txt", sep="")
 
         outputTable <- cbind(annotationColumns, methodlist[[sampleIndex]])
         out_numbering <- nds@rawData[1,]
         out_colnames <- nds@rawData[2,]
-        
+
         if (include_pvals) {
-            # outputTable <- cbind(annotationColumns, methodlist[[sampleIndex]])
-            # out_colnames <- nds@rawData[2,]
+
+            anova_col <- ner@anovaFDRWithNA[,sampleIndex]
+            kw_col <- ner@krusWalFDRWithNA[,sampleIndex]
             
-            anova_col <- ner@anfdr[,sampleIndex]
-            kw_col <- ner@kwfdr[,sampleIndex]
-            
+            if (nrow(outputTable) != length(anova_col) || nrow(outputTable) != length(kw_col)) {
+                stop(paste("Table row count:", nrow(outputTable), "must match p-value vector lengths for anova:", 
+                           length(anova_col), "and and kruskal wallis:", length(kw_col)))
+            }
             outputTable <- cbind(outputTable, anova_col, kw_col)
+            
             out_numbering <- c(out_numbering, 0, 0)
             out_colnames <- c(out_colnames, 'anova', 'kruskal_wallis')
         }
@@ -99,12 +65,13 @@ writeNormalizedDatasets <- function(nr, jobdir, include_pvals=FALSE, include_pai
             
             for (comp in names(nr@ner@pairwise_comps)) {
                 
-                out_numbering <- c(out_numbering, 0)
-                out_colnames <- c(out_colnames, paste("comp", comp, sep="_"))
+                out_numbering <- c(out_numbering, 0, 0)
+                out_colnames <- c(out_colnames, paste("comp", comp, "p", sep="_"), paste("comp", comp, "fdr", sep="_"))
+
+                comp_col_p <- ner@pairwise_comps[[comp]][,sampleIndex]
+                comp_col_fdr <- ner@pairwise_comps_fdr[[comp]][,sampleIndex]
                 
-                comp_col <- ner@pairwise_comps[[comp]][,sampleIndex]
-                
-                outputTable <- cbind(outputTable, comp_col)
+                outputTable <- cbind(outputTable, comp_col_p, comp_col_fdr)
             }
         }
 
@@ -112,22 +79,20 @@ writeNormalizedDatasets <- function(nr, jobdir, include_pvals=FALSE, include_pai
         utils::write.table(outputTable, file=filePath, sep="\t", row.names=FALSE, col.names=FALSE, quote=FALSE)
         # utils::write.table(outputTable, file=filePath, sep="\t", row.names=FALSE, col.names=out_colnames, quote=FALSE)
     }
-    
+
     if (!all(is.na(nr@houseKeepingVars))) {
         hkVarsName <- "housekeeping-variables.tsv"
         hkFilePath <- paste(jobdir, "/", hkVarsName, sep="")
         utils::write.table(file=hkFilePath, nr@houseKeepingVars, sep="\t", 
                            row.names=FALSE, col.names=nds@rawData[2,], quote=FALSE)
     }
-    
+
     rawdata_name <- "submitted_rawdata.tsv"
     rawFilePath <- paste(jobdir, "/", rawdata_name, sep="")
     rawOutputTable <- cbind(annotationColumns, nds@filterrawdata)
-    
+
     utils::write.table(rawOutputTable, file=rawFilePath, sep="\t", row.names=FALSE, col.names=nds@rawData[2,], quote=FALSE)
 }
-
-
 
 #' Normalization adjusting based on total sample intensity
 #' 
@@ -144,7 +109,7 @@ globalIntensityNormalization <- function(rawMatrix) {
     for (i in 1:nrow(rawMatrix)) {
         normMatrix[i, ] <- unlist(sapply(1:ncol(rawMatrix), normFunc))
     }
- 
+    
     normLog2Matrix <- log2(normMatrix)
     colnames(normLog2Matrix) <- colnames(rawMatrix)
     normLog2Matrix
@@ -181,9 +146,9 @@ meanNormalization <- function(rawMatrix) {
     colMeans <-apply(rawMatrix, 2, FUN="mean", na.rm=TRUE)
     avgColMean <- mean(colMeans, na.rm=TRUE)
     normMatrix <- matrix(nrow=nrow(rawMatrix), ncol=ncol(rawMatrix), byrow=TRUE)
-
+    
     normFunc <- function(zd) { (rawMatrix[i, zd] / colMeans[zd]) * avgColMean }
-
+    
     for (i in 1:nrow(rawMatrix)) {
         normMatrix[i, ] <- unlist(sapply(1:ncol(rawMatrix), normFunc))
     }

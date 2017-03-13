@@ -71,7 +71,7 @@ normalyzer <- function(inputPath,
 
     # source("evaluationMain.R")
     
-    normObj <- getVerifiedNormalyzerObject(inputPath, 
+    normObj <- getVerifiedNormalyzerObject(inputPath,
                                            jobName,
                                            threshold=sampleAbundThres,
                                            omitSamples=omitLowAbundSamples,
@@ -79,8 +79,8 @@ normalyzer <- function(inputPath,
     jobDir <- setupJobDir(jobName, outputDir)
     
     print("Normalizing data...")
-    normalyzerResultsObject <- normMethods(normObj, 
-                                           jobName, 
+    normalyzerResultsObject <- normMethods(normObj,
+                                           jobName,
                                            forceAll=forceAllMethods,
                                            normalizeRetentionTime=normalizeRetentionTime,
                                            retentionTimeWindow=retentionTimeWindow)
