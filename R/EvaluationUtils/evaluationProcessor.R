@@ -1,6 +1,7 @@
 source("EvaluationUtils/evaluationMain.R")
 source("EvaluationUtils/RunSetting.R")
 source("EvaluationUtils/evaluationUtils.R")
+source("EvaluationUtils/hardcoded_screen_values.R")
 source("utils.R")
 
 
@@ -115,51 +116,7 @@ screen_values <- function(sig_thresholds, do_fdr, rt_windows, window_shifts,
     # print(paste("Total screened: ", index - 1))
 }
 
-hardcoded_screen_values <- function(do_full_run, super_dirname, subset=T, debug=F) {
-    
-    if (do_full_run) {
-        sig_thres <- c(0.1, 0.05)
-        do_fdr <- c(TRUE)
-        # rt_windows <- c(1,2)
-        rt_windows <- c(seq(1,20,2))
-        frame_shifts <- c(1, 3, 5)
-        lowest_window_size <- c(100, 200, 500)
-        window_merge_method <- c("median")
-        max_cores <- 7
-        target_replicates <- list(c(2,3))
-        stat_test <- c("welch")
-        quiet <- FALSE
-    }
-    else {
-        sig_thres <- c(0.1)
-        do_fdr <- c(FALSE)
-        # rt_windows <- c(seq(0.5, 5, 0.5), seq(6, 15, 1))
-        rt_windows <- c(2)
-        frame_shifts <- c(1)
-        lowest_window_size <- c(200)
-        window_merge_method <- c("median")
-        max_cores <- 6
-        target_replicates <- list(c(1,2), c(1,3), c(1,4), c(1,5), c(2,3), c(2,4), c(2,5), c(3,4), c(3,5), c(4,5))
-        stat_test <- c("welch")
-        quiet <- FALSE
-        
-        verbose <- TRUE
-    }
-    
-    screen_values(sig_thresholds = sig_thres,
-                  do_fdr = do_fdr,
-                  rt_windows = rt_windows,
-                  window_shifts = frame_shifts,
-                  lowest_window_size = lowest_window_size,
-                  window_merge_method = window_merge_method,
-                  max_cores = max_cores,
-                  quiet_processing = quiet,
-                  subset = subset,
-                  super_dirname = super_dirname,
-                  sample_comparisons = target_replicates,
-                  stat_test = stat_test,
-                  debug = debug)
-}
+
 
 
 
