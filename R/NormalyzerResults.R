@@ -221,8 +221,13 @@ setMethod("performNormalizations", "NormalyzerResults",
                   }
               }
               
-              if (rtNorm && rtColPresent) {
-                  nr <- performRTNormalizations(nr, rtWindow)
+              if (rtNorm) {
+                  if (rtColPresent) {
+                      nr <- performRTNormalizations(nr, rtWindow)
+                  }
+                  else {
+                      print("No RT column specified (-1 in first header). Skipping RT normalization.")
+                  }
               }
 
               nr

@@ -28,7 +28,7 @@ generateNormalyzerResultsObject <- function(nds) {
 #' 
 #' @param nr Normalyzer results 
 #' @return None
-writeNormalizedDatasets <- function(nr, jobdir, include_pvals=FALSE, include_pairwise_comparisons=FALSE) {
+writeNormalizedDatasets <- function(nr, jobdir, include_pvals=FALSE, include_pairwise_comparisons=FALSE, include_cv_col=FALSE, include_anova_p=FALSE) {
 
     nds <- nr@nds
     ner <- nr@ner
@@ -61,6 +61,18 @@ writeNormalizedDatasets <- function(nr, jobdir, include_pvals=FALSE, include_pai
             out_colnames <- c(out_colnames, 'anova', 'kruskal_wallis')
         }
         
+        if (include_anova_p) {
+            anova_p <- ner@anova_p[,sampleIndex]
+            
+            if (nrow(outputTable) != length(anova_p)) {
+                stop(paste("Table row count:", nrow(outputTable), "must match p-value vector length for anova: ", length(anova_p)))
+            }
+            
+            outputTable <- cbind(outputTable, anova_p)
+            out_numbering <- c(out_numbering, 0)
+            out_colnames <- c(out_colnames, 'anova_p')
+        }
+        
         if (include_pairwise_comparisons) {
             
             for (comp in names(nr@ner@pairwise_comps)) {
@@ -73,6 +85,13 @@ writeNormalizedDatasets <- function(nr, jobdir, include_pvals=FALSE, include_pai
                 
                 outputTable <- cbind(outputTable, comp_col_p, comp_col_fdr)
             }
+        }
+        
+        if (include_cv_col) {
+            out_numbering <- c(out_numbering, 0)
+            out_colnames <- c(out_colnames, 'CV')
+            cv_col <- ner@avgcvmem[,sampleIndex]
+            outputTable <- cbind(outputTable, cv_col)
         }
 
         outputTable <- rbind(out_numbering, out_colnames, outputTable)

@@ -5,16 +5,18 @@
 #'
 #' @return Normalyzer results with attached evaluation results object.
 #' @export
-analyzeNormalizations <- function(nr, name, comparisons=NULL) {
+analyzeNormalizations <- function(nr, name, comparisons=NULL, categorical_anova=FALSE) {
     
     nds <- nr@nds
-    nr@ner <- setupNormalizationEvaluationObject(nr, comparisons = comparisons)
+    nr@ner <- setupNormalizationEvaluationObject(nr, 
+                                                 comparisons=comparisons,
+                                                 categorical_anova=categorical_anova)
     print("Analysis finished. Next, preparing plots and report.")
     nr
 }
 
 #' Pearson and Spearman correlation calculations for methods and samples
-#' ! Needs some further investigations 
+#' ! Needs some further investigations (why? speed or something else?)
 #' 
 #' @param nr Normalyzer results object with calculated results.
 #' @param ner Normalyzer evaluation object.
@@ -63,7 +65,7 @@ calculateCorrelations <- function(nr, ner) {
 #' 
 #' @param nr Normalyzer results object to be evaluated
 #' @return Normalization evaluation object
-setupNormalizationEvaluationObject <- function(nr, comparisons=NULL) {
+setupNormalizationEvaluationObject <- function(nr, comparisons=NULL, categorical_anova=FALSE) {
     
     ner <- NormalizationEvaluationResults()
     ner <- calculateCV(ner, nr)
@@ -73,7 +75,7 @@ setupNormalizationEvaluationObject <- function(nr, comparisons=NULL) {
     if (!singleRepRun) {
         ner <- calculateMAD(ner, nr)
         ner <- calculateAvgVar(ner, nr)
-        ner <- calculateSignificanceMeasures(ner, nr)
+        ner <- calculateSignificanceMeasures(ner, nr, categorical_anova=categorical_anova)
         
         if (!is.null(comparisons)) {
             ner <- calculatePairwiseComparisons(ner, nr, comparisons)

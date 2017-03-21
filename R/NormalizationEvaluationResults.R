@@ -37,6 +37,7 @@ NormalizationEvaluationResults <- setClass("NormalizationEvaluationResults",
                                                kwfdr = "matrix",
                                                anovaFDRWithNA = "matrix",
                                                krusWalFDRWithNA = "matrix",
+                                               anova_p = "matrix",
                                                
                                                pairwise_comps = "list",
                                                pairwise_comps_fdr = "list",
@@ -206,11 +207,11 @@ setMethod("calculateAvgVar", "NormalizationEvaluationResults",
 #' @return None
 #' @rdname calculateSignificanceMeasures
 setGeneric(name="calculateSignificanceMeasures", 
-           function(ner, nr) standardGeneric("calculateSignificanceMeasures"))
+           function(ner, nr, categorical_anova) standardGeneric("calculateSignificanceMeasures"))
 
 #' @rdname calculateSignificanceMeasures
 setMethod("calculateSignificanceMeasures", "NormalizationEvaluationResults",
-          function(ner, nr) {
+          function(ner, nr, categorical_anova=FALSE) {
               
               # Setup
               sampleReplicateGroups <- nr@nds@sampleReplicateGroups
@@ -218,6 +219,7 @@ setMethod("calculateSignificanceMeasures", "NormalizationEvaluationResults",
               methodList <- getNormalizationMatrices(nr)
 
               anovaPVals <- vector()
+              anovaPValsWithNA <- matrix(NA, ncol=methodCount, nrow=nrow(methodList[[1]]))
               anovaFDRs <- vector()
               anovaFDRsWithNA <- matrix(NA, ncol=methodCount, nrow=nrow(methodList[[1]]))
               krusWalPVals <- vector()
@@ -234,13 +236,23 @@ setMethod("calculateSignificanceMeasures", "NormalizationEvaluationResults",
                   naFilterContrast <- getRowNAFilterContrast(processedDataMatrix, sampleReplicateGroups)
                   dataStoreReplicateNAFiltered <- processedDataMatrix[naFilterContrast,]
 
-                  anovaPValCol <- apply(dataStoreReplicateNAFiltered, 1, function(sampleIndex) summary(stats::aov(unlist(sampleIndex)~sampleReplicateGroups))[[1]][[5]][1])
+                  if (categorical_anova) {
+                      testLevels <- factor(sampleReplicateGroups)
+                  }
+                  else {
+                      testLevels <- sampleReplicateGroups
+                  }
+                  
+                  anovaPValCol <- apply(dataStoreReplicateNAFiltered, 1, function(sampleIndex) summary(stats::aov(unlist(sampleIndex)~testLevels))[[1]][[5]][1])
+                  krusWalPValCol <- apply(dataStoreReplicateNAFiltered, 1, function(sampleIndex) stats::kruskal.test(unlist(sampleIndex)~testLevels, na.action="na.exclude")[[3]][1])
+                  
                   anovaPVals <- cbind(anovaPVals, anovaPValCol)
+                  anovaPValsWithNA[naFilterContrast, methodIndex] <- anovaPValCol
+                  
                   anovaFDRCol <- stats::p.adjust(anovaPVals[, methodIndex], method="BH")
                   anovaFDRs <- cbind(anovaFDRs, anovaFDRCol)
                   anovaFDRsWithNA[naFilterContrast, methodIndex] <- anovaFDRCol
                   
-                  krusWalPValCol <- apply(dataStoreReplicateNAFiltered, 1, function(sampleIndex) stats::kruskal.test(unlist(sampleIndex)~sampleReplicateGroups, na.action="na.exclude")[[3]][1])
                   krusWalPVals <- cbind(krusWalPVals, krusWalPValCol)
                   krusWalFDRCol <- stats::p.adjust(krusWalPVals[, methodIndex], method="BH")
                   krusValFDRs <- cbind(krusValFDRs, krusWalFDRCol)
@@ -263,6 +275,9 @@ setMethod("calculateSignificanceMeasures", "NormalizationEvaluationResults",
               
               ner@nonsiganfdrlist <- nonsiganfdrlistcv
               ner@nonsiganfdrlistcvpdiff <- nonsiganfdrlistcvpdiff
+              
+              ner@anova_p <- anovaPValsWithNA
+              
               ner@anfdr <- anovaFDRs
               ner@kwfdr <- krusValFDRs
               ner@anovaFDRWithNA = anovaFDRsWithNA

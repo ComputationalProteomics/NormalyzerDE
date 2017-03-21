@@ -32,7 +32,10 @@ normalyzer <- function(inputPath,
                        normalizeRetentionTime=FALSE,
                        retentionTimeWindow=1,
                        include_pvals=FALSE,
-                       pairwise_comparisons=NULL) {
+                       pairwise_comparisons=NULL,
+                       include_cv_col=FALSE,
+                       categorical_anova=FALSE,
+                       include_anova_p=FALSE) {
     
     print('start')
     startTime <- Sys.time()
@@ -87,12 +90,20 @@ normalyzer <- function(inputPath,
     print("Finished Normalization")
     
     print("Analyzing results...")
-    normalyzerResultsObject <- analyzeNormalizations(normalyzerResultsObject, jobName, comparisons=pairwise_comparisons)
+    normalyzerResultsObject <- analyzeNormalizations(normalyzerResultsObject, 
+                                                     jobName, 
+                                                     comparisons=pairwise_comparisons,
+                                                     categorical_anova=categorical_anova)
     print("Finished analysing results")
 
     print("Writing matrices to file")
-    writeNormalizedDatasets(normalyzerResultsObject, jobDir, include_pvals=include_pvals, include_pairwise_comparisons=!is.null(pairwise_comparisons))
-        
+    writeNormalizedDatasets(normalyzerResultsObject, 
+                            jobDir, 
+                            include_pvals=include_pvals, 
+                            include_pairwise_comparisons=!is.null(pairwise_comparisons),
+                            include_cv_col=include_cv_col,
+                            include_anova_p=include_anova_p)
+
     print("Generating plots...")
     generatePlots(normalyzerResultsObject, jobDir)
     

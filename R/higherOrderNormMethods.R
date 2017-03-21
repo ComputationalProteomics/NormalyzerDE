@@ -45,6 +45,8 @@ getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSiz
         
         targetSliceIndices <- which(retentionTimes >= windowStart & retentionTimes < windowEnd)
         
+        # browser()
+        
         # debug_slice_matrix <- rawMatrix[targetSliceIndices,]
 
         if (length(targetSliceIndices) == 0) {
