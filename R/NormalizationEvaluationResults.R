@@ -23,6 +23,7 @@ NormalizationEvaluationResults <- setClass("NormalizationEvaluationResults",
                                            slots=c(
                                                avgcvmem = "matrix",
                                                avgcvmempdiff = "numeric",
+                                               featureCVPerMethod = "matrix",
                                                
                                                avgmadmem = "matrix",
                                                avgmadmempdiff = "numeric",
@@ -33,8 +34,8 @@ NormalizationEvaluationResults <- setClass("NormalizationEvaluationResults",
                                                nonsiganfdrlist = "numeric",
                                                nonsiganfdrlistcvpdiff = "numeric",
                                                
-                                               anfdr = "matrix",
-                                               kwfdr = "matrix",
+                                               anfdr = "list",
+                                               kwfdr = "list",
                                                anovaFDRWithNA = "matrix",
                                                krusWalFDRWithNA = "matrix",
                                                anova_p = "matrix",
@@ -64,10 +65,12 @@ setMethod("calculateCV", "NormalizationEvaluationResults",
               sampleReplicateGroups <- nr@nds@sampleReplicateGroups
               methodCount <- length(getUsedMethodNames(nr))
               methodList <- getNormalizationMatrices(nr)
-              
+              numberFeatures <- nrow(methodList[[1]])
               rowCount <- length(levels(as.factor(unlist(sampleReplicateGroups))))
               
+              matrix_cvs <- matrix(nrow=numberFeatures, ncol=methodCount)
               avgCVPerNormAndReplicates <- matrix(nrow=rowCount, ncol=methodCount, byrow=TRUE)
+              
               for (methodIndex in 1:methodCount) {
                   
                   processedDataMatrix <- methodList[[methodIndex]]
@@ -80,6 +83,17 @@ setMethod("calculateCV", "NormalizationEvaluationResults",
                   
                   tempCVMatrixSum <- apply(tempCVMatrix, 2, mean, na.rm=TRUE)
                   avgCVPerNormAndReplicates[, methodIndex] <- tempCVMatrixSum * 100
+                  
+                  
+                  # Calculate sample-wise CV
+                  cv <- function(row) {
+                      st_dev <- sd(row, na.rm=TRUE)
+                      mean_val <- mean(unlist(row), na.rm=TRUE)
+                      st_dev / mean(mean_val) * 100
+                  }
+                  method_cvs <- apply(processedDataMatrix, 1, cv)
+                  matrix_cvs[,methodIndex] <- method_cvs
+                  
               }
               
               # Requires log normalized data to be at first index
@@ -88,6 +102,7 @@ setMethod("calculateCV", "NormalizationEvaluationResults",
               
               ner@avgcvmem <- avgCVPerNormAndReplicates
               ner@avgcvmempdiff <- cvPercentVarFromLog
+              ner@featureCVPerMethod <- matrix_cvs
               
               ner
           }
@@ -207,23 +222,25 @@ setMethod("calculateAvgVar", "NormalizationEvaluationResults",
 #' @return None
 #' @rdname calculateSignificanceMeasures
 setGeneric(name="calculateSignificanceMeasures", 
-           function(ner, nr, categorical_anova) standardGeneric("calculateSignificanceMeasures"))
+           function(ner, nr, categorical_anova, var_filter_frac) standardGeneric("calculateSignificanceMeasures"))
 
 #' @rdname calculateSignificanceMeasures
 setMethod("calculateSignificanceMeasures", "NormalizationEvaluationResults",
-          function(ner, nr, categorical_anova=FALSE) {
+          function(ner, nr, 
+                   categorical_anova=FALSE, 
+                   var_filter_frac=NULL) {
+              
+              # browser()
               
               # Setup
               sampleReplicateGroups <- nr@nds@sampleReplicateGroups
               methodCount <- length(getUsedMethodNames(nr))
               methodList <- getNormalizationMatrices(nr)
 
-              anovaPVals <- vector()
               anovaPValsWithNA <- matrix(NA, ncol=methodCount, nrow=nrow(methodList[[1]]))
-              anovaFDRs <- vector()
+              anovaFDRs <- list()
               anovaFDRsWithNA <- matrix(NA, ncol=methodCount, nrow=nrow(methodList[[1]]))
-              krusWalPVals <- vector()
-              krusValFDRs <- vector()
+              krusValFDRs <- list()
               krusWalFDRsWithNA <- matrix(NA, ncol=methodCount, nrow=nrow(methodList[[1]]))
               
               firstIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=FALSE)
@@ -231,9 +248,15 @@ setMethod("calculateSignificanceMeasures", "NormalizationEvaluationResults",
 
               for (methodIndex in 1:methodCount) {
                   
-                  processedDataMatrix <- methodList[[methodIndex]]
+                  print(paste("CV col length: ", length(ner@featureCVPerMethod[,methodIndex])))
                   
-                  naFilterContrast <- getRowNAFilterContrast(processedDataMatrix, sampleReplicateGroups)
+                  processedDataMatrix <- methodList[[methodIndex]]
+                  naFilterContrast <- getRowNAFilterContrast(processedDataMatrix,
+                                                             sampleReplicateGroups,
+                                                             var_filter_frac=var_filter_frac)
+                  
+                  print(paste("NA filter contrast length: ", length(naFilterContrast)))
+                  
                   dataStoreReplicateNAFiltered <- processedDataMatrix[naFilterContrast,]
 
                   if (categorical_anova) {
@@ -243,27 +266,32 @@ setMethod("calculateSignificanceMeasures", "NormalizationEvaluationResults",
                       testLevels <- sampleReplicateGroups
                   }
                   
-                  anovaPValCol <- apply(dataStoreReplicateNAFiltered, 1, function(sampleIndex) summary(stats::aov(unlist(sampleIndex)~testLevels))[[1]][[5]][1])
-                  krusWalPValCol <- apply(dataStoreReplicateNAFiltered, 1, function(sampleIndex) stats::kruskal.test(unlist(sampleIndex)~testLevels, na.action="na.exclude")[[3]][1])
+                  anovaPValCol <- apply(dataStoreReplicateNAFiltered, 1, 
+                                        function(sampleIndex) summary(stats::aov(unlist(sampleIndex)~testLevels))[[1]][[5]][1])
+                  krusWalPValCol <- apply(dataStoreReplicateNAFiltered, 1, 
+                                          function(sampleIndex) stats::kruskal.test(unlist(sampleIndex)~testLevels, na.action="na.exclude")[[3]][1])
                   
-                  anovaPVals <- cbind(anovaPVals, anovaPValCol)
+                  print(paste("anovaPVals length: ", length(anovaPValCol)))
+                  
                   anovaPValsWithNA[naFilterContrast, methodIndex] <- anovaPValCol
-                  
-                  anovaFDRCol <- stats::p.adjust(anovaPVals[, methodIndex], method="BH")
-                  anovaFDRs <- cbind(anovaFDRs, anovaFDRCol)
+                  anovaFDRCol <- stats::p.adjust(anovaPValCol, method="BH")
+                  anovaFDRs[[methodIndex]] <- anovaFDRCol
                   anovaFDRsWithNA[naFilterContrast, methodIndex] <- anovaFDRCol
                   
-                  krusWalPVals <- cbind(krusWalPVals, krusWalPValCol)
-                  krusWalFDRCol <- stats::p.adjust(krusWalPVals[, methodIndex], method="BH")
-                  krusValFDRs <- cbind(krusValFDRs, krusWalFDRCol)
+                  krusWalFDRCol <- stats::p.adjust(krusWalPValCol, method="BH")
+                  krusValFDRs[[methodIndex]] <- krusWalFDRCol
                   krusWalFDRsWithNA[naFilterContrast, methodIndex] <- krusWalFDRCol
               }
               
               # Finds to 5% of least DE variables in log2 data based on ANOVA
               # Generates error if it doesn't find least DE peptides
-              if (sum(anovaFDRs[, 1] >= min(utils::head(rev(sort(anovaFDRs[, 1])), n=(5 * nrow(anovaFDRs) / 100)))) > 0) {
-                  lowlyVariableFeatures <- which(anovaFDRs[, 1] >= min(utils::head(rev(sort(anovaFDRs[, 1])), n=(5 * nrow(anovaFDRs) / 100))))
+              if (sum(anovaFDRs[[1]] >= min(utils::head(rev(sort(anovaFDRs[[1]])), n=(5 * length(anovaFDRs[[1]]) / 100)))) > 0) {
+                  lowlyVariableFeatures <- which(anovaFDRs[[1]] >= min(utils::head(rev(sort(anovaFDRs[[1]])), n=(5 * length(anovaFDRs[[1]]) / 100))))
               }
+              
+              # if (sum(anovaFDRs[, 1] >= min(utils::head(rev(sort(anovaFDRs[, 1])), n=(5 * nrow(anovaFDRs) / 100)))) > 0) {
+              #     lowlyVariableFeatures <- which(anovaFDRs[, 1] >= min(utils::head(rev(sort(anovaFDRs[, 1])), n=(5 * nrow(anovaFDRs) / 100))))
+              # }
 
               nonsiganfdrlistcv <- vector()
               for (mlist in 1:methodCount) {

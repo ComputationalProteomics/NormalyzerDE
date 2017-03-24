@@ -291,15 +291,31 @@ getLowNALinesContrast <- function(dataMatrix, replicateHeader) {
 #'  samples.
 #' @param replicateHeader Header showing how samples in matrix are replicated.
 #' @return Contrast vector
-getRowNAFilterContrast <- function(dataMatrix, replicateHeader) {
+getRowNAFilterContrast <- function(dataMatrix, 
+                                   replicateHeader, 
+                                   var_filter_frac=NULL) {
     
     lowNALinesContrast <- getLowNALinesContrast(dataMatrix, replicateHeader)
     samplesHaveValuesContrast <- getAllSamplesHaveValuesContrast(dataMatrix, replicateHeader)
-
-    return (lowNALinesContrast & samplesHaveValuesContrast)
+    
+    if (!is.null(var_filter_frac)) {
+        samplesPassVarThres <- getVarFilteredContrast(dataMatrix, var_filter_frac)
+    }
+    else {
+        samplesPassVarThres <- rep(TRUE, nrow(dataMatrix))
+    }
+    
+    return (lowNALinesContrast & samplesHaveValuesContrast & samplesPassVarThres)
 }
 
-
+getVarFilteredContrast <- function(logMatrix, var_filter_frac) {
+  
+    feature_vars <- apply(logMatrix, 1, function(x) {var(x, na.rm=TRUE)})
+    
+    # passingVarFilters <- rep(TRUE, length(cv_col))
+    frac_thres <- sort(feature_vars)[length(feature_vars) * var_filter_frac]
+    feature_vars > frac_thres
+}
 
 
 

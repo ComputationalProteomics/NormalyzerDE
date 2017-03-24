@@ -5,12 +5,17 @@
 #'
 #' @return Normalyzer results with attached evaluation results object.
 #' @export
-analyzeNormalizations <- function(nr, name, comparisons=NULL, categorical_anova=FALSE) {
+analyzeNormalizations <- function(nr, 
+                                  name, 
+                                  comparisons=NULL, 
+                                  categorical_anova=FALSE,
+                                  var_filter_frac=NULL) {
     
     nds <- nr@nds
     nr@ner <- setupNormalizationEvaluationObject(nr, 
                                                  comparisons=comparisons,
-                                                 categorical_anova=categorical_anova)
+                                                 categorical_anova=categorical_anova,
+                                                 var_filter_frac=var_filter_frac)
     print("Analysis finished. Next, preparing plots and report.")
     nr
 }
@@ -65,7 +70,10 @@ calculateCorrelations <- function(nr, ner) {
 #' 
 #' @param nr Normalyzer results object to be evaluated
 #' @return Normalization evaluation object
-setupNormalizationEvaluationObject <- function(nr, comparisons=NULL, categorical_anova=FALSE) {
+setupNormalizationEvaluationObject <- function(nr, 
+                                               comparisons=NULL, 
+                                               categorical_anova=FALSE,
+                                               var_filter_frac=NULL) {
     
     ner <- NormalizationEvaluationResults()
     ner <- calculateCV(ner, nr)
@@ -75,7 +83,10 @@ setupNormalizationEvaluationObject <- function(nr, comparisons=NULL, categorical
     if (!singleRepRun) {
         ner <- calculateMAD(ner, nr)
         ner <- calculateAvgVar(ner, nr)
-        ner <- calculateSignificanceMeasures(ner, nr, categorical_anova=categorical_anova)
+        ner <- calculateSignificanceMeasures(ner, 
+                                             nr, 
+                                             categorical_anova=categorical_anova,
+                                             var_filter_frac=var_filter_frac)
         
         if (!is.null(comparisons)) {
             ner <- calculatePairwiseComparisons(ner, nr, comparisons)

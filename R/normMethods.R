@@ -90,7 +90,7 @@ writeNormalizedDatasets <- function(nr, jobdir, include_pvals=FALSE, include_pai
         if (include_cv_col) {
             out_numbering <- c(out_numbering, 0)
             out_colnames <- c(out_colnames, 'CV')
-            cv_col <- ner@avgcvmem[,sampleIndex]
+            cv_col <- ner@featureCVPerMethod[,sampleIndex]
             outputTable <- cbind(outputTable, cv_col)
         }
 

@@ -35,7 +35,8 @@ normalyzer <- function(inputPath,
                        pairwise_comparisons=NULL,
                        include_cv_col=FALSE,
                        categorical_anova=FALSE,
-                       include_anova_p=FALSE) {
+                       include_anova_p=FALSE,
+                       var_filter_frac=NULL) {
     
     print('start')
     startTime <- Sys.time()
@@ -93,7 +94,8 @@ normalyzer <- function(inputPath,
     normalyzerResultsObject <- analyzeNormalizations(normalyzerResultsObject, 
                                                      jobName, 
                                                      comparisons=pairwise_comparisons,
-                                                     categorical_anova=categorical_anova)
+                                                     categorical_anova=categorical_anova,
+                                                     var_filter_frac=var_filter_frac)
     print("Finished analysing results")
 
     print("Writing matrices to file")

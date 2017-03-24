@@ -782,6 +782,8 @@ plotDendrograms <- function(nr, currentLayout, pageno) {
 #' @return None
 plotDEPlots <- function(nr, currentLayout, pageno) {
     
+    fdr_threshold <- 0.05
+    
     nds <- nr@nds
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
@@ -795,13 +797,13 @@ plotDEPlots <- function(nr, currentLayout, pageno) {
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
     
-    graphics::barplot(colSums(anfdr < 0.05), main="ANOVA", names=c(methodnames), 
+    graphics::barplot(sapply(anfdr, function(col) { length(col[col < fdr_threshold]) }), main="ANOVA", names=c(methodnames), 
                       border="red", density=20, cex=0.5, cex.axis=0.9, las=2,
-                      ylab="No. of Variables with FDR < 0.05")
+                      ylab=paste("No. of Variables with FDR <", fdr_threshold))
     
-    graphics::barplot(colSums(kwfdr < 0.05), main="Kruskal Wallis", names=c(methodnames), 
-                      border="red", density=20, cex=0.5, cex.axis=0.9, 
-                      las=2, ylab="No. of Variables with FDR < 0.05")
+    graphics::barplot(sapply(kwfdr, function(col) { length(col[col < fdr_threshold]) }), main="Kruskal Wallis", names=c(methodnames), 
+                      border="red", density=20, cex=0.5, cex.axis=0.9, las=2, 
+                      ylab=paste("No. of Variables with FDR <", fdr_threshold))
     
     grid::pushViewport(grid::viewport(layout=currentLayout))
     printMeta("Differential Expression", pageno, currentjob)
