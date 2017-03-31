@@ -40,18 +40,18 @@ outputNames <- c("Log2",
 #' @slot houseKeepingVars Vector of house keeping variables found by Normfinder.
 #' @slot data2log2 Log2 of filtered raw data.
 #' @slot data2limloess Lim-Loess normalized raw data.
-#' @slot fittedLR Fitted Loess regression (TODO: Investigate this further).
+#' @slot fittedLR Fitted Loess regression 
 #' @slot data2vsnrep Replicate based VSN normalization.
 #' @slot data2loess Loess normalization.
-#' @slot globalfittedRLR Global fitted RLR normalization (TODO: Investigate further).
+#' @slot globalfittedRLR Global fitted RLR normalization
 #' @slot data2vsn Global VSN normalized data.
-#' @slot data2GI GI-normalized data (TODO: Check out).
+#' @slot data2GI GI-normalized data
 #' @slot data2med Median normalized data.
 #' @slot data2mean Mean normalized data.
-#' @slot data2ctrlog CTR-log normalized data (TODO: Check out).
+#' @slot data2ctrlog CTR-log normalized data 
 #' @slot data2quantile Quantile normalized data.
-#' @slot data2ctr CTR normalized data (TODO: Check out).
-#' @slot data2mad MAD normalized data (TODO: Check out).
+#' @slot data2ctr CTR normalized data
+#' @slot data2mad MAD normalized data
 #' @export
 NormalyzerResults <- setClass("NormalyzerResults",
                               slots=c(

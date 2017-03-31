@@ -248,7 +248,7 @@ filterLinesWithEmptySamples <- function(dataMatrix, replicateHeader) {
 #'  samples.
 #' @param replicateHeader Header showing how samples in matrix are replicated.
 #' @return Contrast vector
-getAllSamplesHaveValuesContrast <- function(dataMatrix, replicateHeader) {
+getAllSamplesHaveValuesContrast <- function(dataMatrix, replicateHeader, minCount=1) {
     
     firstIndices <- getFirstIndicesInVector(replicateHeader)
     lastIndices <- getFirstIndicesInVector(replicateHeader, reverse=TRUE)
@@ -261,7 +261,12 @@ getAllSamplesHaveValuesContrast <- function(dataMatrix, replicateHeader) {
         
         nbrNAperReplicate <- rowSums(is.na(dataMatrix[, firstIndex:lastIndex, drop=FALSE]))
         nbrReplicates <- lastIndex - firstIndex + 1
-        replicatesHaveData <- (nbrNAperReplicate < nbrReplicates & replicatesHaveData)
+        
+        
+        nbrNonNA <- nbrReplicates - nbrNAperReplicate
+        replicatesHaveData <- (nbrNonNA >= minCount & replicatesHaveData)
+        
+        # replicatesHaveData <- (nbrNAperReplicate < nbrReplicates & replicatesHaveData)
     }
     
     replicatesHaveData
@@ -293,10 +298,11 @@ getLowNALinesContrast <- function(dataMatrix, replicateHeader) {
 #' @return Contrast vector
 getRowNAFilterContrast <- function(dataMatrix, 
                                    replicateHeader, 
-                                   var_filter_frac=NULL) {
+                                   var_filter_frac=NULL,
+                                   minCount=1) {
     
     lowNALinesContrast <- getLowNALinesContrast(dataMatrix, replicateHeader)
-    samplesHaveValuesContrast <- getAllSamplesHaveValuesContrast(dataMatrix, replicateHeader)
+    samplesHaveValuesContrast <- getAllSamplesHaveValuesContrast(dataMatrix, replicateHeader, minCount=minCount)
     
     if (!is.null(var_filter_frac)) {
         samplesPassVarThres <- getVarFilteredContrast(dataMatrix, var_filter_frac)
@@ -307,6 +313,7 @@ getRowNAFilterContrast <- function(dataMatrix,
     
     return (lowNALinesContrast & samplesHaveValuesContrast & samplesPassVarThres)
 }
+
 
 getVarFilteredContrast <- function(logMatrix, var_filter_frac) {
   
