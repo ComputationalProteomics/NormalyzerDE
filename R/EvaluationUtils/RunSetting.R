@@ -1,7 +1,7 @@
 # source("EvaluationUtils/evaluationMain.R")
 
 
-RunSetting <- function(sig_thres, do_fdr, rt_windows, window_shifts,
+RunSetting <- function(sig_thres, do_fdr, rt_windows, window_shifts, var_filter_frac,
                        lowest_window_size, window_merge_method, sample_comp, stat_test, quiet=FALSE, subset=FALSE,
                        super_dirname=NULL) {
     
@@ -16,7 +16,8 @@ RunSetting <- function(sig_thres, do_fdr, rt_windows, window_shifts,
         subset = subset,
         super_dirname = super_dirname,
         sample_comp = sample_comp,
-        stat_test = stat_test
+        stat_test = stat_test,
+        var_filter_frac = var_filter_frac
     )
     
     class(me) <- append(class(me), "RunSetting")
@@ -32,7 +33,8 @@ get_run_setting_descr_string <- function(rs) {
         fdr_str <- "nofdr"
     }
     
-    paste(rs$sig_thres, fdr_str, rs$window_shifts, rs$lowest_window_size, rs$window_merge_method, rs$stat_test, paste(rs$sample_comp, sep="", collapse="vs"), sep="_")
+    paste(rs$sig_thres, fdr_str, rs$window_shifts, rs$lowest_window_size, rs$window_merge_method, rs$stat_test, 
+          rs$var_filter_frac, paste(rs$sample_comp, sep="", collapse="vs"), sep="_")
 }
 
 get_run_setting_base <- function(rs) {
@@ -43,6 +45,8 @@ get_run_setting_base <- function(rs) {
 }
 
 do_run_from_runsetting <- function(rs) {
+    
+    print(rs)
     
     descr_string <- get_run_setting_descr_string(rs)
     
@@ -70,6 +74,7 @@ do_run_from_runsetting <- function(rs) {
                          rt_windows=rs$rt_windows,
                          target_replicates=rs$sample_comp,
                          stat_test=rs$stat_test,
+                         var_filter_frac=rs$var_filter_frac,
                          do_rt_run=do_rt_run)
 }
 

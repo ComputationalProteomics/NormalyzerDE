@@ -75,7 +75,7 @@ do_multiple_runs <- function(run_setting_list, max_cores, testrun_only=FALSE) {
 screen_values <- function(sig_thresholds, do_fdr, rt_windows, window_shifts, 
                           lowest_window_size, window_merge_method, stat_test=c("anova"), small_run=FALSE, max_cores=1,
                           quiet_processing=TRUE, subset=FALSE, super_dirname=NULL, sample_comparisons=list(c(2,3)),
-                          debug=F) {
+                          var_filter_fracs=NULL, debug=F) {
     
     index <- 1
     total_runs <- length(sig_thresholds) * length(do_fdr) * length(window_shifts) * length(lowest_window_size) * length(window_merge_method)
@@ -88,22 +88,26 @@ screen_values <- function(sig_thresholds, do_fdr, rt_windows, window_shifts,
                 for (low_win_size in lowest_window_size) {
                     for (merge_method in window_merge_method) {
                         for (sample_comp in sample_comparisons) {
-                            for (test in stat_test) {
-                                # print(paste("Screening sig", sig, "fdr", fdr, "win_shift", win_shift, "low_win_size", low_win_size, "merge_method", merge_method))
-                                
-                                run_settings[[index]] <- RunSetting(sig_thres=sig, 
-                                                                    do_fdr=fdr, 
-                                                                    rt_windows=rt_windows, 
-                                                                    window_shifts=win_shift, 
-                                                                    lowest_window_size=low_win_size, 
-                                                                    window_merge_method=merge_method,
-                                                                    quiet=quiet_processing,
-                                                                    subset=subset,
-                                                                    super_dirname=super_dirname,
-                                                                    sample_comp=sample_comp,
-                                                                    stat_test=test)
-
-                                index <- index + 1
+                            for (var_filter_frac in var_filter_fracs) {
+                                for (test in stat_test) {
+                                    # print(paste("Screening sig", sig, "fdr", fdr, "win_shift", win_shift, "low_win_size", 
+                                    # low_win_size, "merge_method", merge_method))
+                                    
+                                    run_settings[[index]] <- RunSetting(sig_thres=sig,
+                                                                        var_filter_frac=var_filter_frac,
+                                                                        do_fdr=fdr, 
+                                                                        rt_windows=rt_windows, 
+                                                                        window_shifts=win_shift, 
+                                                                        lowest_window_size=low_win_size, 
+                                                                        window_merge_method=merge_method,
+                                                                        quiet=quiet_processing,
+                                                                        subset=subset,
+                                                                        super_dirname=super_dirname,
+                                                                        sample_comp=sample_comp,
+                                                                        stat_test=test)
+                                    
+                                    index <- index + 1
+                                }
                             }
                         }
                     }

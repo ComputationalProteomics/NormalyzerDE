@@ -13,6 +13,7 @@ source("EvaluationUtils/evaluationPlotting.R")
 source("EvaluationUtils/RunEntry.R")
 source("EvaluationUtils/RunSetting.R")
 source("EvaluationUtils/evaluationUtils.R")
+source("EvaluationUtils/outputUtils.R")
 
 suppressPackageStartupMessages("ggplot2")
 library("ggplot2")
@@ -55,6 +56,7 @@ run_review_data_test <- function(super_dirname,
                                  lowest_window_size=50,
                                  window_merge_method="median",
                                  rt_windows=NULL,
+                                 var_filter_frac=NULL,
                                  target_replicates=c(1,3),
                                  stat_test="welch") {
 
@@ -67,6 +69,7 @@ run_review_data_test <- function(super_dirname,
                      quiet=!verbose,
                      subset=subset,
                      super_dirname=super_dirname,
+                     var_filter_frac=var_filter_frac,
                      sample_comp=target_replicates,
                      stat_test=stat_test
                      )
@@ -166,7 +169,9 @@ run_review_data_test <- function(super_dirname,
 
     sign_out_path <- paste(output_base, "sign_matrix", "tsv", sep=".")
     print(paste("Writing significance entries to:", sign_out_path))
-    write_significance_matrix(sign_out_path, c(normal_run_entries, rt_run_entries))
+    
+    
+    # write_significance_matrix(sign_out_path, c(normal_run_entries, rt_run_entries))
     
     end_time <- Sys.time()
     print(difftime(end_time, start_time))
@@ -179,9 +184,6 @@ generate_normal_run_results <- function(nr, rs, row_name_cols) {
     used_methods_names <- getUsedMethodNames(nr)
     normalization_matrices <- getNormalizationMatrices(nr)
     
-    # row_names <- get_rownames(nr, NAME_COLUMNS)
-    # col_names <- get_colnames(nr)
-    
     run_entries <- list()
     for (i in 1:length(used_methods_names)) {
         print(paste("Method: ", used_methods_names[[i]]))
@@ -189,8 +191,6 @@ generate_normal_run_results <- function(nr, rs, row_name_cols) {
         run_result <- get_run_entry(nr, normalization_matrices[[i]], used_methods_names[[i]], 
                                     POT_PAT, HUMAN_PAT, rs, row_name_cols=row_name_cols)
         
-        # rownames(run_result$method_data) <- get_rownames(nr, NAME_COLUMNS)
-
         run_entries[[i]] <- run_result
     }
     run_entries
@@ -296,6 +296,7 @@ get_run_entry <- function(nr, method_data, name, potato_pattern, human_pattern, 
     adjust_fdr <- rs$do_fdr
     replicate_nbrs <- rs$sample_comp
     stat_test <- rs$stat_test
+    var_filter_frac <- rs$var_filter_frac
 
     combined_pattern <- paste0("(", potato_pattern, "|", human_pattern, ")")
     # row_name_col <- c(2,3)
@@ -304,10 +305,10 @@ get_run_entry <- function(nr, method_data, name, potato_pattern, human_pattern, 
     all_replicates <- nr@nds@sampleReplicateGroups
     custom_replicate_groups <- all_replicates[which(all_replicates %in% replicate_nbrs)]
 
-    prepared_df <- get_prepared_normalyzer_sheet(nr, method_data, col_pattern, row_name_cols, replicate_nbrs)
+    prepared_df <- get_prepared_normalyzer_sheet(nr, method_data, col_pattern, row_name_cols, replicate_nbrs, var_filter_frac=var_filter_frac)
     filter_df <- prepared_df[which(!grepl(NAME_FILTER, rownames(prepared_df))),]
 
-    anova_pval <- get_anova_pvals(filter_df, custom_replicate_groups, stat_test=stat_test)
+    anova_pval <- get_anova_pvals(filter_df, custom_replicate_groups, ttest_type=stat_test)
     if (adjust_fdr) {
         anova_fdr <- stats::p.adjust(anova_pval, method="BH")
         target_sig_val <- anova_fdr
@@ -348,64 +349,50 @@ get_run_entry <- function(nr, method_data, name, potato_pattern, human_pattern, 
 }
 
 
-get_prepared_normalyzer_sheet <- function(nr, df, col_pattern, row_name_cols, replicate_nbrs) {
+get_prepared_normalyzer_sheet <- function(nr, df, col_pattern, row_name_cols, replicate_nbrs, var_filter_frac) {
 
     raw_data <- nr@nds@rawData
     sample_header_row <- raw_data[2,which(as.integer(raw_data[1,]) > 0)]
 
-    # print(head(raw_data))
-    # print(sample_header_row)
-    # print(col_pattern)
-    
     names_cols <- raw_data[-1:-2, row_name_cols]
     names <- paste(names_cols[,1], names_cols[,2], sep="|")
     
     target_cols <- which(grepl(col_pattern, sample_header_row))
-    
-    # print(head(df))
-    
-    parsed_df <- df[, target_cols]
+    data_df <- df[, target_cols]
 
-    # print(target_cols)
-    
     all_replicates <- nr@nds@sampleReplicateGroups
     target_replicates <- all_replicates[which(all_replicates %in% replicate_nbrs)]
 
-    # print(all_replicates)
-    # print(target_replicates)
+    rownames(data_df) <- names
+    colnames(data_df) <- target_replicates
     
-    rownames(parsed_df) <- names
-    colnames(parsed_df) <- target_replicates
-
-    # stop("")
-        
-    parsed_df
+    # browser()
+    
+    filter_contrast <- getRowNAFilterContrast(data_df, target_replicates, var_filter_frac)
+    filtered_df <- data_df[filter_contrast,]
+    
+    filtered_df
+    # data_df
 }
 
 
-get_anova_pvals <- function(df, replicate_groups, stat_test="anova") {
+get_anova_pvals <- function(df, replicate_groups, ttest_type="welch") {
 
-    # print(head(df))
-    # print(replicate_groups)
-    
-    # Is this needed?    
     replicate_groups <- as.factor(replicate_groups)
     
     stat_test_func <- function(sampleIndex) {
         
         rep_counts <- table(names(na.omit(sampleIndex)))
-        # print(rep_counts)
-        # stop("")
-        
+
         if (length(rep_counts) == 2 && min(rep_counts > 1)) {
-            if (stat_test == "anova") {
+            if (ttest_type == "student") {
                 t.test(unlist(sampleIndex)~replicate_groups, var.equal=TRUE)$p.value
             }
-            else if (stat_test == "welch") {
+            else if (ttest_type == "welch") {
                 t.test(unlist(sampleIndex)~replicate_groups)$p.value
             }
             else {
-                stop(paste("Unknown test type:", stat_test))
+                stop(paste("Unknown test type:", ttest_type))
             }
         }
         else {
@@ -415,81 +402,6 @@ get_anova_pvals <- function(df, replicate_groups, stat_test="anova") {
     
     anovaPVal <- apply(df, 1, stat_test_func)
     anovaPVal
-}
-
-write_entries_to_file <- function(out_path, run_entries) {
-    
-    first_entry_v <- get_entry_vector(run_entries[[1]])
-    out_strs <- matrix(ncol=length(first_entry_v), nrow=0)
-    first_entry_head <- get_entry_header(run_entries[[1]])
-    
-    print(out_strs)
-    print(get_entry_header(run_entries[[1]]))
-    
-    colnames(out_strs) <- get_entry_header(run_entries[[1]])
-    
-    for (i in 1:length(run_entries)) {
-        
-        entry <- run_entries[[i]]
-        out_strs <- rbind(out_strs, get_entry_vector(entry))
-    }
-    
-    write.csv(out_strs, file=out_path, quote=FALSE, row.names=FALSE)
-}
-
-write_significance_matrix <- function(sign_out_path, entries) {
-    
-    nbr_features <- length(entries[[1]]$sig_df)
-    nbr_methods <- length(entries)
-    
-    sign_matrix <- data.frame(matrix(nrow=nbr_features, ncol=0))
-    entry_names <- NULL
-    
-    for (i in 1:nbr_methods) {
-        
-        entry <- entries[[i]]
-        if (is.null(entry_names)) {
-            entry_names <- names(entry$sig_df)
-        }
-        
-        entry_col <- entry$sig_df
-        if (!is.null(entry$rt_settings)) {
-            name <- paste(entry$norm_method, entry$rt_settings, sep="_")
-        }
-        else {
-            name <- entry$norm_method
-        }
-        
-        sign_matrix[name] <- entry_col
-    }
-
-    feature_names <- entry_names
-    unique_rownames <- paste(feature_names, seq(1, nbr_features), sep="_")
-    
-    n_t <- table(unique_rownames)
-    print(n_t[n_t > 1])
-    print(length(n_t))
-    
-    rownames(sign_matrix) <- unique_rownames
-
-    write.table(sign_matrix, file=sign_out_path, sep="\t", quote=FALSE, col.names=NA)
-}
-
-write_data_matrices <- function(output_base, normal_run_entries, rt_run_entries, nr) {
-    
-    for (run_entry in normal_run_entries) {
-        
-        out_df <- cbind(sig_val=run_entry$sig_df, run_entry$method_data)
-        output_path <- paste0(output_base, "_", run_entry$norm_method, ".data.tsv")
-        write.table(out_df, file=output_path, sep="\t", quote=FALSE, col.names=NA)
-    }
-    
-    for (run_entry in rt_run_entries) {
-        
-        out_df <- cbind(sig_val=run_entry$sig_df, run_entry$method_data)
-        output_path <- paste0(output_base, "_", run_entry$norm_method, run_entry$rt_settings, ".data.tsv")
-        write.table(out_df, file=output_path, sep="\t", quote=FALSE, col.names=NA)
-    }
 }
 
 

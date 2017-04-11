@@ -320,7 +320,7 @@ getVarFilteredContrast <- function(logMatrix, var_filter_frac) {
     feature_vars <- apply(logMatrix, 1, function(x) {var(x, na.rm=TRUE)})
     
     # passingVarFilters <- rep(TRUE, length(cv_col))
-    frac_thres <- sort(feature_vars)[length(feature_vars) * var_filter_frac]
+    frac_thres <- sort(feature_vars)[(length(feature_vars) - 1)  * var_filter_frac + 1]
     feature_vars > frac_thres
 }
 
