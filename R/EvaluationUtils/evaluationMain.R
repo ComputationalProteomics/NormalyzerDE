@@ -14,37 +14,101 @@ source("EvaluationUtils/RunEntry.R")
 source("EvaluationUtils/RunSetting.R")
 source("EvaluationUtils/evaluationUtils.R")
 source("EvaluationUtils/outputUtils.R")
+source("EvaluationUtils/evaluationStatistics.R")
 
 suppressPackageStartupMessages("ggplot2")
 library("ggplot2")
+library("limma")
 
 
 path_base <- "../tests/data"
 
-use_max_quant_proteios_data <- TRUE
+target_dataset <- "pdx001819"
 
-if (use_max_quant_proteios_data) {
+if (target_dataset == "max_quant_proteios") {
     full_report <- "FeatureReport_MQP_20140828-fornormalyzer.txt"
     subset_report <- "MQP.subset_500.tsv"
     NAME_COLUMNS <- c(3,2)
-} else {
+    SAMPLE_PAT_BASE <- "dilA_"
+    SAMPLE_PAT_END <- "]_\\d\\d"
+    
+    POT_PAT <- "^sol"
+    HUMAN_PAT <- "^hum"
+    COMBINED_PATTERN <- paste0("(", POT_PAT, "|", HUMAN_PAT, ")")
+    
+    
+} else if (target_dataset == "progenesis") {
     full_report <- "SpikeIn_Results_Progenesis_20130322_REFORMAT.NORMALYZER.txt"
     subset_report <- "progenesis.subset_500.tsv"
     NAME_COLUMNS <- c(2,1)
+    SAMPLE_PAT_BASE <- "dilA_"
+    SAMPLE_PAT_END <- "]_\\d\\d"
+    
+    POT_PAT <- "^sol"
+    HUMAN_PAT <- "^hum"
+    COMBINED_PATTERN <- paste0("(", POT_PAT, "|", HUMAN_PAT, ")")
+    
+} else if (target_dataset == "dinosaur_test") {
+    full_report <- "FeatureReport_dino_nulltona.tsv"
+    subset_report <- "FeatureReport_dino_500.tsv"
+    NAME_COLUMNS <- c(4,3)
+    SAMPLE_PAT_BASE <- "dil"
+    SAMPLE_PAT_END <- "]"
+    
+    POT_PAT <- "^sol"
+    HUMAN_PAT <- "^hum"
+    COMBINED_PATTERN <- paste0("(", POT_PAT, "|", HUMAN_PAT, ")")
+    
+} else if (target_dataset == "dinosaur_massmatch") {
+    full_report <- "eval_dinosaurs/FeatureReport_dino_massmatch.tsv"
+    NAME_COLUMNS <- c(4,3)
+    SAMPLE_PAT_BASE <- "130124_dil\\w_"
+    SAMPLE_PAT_END <- "]_\\d\\d.mzML"
+    
+    POT_PAT <- "^sol"
+    HUMAN_PAT <- "^hum"
+    COMBINED_PATTERN <- paste0("(", POT_PAT, "|", HUMAN_PAT, ")")
+    
+} else if (target_dataset == "dinosaur_theoretical") {
+    full_report <- "eval_dinosaurs/FeatureReport_dino_theoretical.tsv"
+    NAME_COLUMNS <- c(4,3)
+    SAMPLE_PAT_BASE <- "130124_dil\\w_"
+    SAMPLE_PAT_END <- "]_\\d\\d.mzML"
+    
+} else if (target_dataset == "max_quant_proteios_background") {
+    full_report <- "FeatureReport_MQP_20140828-fornormalyzer_without_potato.txt"
+    NAME_COLUMNS <- c(3,2)
+    SAMPLE_PAT_BASE <- "dil[ABCD]_"
+    SAMPLE_PAT_END <- "]_\\d\\d"
+    
+    POT_PAT <- "^sol"
+    HUMAN_PAT <- "^hum"
+    COMBINED_PATTERN <- paste0("(", POT_PAT, "|", HUMAN_PAT, ")")
+  
+} else if (target_dataset == "pdx001819") {
+  
+    full_report <- "ups_data/pdx001819_report2_features_only_normalyzer_formatted_na.tsv"
+    subset_report <- "ups_data/pdx001819_report2_features_only_normalyzer_formatted_na.500.tsv"
+    NAME_COLUMNS <- c(4,3)
+    SAMPLE_PAT_BASE <- "s_"
+    SAMPLE_PAT_END <- "]amol"
+    
+    POT_PAT <- "^\\w+ups"
+    HUMAN_PAT <- "^hum"
+    COMBINED_PATTERN <- "^\\w+ups"
+      
+} else {
+    stop(paste("Unknown dataset", target_dataset))
 }
 # subset_report <- "BA_MQP.subset_500.tsv"
 
-POT_PAT <- "^sol"
-HUMAN_PAT <- "^hum"
-SAMPLE_PAT_BASE <- "dilA_"
-SAMPLE_PAT_END <- "]_\\d\\d"
-COMBINED_PATTERN <- paste0("(", POT_PAT, "|", HUMAN_PAT, ")")
 
 NAME_FILTER <- "[, ]"
 # ANNOTATION_FILTER <- "[,| ]"
 
 
 run_review_data_test <- function(super_dirname,
+                                 run_dirname,
                                  subset=FALSE,
                                  do_normal_run=TRUE,
                                  do_rt_run=TRUE,
@@ -73,8 +137,10 @@ run_review_data_test <- function(super_dirname,
                      sample_comp=target_replicates,
                      stat_test=stat_test
                      )
+
+    rs$run_dir <- run_dirname
     
-    print(paste("Running replicates: ", paste(target_replicates, collapse=",")))
+    print(rs$run_dir)
     
     output_base <- get_run_setting_base(rs)
     output_path <- paste(output_base, "csv", sep=".")
@@ -88,10 +154,15 @@ run_review_data_test <- function(super_dirname,
     if (subset) review_data_path <- paste(path_base, subset_report, sep="/")
     else review_data_path <- paste(path_base, full_report, sep="/")
     
-    print(paste("Processing dataset:", review_data_path))
+    print(paste("------ START: PROCESSING DATASET IN PATH", review_data_path))
+    print(paste("Running replicates: ", paste(target_replicates, collapse=",")))
+    
+    # print(paste("Processing dataset:", review_data_path))
     job_name <- "review_evaluation"
     norm_obj <- getVerifiedNormalyzerObject(review_data_path, job_name)
 
+    # browser()
+    
     nr <- normMethods(norm_obj, job_name, normalizeRetentionTime=FALSE, runNormfinder=FALSE)
     
     if (do_normal_run) {
@@ -161,9 +232,7 @@ run_review_data_test <- function(super_dirname,
     
     write_data_matrices(output_base, normal_run_entries, rt_run_entries, nr)
 
-    # plot_path <- paste(plot_path, "png", sep=".")
     pdf(plot_path)
-    # multiplot(plotlist=plots, cols=length(plots))
     grid_arrange_shared_legend(plots=plots, ncol=length(plots), plot_info=gsub(".*\\/", "", output_base))
     dev.off()
 
@@ -189,7 +258,7 @@ generate_normal_run_results <- function(nr, rs, row_name_cols) {
         print(paste("Method: ", used_methods_names[[i]]))
         
         run_result <- get_run_entry(nr, normalization_matrices[[i]], used_methods_names[[i]], 
-                                    POT_PAT, HUMAN_PAT, rs, row_name_cols=row_name_cols)
+                                    POT_PAT, rs, row_name_cols=row_name_cols)
         
         run_entries[[i]] <- run_result
     }
@@ -211,30 +280,18 @@ generate_rt_run_results <- function(nr, rs, row_name_cols, name_col=NULL) {
     row_names <- get_rownames(nr, NAME_COLUMNS)
     col_names <- get_colnames(nr)
     
-    
     run_entries <- list()
     for (rt_window in rs$rt_windows) {
-
-        # print(paste("Method: RTs, window size:", rt_window))
 
         frame_shifts <- rs$window_shifts
         win_size_min <- rs$lowest_window_size
         merge_method <- rs$window_merge_method
         
-        debug_id <- "sol35|AASDLVPVLSSFK"
-        debug_sample_pattern <- "dilA_[24]_"
-        debug_samples <- c(2,4)
-        
         raw_copy <- nr@data2log2
-        # raw_copy <- log2(normalyzer_filterraw)
-        
+
         rownames(raw_copy) <- row_names
         colnames(raw_copy) <- col_names[2:length(col_names)]
         
-        target <- raw_copy[debug_id, which(grepl(debug_sample_pattern, colnames(raw_copy))), drop=F]
-        print("log2 global")
-        print(target)
-
         print(paste("Current rt setting:", rt_window))
         
         print("median rt")
@@ -250,7 +307,7 @@ generate_rt_run_results <- function(nr, rs, row_name_cols, name_col=NULL) {
                                                    debug_id=debug_id,
                                                    debug_samples=debug_samples)
         
-        median_entry <- get_run_entry(nr, median_rt, "RT-median", POT_PAT, HUMAN_PAT, rs, current_rt_setting=rt_window, row_name_cols=row_name_cols)
+        median_entry <- get_run_entry(nr, median_rt, "RT-median", POT_PAT, rs, current_rt_setting=rt_window, row_name_cols=row_name_cols)
 
         print("mean rt")
         mean_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw,
@@ -264,7 +321,7 @@ generate_rt_run_results <- function(nr, rs, row_name_cols, name_col=NULL) {
                                                  debug_matrix_rownames=row_names,
                                                  debug_id=debug_id,
                                                  debug_samples=debug_samples)
-        mean_entry <- get_run_entry(nr, mean_rt, "RT-mean", POT_PAT, HUMAN_PAT, rs, current_rt_setting=rt_window, row_name_cols=row_name_cols)
+        mean_entry <- get_run_entry(nr, mean_rt, "RT-mean", POT_PAT, rs, current_rt_setting=rt_window, row_name_cols=row_name_cols)
 
         print("loess rt")
         loess_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw,
@@ -278,7 +335,7 @@ generate_rt_run_results <- function(nr, rs, row_name_cols, name_col=NULL) {
                                                   debug_matrix_rownames=row_names,
                                                   debug_id=debug_id,
                                                   debug_samples=debug_samples)
-        loess_entry <- get_run_entry(nr, loess_rt, "RT-loess", POT_PAT, HUMAN_PAT, rs, current_rt_setting=rt_window, row_name_cols=row_name_cols)
+        loess_entry <- get_run_entry(nr, loess_rt, "RT-loess", POT_PAT, rs, current_rt_setting=rt_window, row_name_cols=row_name_cols)
 
         run_entries_base_index <- length(run_entries) + 1
         run_entries[[run_entries_base_index]] <- median_entry
@@ -290,7 +347,7 @@ generate_rt_run_results <- function(nr, rs, row_name_cols, name_col=NULL) {
 }
 
 # Generate entry object containing information on number of total and DE found in target pattern and background
-get_run_entry <- function(nr, method_data, name, potato_pattern, human_pattern, rs, row_name_cols, current_rt_setting=NULL, omit_na=TRUE) {
+get_run_entry <- function(nr, method_data, name, target_pattern, rs, row_name_cols, current_rt_setting=NULL, omit_na=TRUE) {
 
     sig_thres <- rs$sig_thres
     adjust_fdr <- rs$do_fdr
@@ -298,27 +355,32 @@ get_run_entry <- function(nr, method_data, name, potato_pattern, human_pattern, 
     stat_test <- rs$stat_test
     var_filter_frac <- rs$var_filter_frac
 
-    combined_pattern <- paste0("(", potato_pattern, "|", human_pattern, ")")
+    # combined_pattern <- paste0("(", target_pattern, "|", human_pattern, ")")
     # row_name_col <- c(2,3)
-    col_pattern <- paste0(SAMPLE_PAT_BASE, "[", paste(replicate_nbrs, sep="", collapse=""), SAMPLE_PAT_END)
+    # col_pattern <- paste0(SAMPLE_PAT_BASE, "[", paste(replicate_nbrs, sep="", collapse=""), SAMPLE_PAT_END)
     
     all_replicates <- nr@nds@sampleReplicateGroups
     custom_replicate_groups <- all_replicates[which(all_replicates %in% replicate_nbrs)]
 
-    prepared_df <- get_prepared_normalyzer_sheet(nr, method_data, col_pattern, row_name_cols, replicate_nbrs, var_filter_frac=var_filter_frac)
+    # browser()
+    
+    prepared_df <- get_prepared_normalyzer_sheet(nr, method_data, row_name_cols, replicate_nbrs, var_filter_frac=var_filter_frac)
     filter_df <- prepared_df[which(!grepl(NAME_FILTER, rownames(prepared_df))),]
 
-    anova_pval <- get_anova_pvals(filter_df, custom_replicate_groups, ttest_type=stat_test)
-    if (adjust_fdr) {
-        anova_fdr <- stats::p.adjust(anova_pval, method="BH")
-        target_sig_val <- anova_fdr
+    if (stat_test == "welch" || stat_test == "student") {
+        target_sig_val <- get_anova_pvals(filter_df, custom_replicate_groups, ttest_type=stat_test, adjust_fdr=T)
+        print(paste("Running regular test: ", stat_test))
+    }
+    else if (stat_test == "limma") {
+        target_sig_val <- get_limma_pvals(filter_df, custom_replicate_groups, adjust_fdr=T)
+        print("Running Limma test")
     }
     else {
-        target_sig_val <- anova_pval
+        stop(paste("Unknown stat_test:", stat_test))
     }
-
-    potato_sig <- target_sig_val[which(grepl(potato_pattern, names(target_sig_val)))]
-    back_sig <- target_sig_val[which(!grepl(combined_pattern, names(target_sig_val)))]
+    
+    potato_sig <- target_sig_val[which(grepl(target_pattern, names(target_sig_val)))]
+    back_sig <- target_sig_val[which(!grepl(target_pattern, names(target_sig_val)))]
     
     if (omit_na) {
         nbr_potato_tot <- length(na.omit(potato_sig))
@@ -343,66 +405,36 @@ get_run_entry <- function(nr, method_data, name, potato_pattern, human_pattern, 
                              target_sign=nbr_potato_sig,
                              background_tot=nbr_back_tot,
                              background_sign=nbr_back_sig,
-                             rt_settings=current_rt_setting,
+                             rt_settings=current_rt_setting,    
                              sig_df=target_sig_val)
     potato_entry
 }
 
 
-get_prepared_normalyzer_sheet <- function(nr, df, col_pattern, row_name_cols, replicate_nbrs, var_filter_frac) {
+get_prepared_normalyzer_sheet <- function(nr, df, row_name_cols, replicate_nbrs, var_filter_frac) {
 
     raw_data <- nr@nds@rawData
-    sample_header_row <- raw_data[2,which(as.integer(raw_data[1,]) > 0)]
-
-    names_cols <- raw_data[-1:-2, row_name_cols]
-    names <- paste(names_cols[,1], names_cols[,2], sep="|")
+    replicate_numbers <- raw_data[1,which(as.integer(raw_data[1,]) > 0)]
+    replicate_pattern <- paste0("^(", replicate_nbrs[1], "|", replicate_nbrs[2], ")$")
     
-    target_cols <- which(grepl(col_pattern, sample_header_row))
+    names_cols <- raw_data[-1:-2, row_name_cols]
+    row_names <- paste(names_cols[,1], names_cols[,2], sep="|")
+    
+    target_cols <- which(grepl(replicate_pattern, replicate_numbers))
     data_df <- df[, target_cols]
 
     all_replicates <- nr@nds@sampleReplicateGroups
     target_replicates <- all_replicates[which(all_replicates %in% replicate_nbrs)]
-
-    rownames(data_df) <- names
-    colnames(data_df) <- target_replicates
     
-    # browser()
+    rownames(data_df) <- row_names
+    colnames(data_df) <- target_replicates
     
     filter_contrast <- getRowNAFilterContrast(data_df, target_replicates, var_filter_frac)
     filtered_df <- data_df[filter_contrast,]
     
     filtered_df
-    # data_df
 }
 
-
-get_anova_pvals <- function(df, replicate_groups, ttest_type="welch") {
-
-    replicate_groups <- as.factor(replicate_groups)
-    
-    stat_test_func <- function(sampleIndex) {
-        
-        rep_counts <- table(names(na.omit(sampleIndex)))
-
-        if (length(rep_counts) == 2 && min(rep_counts > 1)) {
-            if (ttest_type == "student") {
-                t.test(unlist(sampleIndex)~replicate_groups, var.equal=TRUE)$p.value
-            }
-            else if (ttest_type == "welch") {
-                t.test(unlist(sampleIndex)~replicate_groups)$p.value
-            }
-            else {
-                stop(paste("Unknown test type:", ttest_type))
-            }
-        }
-        else {
-            NA
-        }
-    }
-    
-    anovaPVal <- apply(df, 1, stat_test_func)
-    anovaPVal
-}
 
 
 

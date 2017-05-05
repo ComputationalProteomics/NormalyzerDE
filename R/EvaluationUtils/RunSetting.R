@@ -17,7 +17,8 @@ RunSetting <- function(sig_thres, do_fdr, rt_windows, window_shifts, var_filter_
         super_dirname = super_dirname,
         sample_comp = sample_comp,
         stat_test = stat_test,
-        var_filter_frac = var_filter_frac
+        var_filter_frac = var_filter_frac,
+        run_dir = NULL
     )
     
     class(me) <- append(class(me), "RunSetting")
@@ -38,22 +39,22 @@ get_run_setting_descr_string <- function(rs) {
 }
 
 get_run_setting_base <- function(rs) {
+    
     descr_string <- get_run_setting_descr_string(rs)
-    out_dir <- generate_output_dir(descr_string, rs$super_dirname, create_dir=FALSE)
-    run_base <- paste(out_dir, "/", descr_string, sep="")
+    
+    if (is.null(rs$run_dir)) {
+        stop("No run_dir assigned!")
+    }
+    
+    run_base <- paste(rs$run_dir, "/", descr_string, sep="")
     run_base
 }
 
 do_run_from_runsetting <- function(rs) {
     
-    print(rs)
-    
     descr_string <- get_run_setting_descr_string(rs)
     
-    # descr_string <- paste(rs$super_dirname, "/", orig_descr_string, sep="")
-
-    out_dir <- generate_output_dir(descr_string, rs$super_dirname, create_dir=TRUE)
-    # run_base <- paste(out_dir, "/", descr_string, sep="")
+    out_dir <- generate_output_dir(rs)
 
     if (length(rs$rt_windows) > 0) {
         do_rt_run <- TRUE
@@ -63,7 +64,8 @@ do_run_from_runsetting <- function(rs) {
     }
     
     print("Will do run!")
-    run_review_data_test(rs$super_dirname, 
+    run_review_data_test(rs$super_dirname,
+                         rs$run_dir,
                          subset=rs$subset,
                          measure_type="all",
                          sig_thres=rs$sig_thres,
@@ -79,13 +81,21 @@ do_run_from_runsetting <- function(rs) {
 }
 
 
-generate_output_dir <- function(description, out_path, create_dir=TRUE) {
+setup_output_dir_path <- function(rs) {
+    
+    out_path <- rs$super_dirname
+    
+    description <- get_run_setting_descr_string(rs)
     datestamp <- get_datestamp_string()
     run_dir <- paste(out_path, "/", datestamp, "_", description, sep="")
-    if (create_dir) {
-        createDirectory(run_dir)
-    }
-    run_dir
+    rs$run_dir <- run_dir
+    rs
+}
+
+
+generate_output_dir <- function(rs) {
+    
+    createDirectory(rs$run_dir)
 }
 
 

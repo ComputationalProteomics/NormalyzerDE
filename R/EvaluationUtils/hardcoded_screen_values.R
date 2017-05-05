@@ -1,3 +1,9 @@
+# require("EvaluationUtils/evaluationMain.R")
+# require("EvaluationUtils/RunSetting.R")
+# require("EvaluationUtils/evaluationUtils.R")
+# require("EvaluationUtils/hardcoded_screen_values.R")
+# require("utils.R")
+
 hardcoded_screen_values <- function(do_full_run, super_dirname, subset=T, debug=F) {
     
     if (do_full_run) {
@@ -19,15 +25,16 @@ hardcoded_screen_values <- function(do_full_run, super_dirname, subset=T, debug=
         sig_thres <- c(0.1)
         do_fdr <- c(TRUE)
         # rt_windows <- c(seq(0.5, 5, 0.5), seq(6, 15, 1))
-        rt_windows <- c(1, 5, 15, 25)
+        rt_windows <- c(1, 3, 5, 7, 10)
         frame_shifts <- c(1)
         lowest_window_size <- c(100)
         window_merge_method <- c("median")
-        max_cores <- 6
-        target_replicates <- list(c(2,3))
+        max_cores <- 7
+        target_replicates <- list(c(5,2), c(5,3), c(5,4), c(5,6), c(5,7), c(5,8), c(5,9))
         stat_test <- c("welch")
         quiet <- FALSE
-        var_filter_fracs <- c(0, 0.2, 0.4, 0.6, 0.8)
+        var_filter_fracs <- c(0.5)
+        # var_filter_fracs <- c(seq(0,1,0.3))
         
         verbose <- TRUE
     }

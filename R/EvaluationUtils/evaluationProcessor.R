@@ -42,9 +42,11 @@ do_multiple_runs <- function(run_setting_list, max_cores, testrun_only=FALSE) {
     
     if (testrun_only) {
         for (i in length(run_setting_list)) {
-            do_run_from_runsetting(run_setting_list[[i]])
+            rs <- run_setting_list[[i]]
+            rs <- setup_output_dir_path(rs)
+            do_run_from_runsetting(rs)
         }
-        stop("")
+        stop("Stopping: Testrun only. Turn of debug for full run!")
     }
     
     total_runs <- length(run_setting_list)
@@ -56,6 +58,8 @@ do_multiple_runs <- function(run_setting_list, max_cores, testrun_only=FALSE) {
         for (core in 1:max_cores) {
 
             current_runsetting <- run_setting_list[[current_run]]
+            current_runsetting <- setup_output_dir_path(current_runsetting)
+            
             print(paste("Starting processing run:", current_run, "/", total_runs, "at", Sys.time()))
             # running_procs[[core]] <- mcparallel(do_run_from_runsetting(current_runsetting))
             running_procs[[core]] <- mcparallel(do_run_from_runsetting(current_runsetting), detached=current_runsetting$quiet)
