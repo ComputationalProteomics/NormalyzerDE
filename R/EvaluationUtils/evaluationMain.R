@@ -142,8 +142,6 @@ run_review_data_test <- function(super_dirname,
     output_base <- get_run_setting_base(rs)
     output_path <- paste(output_base, "csv", sep=".")
     print(paste("Evaluation run with sig_thres:", rs$sig_thres, "and FDR setting:", rs$do_fdr))
-    # plot_ylabs <- get_y_label("all")
-    # score_funcs <- get_norm_methods("all")
 
     start_time <- Sys.time()
     
@@ -161,33 +159,19 @@ run_review_data_test <- function(super_dirname,
     if (do_normal_run) {
         normal_run_entries <- generate_normal_run_results(nr, rs, row_name_cols=NAME_COLUMNS)
     }
-        
+
     if (do_rt_run) {
         rt_run_entries <- generate_rt_run_results(nr, rs, name_col=3, row_name_cols=NAME_COLUMNS)
     }
-    
-    # Postfiltering to match and remove lines only present in some matrices
     
     print(paste("Normal entries:", length(normal_run_entries)))
     if (do_rt_run) {
         print(paste("RT entries:", length(rt_run_entries)))
     }
     
-    if (verbose) {
-        print("--- Normal entries ---")
-        for (entry in normal_run_entries) {
-            print(get_entry_string(entry))
-        }
-        
-        if (do_rt_run) {
-            print("--- RT entries ---")
-            for (entry in rt_run_entries) {
-                print(get_entry_string(entry))
-            }
-        }
-    }
-    
-    output_results(normal_run_entries, rt_run_entries, output_base)
+    roc_plot <- generate_roc_plot(normal_run_entries, rt_run_entries)
+    score_plots <- generate_score_plots(normal_run_entries, rt_run_entries, output_base)
+    generate_results(normal_run_entries, rt_run_entries, output_base, score_plots, roc_plot)
     
     end_time <- Sys.time()
     print(difftime(end_time, start_time))
@@ -195,16 +179,87 @@ run_review_data_test <- function(super_dirname,
 }
 
 
-output_results <- function(normal_run_entries, rt_run_entries, output_base, do_rt_run=TRUE, verbose=TRUE) {
+generate_roc_plot <- function(normal_run_entries, rt_run_entries, use_fdr=T, only_normal=T, debug=F) {
+    
+    comb_df <- data.frame(pvals=c(), type=c(), method=c())
+    
+    if (!only_normal) {
+        all_entries <- c(normal_run_entries, rt_run_entries)
+    }
+    else {
+        # all_entries <- normal_run_entries[1]
+        all_entries <- normal_run_entries
+    }
+    
+    plot_ylabs <- get_y_label("all")
+    
+    for (method_i in 1:length(all_entries)) {
+        
+        big_x <- 0
+        big_y <- 0
+        x_vals <- c()
+        y_vals <- c()
+        
+        target_obj <- all_entries[[method_i]]
+        
+        if (use_fdr) {
+            target_sig <- all_entries[[method_i]][["diff_sig_fdr"]]
+            background_sig <- all_entries[[method_i]][["back_sig_fdr"]]
+        }
+        else {
+            target_sig <- all_entries[[method_i]][["diff_sig_p"]]
+            background_sig <- all_entries[[method_i]][["back_sig_p"]]
+        }
+
+        if (debug) {
+            write.csv(target_sig, file="/home/jakob/Desktop/debug/diff.csv")
+            write.csv(background_sig, file="/home/jakob/Desktop/debug/back.csv")
+        }
+        
+        target_df <- cbind(pvals=target_sig, type=1, sample=method_i)
+        background_df <- cbind(pvals=background_sig, type=0, sample=method_i)
+        
+        unsorted_df <- rbind(target_df, background_df)
+        rownames(unsorted_df) <- seq(1, nrow(unsorted_df))
+        sorted_df <- unsorted_df[order(unsorted_df[, "pvals"]),]
+
+        for (i in 1:nrow(sorted_df)) {
+
+            row <- sorted_df[i,]
+            if (row["type"] == 0) {
+                big_x <- row[["pvals"]]
+            }
+            else {
+                big_y <- row[["pvals"]]
+            }
+            x_vals <- c(x_vals, big_x)
+            y_vals <- c(y_vals, big_y)
+        }
+        
+        coord_df <- data.frame(FPR=x_vals, TPR=y_vals, sample=target_obj$norm_method)
+        comb_df <- rbind(comb_df, coord_df)
+    }
+
+    plt <- ggplot(data=comb_df, aes(TPR,FPR, color=sample)) + geom_line() + ggtitle("ROC curve")
+    
+    if (debug) {
+        ggsave("/home/jakob/Desktop/debug/test.png", plot=plt)
+        write.csv(comb_df, file="/home/jakob/Desktop/debug/coord.csv")
+    }
+    
+    plt
+}
+
+
+generate_score_plots <- function(normal_run_entries, rt_run_entries, output_base, do_rt_run=TRUE) {
     
     score_funcs <- get_norm_methods("all")
     plot_ylabs <- get_y_label("all")
-    plot_path <- paste(output_base, "pdf", sep=".")
-    
+
     print("Visualizing results...")
     print(length(score_funcs))
-        
-    plots <- list()
+    
+    score_plots <- list()
     for (i in 1:length(score_funcs)) {
         
         score_func <- score_funcs[[i]]
@@ -225,8 +280,8 @@ output_results <- function(normal_run_entries, rt_run_entries, output_base, do_r
                                      title=y_lab,
                                      xlab="RT window size (min)",
                                      ylab=y_lab,
-                                     verbose=verbose)
-        plots[[i]] <- plt
+                                     verbose=FALSE)
+        score_plots[[i]] <- plt
         
         norm_sub_path <- paste(output_base, tolower(y_lab), "norm", "csv", sep=".")
         rt_sub_path <- paste(output_base, tolower(y_lab), "rt", "csv", sep=".")
@@ -237,14 +292,7 @@ output_results <- function(normal_run_entries, rt_run_entries, output_base, do_r
         }
     }
     
-    write_data_matrices(output_base, normal_run_entries, rt_run_entries, nr)
-    
-    pdf(plot_path)
-    grid_arrange_shared_legend(plots=plots, ncol=length(plots), plot_info=gsub(".*\\/", "", output_base))
-    dev.off()
-    
-    sign_out_path <- paste(output_base, "sign_matrix", "tsv", sep=".")
-    print(paste("Writing significance entries to:", sign_out_path))
+    score_plots
 }
 
 
@@ -255,10 +303,13 @@ generate_normal_run_results <- function(nr, rs, row_name_cols) {
     
     run_entries <- list()
     for (i in 1:length(used_methods_names)) {
+        
         print(paste("Method: ", used_methods_names[[i]]))
         
         run_result <- get_run_entry(nr, normalization_matrices[[i]], used_methods_names[[i]], 
                                     POT_PAT, rs, row_name_cols=row_name_cols)
+        
+        # browser()
         
         run_entries[[i]] <- run_result
     }
@@ -362,40 +413,43 @@ get_run_entry <- function(nr, method_data, name, target_pattern, rs, row_name_co
     all_replicates <- nr@nds@sampleReplicateGroups
     custom_replicate_groups <- all_replicates[which(all_replicates %in% replicate_nbrs)]
 
-    # browser()
-    
     prepared_df <- get_prepared_normalyzer_sheet(nr, method_data, row_name_cols, replicate_nbrs, var_filter_frac=var_filter_frac)
     filter_df <- prepared_df[which(!grepl(NAME_FILTER, rownames(prepared_df))),]
 
     if (stat_test == "welch" || stat_test == "student") {
-        target_sig_val <- get_anova_pvals(filter_df, custom_replicate_groups, ttest_type=stat_test, adjust_fdr=T)
+        target_sig_val_p <- get_anova_pvals(filter_df, custom_replicate_groups, ttest_type=stat_test, adjust_fdr=F)
+        target_sig_val_fdr <- get_anova_pvals(filter_df, custom_replicate_groups, ttest_type=stat_test, adjust_fdr=T)
         print(paste("Running regular test: ", stat_test))
     }
     else if (stat_test == "limma") {
-        target_sig_val <- get_limma_pvals(filter_df, custom_replicate_groups, adjust_fdr=T)
+        target_sig_val_p <- get_limma_pvals(filter_df, custom_replicate_groups, adjust_fdr=F)
+        target_sig_val_fdr <- get_limma_pvals(filter_df, custom_replicate_groups, adjust_fdr=T)
         print("Running Limma test")
     }
     else {
         stop(paste("Unknown stat_test:", stat_test))
     }
     
-    target_sig <- target_sig_val[which(grepl(target_pattern, names(target_sig_val)))]
-    back_sig <- target_sig_val[which(!grepl(target_pattern, names(target_sig_val)))]
+    diff_sig_p <- target_sig_val_p[which(grepl(target_pattern, names(target_sig_val_p)))]
+    back_sig_p <- target_sig_val_p[which(!grepl(target_pattern, names(target_sig_val_p)))]
+    
+    diff_sig_fdr <- target_sig_val_fdr[which(grepl(target_pattern, names(target_sig_val_fdr)))]
+    back_sig_fdr <- target_sig_val_fdr[which(!grepl(target_pattern, names(target_sig_val_fdr)))]
     
     if (omit_na) {
-        nbr_potato_tot <- length(na.omit(target_sig))
-        nbr_potato_sig <- length(na.omit(target_sig[which(target_sig <= sig_thres)]))
-        nbr_back_tot <- length(na.omit(back_sig))
-        nbr_back_sig <- length(na.omit(back_sig[which(back_sig <= sig_thres)]))
+        nbr_potato_tot <- length(na.omit(diff_sig_fdr))
+        nbr_potato_sig <- length(na.omit(diff_sig_fdr[which(diff_sig_fdr <= sig_thres)]))
+        nbr_back_tot <- length(na.omit(back_sig_fdr))
+        nbr_back_sig <- length(na.omit(back_sig_fdr[which(back_sig_fdr <= sig_thres)]))
     }
     else {
-        nbr_potato_tot <- length(target_sig)
-        nbr_potato_sig <- length(target_sig[which(target_sig <= sig_thres)])
-        nbr_back_tot <- length(back_sig)
-        nbr_back_sig <- length(back_sig[which(back_sig <= sig_thres)])
+        nbr_potato_tot <- length(diff_sig_fdr)
+        nbr_potato_sig <- length(diff_sig_fdr[which(diff_sig_fdr <= sig_thres)])
+        nbr_back_tot <- length(back_sig_fdr)
+        nbr_back_sig <- length(back_sig_fdr[which(back_sig_fdr <= sig_thres)])
     }
 
-    total_rows <- length(na.omit(target_sig)) + length(na.omit(back_sig))
+    total_rows <- length(na.omit(back_sig_fdr)) + length(na.omit(back_sig_fdr))
     
     entry <- EntryRow(nr=nr,
                       method_data=filter_df,
@@ -406,9 +460,11 @@ get_run_entry <- function(nr, method_data, name, target_pattern, rs, row_name_co
                       background_tot=nbr_back_tot,
                       background_sign=nbr_back_sig,
                       rt_settings=current_rt_setting,    
-                      sig_df=target_sig_val,
-                      target_sig_vals=target_sig,
-                      background_sig_vals=back_sig
+                      sig_df=target_sig_val_fdr,
+                      diff_sig_p=na.omit(diff_sig_p),
+                      back_sig_p=na.omit(back_sig_p),
+                      diff_sig_fdr=na.omit(diff_sig_fdr),
+                      back_sig_fdr=na.omit(back_sig_fdr)
                      )
     
     entry

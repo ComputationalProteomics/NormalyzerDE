@@ -1,4 +1,28 @@
+generate_results <- function(normal_run_entries, rt_run_entries, output_base, score_plots, roc_plot, do_rt_run=TRUE, verbose=TRUE) {
+    
+    plot_ylabs <- get_y_label("all")
+    plot_path <- paste(output_base, "pdf", sep=".")
+    y_lab <- plot_ylabs[1]
+    
+    norm_sub_path <- paste(output_base, tolower(y_lab), "norm", "csv", sep=".")
+    rt_sub_path <- paste(output_base, tolower(y_lab), "rt", "csv", sep=".")
+    write_entries_to_file(norm_sub_path, normal_run_entries)
 
+    if (do_rt_run) {
+        write_entries_to_file(rt_sub_path, rt_run_entries)
+    }
+
+    write_data_matrices(output_base, normal_run_entries, rt_run_entries, nr)
+    
+    pdf(plot_path)
+    grid_arrange_shared_legend(plots=score_plots, ncol=length(score_plots), plot_info=gsub(".*\\/", "", output_base))
+    dev.off()
+
+    ggsave(paste(output_base, "roc.png", sep="."), plot=roc_plot)
+        
+    sign_out_path <- paste(output_base, "sign_matrix", "tsv", sep=".")
+    print(paste("Writing significance entries to:", sign_out_path))
+}
 
 write_entries_to_file <- function(out_path, run_entries) {
     
