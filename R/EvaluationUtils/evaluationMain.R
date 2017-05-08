@@ -135,19 +135,15 @@ run_review_data_test <- function(super_dirname,
                      super_dirname=super_dirname,
                      var_filter_frac=var_filter_frac,
                      sample_comp=target_replicates,
-                     stat_test=stat_test
+                     stat_test=stat_test,
+                     run_dir=run_dirname
                      )
 
-    rs$run_dir <- run_dirname
-    
-    print(rs$run_dir)
-    
     output_base <- get_run_setting_base(rs)
     output_path <- paste(output_base, "csv", sep=".")
-    plot_path <- paste(output_base, "pdf", sep=".")
     print(paste("Evaluation run with sig_thres:", rs$sig_thres, "and FDR setting:", rs$do_fdr))
-    plot_ylabs <- get_y_label("all")
-    score_funcs <- get_norm_methods("all")
+    # plot_ylabs <- get_y_label("all")
+    # score_funcs <- get_norm_methods("all")
 
     start_time <- Sys.time()
     
@@ -157,12 +153,9 @@ run_review_data_test <- function(super_dirname,
     print(paste("------ START: PROCESSING DATASET IN PATH", review_data_path))
     print(paste("Running replicates: ", paste(target_replicates, collapse=",")))
     
-    # print(paste("Processing dataset:", review_data_path))
     job_name <- "review_evaluation"
     norm_obj <- getVerifiedNormalyzerObject(review_data_path, job_name)
 
-    # browser()
-    
     nr <- normMethods(norm_obj, job_name, normalizeRetentionTime=FALSE, runNormfinder=FALSE)
     
     if (do_normal_run) {
@@ -194,9 +187,23 @@ run_review_data_test <- function(super_dirname,
         }
     }
     
+    output_results(normal_run_entries, rt_run_entries, output_base)
+    
+    end_time <- Sys.time()
+    print(difftime(end_time, start_time))
+    print(paste("Start:", start_time, "End:", end_time))
+}
+
+
+output_results <- function(normal_run_entries, rt_run_entries, output_base, do_rt_run=TRUE, verbose=TRUE) {
+    
+    score_funcs <- get_norm_methods("all")
+    plot_ylabs <- get_y_label("all")
+    plot_path <- paste(output_base, "pdf", sep=".")
+    
     print("Visualizing results...")
     print(length(score_funcs))
-    
+        
     plots <- list()
     for (i in 1:length(score_funcs)) {
         
@@ -231,20 +238,13 @@ run_review_data_test <- function(super_dirname,
     }
     
     write_data_matrices(output_base, normal_run_entries, rt_run_entries, nr)
-
+    
     pdf(plot_path)
     grid_arrange_shared_legend(plots=plots, ncol=length(plots), plot_info=gsub(".*\\/", "", output_base))
     dev.off()
-
+    
     sign_out_path <- paste(output_base, "sign_matrix", "tsv", sep=".")
     print(paste("Writing significance entries to:", sign_out_path))
-    
-    
-    # write_significance_matrix(sign_out_path, c(normal_run_entries, rt_run_entries))
-    
-    end_time <- Sys.time()
-    print(difftime(end_time, start_time))
-    print(paste("Start:", start_time, "End:", end_time))
 }
 
 
@@ -379,35 +379,39 @@ get_run_entry <- function(nr, method_data, name, target_pattern, rs, row_name_co
         stop(paste("Unknown stat_test:", stat_test))
     }
     
-    potato_sig <- target_sig_val[which(grepl(target_pattern, names(target_sig_val)))]
+    target_sig <- target_sig_val[which(grepl(target_pattern, names(target_sig_val)))]
     back_sig <- target_sig_val[which(!grepl(target_pattern, names(target_sig_val)))]
     
     if (omit_na) {
-        nbr_potato_tot <- length(na.omit(potato_sig))
-        nbr_potato_sig <- length(na.omit(potato_sig[which(potato_sig <= sig_thres)]))
+        nbr_potato_tot <- length(na.omit(target_sig))
+        nbr_potato_sig <- length(na.omit(target_sig[which(target_sig <= sig_thres)]))
         nbr_back_tot <- length(na.omit(back_sig))
         nbr_back_sig <- length(na.omit(back_sig[which(back_sig <= sig_thres)]))
     }
     else {
-        nbr_potato_tot <- length(potato_sig)
-        nbr_potato_sig <- length(potato_sig[which(potato_sig <= sig_thres)])
+        nbr_potato_tot <- length(target_sig)
+        nbr_potato_sig <- length(target_sig[which(target_sig <= sig_thres)])
         nbr_back_tot <- length(back_sig)
         nbr_back_sig <- length(back_sig[which(back_sig <= sig_thres)])
     }
 
-    total_rows <- length(na.omit(potato_sig)) + length(na.omit(back_sig))
+    total_rows <- length(na.omit(target_sig)) + length(na.omit(back_sig))
     
-    potato_entry <- EntryRow(nr=nr,
-                             method_data=filter_df,
-                             norm_method=name, 
-                             tot_rows=total_rows,
-                             target_tot=nbr_potato_tot,
-                             target_sign=nbr_potato_sig,
-                             background_tot=nbr_back_tot,
-                             background_sign=nbr_back_sig,
-                             rt_settings=current_rt_setting,    
-                             sig_df=target_sig_val)
-    potato_entry
+    entry <- EntryRow(nr=nr,
+                      method_data=filter_df,
+                      norm_method=name, 
+                      tot_rows=total_rows,
+                      target_tot=nbr_potato_tot,
+                      target_sign=nbr_potato_sig,
+                      background_tot=nbr_back_tot,
+                      background_sign=nbr_back_sig,
+                      rt_settings=current_rt_setting,    
+                      sig_df=target_sig_val,
+                      target_sig_vals=target_sig,
+                      background_sig_vals=back_sig
+                     )
+    
+    entry
 }
 
 

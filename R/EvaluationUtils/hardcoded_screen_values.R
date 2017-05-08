@@ -30,10 +30,10 @@ hardcoded_screen_values <- function(do_full_run, super_dirname, subset=T, debug=
         lowest_window_size <- c(100)
         window_merge_method <- c("median")
         max_cores <- 7
-        target_replicates <- list(c(5,2), c(5,3), c(5,4), c(5,6), c(5,7), c(5,8), c(5,9))
+        target_replicates <- list(c(4,5), c(4,6), c(4,7), c(4,8), c(4,9), c(5,6), c(5,7), c(5,8), c(5,9), c(6,7), c(6,8), c(6,9), c(7,8), c(7,9), c(8,9))
         stat_test <- c("welch")
         quiet <- FALSE
-        var_filter_fracs <- c(0.5)
+        var_filter_fracs <- c(0, 0.5)
         # var_filter_fracs <- c(seq(0,1,0.3))
         
         verbose <- TRUE

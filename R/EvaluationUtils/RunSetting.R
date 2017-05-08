@@ -3,7 +3,7 @@
 
 RunSetting <- function(sig_thres, do_fdr, rt_windows, window_shifts, var_filter_frac,
                        lowest_window_size, window_merge_method, sample_comp, stat_test, quiet=FALSE, subset=FALSE,
-                       super_dirname=NULL) {
+                       super_dirname=NULL, run_dir=NULL) {
     
     me <- list(
         sig_thres = sig_thres,
@@ -18,7 +18,7 @@ RunSetting <- function(sig_thres, do_fdr, rt_windows, window_shifts, var_filter_
         sample_comp = sample_comp,
         stat_test = stat_test,
         var_filter_frac = var_filter_frac,
-        run_dir = NULL
+        run_dir = run_dir
     )
     
     class(me) <- append(class(me), "RunSetting")
