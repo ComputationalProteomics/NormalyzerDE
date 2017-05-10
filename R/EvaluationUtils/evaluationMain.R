@@ -23,7 +23,8 @@ library("limma")
 
 path_base <- "../tests/data"
 
-target_dataset <- "pdx001819"
+# target_dataset <- "pdx001819"
+target_dataset <- "max_quant_proteios"
 
 if (target_dataset == "max_quant_proteios") {
     full_report <- "FeatureReport_MQP_20140828-fornormalyzer.txt"
@@ -169,9 +170,15 @@ run_review_data_test <- function(super_dirname,
         print(paste("RT entries:", length(rt_run_entries)))
     }
     
-    roc_plot <- generate_roc_plot(normal_run_entries, rt_run_entries)
+    roc_list <- list()
+    roc_list[["roc_plot_normal"]] <- generate_roc_plot(normal_run_entries, rt_run_entries, only_normal=T)
+    roc_list[["roc_plot_normal_04cut"]] <- generate_roc_plot(normal_run_entries, rt_run_entries, only_normal=T, y_cutoff=0.4)
+    roc_list[["roc_plot_normal_06cut"]] <- generate_roc_plot(normal_run_entries, rt_run_entries, only_normal=T, y_cutoff=0.6)
+    roc_list[["roc_plot_normal_08cut"]] <- generate_roc_plot(normal_run_entries, rt_run_entries, only_normal=T, y_cutoff=0.8)
+    roc_list[["roc_plot_all"]] <- generate_roc_plot(normal_run_entries, rt_run_entries, only_normal=F)
     score_plots <- generate_score_plots(normal_run_entries, rt_run_entries, output_base)
-    generate_results(normal_run_entries, rt_run_entries, output_base, score_plots, roc_plot)
+    # generate_results(normal_run_entries, rt_run_entries, output_base, score_plots, roc_plot_normal, roc_plot_all)
+    generate_results(normal_run_entries, rt_run_entries, output_base, score_plots, roc_list)
     
     end_time <- Sys.time()
     print(difftime(end_time, start_time))
@@ -179,26 +186,21 @@ run_review_data_test <- function(super_dirname,
 }
 
 
-generate_roc_plot <- function(normal_run_entries, rt_run_entries, use_fdr=T, only_normal=T, debug=F) {
+generate_roc_plot <- function(normal_run_entries, rt_run_entries, use_fdr=T, only_normal=T, debug=T, sig_coord_thres=0.1, y_cutoff=0) {
     
     comb_df <- data.frame(pvals=c(), type=c(), method=c())
+    sig_coord_df <- data.frame(x=c(), y=c(), method=c())
     
     if (!only_normal) {
         all_entries <- c(normal_run_entries, rt_run_entries)
     }
     else {
-        # all_entries <- normal_run_entries[1]
         all_entries <- normal_run_entries
     }
     
     plot_ylabs <- get_y_label("all")
     
     for (method_i in 1:length(all_entries)) {
-        
-        big_x <- 0
-        big_y <- 0
-        x_vals <- c()
-        y_vals <- c()
         
         target_obj <- all_entries[[method_i]]
         
@@ -215,7 +217,19 @@ generate_roc_plot <- function(normal_run_entries, rt_run_entries, use_fdr=T, onl
             write.csv(target_sig, file="/home/jakob/Desktop/debug/diff.csv")
             write.csv(background_sig, file="/home/jakob/Desktop/debug/back.csv")
         }
+
+        found_pos <- 0
+        found_neg <- 0
+        last_x_coord<- 0
+        last_y_coord <- 0
+        x_vals <- c(0)
+        y_vals <- c(0)
         
+        sig_coord <- NULL
+        
+        tot_sig <- length(target_sig)
+        tot_back <- length(background_sig)
+                
         target_df <- cbind(pvals=target_sig, type=1, sample=method_i)
         background_df <- cbind(pvals=background_sig, type=0, sample=method_i)
         
@@ -227,20 +241,31 @@ generate_roc_plot <- function(normal_run_entries, rt_run_entries, use_fdr=T, onl
 
             row <- sorted_df[i,]
             if (row["type"] == 0) {
-                big_x <- row[["pvals"]]
+                found_neg <- found_neg + 1
+                last_x_coord <- found_neg / tot_back
             }
             else {
-                big_y <- row[["pvals"]]
+                found_pos <- found_pos + 1
+                last_y_coord <- found_pos / tot_sig
             }
-            x_vals <- c(x_vals, big_x)
-            y_vals <- c(y_vals, big_y)
+            x_vals <- c(x_vals, last_x_coord)
+            y_vals <- c(y_vals, last_y_coord)
+            
+            if (is.null(sig_coord) && row["pvals"] > 0.1) {
+                sig_coord <- data.frame(x=last_x_coord, y=last_y_coord, method=target_obj$norm_method)
+                sig_coord_df <- rbind(sig_coord_df, sig_coord)
+            }
         }
         
         coord_df <- data.frame(FPR=x_vals, TPR=y_vals, sample=target_obj$norm_method)
         comb_df <- rbind(comb_df, coord_df)
     }
 
-    plt <- ggplot(data=comb_df, aes(TPR,FPR, color=sample)) + geom_line() + ggtitle("ROC curve")
+    plt <- ggplot() + 
+        geom_line(data=comb_df, aes(FPR, TPR, color=sample)) + 
+        ggtitle("ROC curve") +
+        geom_point(data=sig_coord_df, aes(x=x, y=y, color=method)) +
+        ylim(y_cutoff, NA)
     
     if (debug) {
         ggsave("/home/jakob/Desktop/debug/test.png", plot=plt)

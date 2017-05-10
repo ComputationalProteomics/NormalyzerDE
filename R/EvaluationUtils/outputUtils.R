@@ -1,4 +1,4 @@
-generate_results <- function(normal_run_entries, rt_run_entries, output_base, score_plots, roc_plot, do_rt_run=TRUE, verbose=TRUE) {
+generate_results <- function(normal_run_entries, rt_run_entries, output_base, score_plots, roc_plots, do_rt_run=TRUE, verbose=TRUE) {
     
     plot_ylabs <- get_y_label("all")
     plot_path <- paste(output_base, "pdf", sep=".")
@@ -18,8 +18,14 @@ generate_results <- function(normal_run_entries, rt_run_entries, output_base, sc
     grid_arrange_shared_legend(plots=score_plots, ncol=length(score_plots), plot_info=gsub(".*\\/", "", output_base))
     dev.off()
 
-    ggsave(paste(output_base, "roc.png", sep="."), plot=roc_plot)
-        
+    for (roc_name in names(roc_plots)) {
+        roc_plt <- roc_plots[[roc_name]]
+        ggsave(paste(output_base, roc_name, "png", sep="."), plot=roc_plt)
+    }
+    
+    # ggsave(paste(output_base, "roc_normal.png", sep="."), plot=roc_plot_normal)
+    # ggsave(paste(output_base, "roc_all.png", sep="."), plot=roc_plot_all)
+    
     sign_out_path <- paste(output_base, "sign_matrix", "tsv", sep=".")
     print(paste("Writing significance entries to:", sign_out_path))
 }
