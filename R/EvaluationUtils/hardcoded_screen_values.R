@@ -1,8 +1,8 @@
-# require("EvaluationUtils/evaluationMain.R")
-# require("EvaluationUtils/RunSetting.R")
-# require("EvaluationUtils/evaluationUtils.R")
-# require("EvaluationUtils/hardcoded_screen_values.R")
-# require("utils.R")
+source("EvaluationUtils/evaluationMain.R")
+# source("EvaluationUtils/RunSetting.R")
+# source("EvaluationUtils/evaluationUtils.R")
+# source("EvaluationUtils/hardcoded_screen_values.R")
+# source("utils.R")
 
 hardcoded_screen_values <- function(do_full_run, super_dirname, subset=T, debug=F) {
     
