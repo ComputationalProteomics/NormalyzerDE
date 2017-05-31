@@ -36,7 +36,9 @@ normalyzer <- function(inputPath,
                        include_cv_col=FALSE,
                        categorical_anova=FALSE,
                        include_anova_p=FALSE,
-                       var_filter_frac=NULL) {
+                       var_filter_frac=NULL,
+                       plot_rows=3,
+                       plot_cols=4) {
     
     print('start')
     startTime <- Sys.time()
@@ -107,7 +109,7 @@ normalyzer <- function(inputPath,
                             include_anova_p=include_anova_p)
 
     print("Generating plots...")
-    generatePlots(normalyzerResultsObject, jobDir)
+    generatePlots(normalyzerResultsObject, jobDir, plot_rows=plot_rows, plot_cols=plot_cols)
     
     print(paste("Done! Results are stored in ", jobDir))
     

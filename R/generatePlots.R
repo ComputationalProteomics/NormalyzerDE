@@ -4,15 +4,19 @@
 #' @param jobdir Path to output directory for run.
 #' @return None
 #' @export
-generatePlots <- function(nr, jobdir) {
+generatePlots <- function(nr, jobdir, plot_rows=3, plot_cols=4) {
     
     nds <- nr@nds
     currentjob <- nds@jobName
     
-    currentLayout <- grid::grid.layout(nrow=5, ncol=6, 
-                                       heights=c(0.1, 1, 1, 1, 0.1), 
-                                       widths=c(0.1, 1, 1, 1, 1, 0.1), 
+    nrows <- plot_rows + 2
+    ncols <- plot_cols + 2
+        
+    currentLayout <- grid::grid.layout(nrow=nrows, ncol=ncols,
+                                       heights=c(0.1, rep(3/(nrows-2), (nrows-2)), 0.1), 
+                                       widths=c(0.1, rep(4/(ncols-2), (ncols-2)), 0.1), 
                                        default.units=c('null', 'null'))
+        
     currentFont <- "Helvetica"
     
     setupPlotting(currentjob, jobdir)
@@ -183,7 +187,7 @@ plotSampleOutlierSummary <- function(nr, currentLayout, pageno) {
     
     tout <- rbind(c(1, 2), c(3, 4))
     graphics::layout(tout)
-    graphics::par(mar=c(4, 4, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
+    graphics::par(mar=c(4, 4, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)        
     
     datacoltotal <- apply(filterrawdata, 2, function(x) { sum(x, na.rm=TRUE) })
     
@@ -200,7 +204,8 @@ plotSampleOutlierSummary <- function(nr, currentLayout, pageno) {
     graphics::plot(x, y, type="n", main="Log2-MDS plot", xlab="", ylab="")
     graphics::text(fit$points[, 1], fit$points[, 2], col=filterED, labels=filterED)
     grid::pushViewport(grid::viewport(layout=currentLayout))
-    printMeta("Data Summary - Outlier detection", pageno, currentjob)
+    
+    printMeta("Data Summary - Outlier detection", pageno, currentjob, currentLayout)
 }
 
 #' Generate normalization replicate variance summary
@@ -249,7 +254,7 @@ plotReplicateVariance <- function(nr, currentLayout, pageno) {
                          pch=20, add=TRUE, col="darkgray")
     
     grid::pushViewport(grid::viewport(layout=currentLayout))
-    printMeta("Replicate variation", pageno, currentjob)
+    printMeta("Replicate variation", pageno, currentjob, currentLayout)
 }
 
 #' Generate replicate variance overview for normalization methods and CV
@@ -331,7 +336,7 @@ plotReplicateVarAndStableVariables <- function(nr, currentLayout, pageno) {
     }
     
     grid::pushViewport(grid::viewport(layout=currentLayout))
-    printMeta("Replicate variation (Relative to Log2)", pageno, currentjob)
+    printMeta("Replicate variation (Relative to Log2)", pageno, currentjob, currentLayout)
 }
 
 #' Overview of coefficient of variation compared to intensity for variables
@@ -377,7 +382,7 @@ plotCVvsIntensity <- function(nr, currentLayout, pageno) {
         }
     }
     
-    tout <- rbind(c(1, 2, 3, 4), c(5, 6, 7, 8), c(9, 10, 11, 12))
+    tout <- matrix(1:((currentLayout$nrow-2)*(currentLayout$ncol-2)), ncol=(currentLayout$ncol-2), byrow=T)
     graphics::layout(tout)
     graphics::par(mar=c(4, 4, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
     
@@ -388,7 +393,7 @@ plotCVvsIntensity <- function(nr, currentLayout, pageno) {
     }
     
     grid::pushViewport(grid::viewport(layout=currentLayout))
-    printMeta("CV vs Raw Intensity plots", pageno, currentjob)
+    printMeta("CV vs Raw Intensity plots", pageno, currentjob, currentLayout)
 }
 
 #' Expression vs. fold-change for variables for each normalization method
@@ -430,7 +435,7 @@ plotMA <- function(nr, currentLayout, pageno) {
     grid::grid.newpage()
     grid::pushViewport(grid::viewport(layout=currentLayout))
     
-    printPlots(Malist, "MA plots", pageno, currentjob)
+    printPlots(Malist, "MA plots", pageno, currentjob, currentLayout)
 }
 
 #' Scatter plot comparing replicate expression between samples
@@ -447,7 +452,7 @@ plotScatter <- function(nr, currentLayout, pageno) {
     methodlist <- getNormalizationMatrices(nr)
     currentjob <- nds@jobName
     
-    tout <- rbind(c(1, 2, 3, 4), c(5, 6, 7, 8), c(9, 10, 11, 12))
+    tout <- matrix(1:((currentLayout$nrow-2)*(currentLayout$ncol-2)), ncol=(currentLayout$ncol-2), byrow=T)
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(3, 2, 3, 2), xpd=NA)
     
@@ -460,7 +465,7 @@ plotScatter <- function(nr, currentLayout, pageno) {
     }
     
     grid::pushViewport(grid::viewport(layout=currentLayout))
-    printMeta("Scatterplots", pageno, currentjob)
+    printMeta("Scatterplots", pageno, currentjob, currentLayout)
 }
 
 #' QQ-plots for variable values
@@ -489,7 +494,7 @@ plotQQ <- function(nr, currentLayout, pageno) {
     
     grid::grid.newpage()
     grid::pushViewport(grid::viewport(layout=currentLayout))
-    printPlots(qqlist, "Q-Q plots", pageno, currentjob)
+    printPlots(qqlist, "Q-Q plots", pageno, currentjob, currentLayout)
 }
 
 #' Boxplots showing distribution of values after different normalizations
@@ -508,7 +513,7 @@ plotBoxPlot <- function(nr, currentLayout, pageno) {
     filterED <- nds@sampleReplicateGroups
     filterrawdata <- nds@filterrawdata
     
-    tout<-rbind(c(1, 2, 3, 4), c(5, 6, 7, 8), c(9, 10, 11, 12))
+    tout <- matrix(1:((currentLayout$nrow-2)*(currentLayout$ncol-2)), ncol=(currentLayout$ncol-2), byrow=T)
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(3, 2, 3, 2), xpd=NA)
     mindata <- 1000
@@ -539,7 +544,7 @@ plotBoxPlot <- function(nr, currentLayout, pageno) {
     }
     
     grid::pushViewport(grid::viewport(layout=currentLayout))
-    printMeta("Boxplots", pageno, currentjob)
+    printMeta("Boxplots", pageno, currentjob, currentLayout)
 }
 
 #' Boxplots showing relative log expression after normalizations
@@ -557,7 +562,7 @@ plotRLE <- function(nr, currentLayout, pageno) {
     currentjob <- nds@jobName
     filterED <- nds@sampleReplicateGroups
     
-    tout <- rbind(c(1, 2, 3, 4), c(5, 6, 7, 8), c(9, 10, 11, 12))
+    tout <- matrix(1:((currentLayout$nrow-2)*(currentLayout$ncol-2)), ncol=(currentLayout$ncol-2), byrow=T)
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(3, 2, 3, 2), xpd=NA)
     
@@ -569,7 +574,7 @@ plotRLE <- function(nr, currentLayout, pageno) {
     }
     
     grid::pushViewport(grid::viewport(layout=currentLayout))
-    printMeta("Relative Log Expression (RLE) plots", pageno, currentjob)
+    printMeta("Relative Log Expression (RLE) plots", pageno, currentjob, currentLayout)
 }
 
 #' Density plots showing value distributions after normalizations
@@ -585,7 +590,7 @@ plotDensity <- function(nr, currentLayout, pageno) {
     methodlist <- getNormalizationMatrices(nr)
     currentjob <- nds@jobName
     
-    tout <- rbind(c(1, 2, 3, 4), c(5, 6, 7, 8), c(9, 10, 11, 12))
+    tout <- matrix(1:((currentLayout$nrow-2)*(currentLayout$ncol-2)), ncol=(currentLayout$ncol-2), byrow=T)
     graphics::layout(tout)
     graphics::par(mar=c(3, 2, 3, 1), oma=c(3, 2, 3, 2), xpd=NA)
     
@@ -605,7 +610,7 @@ plotDensity <- function(nr, currentLayout, pageno) {
     }
     
     grid::pushViewport(grid::viewport(layout=currentLayout))
-    printMeta("Density plots", pageno, currentjob)
+    printMeta("Density plots", pageno, currentjob, currentLayout)
 }
 
 #' MDS plots showing grouping of samples after normalizations
@@ -624,13 +629,11 @@ plotMDS <- function(nr, currentLayout, pageno) {
     currentjob <- nds@jobName
     filterED <- nds@sampleReplicateGroups
     
-    tout <- rbind(c(1, 2, 3, 4), c(5, 6, 7, 8), c(9, 10, 11, 12))
+    tout <- matrix(1:((currentLayout$nrow-2)*(currentLayout$ncol-2)), ncol=(currentLayout$ncol-2), byrow=T)
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(3, 2, 3, 2), xpd=NA)
     
     for (i in 1:length(methodlist)) {
-        
-        print(i)
         
         datastore <- methodlist[[i]]
         d <- stats::dist(scale(t(stats::na.omit(datastore)), center=TRUE, scale=TRUE))
@@ -642,9 +645,7 @@ plotMDS <- function(nr, currentLayout, pageno) {
     }
     
     grid::pushViewport(grid::viewport(layout=currentLayout))
-    printMeta(paste("MDS plots - Built from", ncol(d), "variables with non-missing data", sep=" "), pageno, currentjob)
-    
-    # stop("MDS plot part")
+    printMeta(paste("MDS plots - Built from", ncol(d), "variables with non-missing data", sep=" "), pageno, currentjob, currentLayout)
 }
 
 #' Visualize standard deviation over (expression?) for different values
@@ -679,7 +680,7 @@ plotMeanSD <- function(nr, currentLayout, pageno) {
     
     grid::grid.newpage()
     grid::pushViewport(grid::viewport(layout=currentLayout))
-    printPlots(sdPlots, "MeanSDplots", pageno, currentjob)  
+    printPlots(sdPlots, "MeanSDplots", pageno, currentjob, currentLayout)  
 
     print(paste("Current page:", pageno))
 }
@@ -729,7 +730,7 @@ plotCorrelation <- function(nr, currentLayout, pageno) {
     graphics::stripchart(as.data.frame(spedf), 
                          vertical=TRUE, cex=0.4, las=2, pch=20, add=TRUE, col="darkgreen")
     grid::pushViewport(grid::viewport(layout=currentLayout))
-    printMeta("Correlation plots", pageno, currentjob)
+    printMeta("Correlation plots", pageno, currentjob, currentLayout)
 }
 
 #' Visualize dendrogram grouping of samples
@@ -750,18 +751,22 @@ plotDendrograms <- function(nr, currentLayout, pageno) {
     print(length(methodnames))
     print(length(filterED))
     
-    tout <- rbind(c(1, 2, 3, 4), c(5, 6, 7, 8), c(9, 10, 11, 12))
+    tout <- matrix(1:((currentLayout$nrow-2)*(currentLayout$ncol-2)), ncol=(currentLayout$ncol-2), byrow=T)
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
-    colt<-(c("red", "green", "blue", "orange", "darkgray", "blueviolet", 
-             "darkslateblue", "darkviolet", "gray", "bisque4", "brown", 
-             "cadetblue4", "darkgreen", "darkcyan", "darkmagenta", 
-             "darkgoldenrod4", "coral1"))
+    
+    color_vect <- c("red", "green", "blue", "orange", "darkgray", "blueviolet", 
+                    "darkslateblue", "darkviolet", "gray", "bisque4", "brown", 
+                    "cadetblue4", "darkgreen", "darkcyan", "darkmagenta", 
+                    "darkgoldenrod4", "coral1")
+    colt <- rep(color_vect, ceiling(length(filterED) / length(color_vect)))
     
     for (j in 1:length(methodlist)) {
         
-        scaledTransposedMatrix <- scale(t(stats::na.omit(methodlist[[j]])), center=TRUE, scale=TRUE)
-        
+        data_matrix <- stats::na.omit(methodlist[[j]])
+        colnames(data_matrix) <- filterED
+        scaledTransposedMatrix <- scale(t(data_matrix), center=TRUE, scale=TRUE)
+
         hc <- stats::hclust(stats::dist(scaledTransposedMatrix), "ave")
         
         graphics::plot(ape::as.phylo(hc), main=methodnames[j], cex=0.5, tip.color=colt[filterED])
@@ -771,7 +776,7 @@ plotDendrograms <- function(nr, currentLayout, pageno) {
     grid::pushViewport(grid::viewport(layout=currentLayout))
     printMeta(paste("Dendrograms - Built from", ncol(scaledTransposedMatrix), 
                     "variables containing non-missing data", sep=" "), 
-              pageno, currentjob)
+              pageno, currentjob, currentLayout)
 }
 
 #' Visualize number of DE variables for ANOVA and Kruskal Wallis
@@ -806,6 +811,6 @@ plotDEPlots <- function(nr, currentLayout, pageno) {
                       ylab=paste("No. of Variables with FDR <", fdr_threshold))
     
     grid::pushViewport(grid::viewport(layout=currentLayout))
-    printMeta("Differential Expression", pageno, currentjob)
+    printMeta("Differential Expression", pageno, currentjob, currentLayout)
 }
 
