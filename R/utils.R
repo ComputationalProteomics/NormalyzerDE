@@ -325,5 +325,3 @@ getVarFilteredContrast <- function(logMatrix, var_filter_frac) {
 }
 
 
-
-

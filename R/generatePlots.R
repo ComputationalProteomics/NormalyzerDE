@@ -31,6 +31,8 @@ generatePlots <- function(nr, jobdir, plot_rows=3, plot_cols=4) {
     
     print(paste("IS SINGLE REP RUN:", isLimitedRun))
     
+    # browser()
+    
     # CV
     if (!isLimitedRun) {
         print("DEBUG: Plotting page 3")
@@ -365,8 +367,8 @@ plotCVvsIntensity <- function(nr, currentLayout, pageno) {
     for (j in 1:length(methodlist)) {
         
         datastore <- methodlist[[j]]
-        datastore <- datastore[, 1:sum(sampleReplicateGroups == 1)]
-        
+        datastore <- datastore[, sampleReplicateGroups == min(sampleReplicateGroups)]
+
         for (i in 1:nrow(datastore)) {
             
             tempcv <- RcmdrMisc::numSummary(datastore[i, ], 
@@ -402,6 +404,7 @@ plotCVvsIntensity <- function(nr, currentLayout, pageno) {
 #' @param nr Normalyzer results object.
 #' @param currentLayout Layout used for document.
 #' @param pageno Current page number.
+#'
 #' @return None
 plotMA <- function(nr, currentLayout, pageno) {
     
@@ -409,7 +412,7 @@ plotMA <- function(nr, currentLayout, pageno) {
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
     currentjob <- nds@jobName
-    filterED <- nds@sampleReplicateGroups
+    sampleReplicateGroups <- nds@sampleReplicateGroups
     filterrawdata <- nds@filterrawdata
     
     Malist <- list()
@@ -417,7 +420,7 @@ plotMA <- function(nr, currentLayout, pageno) {
         
         datastore <- as.matrix(methodlist[[i]])
         tempcolname <- colnames(datastore)
-        datastore <- datastore[, 1:sum(filterED == 1)]
+        datastore <- datastore[, sampleReplicateGroups == min(sampleReplicateGroups)]
         datastore1 <- datastore[!is.na(datastore[, 1]), ]
         avg <- rowMeans(datastore1)
         fc <- apply(cbind(datastore1[, 1], avg), 1, function(x) x[1] - x[2])
