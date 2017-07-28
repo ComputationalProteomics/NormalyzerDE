@@ -55,7 +55,7 @@ normalyzer <- function(inputPath,
     # require(ggplot2)      # Extensively used for plotting, CRAN
     # require(grid)         # grid::grid.layout, and much more for plotting, base
     # require(hexbin)       # Needed for the meanSdPlot
-    
+    # require(raster)       # CRAN package    
     
     # Biobase::rowMedians ??
     
