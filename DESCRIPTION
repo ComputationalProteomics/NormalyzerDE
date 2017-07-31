@@ -1,12 +1,11 @@
 Package: Normalyzer
 Title: Evaluation of normalization methods
-Version: 0.0.9
+Version: 1.1.2
 Author: Aakash Chawade, Jakob Willforss
 Maintainer: Jakob Willforss <jakob.willforss@immun.lth.se>
 Description: Evaluation of normalization methods applied to proteomic data.
 Imports:
     vsn,
-    Rcmdr,
     preprocessCore,
     limma,
     MASS,
@@ -17,9 +16,6 @@ Imports:
     ggplot2,
     methods,
     Biobase,
-    RcmdrMisc,
-    Rcmdr,
-    preprocessCore,
     limma,
     MASS,
 Suggests:
@@ -32,4 +28,4 @@ biocViews:
 License: GPL (>=2)
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 5.0.1.9000
+RoxygenNote: 6.0.1

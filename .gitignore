@@ -4,7 +4,8 @@
 R/Rplots.pdf
 *.pdf
 *.html
-
+.Rbuildignore
+*.Rproj
 
 # Folders
 data/
@@ -18,3 +19,4 @@ inst/doc
 normalyzer_testing/
 automated_tests/
 regular_tests/
+.Rproj.user

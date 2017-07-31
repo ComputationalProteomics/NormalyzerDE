@@ -77,7 +77,8 @@ setMethod("calculateCV", "NormalizationEvaluationResults",
                   tempCVMatrix <- matrix(nrow=nrow(processedDataMatrix), ncol=length(levels(as.factor(unlist(sampleReplicateGroups)))), byrow=TRUE)
                   
                   for (i in 1:nrow(processedDataMatrix)) {
-                      tempCV <- RcmdrMisc::numSummary(processedDataMatrix[i, ], statistics=c("cv"), groups=unlist(sampleReplicateGroups))
+                      tempCV <- rcmdrNumSummary(processedDataMatrix[i, ], statistics=c("cv"), groups=unlist(sampleReplicateGroups))
+                      # tempCV <- RcmdrMisc::numSummary(processedDataMatrix[i, ], statistics=c("cv"), groups=unlist(sampleReplicateGroups))
                       tempCVMatrix[i, ] <- tempCV$table
                   }
                   
@@ -265,6 +266,8 @@ setMethod("calculateSignificanceMeasures", "NormalizationEvaluationResults",
                   else {
                       testLevels <- sampleReplicateGroups
                   }
+                  
+                  # browser()
                   
                   anovaPValCol <- apply(dataStoreReplicateNAFiltered, 1, 
                                         function(sampleIndex) summary(stats::aov(unlist(sampleIndex)~testLevels))[[1]][[5]][1])

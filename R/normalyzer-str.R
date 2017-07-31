@@ -21,7 +21,7 @@
 #'  samples. Is by default set to 15.
 #' @return None
 #' @export
-#' @import MASS Rcmdr limma preprocessCore methods
+#' @import MASS limma preprocessCore methods
 normalyzer <- function(inputPath, 
                        jobName, 
                        outputDir=NULL,
@@ -43,7 +43,7 @@ normalyzer <- function(inputPath,
     print('start')
     startTime <- Sys.time()
     
-    # require(Rcmdr)        # RcmdrMisc::numSummary, CRAN
+    # require(RcmdrMisc)        # RcmdrMisc::numSummary, CRAN (could maybe be omitted after re-implementation of its 'numSummary' function?)
     # require(vsn)          # Used for justvsn, BioConductor
     # require(preprocessCore)     # Used for quantile normalization, BC
     # require(limma)        # Used for normalizeCyclicLoess, BioConductor
@@ -74,6 +74,8 @@ normalyzer <- function(inputPath,
     source("utils.R")
     source("inputVerification.R")
     source("analyzeResults.R")
+    
+    source("rcmdrNumSummary.R")
 
     # source("evaluationMain.R")
     
