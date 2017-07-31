@@ -373,10 +373,10 @@ plotCVvsIntensity <- function(nr, currentLayout, pageno) {
         
         for (i in 1:nrow(datastore)) {
             
-            tempcv <- rcmdrNumSummary(datastore[i, ], statistics=c("cv"))
-            tempavg <- rcmdrNumSummary(filterrawdata[i, ], statistics=c("mean"))
-            # tempcv <- RcmdrMisc::numSummary(datastore[i, ], statistics=c("cv"))
-            # tempavg <- RcmdrMisc::numSummary(filterrawdata[i, ], statistics=c("mean"))
+            # tempcv <- rcmdrNumSummary(datastore[i, ], statistics=c("cv"))
+            # tempavg <- rcmdrNumSummary(filterrawdata[i, ], statistics=c("mean"))
+            tempcv <- RcmdrMisc::numSummary(datastore[i, ], statistics=c("cv"))
+            tempavg <- RcmdrMisc::numSummary(filterrawdata[i, ], statistics=c("mean"))
             
             tempcvmat1[i, j] <- 100 * tempcv$table
             tempavgmat1[i, j] <- tempavg$table 

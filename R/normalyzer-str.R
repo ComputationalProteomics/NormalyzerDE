@@ -21,7 +21,7 @@
 #'  samples. Is by default set to 15.
 #' @return None
 #' @export
-#' @import MASS limma preprocessCore methods
+#' @import MASS limma preprocessCore methods RcmdrMisc
 normalyzer <- function(inputPath, 
                        jobName, 
                        outputDir=NULL,
@@ -38,7 +38,8 @@ normalyzer <- function(inputPath,
                        include_anova_p=FALSE,
                        var_filter_frac=NULL,
                        plot_rows=3,
-                       plot_cols=4) {
+                       plot_cols=4,
+                       source_files=FALSE) {
     
     print('start')
     startTime <- Sys.time()
@@ -60,23 +61,25 @@ normalyzer <- function(inputPath,
     # Biobase::rowMedians ??
     
     
-    source("generatePlots.R")
-    source("normfinder-pipeline.R")
-    source("normMethods.R")
-    source("higherOrderNormMethods.R")
-    source("printMeta.R")
-    source("printPlots.R")
-    
-    source("NormalyzerDataset.R")
-    source("NormalizationEvaluationResults.R")
-    source("NormalyzerResults.R")
-    
-    source("utils.R")
-    source("inputVerification.R")
-    source("analyzeResults.R")
-    
-    source("rcmdrNumSummary.R")
+    if (source_files) {
+        source("generatePlots.R")
+        source("normfinder-pipeline.R")
+        source("normMethods.R")
+        source("higherOrderNormMethods.R")
+        source("printMeta.R")
+        source("printPlots.R")
 
+        source("NormalyzerDataset.R")
+        source("NormalizationEvaluationResults.R")
+        source("NormalyzerResults.R")
+
+        source("utils.R")
+        source("inputVerification.R")
+        source("analyzeResults.R")
+    }
+
+    
+        
     # source("evaluationMain.R")
     
     normObj <- getVerifiedNormalyzerObject(inputPath,
