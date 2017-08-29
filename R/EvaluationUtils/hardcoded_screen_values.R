@@ -11,11 +11,11 @@ hardcoded_screen_values <- function(do_full_run, super_dirname, subset=T, debug=
         do_fdr <- c(TRUE)
         # rt_windows <- c(1,2)
         rt_windows <- c(seq(1, 20, 2))
-        frame_shifts <- c(1, 3, 5)
-        lowest_window_size <- c(100, 200, 500)
+        frame_shifts <- c(1, 3)
+        lowest_window_size <- c(100, 200)
         window_merge_method <- c("median")
         max_cores <- 7
-        target_replicates <- list(c(2,3))
+        target_replicates <- list(c(1,2))
         stat_test <- c("welch")
         var_filter_fracs <- c(0)
         
@@ -30,10 +30,7 @@ hardcoded_screen_values <- function(do_full_run, super_dirname, subset=T, debug=
         lowest_window_size <- c(100)
         window_merge_method <- c("median")
         max_cores <- 7
-        # target_replicates <- list(c(6,7))
-        # target_replicates <- list(c(5,6), c(5,7), c(5,8), c(5,9), c(6,7), c(6,8), c(6,9), c(7,8), c(7,9), c(8,9))
-        # target_replicates <- list(c(4,5))
-        target_replicates <- list(c(2,3), c(3,4), c(4,5), c(5,6))
+        target_replicates <- list(c(1,2))
         stat_test <- c("limma")
         quiet <- FALSE
         var_filter_fracs <- c(0, 0.5)

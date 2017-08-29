@@ -1,7 +1,13 @@
 header <- c("method", "tot_na_reduced", "potato_tot", "potato_sig", "back_tot", "back_sig", "rt_settings")
 header_without_rt <- c("method", "tot_na_reduced", "potato_tot", "potato_sig", "back_tot", "back_sig")
 
-EntryRow <- function(nr, method_data, norm_method, tot_rows, target_tot, target_sign, 
+EntryRow <- function(nr, 
+                     method_data, 
+                     norm_method, 
+                     detailed_name,
+                     tot_rows, 
+                     target_tot, 
+                     target_sign, 
                      background_tot, background_sign, 
                      diff_sig_p, back_sig_p,
                      diff_sig_fdr, back_sig_fdr,
@@ -11,6 +17,7 @@ EntryRow <- function(nr, method_data, norm_method, tot_rows, target_tot, target_
         nr = nr,
         method_data = method_data,
         norm_method = norm_method,
+        detailed_name = detailed_name,
         tot_rows = tot_rows,
         target_tot = target_tot,
         target_sign = target_sign,

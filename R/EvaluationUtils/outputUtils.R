@@ -58,7 +58,7 @@ write_significance_matrix <- function(sign_out_path, entries) {
     sign_matrix <- data.frame(matrix(nrow=nbr_features, ncol=0))
     entry_names <- NULL
     
-    browser()
+    # browser()
     
     for (i in 1:nbr_methods) {
         

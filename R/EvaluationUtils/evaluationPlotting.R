@@ -1,7 +1,11 @@
 library("ggplot2")
+library("RColorBrewer")
 
 
 generate_roc_plot <- function(normal_run_entries, rt_run_entries, use_fdr=T, only_normal=T, debug=T, sig_coord_thres=0.1, y_cutoff=0) {
+    
+    print("DEBUGGING: INCLUDE RT")
+    only_normal <- F
     
     comb_df <- data.frame(pvals=c(), type=c(), method=c())
     sig_coord_df <- data.frame(x=c(), y=c(), method=c())
@@ -14,8 +18,8 @@ generate_roc_plot <- function(normal_run_entries, rt_run_entries, use_fdr=T, onl
     }
     
     plot_ylabs <- get_y_label("all")
-    
-    auc <- NULL
+    aucs <- c()
+    # auc <- NULL
     
     for (method_i in 1:length(all_entries)) {
         
@@ -69,24 +73,31 @@ generate_roc_plot <- function(normal_run_entries, rt_run_entries, use_fdr=T, onl
             y_vals <- c(y_vals, last_y_coord)
             
             if (is.null(sig_coord) && row["pvals"] > 0.1) {
-                sig_coord <- data.frame(x=last_x_coord, y=last_y_coord, method=target_obj$norm_method)
+                sig_coord <- data.frame(x=last_x_coord, y=last_y_coord, method=target_obj$detailed_name)
                 sig_coord_df <- rbind(sig_coord_df, sig_coord)
             }
         }
         
-        coord_df <- data.frame(FPR=x_vals, TPR=y_vals, sample=target_obj$norm_method)
+        coord_df <- data.frame(FPR=x_vals, TPR=y_vals, sample=target_obj$detailed_name)
         comb_df <- rbind(comb_df, coord_df)
         
-        if (is.null(auc)) {
-            auc <- calculate_auc(x_vals, y_vals)
-        }
+        aucs <- c(aucs, calculate_auc(x_vals, y_vals))
     }
+    
+    orig_lvs <- levels(comb_df$sample)
+    new_lvs <- paste(round(aucs, 3), orig_lvs, sep=", ")
+    levels(comb_df$sample) <- new_lvs
+    sig_coord_df$method <- new_lvs
+        
+    colorCount <- length(unique(comb_df$sample))
+    getPalette <- colorRampPalette(brewer.pal(9, "Set1"))
     
     plt <- ggplot() + 
         geom_line(data=comb_df, aes(FPR, TPR, color=sample)) + 
-        ggtitle(paste("ROC curve (AUC: ", auc, ")", sep=" ")) +
+        ggtitle(paste("ROC curve", sep=" ")) +
         geom_point(data=sig_coord_df, aes(x=x, y=y, color=method)) +
-        ylim(y_cutoff, NA)
+        ylim(y_cutoff, NA) +
+        scale_color_manual(values=getPalette(colorCount))
     
     if (debug) {
         ggsave("/home/jakob/Desktop/debug/test.png", plot=plt)
@@ -97,14 +108,8 @@ generate_roc_plot <- function(normal_run_entries, rt_run_entries, use_fdr=T, onl
 }
 
 calculate_auc <- function(x_coord, y_coord) {
-    # x_coord <- c(0.0, 0.0, 0.2, 0.5, 0.5, 1.0)
-    # y_coord <- c(0.0, 0.6, 0.6, 0.6, 1.0, 1.0)
-    
-    # linear_coord <- seq(0, 1, 1/(length(x_coord)-1))
-    # print(linear_coord)
-    
-    tot_sum <- 0
 
+    tot_sum <- 0
     prev_x <- x_coord[1]
     for (i in 2:length(x_coord)) {
         

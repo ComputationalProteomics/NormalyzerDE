@@ -21,10 +21,10 @@ library("ggplot2")
 library("limma")
 
 
-path_base <- "../tests/data"
+path_base <- "../../tests/data/"
 
 # target_dataset <- "pdx001819"
-target_dataset <- "max_quant_proteios"
+target_dataset <- "bad_data"
 
 if (target_dataset == "max_quant_proteios") {
     full_report <- "FeatureReport_MQP_20140828-fornormalyzer.txt"
@@ -58,6 +58,17 @@ if (target_dataset == "max_quant_proteios") {
     
     POT_PAT <- "^sol"
     HUMAN_PAT <- "^hum"
+    COMBINED_PATTERN <- paste0("(", POT_PAT, "|", HUMAN_PAT, ")")
+    
+} else if (target_dataset == "bad_data") {
+    full_report <- "bad_data_dataset/BadData_89only_2rep.normalyzer.tsv"
+    subset_report <- "bad_data_dataset/BadData.subset_500.normalyzer.tsv"
+    NAME_COLUMNS <- c(4,3)
+    SAMPLE_PAT_BASE <- "dil"
+    SAMPLE_PAT_END <- "]"
+    
+    POT_PAT <- "^hum"
+    HUMAN_PAT <- "^pot"
     COMBINED_PATTERN <- paste0("(", POT_PAT, "|", HUMAN_PAT, ")")
     
 } else if (target_dataset == "dinosaur_massmatch") {
@@ -200,7 +211,7 @@ generate_normal_run_results <- function(nr, rs, row_name_cols) {
         
         print(paste("Method: ", used_methods_names[[i]]))
         
-        run_result <- get_run_entry(nr, normalization_matrices[[i]], used_methods_names[[i]], 
+        run_result <- get_run_entry(nr, normalization_matrices[[i]], used_methods_names[[i]], used_methods_names[[i]],
                                     POT_PAT, rs, row_name_cols=row_name_cols)
         
         # browser()
@@ -252,7 +263,7 @@ generate_rt_run_results <- function(nr, rs, row_name_cols, name_col=NULL) {
                                                    debug_id=debug_id,
                                                    debug_samples=debug_samples)
         
-        median_entry <- get_run_entry(nr, median_rt, "RT-median", POT_PAT, rs, current_rt_setting=rt_window, row_name_cols=row_name_cols)
+        median_entry <- get_run_entry(nr, median_rt, "RT-median", paste0("RT-median_", rt_window), POT_PAT, rs, current_rt_setting=rt_window, row_name_cols=row_name_cols)
 
         print("mean rt")
         mean_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw,
@@ -266,7 +277,7 @@ generate_rt_run_results <- function(nr, rs, row_name_cols, name_col=NULL) {
                                                  debug_matrix_rownames=row_names,
                                                  debug_id=debug_id,
                                                  debug_samples=debug_samples)
-        mean_entry <- get_run_entry(nr, mean_rt, "RT-mean", POT_PAT, rs, current_rt_setting=rt_window, row_name_cols=row_name_cols)
+        mean_entry <- get_run_entry(nr, mean_rt, "RT-mean", paste0("RT-mean_", rt_window), POT_PAT, rs, current_rt_setting=rt_window, row_name_cols=row_name_cols)
 
         print("loess rt")
         loess_rt <- getSmoothedRTNormalizedMatrix(normalyzer_filterraw,
@@ -280,7 +291,7 @@ generate_rt_run_results <- function(nr, rs, row_name_cols, name_col=NULL) {
                                                   debug_matrix_rownames=row_names,
                                                   debug_id=debug_id,
                                                   debug_samples=debug_samples)
-        loess_entry <- get_run_entry(nr, loess_rt, "RT-loess", POT_PAT, rs, current_rt_setting=rt_window, row_name_cols=row_name_cols)
+        loess_entry <- get_run_entry(nr, loess_rt, "RT-loess", paste0("RT-loess_", rt_window), POT_PAT, rs, current_rt_setting=rt_window, row_name_cols=row_name_cols)
 
         run_entries_base_index <- length(run_entries) + 1
         run_entries[[run_entries_base_index]] <- median_entry
@@ -292,7 +303,7 @@ generate_rt_run_results <- function(nr, rs, row_name_cols, name_col=NULL) {
 }
 
 # Generate entry object containing information on number of total and DE found in target pattern and background
-get_run_entry <- function(nr, method_data, name, target_pattern, rs, row_name_cols, current_rt_setting=NULL, omit_na=TRUE) {
+get_run_entry <- function(nr, method_data, name, detailed_name, target_pattern, rs, row_name_cols, current_rt_setting=NULL, omit_na=TRUE) {
 
     sig_thres <- rs$sig_thres
     adjust_fdr <- rs$do_fdr
@@ -347,7 +358,8 @@ get_run_entry <- function(nr, method_data, name, target_pattern, rs, row_name_co
     
     entry <- EntryRow(nr=nr,
                       method_data=filter_df,
-                      norm_method=name, 
+                      norm_method=name,
+                      detailed_name=detailed_name, 
                       tot_rows=total_rows,
                       target_tot=nbr_potato_tot,
                       target_sign=nbr_potato_sig,
@@ -367,6 +379,8 @@ get_run_entry <- function(nr, method_data, name, target_pattern, rs, row_name_co
 
 get_prepared_normalyzer_sheet <- function(nr, df, row_name_cols, replicate_nbrs, var_filter_frac) {
 
+    # browser()
+    
     raw_data <- nr@nds@rawData
     replicate_numbers <- raw_data[1,which(as.integer(raw_data[1,]) > 0)]
     replicate_pattern <- paste0("^(", replicate_nbrs[1], "|", replicate_nbrs[2], ")$")
