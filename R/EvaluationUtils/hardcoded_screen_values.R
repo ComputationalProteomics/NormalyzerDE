@@ -10,7 +10,7 @@ hardcoded_screen_values <- function(do_full_run, super_dirname, subset=T, debug=
         sig_thres <- c(0.1, 0.05)
         do_fdr <- c(TRUE)
         # rt_windows <- c(1,2)
-        rt_windows <- c(seq(1, 20, 2))
+        rt_windows <- c(seq(1, 10, 2))
         frame_shifts <- c(1, 3)
         lowest_window_size <- c(100, 200)
         window_merge_method <- c("median")

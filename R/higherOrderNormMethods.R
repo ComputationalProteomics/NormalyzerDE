@@ -83,8 +83,9 @@ getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes)
     sortedRts <- sort(retentionTimes)
     currentRTSlice <- sortedRts[sortedRts >= rtStart & sortedRts < rtEnd] 
     
-    startIndex <- which(sortedRts == min(currentRTSlice))
-    endIndex <- which(sortedRts == max(currentRTSlice))
+    # Get single element if multiple with exactly same RT
+    startIndex <- tail(which(sortedRts == min(currentRTSlice)), 1)
+    endIndex <- tail(which(sortedRts == max(currentRTSlice)), 1)
 
     currentCount <- length(currentRTSlice)
     remainingCount <- minimumDatapoints - currentCount
@@ -118,6 +119,10 @@ getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes)
     
     widenedSlice <- sortedRts[newStartRtIndex:newEndRtIndex]
 
+    if (length(widenedSlice) != minimumDatapoints) {
+        browser()
+    }
+    
     stopifnot(length(widenedSlice) == minimumDatapoints)
 
     widenedStartRt <- min(widenedSlice)
