@@ -182,10 +182,10 @@ run_review_data_test <- function(super_dirname,
     }
     
     roc_list <- list()
-    roc_list[["roc_plot_normal"]] <- generate_roc_plot(normal_run_entries, rt_run_entries, only_normal=T)
-    roc_list[["roc_plot_normal_04cut"]] <- generate_roc_plot(normal_run_entries, rt_run_entries, only_normal=T, y_cutoff=0.4)
-    roc_list[["roc_plot_normal_06cut"]] <- generate_roc_plot(normal_run_entries, rt_run_entries, only_normal=T, y_cutoff=0.6)
-    roc_list[["roc_plot_normal_08cut"]] <- generate_roc_plot(normal_run_entries, rt_run_entries, only_normal=T, y_cutoff=0.8)
+    roc_list[["roc_plot_normal"]] <- generate_roc_plot(normal_run_entries, rt_run_entries, only_normal=T, title=gsub(".*\\/", "", output_base))
+    roc_list[["roc_plot_normal_04cut"]] <- generate_roc_plot(normal_run_entries, rt_run_entries, only_normal=T, y_cutoff=0.4, title=gsub(".*\\/", "", output_base))
+    roc_list[["roc_plot_normal_06cut"]] <- generate_roc_plot(normal_run_entries, rt_run_entries, only_normal=T, y_cutoff=0.6, title=gsub(".*\\/", "", output_base))
+    roc_list[["roc_plot_normal_08cut"]] <- generate_roc_plot(normal_run_entries, rt_run_entries, only_normal=T, y_cutoff=0.8, title=gsub(".*\\/", "", output_base))
     roc_list[["roc_plot_all"]] <- generate_roc_plot(normal_run_entries, rt_run_entries, only_normal=F)
     score_plots <- generate_score_plots(normal_run_entries, rt_run_entries, output_base)
     # generate_results(normal_run_entries, rt_run_entries, output_base, score_plots, roc_plot_normal, roc_plot_all)

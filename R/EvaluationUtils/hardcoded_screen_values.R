@@ -6,6 +6,8 @@ source("EvaluationUtils/evaluationMain.R")
 
 hardcoded_screen_values <- function(do_full_run, super_dirname, subset=T, debug=F) {
     
+    combine_pdfs <- TRUE
+    
     if (do_full_run) {
         sig_thres <- c(0.1, 0.05)
         do_fdr <- c(TRUE)
@@ -16,8 +18,8 @@ hardcoded_screen_values <- function(do_full_run, super_dirname, subset=T, debug=
         window_merge_method <- c("median")
         max_cores <- 7
         target_replicates <- list(c(1,2))
-        stat_test <- c("welch")
-        var_filter_fracs <- c(0)
+        stat_test <- c("welch", "limma")
+        var_filter_fracs <- c(0, 0.25, 0.5, 0.75)
         
         quiet <- FALSE
     }
@@ -52,5 +54,6 @@ hardcoded_screen_values <- function(do_full_run, super_dirname, subset=T, debug=
                   sample_comparisons = target_replicates,
                   stat_test = stat_test,
                   var_filter_fracs = var_filter_fracs,
-                  debug = debug)
+                  debug = debug,
+                  combine_pdfs=combine_pdfs)
 }

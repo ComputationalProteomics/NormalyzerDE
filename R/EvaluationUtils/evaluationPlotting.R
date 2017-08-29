@@ -2,10 +2,7 @@ library("ggplot2")
 library("RColorBrewer")
 
 
-generate_roc_plot <- function(normal_run_entries, rt_run_entries, use_fdr=T, only_normal=T, debug=T, sig_coord_thres=0.1, y_cutoff=0) {
-    
-    print("DEBUGGING: INCLUDE RT")
-    only_normal <- F
+generate_roc_plot <- function(normal_run_entries, rt_run_entries, use_fdr=T, only_normal=F, debug=T, sig_coord_thres=0.1, y_cutoff=0, title="ROC curve") {
     
     comb_df <- data.frame(pvals=c(), type=c(), method=c())
     sig_coord_df <- data.frame(x=c(), y=c(), method=c())
@@ -90,11 +87,11 @@ generate_roc_plot <- function(normal_run_entries, rt_run_entries, use_fdr=T, onl
     sig_coord_df$method <- new_lvs
         
     colorCount <- length(unique(comb_df$sample))
-    getPalette <- colorRampPalette(brewer.pal(9, "Set1"))
+    getPalette <- colorRampPalette(RColorBrewer::brewer.pal(9, "Set1"))
     
     plt <- ggplot() + 
         geom_line(data=comb_df, aes(FPR, TPR, color=sample)) + 
-        ggtitle(paste("ROC curve", sep=" ")) +
+        ggtitle(title) +
         geom_point(data=sig_coord_df, aes(x=x, y=y, color=method)) +
         ylim(y_cutoff, NA) +
         scale_color_manual(values=getPalette(colorCount))

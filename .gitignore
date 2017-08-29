@@ -6,6 +6,7 @@ R/Rplots.pdf
 *.html
 .Rbuildignore
 *.Rproj
+.RData
 
 # Folders
 data/

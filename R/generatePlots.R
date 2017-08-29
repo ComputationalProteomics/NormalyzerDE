@@ -673,7 +673,7 @@ plotMeanSD <- function(nr, currentLayout, pageno) {
     for (i in 1:length(methodlist)) {
         
         datastore <- methodlist[[i]]
-        print(paste("Feeding method name: ", methodnames[i]))
+        # print(paste("Feeding method name: ", methodnames[i]))
         
         msd <- vsn::meanSdPlot(datastore, xlab="", ylab="", plot=FALSE)
         

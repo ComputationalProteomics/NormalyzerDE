@@ -79,7 +79,7 @@ do_multiple_runs <- function(run_setting_list, max_cores, testrun_only=FALSE) {
 screen_values <- function(sig_thresholds, do_fdr, rt_windows, window_shifts, 
                           lowest_window_size, window_merge_method, stat_test=c("anova"), small_run=FALSE, max_cores=1,
                           quiet_processing=TRUE, subset=FALSE, super_dirname=NULL, sample_comparisons=list(c(2,3)),
-                          var_filter_fracs=NULL, debug=F) {
+                          var_filter_fracs=NULL, debug=F, combine_pdfs=F) {
     
     index <- 1
     total_runs <- length(sig_thresholds) * length(do_fdr) * length(window_shifts) * length(lowest_window_size) * length(window_merge_method)
@@ -122,56 +122,38 @@ screen_values <- function(sig_thresholds, do_fdr, rt_windows, window_shifts,
     
     do_multiple_runs(run_settings, max_cores, testrun_only = debug)
     # print(paste("Total screened: ", index - 1))
+    
+    print("Processing done!")
+    
+    if (combine_pdfs) {
+        print("Generating combined PDFs...")
+        generate_combined_pdfs(super_dirname)
+        print("PDF command done!")
+    }
 }
 
-
-# hardcoded_screen_values <- function(do_full_run, super_dirname, subset=T, debug=F) {
-#     
-#     if (do_full_run) {
-#         sig_thres <- c(0.1, 0.05)
-#         do_fdr <- c(TRUE)
-#         # rt_windows <- c(1,2)
-#         rt_windows <- c(seq(1,20,2))
-#         frame_shifts <- c(1, 3, 5)
-#         lowest_window_size <- c(100, 200, 500)
-#         window_merge_method <- c("median")
-#         max_cores <- 7
-#         target_replicates <- list(c(2,3))
-#         stat_test <- c("welch")
-#         quiet <- FALSE
-#     }
-#     else {
-#         sig_thres <- c(0.1)
-#         do_fdr <- c(TRUE)
-#         # rt_windows <- c(seq(0.5, 5, 0.5), seq(6, 15, 1))
-#         rt_windows <- c(10, 30, 50, 100)
-#         frame_shifts <- c(1)
-#         lowest_window_size <- c(200)
-#         window_merge_method <- c("median")
-#         max_cores <- 6
-#         target_replicates <- list(c(2,3))
-#         stat_test <- c("welch")
-#         quiet <- FALSE
-#         
-#         verbose <- TRUE
-#     }
-#     
-#     screen_values(sig_thresholds = sig_thres,
-#                   do_fdr = do_fdr,
-#                   rt_windows = rt_windows,
-#                   window_shifts = frame_shifts,
-#                   lowest_window_size = lowest_window_size,
-#                   window_merge_method = window_merge_method,
-#                   max_cores = max_cores,
-#                   quiet_processing = quiet,
-#                   subset = subset,
-#                   super_dirname = super_dirname,
-#                   sample_comparisons = target_replicates,
-#                   stat_test = stat_test,
-#                   debug = debug)
-# }
-
-
+generate_combined_pdfs <- function(super_dirname) {
+    
+    eval_pdf_cmd <- paste0("pdftk ", super_dirname, "/*/*.pdf cat output ", super_dirname, "/merged.pdf")
+    system(eval_pdf_cmd)
+    print(eval_pdf_cmd)
+    
+    png_to_pdf_cmd <- paste0("for png in ", super_dirname,"/*/*.png; do convert ${png} ${png%.*}.pdf; done")
+    system(png_to_pdf_cmd)
+    print(png_to_pdf_cmd)
+    
+    roc_04_cmd <- paste0("pdftk ", super_dirname, "/*/*04cut.pdf cat output ", super_dirname, "/roc_04_merged.pdf")
+    system(roc_04_cmd)
+    print(roc_04_cmd)
+    
+    roc_06_cmd <- paste0("pdftk ", super_dirname, "/*/*06cut.pdf cat output ", super_dirname, "/roc_06_merged.pdf")
+    system(roc_06_cmd)
+    print(roc_06_cmd)
+    
+    roc_all_cmd <- paste0("pdftk ", super_dirname, "/*/*roc_plot_all.pdf cat output ", super_dirname, "/roc_all_merged.pdf")
+    system(roc_all_cmd)
+    print(roc_all_cmd)
+}
 
 
 

@@ -56,7 +56,7 @@ printPlots <- function(plotlist, plotname, pageno, jobname, currentLayout) {
         row <- (pos_counter-1) %/% grid_cols + 2
         col <- (pos_counter-1) %% grid_cols + 2
 
-        print(paste("i", i, "pos_counter", pos_counter, "row", row, "col", col, "grid cols", grid_cols, "grid rows", grid_rows))
+        # print(paste("i", i, "pos_counter", pos_counter, "row", row, "col", col, "grid cols", grid_cols, "grid rows", grid_rows))
         
         print(plotlist[[i]], vp=grid::viewport(layout.pos.row=row, layout.pos.col=col))
     }
