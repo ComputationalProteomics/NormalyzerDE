@@ -24,6 +24,7 @@
 #' @import MASS limma preprocessCore methods RcmdrMisc
 normalyzer <- function(inputPath, 
                        jobName, 
+                       designMatrix=NULL,
                        outputDir=NULL,
                        forceAllMethods=FALSE,
                        omitLowAbundSamples=FALSE,
@@ -44,7 +45,7 @@ normalyzer <- function(inputPath,
     print('start')
     startTime <- Sys.time()
     
-    # require(RcmdrMisc)        # RcmdrMisc::numSummary, CRAN (could maybe be omitted after re-implementation of its 'numSummary' function?)
+    # require(RcmdrMisc)    # RcmdrMisc::numSummary, CRAN (could maybe be omitted after re-implementation of its 'numSummary' function?)
     # require(vsn)          # Used for justvsn, BioConductor
     # require(preprocessCore)     # Used for quantile normalization, BC
     # require(limma)        # Used for normalizeCyclicLoess, BioConductor
@@ -79,7 +80,7 @@ normalyzer <- function(inputPath,
     }
 
     
-        
+    
     # source("evaluationMain.R")
     
     normObj <- getVerifiedNormalyzerObject(inputPath,

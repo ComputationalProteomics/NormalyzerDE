@@ -20,4 +20,5 @@ inst/doc
 normalyzer_testing/
 automated_tests/
 regular_tests/
+TestData/
 .Rproj.user
