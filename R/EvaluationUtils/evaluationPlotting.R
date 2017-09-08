@@ -16,8 +16,7 @@ generate_roc_plot <- function(normal_run_entries, rt_run_entries, use_fdr=T, onl
     
     plot_ylabs <- get_y_label("all")
     aucs <- c()
-    # auc <- NULL
-    
+
     for (method_i in 1:length(all_entries)) {
         
         target_obj <- all_entries[[method_i]]
@@ -69,7 +68,7 @@ generate_roc_plot <- function(normal_run_entries, rt_run_entries, use_fdr=T, onl
             x_vals <- c(x_vals, last_x_coord)
             y_vals <- c(y_vals, last_y_coord)
             
-            if (is.null(sig_coord) && row["pvals"] > 0.1) {
+            if (is.null(sig_coord) && row["pvals"] > sig_coord_thres) {
                 sig_coord <- data.frame(x=last_x_coord, y=last_y_coord, method=target_obj$detailed_name)
                 sig_coord_df <- rbind(sig_coord_df, sig_coord)
             }
