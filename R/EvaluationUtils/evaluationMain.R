@@ -329,7 +329,6 @@ get_run_entry <- function(nr, method_data, name, detailed_name, target_pattern, 
     else if (stat_test == "limma") {
         target_sig_val_p <- get_limma_pvals(filter_df, custom_replicate_groups, adjust_fdr=F)
         target_sig_val_fdr <- get_limma_pvals(filter_df, custom_replicate_groups, adjust_fdr=T)
-        print("Running Limma test")
     }
     else {
         stop(paste("Unknown stat_test:", stat_test))

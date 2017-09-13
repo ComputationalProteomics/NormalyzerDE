@@ -28,14 +28,14 @@ hardcoded_screen_values <- function(do_full_run, super_dirname, subset=T, debug=
         do_fdr <- c(TRUE)
         # rt_windows <- c(seq(0.5, 5, 0.5), seq(6, 15, 1))
         rt_windows <- c(1, 3, 5)
-        frame_shifts <- c(1)
+        frame_shifts <- c(3)
         lowest_window_size <- c(100)
         window_merge_method <- c("median")
         max_cores <- 7
         target_replicates <- list(c(1,2))
         stat_test <- c("limma")
         quiet <- FALSE
-        var_filter_fracs <- c(0, 0.5)
+        var_filter_fracs <- c(0)
         # var_filter_fracs <- c(seq(0,1,0.3))
         
         verbose <- TRUE
