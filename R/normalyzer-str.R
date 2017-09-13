@@ -87,7 +87,8 @@ normalyzer <- function(inputPath,
                                            jobName,
                                            threshold=sampleAbundThres,
                                            omitSamples=omitLowAbundSamples,
-                                           requireReplicates=requireReplicates)
+                                           requireReplicates=requireReplicates,
+                                           designMatrix=designMatrix)
     jobDir <- setupJobDir(jobName, outputDir)
     
     print("Normalizing data...")

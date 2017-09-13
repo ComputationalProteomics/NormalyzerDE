@@ -5,25 +5,45 @@
 #' @param jobName Name of ongoing run.
 #' @return Normalyzer data object representing verified input data.
 #' @export
-getVerifiedNormalyzerObject <- function(inputPath, jobName, threshold=15, 
+getVerifiedNormalyzerObject <- function(inputPath, 
+                                        jobName, 
+                                        threshold=15, 
                                         omitSamples=FALSE,
-                                        requireReplicates=TRUE) {
+                                        requireReplicates=TRUE,
+                                        designMatrixPath=NULL,
+                                        sampleCol="newnames",
+                                        groupCol="samples") {
 
     rawData <- loadRawDataFromFile(inputPath)
     
-    verifyValidNumbers(rawData)
+    if (is.null(designMatrixPath)) {
+        all_groups <- as.numeric(rawData[1,])
+        groups <- all_groups[all_groups > 0]
+        rawDataOnly <- rawData[-1:-2, which(as.numeric(rawData[1,]) > 0), drop=FALSE]
+        colnames(rawDataOnly) <- rawData[2,which(as.numeric(all_groups) > 0)]
+    }
+    else {
+        designMatrix <- read.csv(designMatrixPath, sep="\t")
+        groups <- as.numeric(as.factor(designMatrix[, groupCol]))
+        rawDataOnly <- rawData[-1,]
+        colnames(rawDataOnly) <- rawData[1,]
+        verifyDesignMatrix(rawData, designMatrix)
+    }
     
-    repSortedRawData <- getReplicateSortedData(rawData)
+    verifyValidNumbers(rawDataOnly, groups)
+    repSortedRawData <- getReplicateSortedData(rawDataOnly, groups)
     processedRawData <- preprocessData(repSortedRawData)
-    
+
     lowCountSampleFiltered <- getLowCountSampleFiltered(processedRawData, 
+                                                        groups,
                                                         threshold=threshold, 
                                                         stopIfTooFew=!omitSamples)
     
     # If no samples left after omitting, stop
-    verifyMultipleSamplesPresent(lowCountSampleFiltered, requireReplicates=requireReplicates)
+    verifyMultipleSamplesPresent(lowCountSampleFiltered, groups, requireReplicates=requireReplicates)
     validateSampleReplication(lowCountSampleFiltered, requireReplicates=requireReplicates)
     
+    # TODO: Insert alternative design matrix usage here
     nds <- generateNormalyzerDataset(lowCountSampleFiltered, jobName)
     nds
 }
@@ -59,19 +79,18 @@ loadRawDataFromFile <- function(inputPath) {
 #' 
 #' @param rawData Dataframe with Normalyzer input data.
 #' @return Parsed rawdata where 0 values are replaced with NA
-verifyValidNumbers <- function(normalyzerDfAll) {
+verifyValidNumbers <- function(rawDataOnly, groups) {
     
-    normalyzerDf <- normalyzerDfAll[, which(as.numeric(normalyzerDfAll[1,]) > 0), 
-                                    drop=FALSE]
+    # normalyzerDf <- normalyzerDfAll[, which(as.numeric(normalyzerDfAll[1,]) > 0), drop=FALSE]
     
     # Fields expected to contain numbers in decimal or scientific notation, or containing NA or null
     validPatterns <- c("\\d+(\\.\\d+)?", "NA", "null", "\\d+\\.\\d+[eE]([\\+\\-])?\\d+$")
     
-    rawData <- normalyzerDf[-1:-2,]
+    # rawData <- normalyzerDf[-1:-2,]
     
     regexPattern <- sprintf("^(%s)$", paste(validPatterns, collapse="|"))
-    matches <- grep(regexPattern, rawData, perl=TRUE, ignore.case=TRUE)
-    nonMatches <- na.omit(rawData[-matches])
+    matches <- grep(regexPattern, rawDataOnly, perl=TRUE, ignore.case=TRUE)
+    nonMatches <- na.omit(rawDataOnly[-matches])
     
     if (length(nonMatches > 0)) {
         error_string <- paste(
@@ -89,21 +108,56 @@ verifyValidNumbers <- function(normalyzerDfAll) {
     print("Input data checked. All fields are valid.")
 }
 
+#' Verify that design matrix setup matches the data matrix
+#' 
+#' @param rawData Dataframe with Normalyzer input data
+#' @param designMatrix Dataframe with design setup for Normalyzer
+#' 
+#' @return None
+verifyDesignMatrix <- function(rawDataOnly, designMatrix, groups) {
+
+    # groups <- as.numeric(as.factor(designMatrix[, groupCol]))
+    # sampleColumns <- as.character(designMatrix[, sampleCol])
+
+    if (!all(dataColumns %in% colnames(rawDataOnly))) {
+        errorString <- paste(
+            "Not all columns present in design matrix are present in data matrix",
+            "The following element was not found:",
+            setdiff(dataColumns, colnames(rawDataOnly))
+        )
+        stop(errorString)
+    }
+    
+    dataColumns <- rawDataOnly[, sampleColumns]
+    
+    if (length(sampleColumns) != ncol(dataColumns)) {
+        errorString <- paste(
+            "Number of samples does not match number of selected columns",
+            "Found number of columns:",
+            ncol(dataColumns),
+            "Expected number of columns:",
+            length(sampleColumns),
+            "Are all columns in the design matrix present in the data matrix?"
+        )
+        stop(errorString)
+    }
+}
+
 
 #' Get dataframe with raw data column sorted on replicates
 #' 
 #' @param rawData Dataframe with unparsed Normalyzer input data.
 #' @return rawData sorted on replicate
-getReplicateSortedData <- function(rawData) {
+getReplicateSortedData <- function(rawDataOnly, header) {
 
-    factor_levels <- sort(as.numeric(unique(rawData[1,])))
-    temp_df <- NULL
+    factorLevels <- sort(as.numeric(unique(header)))
+    tempDf <- NULL
 
-    for (i in 1:length(factor_levels)) {
-        temp_df <- cbind(temp_df, rawData[, which(rawData[1,] == factor_levels[as.numeric(i)]), drop=FALSE])
+    for (i in 1:length(factorLevels)) {
+        tempDf <- cbind(tempDf, rawDataOnly[, which(header == factorLevels[as.numeric(i)]), drop=FALSE])
     }
 
-    temp_df
+    tempDf
 }
 
 
@@ -111,13 +165,13 @@ getReplicateSortedData <- function(rawData) {
 #' 
 #' @param rawData Dataframe with Normalyzer input data.
 #' @return Parsed rawdata where 0 values are replaced with NA
-preprocessData <- function(normalyzerDf) {
+preprocessData <- function(dataMatrix) {
 
-    dataMatrix <- normalyzerDf[-1:-2, ]
+    # dataMatrix <- dataMatrix[-1:-2, ]
     dataMatrix[which(dataMatrix == 0)] <- NA
-    processedDf <- rbind(normalyzerDf[1:2, ], dataMatrix)
+    # processedDf <- rbind(dataMatrix[1:2, ], dataMatrix)
 
-    processedDf
+    dataMatrix
 }
 
 #' Verify that samples contain at least a lowest number of values
@@ -126,18 +180,15 @@ preprocessData <- function(normalyzerDf) {
 #'        Zero values are expected to have been replaced with NAs.
 #' @param threshold Lowest number of allowed values in a column.
 #' @return None
-getLowCountSampleFiltered <- function(dfWithNAs, threshold=15, stopIfTooFew=TRUE) {
+getLowCountSampleFiltered <- function(dataMatrix, header, threshold=15, stopIfTooFew=TRUE) {
     
-    rawData <- dfWithNAs[-1:-2,]
-    header <- dfWithNAs[1,]
     sampleIndices <- which(as.numeric(header) > 0)
-    
     numberOfValues <- vector(length=length(sampleIndices), mode="numeric")
     
     for (i in 1:length(sampleIndices)) {
         
         sampleIndex <- sampleIndices[i]
-        numberOfValues[i] <- length(na.omit(rawData[,sampleIndex]))
+        numberOfValues[i] <- length(na.omit(dataMatrix[, sampleIndex]))
     }
     
     notPassingThreshold <- which(numberOfValues < threshold)
@@ -176,10 +227,10 @@ getLowCountSampleFiltered <- function(dfWithNAs, threshold=15, stopIfTooFew=TRUE
     }
     
     if (length(notPassingThreshold > 0)) {
-        naSamplesOmittedDf <- dfWithNAs[, -sampleIndices[notPassingThreshold]]
+        naSamplesOmittedDf <- dataMatrix[, -sampleIndices[notPassingThreshold]]
     }
     else {
-        dfWithNAs
+        dataMatrix
     }
 }
 
@@ -190,9 +241,9 @@ getLowCountSampleFiltered <- function(dfWithNAs, threshold=15, stopIfTooFew=TRUE
 #' @param requireReplicates By default stops processing if not all samples
 #'  have replicates
 #' @return None
-validateSampleReplication <- function(processedDf, requireReplicates=TRUE) {
+validateSampleReplication <- function(dataMatrix, header, requireReplicates=TRUE) {
     
-    nonReplicatedSamples <- getNonReplicatedFromDf(processedDf)
+    nonReplicatedSamples <- getNonReplicatedFromDf(dataMatrix)
     
     if (length(nonReplicatedSamples) > 0) {
         
@@ -221,9 +272,11 @@ validateSampleReplication <- function(processedDf, requireReplicates=TRUE) {
 #' 
 #' @param processedDf Prepared Normalyzer dataframe.
 #' @return None
-verifyMultipleSamplesPresent <- function(processedDf, requireReplicates=TRUE) {
+verifyMultipleSamplesPresent <- function(dataMatrix, header, requireReplicates=TRUE) {
     
-    header <- processedDf[1,]
+    # browser()
+    
+    # header <- dataMatrix[1,]
     samples <- header[which(as.numeric(header) > 0)]
     distinctSamples <- unique(samples)
 
