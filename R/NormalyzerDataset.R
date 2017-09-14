@@ -21,7 +21,9 @@ NormalyzerDataset <- setClass("NormalyzerDataset",
                                   filterrawdata = "matrix",
                                   normfinderFilterRawData = "matrix",
                                   
-                                  inputHeaderValues = "character",
+                                  designMatrix = "matrix",
+                                  legacyHeader = "numeric",
+                                  
                                   sampleReplicateGroups = "numeric",
                                   
                                   colsum = "numeric",
@@ -34,7 +36,8 @@ NormalyzerDataset <- setClass("NormalyzerDataset",
                                   singleReplicateRun = "logical"
                               ),
                               prototype=prototype(jobName=NULL, 
-                                                  rawData=NULL))
+                                                  rawData=NULL,
+                                                  designMatrix=NULL))
 
 #' Initialize values for dataset
 #'
@@ -48,6 +51,17 @@ setGeneric(name="setupValues", function(nds) standardGeneric("setupValues"))
 setMethod("setupValues", "NormalyzerDataset",
           function(nds) {
               
+              if (is.null(nds@designMatrix) && is.null(nds@legacyHeader)) {
+                  stop("Error, either design matrix or legacy header must be provided!")
+              }
+              
+              if (is.null(nds@designMatrix)) {
+                  nds@sampleReplicateGroups <- nds@legacyHeader[nds@legacyHeader > 0]
+              }
+              else {
+                  nds@sampleReplicateGroups <- nds@designMatrix[, "groups"]
+              }
+              
               singleReplicateRun <- detectSingleReplicate(nds)
               singletonSamplePresent <- detectSingletonSample(nds)
               
@@ -60,10 +74,11 @@ setMethod("setupValues", "NormalyzerDataset",
               
               nds <- setupBasicValues(nds)
               nds <- setupRTColumn(nds)
-
+              
               nds
           }
 )
+
 
 #' Detect single replicate, and assign related logical
 #'
@@ -77,7 +92,9 @@ setGeneric(name="detectSingleReplicate",
 setMethod("detectSingleReplicate", "NormalyzerDataset",
           function(nds) {
               
-              nonReplicatedSamples <- getNonReplicatedFromDf(nds@rawData)
+              headerCounts <- table(nds@sampleReplicateGroups)
+              nonReplicatedSamples <- names(headerCounts[which(headerCounts == 1)])
+              
               if (length(nonReplicatedSamples) > 0) {
                   singleReplicateRun <- TRUE
                   print(paste("Non replicated samples in dataset:",
@@ -104,9 +121,11 @@ setGeneric(name="detectSingletonSample",
 #' @rdname detectSingletonSample
 setMethod("detectSingletonSample", "NormalyzerDataset",
           function(nds) {
+
+              fullHeader <- nds@rawData[1,]
+              groups <- fullHeader[fullHeader > 0]
               
-              header <- nds@rawData[1,]
-              distinctSamples <- unique(header[which(as.numeric(header) > 0)])
+              distinctSamples <- unique(groups)
               singletonSamplePresent <- FALSE
               if (length(distinctSamples) == 1) {
                   singletonSamplePresent <- TRUE
@@ -136,10 +155,8 @@ setMethod("setupBasicValues", "NormalyzerDataset",
           function(nds) {
               
               nds@inputHeaderValues <- nds@rawData[1,]
-              
               sampleRepStr <- nds@inputHeaderValues[which(as.numeric(nds@inputHeaderValues) > 0)]
               nds@sampleReplicateGroups <- as.numeric(sampleRepStr)
-              
               nds@annotationValues <- nds@rawData[-1:-2, which(as.numeric(nds@inputHeaderValues) < 1), drop=FALSE]
               
               nds <- setupFilterRawData(nds)

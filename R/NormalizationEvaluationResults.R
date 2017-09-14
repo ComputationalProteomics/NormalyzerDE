@@ -249,14 +249,14 @@ setMethod("calculateSignificanceMeasures", "NormalizationEvaluationResults",
 
               for (methodIndex in 1:methodCount) {
                   
-                  print(paste("CV col length: ", length(ner@featureCVPerMethod[,methodIndex])))
+                  # print(paste("CV col length: ", length(ner@featureCVPerMethod[,methodIndex])))
                   
                   processedDataMatrix <- methodList[[methodIndex]]
                   naFilterContrast <- getRowNAFilterContrast(processedDataMatrix,
                                                              sampleReplicateGroups,
                                                              var_filter_frac=var_filter_frac)
                   
-                  print(paste("NA filter contrast length: ", length(naFilterContrast)))
+                  # print(paste("NA filter contrast length: ", length(naFilterContrast)))
                   
                   dataStoreReplicateNAFiltered <- processedDataMatrix[naFilterContrast,]
 
@@ -274,7 +274,7 @@ setMethod("calculateSignificanceMeasures", "NormalizationEvaluationResults",
                   krusWalPValCol <- apply(dataStoreReplicateNAFiltered, 1, 
                                           function(sampleIndex) stats::kruskal.test(unlist(sampleIndex)~testLevels, na.action="na.exclude")[[3]][1])
                   
-                  print(paste("anovaPVals length: ", length(anovaPValCol)))
+                  # print(paste("anovaPVals length: ", length(anovaPValCol)))
                   
                   anovaPValsWithNA[naFilterContrast, methodIndex] <- anovaPValCol
                   anovaFDRCol <- stats::p.adjust(anovaPValCol, method="BH")
