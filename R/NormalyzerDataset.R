@@ -190,8 +190,6 @@ setMethod("setupRTColumn", "NormalyzerDataset",
                   nds@retentionTimes <- as.numeric(rtValues)
               }
               
-              browser()
-              
               nds
           }
 )
@@ -212,17 +210,9 @@ setMethod("setupFilterRawData", "NormalyzerDataset",
 
               stopifnot(!is.null(nds@rawData))
               
-              # fullSampleHead <- nds@inputHeaderValues
-              # sampleDataWithHead <- nds@rawData[, which(as.numeric(nds@) > 0), drop=FALSE]
-              
-              # filterRawData <- as.matrix(sampleDataWithHead[-(1:2),, drop=FALSE])
-              # class(filterRawData) <- "numeric"
-              
               nds@filterrawdata <- nds@rawData[, nds@sampleNames]
               class(nds@filterrawdata) <- "numeric"
 
-              # browser()
-              
               nds
           }
 )

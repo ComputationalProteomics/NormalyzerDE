@@ -13,7 +13,8 @@ legacyNormalyzerToDesign <- function(legacyMatrixFp, sep="\t") {
     
     sampleColumns <- fullRawData[2, allAnnotGroups > 0]
     
-    designDf <- cbind(sample=sampleColumns, group=allAnnotGroups[allAnnotGroups > 0])
+    designDf <- data.frame(sample=sampleColumns, group=allAnnotGroups[allAnnotGroups > 0], stringsAsFactors=F)
+    
     return(designDf)
 }
 

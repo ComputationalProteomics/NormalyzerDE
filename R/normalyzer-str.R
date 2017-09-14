@@ -77,6 +77,7 @@ normalyzer <- function(inputPath,
         source("utils.R")
         source("inputVerification.R")
         source("analyzeResults.R")
+        source("preparsers.R")
     }
 
     

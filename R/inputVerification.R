@@ -7,7 +7,7 @@
 #' @export
 getVerifiedNormalyzerObject <- function(inputPath, 
                                         jobName, 
-                                        designMatrixPath,
+                                        designMatrixPath=NULL,
                                         threshold=15, 
                                         omitSamples=FALSE,
                                         requireReplicates=TRUE,
@@ -16,7 +16,14 @@ getVerifiedNormalyzerObject <- function(inputPath,
 
     rawData <- loadRawDataFromFile(inputPath)
     
-    designMatrix <- read.table(designMatrixPath, sep="\t", stringsAsFactors=F, header=T)
+    if (is.null(designMatrixPath)) {
+        designMatrix <- legacyNormalyzerToDesign(inputPath)
+        rawData <- rawData[-1,]
+    }
+    else {
+        designMatrix <- read.table(designMatrixPath, sep="\t", stringsAsFactors=F, header=T)
+    }
+    
     groups <- as.numeric(as.factor(designMatrix[, groupCol]))
     fullMatrix <- rawData[-1,]
     colnames(fullMatrix) <- rawData[1,]
@@ -74,12 +81,8 @@ loadRawDataFromFile <- function(inputPath) {
 #' @return Parsed rawdata where 0 values are replaced with NA
 verifyValidNumbers <- function(rawDataOnly, groups) {
     
-    # normalyzerDf <- normalyzerDfAll[, which(as.numeric(normalyzerDfAll[1,]) > 0), drop=FALSE]
-    
     # Fields expected to contain numbers in decimal or scientific notation, or containing NA or null
     validPatterns <- c("\\d+(\\.\\d+)?", "NA", "null", "\\d+\\.\\d+[eE]([\\+\\-])?\\d+$")
-    
-    # rawData <- normalyzerDf[-1:-2,]
     
     regexPattern <- sprintf("^(%s)$", paste(validPatterns, collapse="|"))
     matches <- grep(regexPattern, rawDataOnly, perl=TRUE, ignore.case=TRUE)
@@ -109,11 +112,6 @@ verifyValidNumbers <- function(rawDataOnly, groups) {
 #' @return None
 verifyDesignMatrix <- function(dataMatrix, designMatrix, sampleCol="sample") {
 
-    # groups <- as.numeric(as.factor(designMatrix[, groupCol]))
-    # sampleColumns <- as.character(designMatrix[, sampleCol])
-
-    # browser()
-    
     designColnames <- designMatrix[, "sample"]
     
     if (!all(designColnames %in% colnames(dataMatrix))) {
@@ -164,9 +162,7 @@ getReplicateSortedData <- function(rawDataOnly, groups) {
 #' @return Parsed rawdata where 0 values are replaced with NA
 preprocessData <- function(dataMatrix) {
 
-    # dataMatrix <- dataMatrix[-1:-2, ]
     dataMatrix[which(dataMatrix == 0)] <- NA
-    # processedDf <- rbind(dataMatrix[1:2, ], dataMatrix)
 
     dataMatrix
 }
