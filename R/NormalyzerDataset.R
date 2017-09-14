@@ -3,7 +3,7 @@
 #' @slot jobName Name of the job represented by the dataset
 #' @slot rawData Matrix with raw values
 #' @slot filterrawdata Reduced raw data matrix where low abundance rows are 
-#'  removed
+#'  removed - TODO: CHECK, IS THIS CURRENTLY WORKING?
 #' @slot normfinderFilterRawData Reduced raw data matrix used for Normfinder
 #'  normalization
 #' @slot inputHeaderValues Vector with sample descriptions
@@ -15,15 +15,15 @@
 
 NormalyzerDataset <- setClass("NormalyzerDataset",
                               slots = c(
-                                  jobName = "character",
                                   
+                                  jobName = "character",
                                   rawData = "matrix",
+                                  
+                                  designMatrix = "data.frame",
+                                  sampleNames = "character",
+
                                   filterrawdata = "matrix",
                                   normfinderFilterRawData = "matrix",
-                                  
-                                  designMatrix = "matrix",
-                                  legacyHeader = "numeric",
-                                  
                                   sampleReplicateGroups = "numeric",
                                   
                                   colsum = "numeric",
@@ -51,17 +51,9 @@ setGeneric(name="setupValues", function(nds) standardGeneric("setupValues"))
 setMethod("setupValues", "NormalyzerDataset",
           function(nds) {
               
-              if (is.null(nds@designMatrix) && is.null(nds@legacyHeader)) {
-                  stop("Error, either design matrix or legacy header must be provided!")
-              }
-              
-              if (is.null(nds@designMatrix)) {
-                  nds@sampleReplicateGroups <- nds@legacyHeader[nds@legacyHeader > 0]
-              }
-              else {
-                  nds@sampleReplicateGroups <- nds@designMatrix[, "groups"]
-              }
-              
+              nds@sampleReplicateGroups <- nds@designMatrix[, "group"]
+              nds@sampleNames <- nds@designMatrix[, "sample"]
+
               singleReplicateRun <- detectSingleReplicate(nds)
               singletonSamplePresent <- detectSingletonSample(nds)
               
@@ -124,9 +116,9 @@ setMethod("detectSingletonSample", "NormalyzerDataset",
 
               fullHeader <- nds@rawData[1,]
               groups <- fullHeader[fullHeader > 0]
-              
               distinctSamples <- unique(groups)
               singletonSamplePresent <- FALSE
+              
               if (length(distinctSamples) == 1) {
                   singletonSamplePresent <- TRUE
                   print(paste("Only one replicate group present.",
@@ -154,11 +146,9 @@ setGeneric(name="setupBasicValues",
 setMethod("setupBasicValues", "NormalyzerDataset",
           function(nds) {
               
-              nds@inputHeaderValues <- nds@rawData[1,]
-              sampleRepStr <- nds@inputHeaderValues[which(as.numeric(nds@inputHeaderValues) > 0)]
-              nds@sampleReplicateGroups <- as.numeric(sampleRepStr)
-              nds@annotationValues <- nds@rawData[-1:-2, which(as.numeric(nds@inputHeaderValues) < 1), drop=FALSE]
-              
+              nds@sampleReplicateGroups <- as.numeric(nds@sampleReplicateGroups)
+              nds@annotationValues <- nds@rawData[, !(colnames(nds@rawData) %in% nds@sampleNames), drop=FALSE]
+
               nds <- setupFilterRawData(nds)
               if (!nds@singleReplicateRun) {
                   nds <- setupNormfinderFilterRawData(nds)
@@ -184,22 +174,23 @@ setGeneric(name="setupRTColumn",
 setMethod("setupRTColumn", "NormalyzerDataset",
           function(nds) {
               
-              rt_annotations <- nds@inputHeaderValues[which(nds@inputHeaderValues == "-1")]
+              rtColumns <- grep("\\bRT\\b", colnames(nds@rawData))
               
-              if (length(rt_annotations) > 1) {
+              if (length(rtColumns) > 1) {
                   error_message <- paste(
-                      "Only able to handle single RT column (marked with -1)",
-                      "Please set unwanted RT columns to 0")
+                      "Only able to handle single RT column (name containing RT standing by itself)",
+                      "Please change name or remove unwanted RT columns")
                   stop(error_message)
               }
-              else if (length(rt_annotations) == 1) {
+              else if (length(rtColumns) == 1) {
+                  
                   print("RT annotation column found")
                   
-                  rtValues <- nds@rawData[, which(nds@inputHeaderValues == "-1")][-1:-2]
-                  filterRtValues <- nds@filterrawdata[, which(nds@inputHeaderValues == "-1")]
-                  
+                  rtValues <- nds@rawData[, rtColumns]
                   nds@retentionTimes <- as.numeric(rtValues)
               }
+              
+              browser()
               
               nds
           }
@@ -221,14 +212,17 @@ setMethod("setupFilterRawData", "NormalyzerDataset",
 
               stopifnot(!is.null(nds@rawData))
               
-              fullSampleHead <- nds@inputHeaderValues
-              sampleDataWithHead <- nds@rawData[, which(as.numeric(fullSampleHead) > 0), drop=FALSE]
+              # fullSampleHead <- nds@inputHeaderValues
+              # sampleDataWithHead <- nds@rawData[, which(as.numeric(nds@) > 0), drop=FALSE]
               
-              filterRawData <- as.matrix(sampleDataWithHead[-(1:2),, drop=FALSE])
-              class(filterRawData) <- "numeric"
+              # filterRawData <- as.matrix(sampleDataWithHead[-(1:2),, drop=FALSE])
+              # class(filterRawData) <- "numeric"
               
-              nds@filterrawdata <- filterRawData
+              nds@filterrawdata <- nds@rawData[, nds@sampleNames]
+              class(nds@filterrawdata) <- "numeric"
 
+              # browser()
+              
               nds
           }
 )
@@ -248,14 +242,18 @@ setMethod("setupNormfinderFilterRawData", "NormalyzerDataset",
               
               stopifnot(!is.null(nds@rawData))
               
-              fullSampleHeader <- nds@inputHeaderValues
+              # fullSampleHeader <- nds@inputHeaderValues
               filteredSampleHeader <- nds@sampleReplicateGroups
               
-              countVal <- rowSums(!is.na(nds@rawData[, which(fullSampleHeader > 0)]))
-              nbrReplicates <- 1 * ncol(nds@rawData[, which(fullSampleHeader > 0)])
-                            
-              nds@normfinderFilterRawData <- nds@rawData[countVal >= nbrReplicates,,drop=FALSE]
+              # countVal <- rowSums(!is.na(nds@rawData[, which(fullSampleHeader > 0)]))
+              # nbrReplicates <- 1 * ncol(nds@rawData[, which(fullSampleHeader > 0)])
+              rowCountVals <- rowSums(!is.na(nds@filterrawdata))
+              totalNbrSamples <- 1 * ncol(nds@filterrawdata)
+            
+              nds@normfinderFilterRawData <- nds@filterrawdata[rowCountVals >= totalNbrSamples,,drop=FALSE]
 
+              # browser()
+              
               nds
           }
 )

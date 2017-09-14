@@ -85,10 +85,10 @@ normalyzer <- function(inputPath,
     
     normObj <- getVerifiedNormalyzerObject(inputPath,
                                            jobName,
+                                           designMatrix,
                                            threshold=sampleAbundThres,
                                            omitSamples=omitLowAbundSamples,
-                                           requireReplicates=requireReplicates,
-                                           designMatrix=designMatrix)
+                                           requireReplicates=requireReplicates)
     jobDir <- setupJobDir(jobName, outputDir)
     
     print("Normalizing data...")

@@ -7,31 +7,25 @@
 #' @export
 getVerifiedNormalyzerObject <- function(inputPath, 
                                         jobName, 
+                                        designMatrixPath,
                                         threshold=15, 
                                         omitSamples=FALSE,
                                         requireReplicates=TRUE,
-                                        designMatrixPath=NULL,
-                                        sampleCol="newnames",
-                                        groupCol="samples") {
+                                        sampleCol="sample",
+                                        groupCol="group") {
 
     rawData <- loadRawDataFromFile(inputPath)
     
-    if (is.null(designMatrixPath)) {
-        all_groups <- as.numeric(rawData[1,])
-        groups <- all_groups[all_groups > 0]
-        rawDataOnly <- rawData[-1:-2, which(as.numeric(rawData[1,]) > 0), drop=FALSE]
-        colnames(rawDataOnly) <- rawData[2,which(as.numeric(all_groups) > 0)]
-    }
-    else {
-        designMatrix <- read.csv(designMatrixPath, sep="\t")
-        groups <- as.numeric(as.factor(designMatrix[, groupCol]))
-        rawDataOnly <- rawData[-1,]
-        colnames(rawDataOnly) <- rawData[1,]
-        verifyDesignMatrix(rawData, designMatrix)
-    }
+    designMatrix <- read.table(designMatrixPath, sep="\t", stringsAsFactors=F, header=T)
+    groups <- as.numeric(as.factor(designMatrix[, groupCol]))
+    fullMatrix <- rawData[-1,]
+    colnames(fullMatrix) <- rawData[1,]
+    dataMatrix <- fullMatrix[, designMatrix[, "sample"]]
     
-    verifyValidNumbers(rawDataOnly, groups)
-    repSortedRawData <- getReplicateSortedData(rawDataOnly, groups)
+    verifyDesignMatrix(dataMatrix, designMatrix)
+    verifyValidNumbers(dataMatrix, groups)
+    
+    repSortedRawData <- getReplicateSortedData(dataMatrix, groups)
     processedRawData <- preprocessData(repSortedRawData)
 
     lowCountSampleFiltered <- getLowCountSampleFiltered(processedRawData, 
@@ -43,8 +37,7 @@ getVerifiedNormalyzerObject <- function(inputPath,
     verifyMultipleSamplesPresent(lowCountSampleFiltered, groups, requireReplicates=requireReplicates)
     validateSampleReplication(lowCountSampleFiltered, groups, requireReplicates=requireReplicates)
     
-    # TODO: Insert alternative design matrix usage here
-    nds <- generateNormalyzerDataset(rawData, jobName, legacyHeader=rawData[1,])
+    nds <- generateNormalyzerDataset(rawData, jobName, designMatrix)
     nds
 }
 
@@ -114,29 +107,33 @@ verifyValidNumbers <- function(rawDataOnly, groups) {
 #' @param designMatrix Dataframe with design setup for Normalyzer
 #' 
 #' @return None
-verifyDesignMatrix <- function(rawDataOnly, designMatrix, groups) {
+verifyDesignMatrix <- function(dataMatrix, designMatrix, sampleCol="sample") {
 
     # groups <- as.numeric(as.factor(designMatrix[, groupCol]))
     # sampleColumns <- as.character(designMatrix[, sampleCol])
 
-    if (!all(dataColumns %in% colnames(rawDataOnly))) {
+    # browser()
+    
+    designColnames <- designMatrix[, "sample"]
+    
+    if (!all(designColnames %in% colnames(dataMatrix))) {
         errorString <- paste(
             "Not all columns present in design matrix are present in data matrix",
             "The following element was not found:",
-            setdiff(dataColumns, colnames(rawDataOnly))
+            paste(setdiff(designColnames, colnames(dataMatrix)), collapse=" ")
         )
         stop(errorString)
     }
     
-    dataColumns <- rawDataOnly[, sampleColumns]
+    dataColumns <- dataMatrix[, designColnames]
     
-    if (length(sampleColumns) != ncol(dataColumns)) {
+    if (length(designColnames) != ncol(dataColumns)) {
         errorString <- paste(
             "Number of samples does not match number of selected columns",
             "Found number of columns:",
             ncol(dataColumns),
             "Expected number of columns:",
-            length(sampleColumns),
+            length(designColnames),
             "Are all columns in the design matrix present in the data matrix?"
         )
         stop(errorString)
@@ -321,14 +318,12 @@ verifyMultipleSamplesPresent <- function(dataMatrix, groups, requireReplicates=T
 #' @param rawData Dataframe with unparsed Normalyzer input data.
 #' @param jobName Name of ongoing run.
 #' @return Normalyzer data object representing loaded data.
-generateNormalyzerDataset <- function(fullRawMatrix, jobName, legacyHeader) {
+generateNormalyzerDataset <- function(fullRawMatrix, jobName, designMatrix) {
     
-    if (!is.null(legacyHeader)) {
-        nds <- NormalyzerDataset(jobName=jobName, rawData=fullRawMatrix[-1,], legacyHeader=as.numeric(legacyHeader))
-    }
-    else {
-        stop("Other cases are currently not implemented!")
-    }
+    rawData <- fullRawMatrix[-1,]
+    colnames(rawData) <- fullRawMatrix[1,]
+    
+    nds <- NormalyzerDataset(jobName=jobName, rawData=rawData, designMatrix=designMatrix)
     nds <- setupValues(nds)
     nds
 }
