@@ -232,18 +232,11 @@ setMethod("setupNormfinderFilterRawData", "NormalyzerDataset",
               
               stopifnot(!is.null(nds@rawData))
               
-              # fullSampleHeader <- nds@inputHeaderValues
               filteredSampleHeader <- nds@sampleReplicateGroups
-              
-              # countVal <- rowSums(!is.na(nds@rawData[, which(fullSampleHeader > 0)]))
-              # nbrReplicates <- 1 * ncol(nds@rawData[, which(fullSampleHeader > 0)])
               rowCountVals <- rowSums(!is.na(nds@filterrawdata))
               totalNbrSamples <- 1 * ncol(nds@filterrawdata)
-            
               nds@normfinderFilterRawData <- nds@filterrawdata[rowCountVals >= totalNbrSamples,,drop=FALSE]
 
-              # browser()
-              
               nds
           }
 )

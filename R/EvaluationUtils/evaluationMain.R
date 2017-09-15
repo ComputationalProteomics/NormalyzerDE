@@ -172,6 +172,8 @@ run_review_data_test <- function(super_dirname,
         normal_run_entries <- generate_normal_run_results(nr, rs, row_name_cols=NAME_COLUMNS)
     }
 
+    browser()
+    
     if (do_rt_run) {
         rt_run_entries <- generate_rt_run_results(nr, rs, name_col=3, row_name_cols=NAME_COLUMNS)
     }
@@ -236,6 +238,8 @@ generate_rt_run_results <- function(nr, rs, row_name_cols, name_col=NULL) {
     row_names <- get_rownames(nr, NAME_COLUMNS)
     col_names <- get_colnames(nr)
     
+    browser()
+    
     run_entries <- list()
     for (rt_window in rs$rt_windows) {
 
@@ -245,6 +249,8 @@ generate_rt_run_results <- function(nr, rs, row_name_cols, name_col=NULL) {
         
         raw_copy <- nr@data2log2
 
+        browser()
+        
         rownames(raw_copy) <- row_names
         colnames(raw_copy) <- col_names[2:length(col_names)]
         
