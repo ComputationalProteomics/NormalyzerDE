@@ -269,6 +269,8 @@ setMethod("calculateSignificanceMeasures", "NormalizationEvaluationResults",
                   
                   # browser()
                   
+                  
+                  
                   anovaPValCol <- apply(dataStoreReplicateNAFiltered, 1, 
                                         function(sampleIndex) summary(stats::aov(unlist(sampleIndex)~testLevels))[[1]][[5]][1])
                   krusWalPValCol <- apply(dataStoreReplicateNAFiltered, 1, 

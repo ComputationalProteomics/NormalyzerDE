@@ -58,7 +58,6 @@ writeNormalizedDatasets <- function(nr, jobdir, include_pvals=FALSE, include_pai
         }
 
         utils::write.table(outputTable, file=filePath, sep="\t", row.names=FALSE, quote=FALSE)
-        # utils::write.table(outputTable, file=filePath, sep="\t", row.names=FALSE, col.names=out_colnames, quote=FALSE)
     }
     
     if (!all(is.na(nr@houseKeepingVars))) {
@@ -72,6 +71,5 @@ writeNormalizedDatasets <- function(nr, jobdir, include_pvals=FALSE, include_pai
     rawFilePath <- paste(jobdir, "/", rawdata_name, sep="")
     rawOutputTable <- cbind(annotationColumns, nds@filterrawdata)
     
-    # utils::write.table(rawOutputTable, file=rawFilePath, sep="\t", row.names=FALSE, col.names=nds@rawData[2,], quote=FALSE)
     utils::write.table(rawOutputTable, file=rawFilePath, sep="\t", row.names=FALSE, quote=FALSE)
 }

@@ -178,8 +178,6 @@ getSmoothedRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod,
         stop(paste("Unknown merge method:", merge_method))
     }
     
-    colnames(combinedMatrices) <- colnames(rawMatrix)
-    
     combinedMatrices
 }
 
