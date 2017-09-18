@@ -15,11 +15,8 @@ writeNormalizedDatasets <- function(nr, jobdir, include_pvals=FALSE, include_pai
         
         currentMethod <- methodnames[sampleIndex]
         filePath <- paste(jobdir, "/", currentMethod, "-normalized.txt", sep="")
-        
         outputTable <- cbind(annotationColumns, methodlist[[sampleIndex]])
-        # out_numbering <- nds@rawData[1,]
-        # out_colnames <- nds@rawData[2,]
-        
+
         if (include_pvals) {
             
             anova_col <- ner@anovaFDRWithNA[,sampleIndex]
@@ -29,10 +26,7 @@ writeNormalizedDatasets <- function(nr, jobdir, include_pvals=FALSE, include_pai
                 stop(paste("Table row count:", nrow(outputTable), "must match p-value vector lengths for anova:", 
                            length(anova_col), "and and kruskal wallis:", length(kw_col)))
             }
-            outputTable <- cbind(outputTable, anova_col, kw_col)
-            
-            # out_numbering <- c(out_numbering, 0, 0)
-            # out_colnames <- c(out_colnames, 'anova', 'kruskal_wallis')
+            outputTable <- cbind(outputTable, anova=anova_col, kruskal_wallis=kw_col)
         }
         
         if (include_anova_p) {
@@ -42,35 +36,27 @@ writeNormalizedDatasets <- function(nr, jobdir, include_pvals=FALSE, include_pai
                 stop(paste("Table row count:", nrow(outputTable), "must match p-value vector length for anova: ", length(anova_p)))
             }
             
-            outputTable <- cbind(outputTable, anova_p)
-            # out_numbering <- c(out_numbering, 0)
-            # out_colnames <- c(out_colnames, 'anova_p')
+            outputTable <- cbind(outputTable, anova_p=anova_p)
         }
         
         if (include_pairwise_comparisons) {
             
             for (comp in names(nr@ner@pairwise_comps)) {
                 
-                # out_numbering <- c(out_numbering, 0, 0)
-                # out_colnames <- c(out_colnames, paste("comp", comp, "p", sep="_"), paste("comp", comp, "fdr", sep="_"))
-                
                 comp_col_p <- ner@pairwise_comps[[comp]][,sampleIndex]
                 comp_col_fdr <- ner@pairwise_comps_fdr[[comp]][,sampleIndex]
                 
+                new_colnames <- c(colnames(outputTable), paste("comp", comp, "p", sep="_"), paste("comp", comp, "fdr", sep="_"))
                 outputTable <- cbind(outputTable, comp_col_p, comp_col_fdr)
+                colnames(outputTable) <- new_colnames
             }
         }
         
         if (include_cv_col) {
-            # out_numbering <- c(out_numbering, 0)
-            # out_colnames <- c(out_colnames, 'CV')
             cv_col <- ner@featureCVPerMethod[,sampleIndex]
-            outputTable <- cbind(outputTable, cv_col)
+            outputTable <- cbind(outputTable, CV=cv_col)
         }
 
-        # browser()
-                
-        # outputTable <- rbind(out_numbering, out_colnames, outputTable)
         utils::write.table(outputTable, file=filePath, sep="\t", row.names=FALSE, quote=FALSE)
         # utils::write.table(outputTable, file=filePath, sep="\t", row.names=FALSE, col.names=out_colnames, quote=FALSE)
     }
@@ -81,8 +67,6 @@ writeNormalizedDatasets <- function(nr, jobdir, include_pvals=FALSE, include_pai
         utils::write.table(file=hkFilePath, nr@houseKeepingVars, sep="\t", 
                            row.names=FALSE, col.names=nds@rawData[2,], quote=FALSE)
     }
-    
-    # browser()
     
     rawdata_name <- "submitted_rawdata.tsv"
     rawFilePath <- paste(jobdir, "/", rawdata_name, sep="")
