@@ -226,6 +226,16 @@ getFirstIndicesInVector <- function(targetVector, reverse=FALSE) {
 }
 
 
+getIndexList <- function(targetVector) {
+    
+    indexList <- list()
+    uniq_vals <- unique(targetVector)
+    for (val in uniq_vals) {
+        indexList[[toString(val)]] <- which(targetVector == val)
+    }
+    indexList
+}
+
 
 #' Removes rows from matrix where replicates aren't represented by at least
 #' one value

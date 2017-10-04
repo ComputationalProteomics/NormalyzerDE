@@ -287,26 +287,36 @@ setMethod("performReplicateBasedNormalizations", "NormalyzerResults",
             vsnMatrix <- matrix(, nrow=nrow(filterrawdata), ncol=0)
             fittedLRMatrix <- matrix(, nrow=nrow(filterrawdata), ncol=0)
             
-            for (sampleIndex in 1:length(firstIndices)) {
-
-                startColIndex <- firstIndices[sampleIndex]
-                endColIndex <- lastIndices[sampleIndex]
+            indexList <- getIndexList(sampleReplicateGroups)
+            colOrder <- c()
+            
+            for (repVal in names(indexList)) {
                 
-                rawDataWindow <- filterrawdata[, startColIndex:endColIndex]
+                repValNr <- strtoi(repVal)
+                cols <- indexList[[repVal]]
+                colOrder <- c(colOrder, cols)
                 
+                rawDataWindow <- filterrawdata[, cols]
                 LRWindow <- performGlobalRLRNormalization(rawDataWindow)
                 fittedLRMatrix <- cbind(fittedLRMatrix, LRWindow)
-                
+    
                 loessDataWindow <- performCyclicLoessNormalization(rawDataWindow)
                 limLoessMatrix <- cbind(limLoessMatrix, loessDataWindow)
-                
+    
                 vsnDataWindow <- performVSNNormalization(rawDataWindow)
                 vsnMatrix <- cbind(vsnMatrix, vsnDataWindow)
             }
+            
+            origPos <- c()
+            for (i in 1:length(colOrder)) {
+                origPos <- c(origPos, which(colOrder == i))
+            }
+            
+            nr@fittedLR <- fittedLRMatrix[, origPos]
+            nr@data2limloess <- limLoessMatrix[, origPos]
+            nr@data2vsnrep <- vsnMatrix[, origPos]
 
-            nr@fittedLR <- fittedLRMatrix
-            nr@data2limloess <- limLoessMatrix
-            nr@data2vsnrep <- vsnMatrix
+            browser()
             
             nr
         })
@@ -366,8 +376,8 @@ setMethod("getSlotNameList", "NormalyzerResults",
 #' @rdname getNormalizationMatrices
 setMethod("getNormalizationMatrices", "NormalyzerResults",
         function(nr) {
-            methodDataList <- list()
             
+            methodDataList <- list()
             listCounter <- 1
             for (i in 1:length(slotNames)) {
                 slotName <- slotNames[i]

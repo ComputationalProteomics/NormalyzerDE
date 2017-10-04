@@ -77,7 +77,11 @@ setMethod("calculateCV", "NormalizationEvaluationResults",
                   tempCVMatrix <- matrix(nrow=nrow(processedDataMatrix), ncol=length(levels(as.factor(unlist(sampleReplicateGroups)))), byrow=TRUE)
                   
                   for (i in 1:nrow(processedDataMatrix)) {
+                      
                       # tempCV <- rcmdrNumSummary(processedDataMatrix[i, ], statistics=c("cv"), groups=unlist(sampleReplicateGroups))
+                      # print(processedDataMatrix[i, ])
+                      # print(unlist(sampleReplicateGroups))
+                      
                       tempCV <- RcmdrMisc::numSummary(processedDataMatrix[i, ], statistics=c("cv"), groups=unlist(sampleReplicateGroups))
                       tempCVMatrix[i, ] <- tempCV$table
                   }
