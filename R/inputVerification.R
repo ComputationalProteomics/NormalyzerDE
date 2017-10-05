@@ -53,6 +53,7 @@ getVerifiedNormalyzerObject <- function(inputPath,
 #' @param inputPath Path to Normalyzer data.
 #' @return Table containing raw data from input file.
 loadRawDataFromFile <- function(inputPath) {
+    
     tryCatch(
         rawData <- as.matrix(utils::read.table(inputPath, 
                                                header=FALSE, 

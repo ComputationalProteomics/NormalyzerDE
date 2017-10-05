@@ -279,10 +279,6 @@ setMethod("performReplicateBasedNormalizations", "NormalyzerResults",
             sampleReplicateGroups <- nds@sampleReplicateGroups
             filterrawdata <- nds@filterrawdata
 
-            firstIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=FALSE)
-            lastIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=TRUE)
-            stopifnot(length(firstIndices) == length(lastIndices))
-
             limLoessMatrix <- matrix(, nrow=nrow(filterrawdata), ncol=0)
             vsnMatrix <- matrix(, nrow=nrow(filterrawdata), ncol=0)
             fittedLRMatrix <- matrix(, nrow=nrow(filterrawdata), ncol=0)
@@ -316,8 +312,6 @@ setMethod("performReplicateBasedNormalizations", "NormalyzerResults",
             nr@data2limloess <- limLoessMatrix[, origPos]
             nr@data2vsnrep <- vsnMatrix[, origPos]
 
-            browser()
-            
             nr
         })
 

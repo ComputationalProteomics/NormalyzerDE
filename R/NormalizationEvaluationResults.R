@@ -78,10 +78,6 @@ setMethod("calculateCV", "NormalizationEvaluationResults",
                   
                   for (i in 1:nrow(processedDataMatrix)) {
                       
-                      # tempCV <- rcmdrNumSummary(processedDataMatrix[i, ], statistics=c("cv"), groups=unlist(sampleReplicateGroups))
-                      # print(processedDataMatrix[i, ])
-                      # print(unlist(sampleReplicateGroups))
-                      
                       tempCV <- RcmdrMisc::numSummary(processedDataMatrix[i, ], statistics=c("cv"), groups=unlist(sampleReplicateGroups))
                       tempCVMatrix[i, ] <- tempCV$table
                   }
@@ -133,23 +129,21 @@ setMethod("calculateMAD", "NormalizationEvaluationResults",
               
               # Start
               avgmadmem <- matrix(nrow=rowCount, ncol=methodCount, byrow=TRUE)
-              firstIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=FALSE)
-              lastIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=TRUE)
+              indexList <- getIndexList(sampleReplicateGroups)
               
               for (methodIndex in 1:methodCount) {
                   
                   processedDataMatrix <- methodList[[methodIndex]]
-                  
+
                   medianAbsDevMem <- matrix(nrow=nrow(processedDataMatrix), 
                                             ncol=length(levels(as.factor(unlist(sampleReplicateGroups)))), 
                                             byrow=TRUE)
                   
-                  for (sampleIndex in 1:length(firstIndices)) {
-                      startColIndex <- firstIndices[sampleIndex]
-                      endColIndex <- lastIndices[sampleIndex]
-                      
-                      medianAbsDevMem[, sampleIndex] <- apply(processedDataMatrix[, startColIndex:endColIndex], 1, function(x) { stats::mad(x, na.rm=TRUE) })
-                      rowNonNACount <- apply(processedDataMatrix[, startColIndex:endColIndex], 1, function(x) { sum(!is.na(x)) }) - 1
+                  for (sampleIndex in 1:length(names(indexList))) {
+                      repVal <- names(indexList)[sampleIndex]
+                      cols <- indexList[[repVal]]
+                      medianAbsDevMem[, sampleIndex] <- apply(processedDataMatrix[, cols], 1, function(x) { stats::mad(x, na.rm=TRUE) })
+                      rowNonNACount <- apply(processedDataMatrix[, cols], 1, function(x) { sum(!is.na(x)) }) - 1
                   }
                   
                   temmadmatsum <- apply(medianAbsDevMem, 2, mean, na.rm=TRUE)
@@ -157,7 +151,6 @@ setMethod("calculateMAD", "NormalizationEvaluationResults",
               }
               
               avgmadmempdiff <- sapply(1:ncol(avgmadmem), function (sampleIndex) (mean(avgmadmem[, sampleIndex]) * 100) / mean(avgmadmem[, 1]))
-              
               ner@avgmadmem <- avgmadmem
               ner@avgmadmempdiff <- avgmadmempdiff
               
@@ -185,8 +178,7 @@ setMethod("calculateAvgVar", "NormalizationEvaluationResults",
               
               # Start
               avgvarmem <- matrix(nrow=rowCount, ncol=methodCount, byrow=TRUE)
-              firstIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=FALSE)
-              lastIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=TRUE)
+              indexList <- getIndexList(sampleReplicateGroups)
               
               for (methodIndex in 1:methodCount) {
                   
@@ -195,14 +187,13 @@ setMethod("calculateAvgVar", "NormalizationEvaluationResults",
                   
                   processedDataMatrix <- methodList[[methodIndex]]
                   
-                  for (sampleIndex in 1:length(firstIndices)) {
+                  for (sampleIndex in 1:length(names(indexList))) {
                       
-                      startColIndex <- firstIndices[sampleIndex]
-                      endColIndex <- lastIndices[sampleIndex]
+                      repVal <- names(indexList)[sampleIndex]
+                      cols <- indexList[[repVal]]
                       
-                      rowNonNACount <- apply(processedDataMatrix[, startColIndex:endColIndex], 1, function(x) { sum(!is.na(x)) }) - 1
-                      rowVariances <- rowNonNACount * apply(processedDataMatrix[, startColIndex:endColIndex], 1, function(x) { stats::var(x, na.rm=TRUE) })
-                      
+                      rowNonNACount <- apply(processedDataMatrix[, cols], 1, function(x) { sum(!is.na(x)) }) - 1
+                      rowVariances <- rowNonNACount * apply(processedDataMatrix[, cols], 1, function(x) { stats::var(x, na.rm=TRUE) })
                       replicateGroupVariance <- c(replicateGroupVariance, sum(rowVariances, na.rm=TRUE) / sum(rowNonNACount, na.rm=TRUE))
                   }
                   
@@ -235,9 +226,6 @@ setMethod("calculateSignificanceMeasures", "NormalizationEvaluationResults",
                    categorical_anova=FALSE, 
                    var_filter_frac=NULL) {
               
-              # browser()
-              
-              # Setup
               sampleReplicateGroups <- nr@nds@sampleReplicateGroups
               methodCount <- length(getUsedMethodNames(nr))
               methodList <- getNormalizationMatrices(nr)
@@ -248,19 +236,12 @@ setMethod("calculateSignificanceMeasures", "NormalizationEvaluationResults",
               krusValFDRs <- list()
               krusWalFDRsWithNA <- matrix(NA, ncol=methodCount, nrow=nrow(methodList[[1]]))
               
-              firstIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=FALSE)
-              lastIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=TRUE)
-
               for (methodIndex in 1:methodCount) {
-                  
-                  # print(paste("CV col length: ", length(ner@featureCVPerMethod[,methodIndex])))
                   
                   processedDataMatrix <- methodList[[methodIndex]]
                   naFilterContrast <- getRowNAFilterContrast(processedDataMatrix,
                                                              sampleReplicateGroups,
                                                              var_filter_frac=var_filter_frac)
-                  
-                  # print(paste("NA filter contrast length: ", length(naFilterContrast)))
                   
                   dataStoreReplicateNAFiltered <- processedDataMatrix[naFilterContrast,]
 
@@ -271,16 +252,10 @@ setMethod("calculateSignificanceMeasures", "NormalizationEvaluationResults",
                       testLevels <- sampleReplicateGroups
                   }
                   
-                  # browser()
-                  
-                  
-                  
                   anovaPValCol <- apply(dataStoreReplicateNAFiltered, 1, 
                                         function(sampleIndex) summary(stats::aov(unlist(sampleIndex)~testLevels))[[1]][[5]][1])
                   krusWalPValCol <- apply(dataStoreReplicateNAFiltered, 1, 
                                           function(sampleIndex) stats::kruskal.test(unlist(sampleIndex)~testLevels, na.action="na.exclude")[[3]][1])
-                  
-                  # print(paste("anovaPVals length: ", length(anovaPValCol)))
                   
                   anovaPValsWithNA[naFilterContrast, methodIndex] <- anovaPValCol
                   anovaFDRCol <- stats::p.adjust(anovaPValCol, method="BH")
@@ -342,8 +317,7 @@ setMethod("calculatePairwiseComparisons", "NormalizationEvaluationResults",
               methodCount <- length(getUsedMethodNames(nr))
               methodList <- getNormalizationMatrices(nr)
 
-              firstIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=FALSE)
-              lastIndices <- getFirstIndicesInVector(sampleReplicateGroups, reverse=TRUE)
+              indexList <- getIndexList(sampleReplicateGroups)
               
               pairwisePList <- list()
               pairwiseFDRList <- list()
@@ -370,16 +344,13 @@ setMethod("calculatePairwiseComparisons", "NormalizationEvaluationResults",
                   
                   for (comp in comparisons) {
                       
-                      sample1 <- strtoi(substr(comp, 1, 1))
-                      sample2 <- strtoi(substr(comp, 2, 2))
+                      sample1 <- substr(comp, 1, 1)
+                      sample2 <- substr(comp, 2, 2)
                       
-                      s1start <- firstIndices[sample1]
-                      s1end <- lastIndices[sample1]
-                      s2start <- firstIndices[sample2]
-                      s2end <- lastIndices[sample2]
+                      s1cols <- indexList[[sample1]]
+                      s2cols <- indexList[[sample2]]
                       
-                      
-                      welchPValCol <- apply(dataStoreReplicateNAFiltered, 1, function(row) do_t_test(row[s1start:s1end], row[s2start:s2end], default=NA))
+                      welchPValCol <- apply(dataStoreReplicateNAFiltered, 1, function(row) do_t_test(row[s1cols], row[s2cols], default=NA))
                       welchFDRCol <- stats::p.adjust(welchPValCol, method="BH")
 
                       pairwisePList[[comp]][naFilterContrast, methodIndex] <- welchPValCol

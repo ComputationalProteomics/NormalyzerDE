@@ -173,56 +173,13 @@ grid_arrange_shared_legend <- function(plots, ncol = length(list(...)), nrow = 1
                                              ncol = 2,
                                              widths = unit.c(unit(1, "npc") - lwidth, lwidth)),
                        top = textGrob("test", vjust = 1, gp = gpar(fontface = "bold", cex = 1.5)))
-    # grid.newpage()
-    
-    
-    
+
     grid.draw(combined)
     grid.text(plot_info, x=0.1, y=0.9, just="left")
-    
 }
 
 get_datestamp_string <- function() {
     format(Sys.time(), "%Y%m%d_%H%M%S")
-}
-
-
-
-#' Retrieve indices for first or last occurences in vector with replicated 
-#' elements
-#' 
-#' @param targetVector Input vector with replicated elements.
-#' @param reverse Look for first or last occurence for each element.
-#'  By default looks for the first occurence.
-#' @return Vector with indices for each first occurence.
-getFirstIndicesInVector <- function(targetVector, reverse=FALSE) {
-    
-    encounteredNumbers <- c()
-    firstIndices <- c()
-    
-    if (!reverse) {
-        startIndex <- 1
-        endIndex <- length(targetVector)
-    }
-    else {
-        startIndex <- length(targetVector)
-        endIndex <- 1
-    }
-    
-    for (i in startIndex:endIndex) {
-        targetValue <- targetVector[i]
-        if (!is.element(targetValue, encounteredNumbers)) {
-            encounteredNumbers <- append(encounteredNumbers, targetValue)
-            if (!reverse) {
-                firstIndices <- append(firstIndices, i)
-            }
-            else {
-                firstIndices <- append(i, firstIndices)
-            }
-        }
-    }
-    
-    firstIndices
 }
 
 
@@ -260,23 +217,18 @@ filterLinesWithEmptySamples <- function(dataMatrix, replicateHeader) {
 #' @return Contrast vector
 getAllSamplesHaveValuesContrast <- function(dataMatrix, replicateHeader, minCount=1) {
     
-    firstIndices <- getFirstIndicesInVector(replicateHeader)
-    lastIndices <- getFirstIndicesInVector(replicateHeader, reverse=TRUE)
     replicatesHaveData <- rep(TRUE, nrow(dataMatrix))
+    indexList <- getIndexList(replicateHeader)
     
-    for (i in 1:length(firstIndices)) {
+    for (sampleIndex in 1:length(names(indexList))) {
         
-        firstIndex <- firstIndices[i]
-        lastIndex <- lastIndices[i]
+        repVal <- names(indexList)[sampleIndex]
+        cols <- indexList[[repVal]]
         
-        nbrNAperReplicate <- rowSums(is.na(dataMatrix[, firstIndex:lastIndex, drop=FALSE]))
-        nbrReplicates <- lastIndex - firstIndex + 1
-        
-        
+        nbrNAperReplicate <- rowSums(is.na(dataMatrix[, cols, drop=FALSE]))
+        nbrReplicates <- length(cols)
         nbrNonNA <- nbrReplicates - nbrNAperReplicate
         replicatesHaveData <- (nbrNonNA >= minCount & replicatesHaveData)
-        
-        # replicatesHaveData <- (nbrNAperReplicate < nbrReplicates & replicatesHaveData)
     }
     
     replicatesHaveData
@@ -328,8 +280,6 @@ getRowNAFilterContrast <- function(dataMatrix,
 getVarFilteredContrast <- function(logMatrix, var_filter_frac) {
   
     feature_vars <- apply(logMatrix, 1, function(x) {var(x, na.rm=TRUE)})
-    
-    # passingVarFilters <- rep(TRUE, length(cv_col))
     frac_thres <- sort(feature_vars)[(length(feature_vars) - 1)  * var_filter_frac + 1]
     feature_vars > frac_thres
 }
