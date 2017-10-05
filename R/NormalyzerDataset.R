@@ -24,6 +24,7 @@ NormalyzerDataset <- setClass("NormalyzerDataset",
 
                                   filterrawdata = "matrix",
                                   normfinderFilterRawData = "matrix",
+                                  normfinderAnnot = "matrix",
                                   sampleReplicateGroups = "numeric",
                                   
                                   colsum = "numeric",
@@ -235,7 +236,11 @@ setMethod("setupNormfinderFilterRawData", "NormalyzerDataset",
               filteredSampleHeader <- nds@sampleReplicateGroups
               rowCountVals <- rowSums(!is.na(nds@filterrawdata))
               totalNbrSamples <- 1 * ncol(nds@filterrawdata)
-              nds@normfinderFilterRawData <- nds@filterrawdata[rowCountVals >= totalNbrSamples,,drop=FALSE]
+              
+              passingRows <- which(rowCountVals >= totalNbrSamples)
+              
+              nds@normfinderAnnot <- nds@annotationValues[passingRows,,drop=FALSE]
+              nds@normfinderFilterRawData <- nds@filterrawdata[passingRows,,drop=FALSE]
 
               nds
           }

@@ -188,8 +188,6 @@ setMethod("initializeResultsObject", "NormalyzerResults",
 setMethod("performNormalizations", "NormalyzerResults",
           function(nr, forceAll=FALSE, rtNorm=FALSE, rtWindow=0.1, runNormfinder=TRUE) {
               
-              runNormfinder = FALSE
-              
               nds <- nr@nds
               nr <- basicMetricNormalizations(nr)
               rtColPresent <- length(nds@retentionTimes) > 0
@@ -253,7 +251,7 @@ setMethod("calculateHKdataForNormObj", "NormalyzerResults",
             nds <- nr@nds
             filterrawdata <- nds@filterrawdata
 
-            HKVarTemp <- as.matrix(nr@houseKeepingVars[, which(as.numeric(nds@inputHeaderValues) > 0)])
+            HKVarTemp <- as.matrix(nr@houseKeepingVars[, which(as.numeric(nds@sampleReplicateGroups) > 0)])
             class(HKVarTemp) <- "numeric"
             colmedianctr <- apply(HKVarTemp, 2, FUN="mean")
               

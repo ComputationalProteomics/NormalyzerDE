@@ -63,8 +63,9 @@ writeNormalizedDatasets <- function(nr, jobdir, include_pvals=FALSE, include_pai
     if (!all(is.na(nr@houseKeepingVars))) {
         hkVarsName <- "housekeeping-variables.tsv"
         hkFilePath <- paste(jobdir, "/", hkVarsName, sep="")
+        
         utils::write.table(file=hkFilePath, nr@houseKeepingVars, sep="\t", 
-                           row.names=FALSE, col.names=nds@rawData[2,], quote=FALSE)
+                           row.names=FALSE, quote=FALSE)
     }
     
     rawdata_name <- "submitted_rawdata.tsv"

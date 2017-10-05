@@ -29,21 +29,11 @@
 normfinder <- function(nds) {
 
     filterrawdata1 <- nds@normfinderFilterRawData
-    getEDdata <- nds@inputHeaderValues
+    getEDdata <- nds@sampleReplicateGroups
     
     gr <- getEDdata[which(as.numeric(getEDdata) > 0)]
+    filnavn <- filterrawdata1
     
-    # print(head(filterrawdata1))
-    # print(getEDdata)
-    # print(gr)
-    
-    # stop("")
-    
-    filnavn <- filterrawdata1[, which(as.numeric(filterrawdata1[1,]) > 0)]
-    filnavn <- as.matrix(filnavn[-(1:2), ])
-    filnavn <- apply(filnavn, 2, function(x) as.numeric(gsub(",", ".", x)))
-    class(filnavn) <- "numeric"
-
     k <- nrow(filnavn)
     gr <- unlist(gr)
     da <- as.matrix(filnavn)
@@ -130,6 +120,8 @@ normfinder <- function(nds) {
     m1j <- apply(dif, 2, mean)
     m1 <- mean(m1i)
     
+    # browser()
+    
     #intergroup variation
     for (i in 1:k) {
         for (j in 1:m) {
@@ -157,7 +149,6 @@ normfinder <- function(nds) {
     
     # We now look for the best combination of the gene with the smallest 
     # value of the quality measure and one more gene
-    Hkg <- NULL
     G1 <- 1
     G2 <- 1
     var <- 1000
@@ -184,9 +175,10 @@ normfinder <- function(nds) {
         }
     }
     
-    Hkg <- c(G1, G2)
+    hkg_indices <- c(G1, G2)
+    housekeeping_full_rows <- cbind(nds@normfinderAnnot[hkg_indices, ], filterrawdata1[hkg_indices, ])
     
-    return(filterrawdata1[(Hkg + 2), ])
+    return(housekeeping_full_rows)
 }
 
 

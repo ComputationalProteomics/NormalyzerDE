@@ -40,7 +40,8 @@ normalyzer <- function(inputPath,
                        var_filter_frac=NULL,
                        plot_rows=3,
                        plot_cols=4,
-                       source_files=FALSE) {
+                       source_files=FALSE,
+                       zeroToNA=FALSE) {
     
     print('start')
     startTime <- Sys.time()
@@ -90,7 +91,8 @@ normalyzer <- function(inputPath,
                                            designMatrix,
                                            threshold=sampleAbundThres,
                                            omitSamples=omitLowAbundSamples,
-                                           requireReplicates=requireReplicates)
+                                           requireReplicates=requireReplicates,
+                                           zeroToNA=zeroToNA)
     jobDir <- setupJobDir(jobName, outputDir)
     
     print("Normalizing data...")

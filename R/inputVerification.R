@@ -12,11 +12,19 @@ getVerifiedNormalyzerObject <- function(inputPath,
                                         omitSamples=FALSE,
                                         requireReplicates=TRUE,
                                         sampleCol="sample",
-                                        groupCol="group") {
+                                        groupCol="group",
+                                        zeroToNA=FALSE) {
 
     rawData <- loadRawDataFromFile(inputPath)
     
+    # browser()
+    
+    if (zeroToNA) {
+        rawData[rawData == "0"] <- NA
+    }
+    
     if (is.null(designMatrixPath)) {
+        print("No design matrix providing, inferring it from legacy header")
         designMatrix <- legacyNormalyzerToDesign(inputPath)
         rawData <- rawData[-1,]
     }
@@ -102,6 +110,17 @@ verifyValidNumbers <- function(rawDataOnly, groups) {
         stop(error_string)
     }
     
+    zeroRegexPattern <- c("^0$")
+    zeroMatches <- grep(zeroRegexPattern, rawDataOnly, perl=TRUE)
+    if (length(zeroMatches) > 0) {
+        error_string <- paste(
+            "Encountered zeroes in data. Must be replaced with NA before processing.",
+            "This can be done automatically setting the zeroToNA-flag option to TRUE.",
+            sep="\n"
+        )
+        stop(error_string)
+    }
+
     print("Input data checked. All fields are valid.")
 }
 
@@ -134,6 +153,16 @@ verifyDesignMatrix <- function(dataMatrix, designMatrix, sampleCol="sample") {
             "Expected number of columns:",
             length(designColnames),
             "Are all columns in the design matrix present in the data matrix?"
+        )
+        stop(errorString)
+    }
+    
+    if (length(unique(designColnames)) != length(designColnames)) {
+        errorString <- paste(
+            "Sample labels must be unique, found: ",
+            length(unique(designColnames)),
+            "unique, expected:",
+            length(designColnames)
         )
         stop(errorString)
     }
