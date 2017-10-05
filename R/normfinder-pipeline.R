@@ -26,8 +26,9 @@
 # TERMS AND CONDITIONS OF USE FOR NORMFINDER CAN BE FOUND IN THIS LINK: 
 # http://moma.dk/normfinder-software
 
-normfinder <- function(nds) {
+normfinder <- function(nr) {
 
+    nds <- nr@nds
     filterrawdata1 <- nds@normfinderFilterRawData
     getEDdata <- nds@sampleReplicateGroups
     
@@ -176,9 +177,17 @@ normfinder <- function(nds) {
     }
     
     hkg_indices <- c(G1, G2)
-    housekeeping_full_rows <- cbind(nds@normfinderAnnot[hkg_indices, ], filterrawdata1[hkg_indices, ])
     
-    return(housekeeping_full_rows)
+    house_keeping_vals <- filterrawdata1[hkg_indices, ]
+    class(house_keeping_vals) <- "numeric"
+    housekeeping_full_rows <- cbind(nds@normfinderAnnot[hkg_indices, ], filterrawdata1[hkg_indices, ])
+
+    nr@houseKeepingVars <- housekeeping_full_rows
+    nr@houseKeepingVarsVals <- house_keeping_vals
+    # nr@houseKeepingVarsValues <- nds@normfinder
+        
+    return(nr)
+    # return(housekeeping_full_rows)
 }
 
 

@@ -8,7 +8,7 @@ slotNames <- c("data2log2",
                "data2GI",
                "data2med",
                "data2mean",
-               "data2ctrlog",
+               "data2normfinder",
                "data2quantile",
                "data2rtMed",
                "data2rtMean",
@@ -48,7 +48,7 @@ outputNames <- c("Log2",
 #' @slot data2GI GI-normalized data
 #' @slot data2med Median normalized data.
 #' @slot data2mean Mean normalized data.
-#' @slot data2ctrlog CTR-log normalized data 
+#' @slot data2normfinder CTR-log normalized data 
 #' @slot data2quantile Quantile normalized data.
 #' @slot data2ctr CTR normalized data
 #' @slot data2mad MAD normalized data
@@ -63,6 +63,7 @@ NormalyzerResults <- setClass("NormalyzerResults",
                                   furtherNormalizationMinThreshold="numeric",
                                   
                                   houseKeepingVars="matrix",
+                                  houseKeepingVarsVals="matrix",
                                   
                                   data2log2 = "matrix",
                                   data2limloess = "matrix",
@@ -74,7 +75,7 @@ NormalyzerResults <- setClass("NormalyzerResults",
                                   data2GI = "matrix",
                                   data2med = "matrix",
                                   data2mean = "matrix",
-                                  data2ctrlog = "matrix",
+                                  data2normfinder = "matrix",
                                   data2quantile = "matrix",
                                   
                                   data2rtMed = "matrix",
@@ -195,7 +196,8 @@ setMethod("performNormalizations", "NormalyzerResults",
               if (nrow(nds@normfinderFilterRawData) < nr@normfinderMaxThreshold && runNormfinder || forceAll) {
 
                   if (!nds@singleReplicateRun) {
-                      nr@houseKeepingVars <- normfinder(nds)
+                      nr <- normfinder(nr)
+                      # nr@houseKeepingVars <- normfinder(nds)
                       nr <- calculateHKdataForNormObj(nr)
                   }
                   else {
@@ -251,18 +253,21 @@ setMethod("calculateHKdataForNormObj", "NormalyzerResults",
             nds <- nr@nds
             filterrawdata <- nds@filterrawdata
 
-            HKVarTemp <- as.matrix(nr@houseKeepingVars[, which(as.numeric(nds@sampleReplicateGroups) > 0)])
-            class(HKVarTemp) <- "numeric"
-            colmedianctr <- apply(HKVarTemp, 2, FUN="mean")
+            houseKeepVals <- nr@houseKeepingVarsVals
+            # HKVarTemp <- as.matrix(nr@houseKeepingVars[, which(as.numeric(nds@sampleReplicateGroups) > 0)])
+            # class(HKVarTemp) <- "numeric"
+            colmedianctr <- apply(houseKeepVals, 2, FUN="mean")
               
             for(i in 1:nrow(filterrawdata)) {
                 nr@data2ctr[i,] <- unlist(sapply(1:ncol(filterrawdata), 
                                                  function(zd) { (filterrawdata[i, zd] / colmedianctr[zd]) * mean(colmedianctr) }))
             }
               
-            nr@data2ctrlog <- log2(nr@data2ctr)
-            colnames(nr@data2ctrlog) <- colnames(nds@filterrawdata)
-              
+            nr@data2normfinder <- log2(nr@data2ctr)
+            colnames(nr@data2normfinder) <- colnames(nds@filterrawdata)
+            
+            # browser()
+            
             nr
         })
 
@@ -334,7 +339,7 @@ setMethod("getUsedMethodNames", "NormalyzerResults",
         function(nr) {
               
             usedMethodNames <- c()
-              
+            
             for (i in 1:length(slotNames)) {
                 slotName <- slotNames[i]
                 fieldValue <- methods::slot(nr, slotName)
