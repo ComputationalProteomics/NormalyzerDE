@@ -433,7 +433,7 @@ plotMA <- function(nr, currentLayout, pageno) {
             ggplot2::geom_point(color="darkgray", size=0.7) + 
             ggplot2::labs(x=("Replicate group mean"), 
                           y=("Replicate-1 Fold Change"),
-                          title=(paste(tempcolname[1], methodnames[i]))) + 
+                          title=methodnames[i]) + 
             ggplot2::stat_smooth(method="loess", se=FALSE, colour="red") + 
             ggplot2::geom_abline(intercept=0, slope=0, size=0.3)
     } 
@@ -495,7 +495,7 @@ plotQQ <- function(nr, currentLayout, pageno) {
         tempcolname <- colnames(datastore)
         #qqnorm(datastore[,1],main=paste(tempcolname[1],methodnames[i]),xlab="",ylab="")
         qqlist[[i]] <- ggplot2::qplot(sample=datastore[, 1], stat="qq") + 
-            ggplot2::labs(x=(""), y=(""), title=(paste(tempcolname[1], methodnames[i])))
+            ggplot2::labs(x="", y="", title=methodnames[i])
     }
     
     grid::grid.newpage()
