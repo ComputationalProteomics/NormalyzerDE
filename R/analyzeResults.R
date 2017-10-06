@@ -45,6 +45,7 @@ calculateCorrelations <- function(nr, ner) {
         un <- unique(filterED)
         
         for (uq in 1:length(un)) {
+            
             dt <- as.matrix(datastore[, which(filterED == un[uq])])
             class(dt) <- "numeric"
             percor <- stats::cor(dt, use="pairwise.complete.obs", method="pearson")

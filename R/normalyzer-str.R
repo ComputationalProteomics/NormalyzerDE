@@ -42,7 +42,8 @@ normalyzer <- function(inputPath,
                        plot_cols=4,
                        source_files=FALSE,
                        zeroToNA=FALSE,
-                       inputFormat="default") {
+                       inputFormat="default",
+                       skipAnalysis=FALSE) {
     
     print('start')
     startTime <- Sys.time()
@@ -105,13 +106,18 @@ normalyzer <- function(inputPath,
                                            retentionTimeWindow=retentionTimeWindow)
     print("Finished Normalization")
     
-    print("Analyzing results...")
-    normalyzerResultsObject <- analyzeNormalizations(normalyzerResultsObject, 
-                                                     jobName, 
-                                                     comparisons=pairwise_comparisons,
-                                                     categorical_anova=categorical_anova,
-                                                     var_filter_frac=var_filter_frac)
-    print("Finished analysing results")
+    if (!skipAnalysis) {
+        print("Analyzing results...")
+        normalyzerResultsObject <- analyzeNormalizations(normalyzerResultsObject, 
+                                                         jobName, 
+                                                         comparisons=pairwise_comparisons,
+                                                         categorical_anova=categorical_anova,
+                                                         var_filter_frac=var_filter_frac)
+        print("Finished analysing results")
+    }
+    else {
+        "skipAnalysis flag set so no analysis performed"
+    }
 
     print("Writing matrices to file")
     writeNormalizedDatasets(normalyzerResultsObject, 
@@ -121,15 +127,18 @@ normalyzer <- function(inputPath,
                             include_cv_col=include_cv_col,
                             include_anova_p=include_anova_p)
 
-    print("Generating plots...")
-    generatePlots(normalyzerResultsObject, jobDir, plot_rows=plot_rows, plot_cols=plot_cols)
+    if (!skipAnalysis) {
+        print("Generating plots...")
+        generatePlots(normalyzerResultsObject, jobDir, plot_rows=plot_rows, plot_cols=plot_cols)
+    }
+    else {
+        print("skipAnalysis flag set so no analysis performed - skipping evaluation plots")
+    }
     
     print(paste("Done! Results are stored in ", jobDir))
     
     endTime <- Sys.time()
     print(difftime(endTime, startTime))
-    # elapsedTime <- elapsedSecondsBetweenSystimes(startTime, endTime)
-    # print(paste("Processing took", elapsedTime, "seconds"))
 }
 
 
