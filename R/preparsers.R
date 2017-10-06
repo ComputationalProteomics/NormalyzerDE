@@ -14,26 +14,28 @@ legacyNormalyzerToDesign <- function(legacyMatrixFp, sep="\t") {
     sampleColumns <- fullRawData[2, allAnnotGroups > 0]
     
     designDf <- data.frame(sample=sampleColumns, group=allAnnotGroups[allAnnotGroups > 0], stringsAsFactors=F)
-    
-    return(designDf)
+    designDf
 }
 
 
 proteoisToNormalyzer <- function(proteiosFp, sep="\t") {
     
-    values_df <- read.csv(proteiosFp, skip=9, sep=sep, header=F, na.strings="null")
+    values_df <- read.csv(proteiosFp, skip=9, sep=sep, header=F, na.strings="null", stringsAsFactors=FALSE, comment.char="", quote="")
     
-    head_lines <- readLines(file(proteiosFp, open="r"), 9)
+    con <- file(proteiosFp, open="r")
+    head_lines <- readLines(con, 9)
+    close(con)
     
     sample_line_nbr <- 6
     annot_line_nbr <- 9
     
     sample_fields <- strsplit(trimws(gsub("Sample name", "", head_lines[[sample_line_nbr]])), "\t")[[1]]
     annot_fields <- strsplit(trimws(head_lines[[annot_line_nbr]]), "\t")[[1]]
-    
-    colnames(values_df) <- c(annot_fields, sample_fields)
 
-    return(values_df)    
+    header_names <- c(annot_fields, sample_fields)
+    values_df <- rbind(header_names, values_df)
+    full_m <- as.matrix(values_df)
+    full_m
 }
 
 maxQuantToNormalyzer <- function(maxQuantFp, sep="\t") {

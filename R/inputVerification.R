@@ -13,15 +13,20 @@ getVerifiedNormalyzerObject <- function(inputPath,
                                         requireReplicates=TRUE,
                                         sampleCol="sample",
                                         groupCol="group",
-                                        zeroToNA=FALSE) {
+                                        zeroToNA=FALSE,
+                                        inputFormat="default") {
 
-    rawData <- loadRawDataFromFile(inputPath)
     
-    # browser()
-    
-    if (zeroToNA) {
-        rawData[rawData == "0"] <- NA
+    if (inputFormat == "default") {
+        rawData <- loadRawDataFromFile(inputPath)
+    } else if (inputFormat == "proteios") {
+        rawData <- proteoisToNormalyzer(inputPath)
+    } else if (inputFormat == "maxquant") {
+        rawData <- maxQuantToNormalyzer(inputPath)
+    } else {
+        stop(paste("Unknown inputFormat:", inputFormat))
     }
+    
     
     if (is.null(designMatrixPath)) {
         print("No design matrix providing, inferring it from legacy header")
@@ -30,6 +35,10 @@ getVerifiedNormalyzerObject <- function(inputPath,
     }
     else {
         designMatrix <- read.table(designMatrixPath, sep="\t", stringsAsFactors=F, header=T)
+    }
+    
+    if (zeroToNA) {
+        rawData[rawData == "0"] <- NA
     }
     
     groups <- as.numeric(as.factor(designMatrix[, groupCol]))
@@ -42,6 +51,8 @@ getVerifiedNormalyzerObject <- function(inputPath,
     
     repSortedRawData <- getReplicateSortedData(dataMatrix, groups)
     processedRawData <- preprocessData(repSortedRawData)
+    
+    # processedRawData <- preprocessData(dataMatrix)
 
     lowCountSampleFiltered <- getLowCountSampleFiltered(processedRawData, 
                                                         groups,
@@ -70,7 +81,7 @@ loadRawDataFromFile <- function(inputPath) {
                                                quote="",
                                                comment.char="")),
         error=function(e) {
-            print(paste0("Provided input file (", inputPath, ") not found:"))
+            print(paste0("Error encountered for input file:", inputPath, ", error: ", e))
             stop("Please provide a valid input file.")
         },
         
@@ -91,13 +102,15 @@ loadRawDataFromFile <- function(inputPath) {
 verifyValidNumbers <- function(rawDataOnly, groups) {
     
     # Fields expected to contain numbers in decimal or scientific notation, or containing NA or null
-    validPatterns <- c("\\d+(\\.\\d+)?", "NA", "null", "\\d+\\.\\d+[eE]([\\+\\-])?\\d+$")
+    validPatterns <- c("\\d+(\\.\\d+)?", "NA", "null", "\\d+(\\.\\d+)?[eE]([\\+\\-])?\\d+$")
     
     regexPattern <- sprintf("^(%s)$", paste(validPatterns, collapse="|"))
     matches <- grep(regexPattern, rawDataOnly, perl=TRUE, ignore.case=TRUE)
     nonMatches <- na.omit(rawDataOnly[-matches])
     
-    if (length(nonMatches > 0)) {
+    # browser()
+    
+    if (length(nonMatches) > 0) {
         error_string <- paste(
             "Invalid values encountered in input data.",
             "Only valid data is numeric and NA- or na-fields",

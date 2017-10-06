@@ -92,8 +92,7 @@ setMethod("detectSingleReplicate", "NormalyzerDataset",
                   singleReplicateRun <- TRUE
                   print(paste("Non replicated samples in dataset:",
                               paste(nonReplicatedSamples, collapse=" "),
-                              "performing limited single-replicate run",
-                              sep="\n"))
+                              "performing limited single-replicate run"))
               }
               else {
                   singleReplicateRun <- FALSE
