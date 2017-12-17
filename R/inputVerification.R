@@ -21,10 +21,13 @@ getVerifiedNormalyzerObject <- function(inputPath,
         rawData <- loadRawDataFromFile(inputPath)
     } else if (inputFormat == "proteios") {
         rawData <- proteoisToNormalyzer(inputPath)
-    } else if (inputFormat == "maxquant") {
-        rawData <- maxQuantToNormalyzer(inputPath)
+    } else if (inputFormat == "maxquantpep") {
+        rawData <- maxQuantToNormalyzer(inputPath, protLevel=FALSE)
+    } else if (inputFormat == "maxquantprot") {
+        rawData <- maxQuantToNormalyzer(inputPath, protLevel=TRUE)
     } else {
-        stop(paste("Unknown inputFormat:", inputFormat))
+        valids <- c("default", "proteios", "maxquantpep", "maxquantprot")
+        stop(paste("Unknown inputFormat:", inputFormat, "valids are:", paste(valids, collapse=", ")))
     }
     
     

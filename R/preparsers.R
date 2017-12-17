@@ -38,20 +38,29 @@ proteoisToNormalyzer <- function(proteiosFp, sep="\t") {
     full_m
 }
 
-maxQuantToNormalyzer <- function(maxQuantFp, sep="\t") {
+maxQuantToNormalyzer <- function(maxQuantFp, protLevel, sep="\t") {
     
     pep_intensity_pattern <- "Intensity\\."
-    annot_cols <- c("Sequence", "Mass", "Proteins", "Leading.razor.protein", "PEP", "Charges")
     
-    full_df <- read.csv(maxQuantFp, sep=sep)
+    if (!protLevel) {
+        annot_cols <- c("Sequence", "Mass", "Proteins", "Leading.razor.protein", "PEP", "Charges")
+    }
+    else {
+        annot_cols <- c("Protein.IDs", "Majority.protein.IDs", "Fasta.headers")
+    }
+    
+    full_df <- read.csv(maxQuantFp, sep=sep, stringsAsFactors=FALSE, comment.char="", quote="", header=T)
+    cnames <- colnames(full_df)
     intensity_cols <- cnames[which(grepl(pep_intensity_pattern, cnames))]
     
-    all_cols <- c(annot_cols, intensity_cols)
-    all_cols_trimmed <- gsub("Intensity.", "", all_cols)
+    header_names <- c(annot_cols, intensity_cols)
+    header_names_trimmed <- gsub("Intensity.", "", header_names)
 
-    target_df <- full_df[, c(annot_cols, intensity_cols)]
-    colnames(target_df) <- all_cols_trimmed
+    values_df <- full_df[, c(annot_cols, intensity_cols)]
+    # colnames(target_df) <- all_cols_trimmed
+    raw_df <- rbind(header_names_trimmed, values_df)
+    raw_m <- as.matrix(raw_df)
     
-    return(target_df)
+    return(raw_m)
 }
 
