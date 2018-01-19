@@ -19,6 +19,9 @@ NormalyzerDataset <- setClass("NormalyzerDataset",
                                   jobName = "character",
                                   rawData = "matrix",
                                   
+                                  sampleNameCol = "character",
+                                  groupNameCol = "character",
+                                  
                                   designMatrix = "data.frame",
                                   sampleNames = "character",
 
@@ -38,7 +41,9 @@ NormalyzerDataset <- setClass("NormalyzerDataset",
                               ),
                               prototype=prototype(jobName=NULL, 
                                                   rawData=NULL,
-                                                  designMatrix=NULL))
+                                                  designMatrix=NULL,
+                                                  sampleNameCol=NULL,
+                                                  groupNameCol=NULL))
 
 #' Initialize values for dataset
 #'
@@ -52,8 +57,8 @@ setGeneric(name="setupValues", function(nds) standardGeneric("setupValues"))
 setMethod("setupValues", "NormalyzerDataset",
           function(nds) {
               
-              nds@sampleReplicateGroups <- nds@designMatrix[, "group"]
-              nds@sampleNames <- nds@designMatrix[, "sample"]
+              nds@sampleReplicateGroups <- as.factor(nds@designMatrix[, nds@groupNameCol])
+              nds@sampleNames <- nds@designMatrix[, nds@sampleNameCol]
 
               singleReplicateRun <- detectSingleReplicate(nds)
               singletonSamplePresent <- detectSingletonSample(nds)

@@ -42,6 +42,8 @@ normalyzer <- function(inputPath,
                        plot_cols=4,
                        source_files=FALSE,
                        zeroToNA=FALSE,
+                       sampleColName="sample",
+                       groupColName="group",
                        inputFormat="default",
                        skipAnalysis=FALSE) {
     
@@ -95,7 +97,9 @@ normalyzer <- function(inputPath,
                                            omitSamples=omitLowAbundSamples,
                                            requireReplicates=requireReplicates,
                                            zeroToNA=zeroToNA,
-                                           inputFormat=inputFormat)
+                                           inputFormat=inputFormat,
+                                           sampleCol=sampleColName,
+                                           groupCol=groupColName)
     jobDir <- setupJobDir(jobName, outputDir)
     
     print("Normalizing data...")
