@@ -1,6 +1,6 @@
 Package: Normalyzer
 Title: Evaluation of normalization methods
-Version: 1.1.2
+Version: 1.2.0
 Author: Aakash Chawade, Jakob Willforss
 Maintainer: Jakob Willforss <jakob.willforss@immun.lth.se>
 Description: Evaluation of normalization methods applied to proteomic data.

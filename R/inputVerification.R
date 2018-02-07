@@ -16,7 +16,6 @@ getVerifiedNormalyzerObject <- function(inputPath,
                                         zeroToNA=FALSE,
                                         inputFormat="default") {
 
-    
     if (inputFormat == "default") {
         rawData <- loadRawDataFromFile(inputPath)
     } else if (inputFormat == "proteios") {
@@ -29,7 +28,6 @@ getVerifiedNormalyzerObject <- function(inputPath,
         valids <- c("default", "proteios", "maxquantpep", "maxquantprot")
         stop(paste("Unknown inputFormat:", inputFormat, "valids are:", paste(valids, collapse=", ")))
     }
-    
     
     if (is.null(designMatrixPath)) {
         print("No design matrix providing, inferring it from legacy header")
