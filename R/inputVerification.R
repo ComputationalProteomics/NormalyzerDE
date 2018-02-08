@@ -153,7 +153,7 @@ verifyDesignMatrix <- function(fullMatrix, designMatrix, sampleCol="sample") {
         errorString <- paste(
             "Not all columns present in design matrix are present in data matrix",
             "The following element was not found:",
-            paste(setdiff(designColnames, colnames(dataMatrix)), collapse=" ")
+            paste(setdiff(designColnames, colnames(fullMatrix)), collapse=" ")
         )
         stop(errorString)
     }
