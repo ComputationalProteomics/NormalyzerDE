@@ -226,7 +226,7 @@ setMethod("performNormalizations", "NormalyzerResults",
                       nr <- performRTNormalizations(nr, rtWindow)
                   }
                   else {
-                      print("No RT column specified (-1 in first header). Skipping RT normalization.")
+                      print("No RT column specified (column named 'RT'). Skipping RT normalization.")
                   }
               }
 
