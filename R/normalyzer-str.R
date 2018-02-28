@@ -41,6 +41,7 @@ normalyzer <- function(inputPath,
                        plot_rows=3,
                        plot_cols=4,
                        source_files=FALSE,
+                       source_base=NULL,
                        zeroToNA=FALSE,
                        sampleColName="sample",
                        groupColName="group",
@@ -68,22 +69,23 @@ normalyzer <- function(inputPath,
     
     
     if (source_files) {
-        source("generatePlots.R")
-        source("normfinder-pipeline.R")
-        source("normMethods.R")
-        source("higherOrderNormMethods.R")
-        source("printMeta.R")
-        source("printPlots.R")
+        
+        source(paste(source_base, "generatePlots.R", sep="/"))
+        source(paste(source_base, "normfinder-pipeline.R", sep="/"))
+        source(paste(source_base, "normMethods.R", sep="/"))
+        source(paste(source_base, "higherOrderNormMethods.R", sep="/"))
+        source(paste(source_base, "printMeta.R", sep="/"))
+        source(paste(source_base, "printPlots.R", sep="/"))
 
-        source("NormalyzerDataset.R")
-        source("NormalizationEvaluationResults.R")
-        source("NormalyzerResults.R")
+        source(paste(source_base, "NormalyzerDataset.R", sep="/"))
+        source(paste(source_base, "NormalizationEvaluationResults.R", sep="/"))
+        source(paste(source_base, "NormalyzerResults.R", sep="/"))
 
-        source("utils.R")
-        source("inputVerification.R")
-        source("analyzeResults.R")
-        source("preparsers.R")
-        source("outputUtils.R")
+        source(paste(source_base, "utils.R", sep="/"))
+        source(paste(source_base, "inputVerification.R", sep="/"))
+        source(paste(source_base, "analyzeResults.R", sep="/"))
+        source(paste(source_base, "preparsers.R", sep="/"))
+        source(paste(source_base, "outputUtils.R", sep="/"))
     }
 
     
