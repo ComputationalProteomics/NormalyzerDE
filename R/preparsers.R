@@ -18,7 +18,7 @@ legacyNormalyzerToDesign <- function(legacyMatrixFp, sep="\t") {
 }
 
 
-proteoisToNormalyzer <- function(proteiosFp, sep="\t") {
+proteoisToNormalyzerLegacy <- function(proteiosFp, sep="\t") {
     
     values_df <- read.csv(proteiosFp, skip=9, sep=sep, header=F, na.strings="null", stringsAsFactors=FALSE, comment.char="", quote="")
     
@@ -34,6 +34,17 @@ proteoisToNormalyzer <- function(proteiosFp, sep="\t") {
 
     header_names <- c(annot_fields, sample_fields)
     values_df <- rbind(header_names, values_df)
+    full_m <- as.matrix(values_df)
+    full_m
+}
+
+proteiosToNormalyzer <- function(proteiosFp, sep="\t") {
+    values_df <- as.matrix(
+        utils::read.table(inputPath, 
+        header=FALSE, 
+        sep="\t", 
+        stringsAsFactors=FALSE,
+        quote=""))
     full_m <- as.matrix(values_df)
     full_m
 }
