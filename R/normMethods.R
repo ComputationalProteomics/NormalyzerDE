@@ -2,11 +2,14 @@
 #' 
 #' @param nds Normalyzer dataset object.
 #' @param currentjob Name of the ongoing processing run.
-#' @param jobdir Path to the output directory
+#' @param forceAll Force all methods to run despite not qualifying for thresholds.
+#' @param normalizeRetentionTime Perform retention time based normalization methods.
+#' @param retentionTimeWindow Default window size for retention times.
+#' @param runNormFinder Run the Normfinder normalization method.
 #' @return Returns Normalyzer results object with performed analyzes assigned
 #'  as attributes
 #' @export
-normMethods <- function(nds, currentjob, forceAll=FALSE, normalizeRetentionTime=FALSE, retentionTimeWindow=0.1, runNormfinder=TRUE) {
+normMethods <- function(nds, currentjob, forceAll=FALSE, normalizeRetentionTime=FALSE, retentionTimeWindow=1, runNormfinder=TRUE) {
     
     nr <- generateNormalyzerResultsObject(nds)
     nr <- performNormalizations(nr, forceAll=forceAll, rtNorm=normalizeRetentionTime, rtWindow=retentionTimeWindow, runNormfinder=runNormfinder)

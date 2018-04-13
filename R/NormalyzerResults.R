@@ -102,6 +102,8 @@ setGeneric(name="initializeResultsObject",
 #' @param forceAll Ignore dataset size limits and run all normalizations
 #'  (only meant for testing purposes)
 #' @param rtNorm Perform retention time based normalizations
+#' @param rtWindow Retention time window size.
+#' @param runNormfinder Perform Normfinder normalization.
 #' @return None
 #' @rdname performNormalizations
 #' @export
@@ -137,8 +139,9 @@ setGeneric(name="performReplicateBasedNormalizations",
 
 #' Perform retention time normalizations
 #'
-#' @param nr Normalyzer results object.
-#' @param stepSize Normalyzer results object.
+#' @param nr Results object.
+#' @param stepSize Size of normalization windows in minutes retention time.
+#' @param overlapWindows Number of overlapping normalization windows.
 #' @return None
 #' @rdname performRTNormalizations
 #' @export

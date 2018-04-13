@@ -5,6 +5,7 @@
 #' @param plotname Name of current plot.
 #' @param pageno Current page number.
 #' @param jobname Name of ongoing job.
+#' @param currentLayout Custom viewport layout.
 #' @return None
 printMeta <- function(plotname, pageno, jobname, currentLayout) {
 

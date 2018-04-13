@@ -3,6 +3,16 @@
 #' 
 #' @param inputPath Path to file with raw input to Normalyzer.
 #' @param jobName Name of ongoing run.
+#' @param designMatrixPath File path to design matrix.
+#' @param threshold Minimum number of features.
+#' @param omitSamples Automatically omit invalid samples from analysis.
+#' @param requireReplicates Require there to be at least to samples per
+#'        condition
+#' @param sampleCol Name of the column containing samples in design matrix.
+#' @param groupCol Name of column containing conditions in design matrix.
+#' @param zeroToNA Automatically convert zero values to NAs.
+#' @param inputFormat Type of input matrix: "default", "proteios", 
+#'        "maxquantpep", "maxquantprot"
 #' @return Normalyzer data object representing verified input data.
 #' @export
 getVerifiedNormalyzerObject <- function(inputPath, 
@@ -99,7 +109,8 @@ loadRawDataFromFile <- function(inputPath) {
 
 #' Verify that input fields conform to the expected formats
 #' 
-#' @param rawData Dataframe with Normalyzer input data.
+#' @param rawDataOnly Dataframe with input data.
+#' @param groups Condition levels for comparisons.
 #' @return Parsed rawdata where 0 values are replaced with NA
 verifyValidNumbers <- function(rawDataOnly, groups) {
     
@@ -141,8 +152,9 @@ verifyValidNumbers <- function(rawDataOnly, groups) {
 
 #' Verify that design matrix setup matches the data matrix
 #' 
-#' @param rawData Dataframe with Normalyzer input data
-#' @param designMatrix Dataframe with design setup for Normalyzer
+#' @param fullMatrix Dataframe with input data.
+#' @param designMatrix Dataframe with design setup.
+#' @param sampleCol Column in design matrix containing sample IDs.
 #' 
 #' @return None
 verifyDesignMatrix <- function(fullMatrix, designMatrix, sampleCol="sample") {
@@ -187,7 +199,8 @@ verifyDesignMatrix <- function(fullMatrix, designMatrix, sampleCol="sample") {
 
 #' Get dataframe with raw data column sorted on replicates
 #' 
-#' @param rawData Dataframe with unparsed Normalyzer input data.
+#' @param rawDataOnly Dataframe with unparsed input data matrix.
+#' @param groups Vector containing condition levels.
 #' @return rawData sorted on replicate
 getReplicateSortedData <- function(rawDataOnly, groups) {
 
@@ -204,7 +217,7 @@ getReplicateSortedData <- function(rawDataOnly, groups) {
 
 #' Replace 0 values with NA in input data
 #' 
-#' @param rawData Dataframe with Normalyzer input data.
+#' @param dataMatrix Matrix with raw data.
 #' @return Parsed rawdata where 0 values are replaced with NA
 preprocessData <- function(dataMatrix) {
 
@@ -215,9 +228,11 @@ preprocessData <- function(dataMatrix) {
 
 #' Verify that samples contain at least a lowest number of values
 #' 
-#' @param dfWithNAs Dataframe with processed Normalyzer input data.
-#'        Zero values are expected to have been replaced with NAs.
+#' @param dataMatrix Dataframe with processed input data.
+#' @param groups Vector containing condition levels.
 #' @param threshold Lowest number of allowed values in a column.
+#' @param stopIfTooFew Abort run if lower than threshold number of values in
+#'        column
 #' @return None
 getLowCountSampleFiltered <- function(dataMatrix, groups, threshold=15, stopIfTooFew=TRUE) {
     
@@ -276,7 +291,8 @@ getLowCountSampleFiltered <- function(dataMatrix, groups, threshold=15, stopIfTo
 
 #' Check whether all samples have replicates
 #' 
-#' @param processedDf Prepared Normalyzer dataframe.
+#' @param dataMatrix Prepared matrix containing expression data.
+#' @param groups Vector containing condition levels
 #' @param requireReplicates By default stops processing if not all samples
 #'  have replicates
 #' @return None
@@ -310,7 +326,10 @@ validateSampleReplication <- function(dataMatrix, groups, requireReplicates=TRUE
 
 #' Check whether more than one sample is present
 #' 
-#' @param processedDf Prepared Normalyzer dataframe.
+#' @param dataMatrix Prepared dataframe.
+#' @param groups Vector containing condition levels
+#' @param requireReplicates By default stops processing if not all samples
+#'  have replicates
 #' @return None
 verifyMultipleSamplesPresent <- function(dataMatrix, groups, requireReplicates=TRUE) {
     
@@ -357,9 +376,12 @@ verifyMultipleSamplesPresent <- function(dataMatrix, groups, requireReplicates=T
 
 #' Setup Normalyzer dataset from given raw data
 #' 
-#' @param rawData Dataframe with unparsed Normalyzer input data.
+#' @param fullRawMatrix Dataframe with unparsed input data.
 #' @param jobName Name of ongoing run.
-#' @return Normalyzer data object representing loaded data.
+#' @param designMatrix Dataframe containing condition matrix.
+#' @param sampleNameCol Name of column in design matrix containing sample names.
+#' @param groupNameCol Name of column in design matrix contaning conditions.
+#' @return Data object representing loaded data.
 generateNormalyzerDataset <- function(fullRawMatrix, jobName, designMatrix, sampleNameCol, groupNameCol) {
     
     rawData <- fullRawMatrix[-1,]

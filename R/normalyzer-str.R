@@ -10,6 +10,7 @@
 #' @param inputPath CSV delimited input file containing raw counts and 
 #'  replicate information in header.
 #' @param jobName Give the current run a name.
+#' @param designMatrix Path to file containing design matrix.
 #' @param outputDir Specify an output directory for generated files.
 #'  Defaults to current working directory.
 #' @param forceAllMethods Debugging function. Run all normalizations even if
@@ -19,6 +20,24 @@
 #'  Will otherwise stop with error message if such sample is encountered.
 #' @param sampleAbundThres Threshold for omitting low-abundant
 #'  samples. Is by default set to 15.
+#' @param requireReplicates Require multiple samples per condition to pass input validation.
+#' @param normalizeRetentionTime Perform normalizations over retention time.
+#' @param retentionTimeWindow Retention time normalization window size.
+#' @param include_pvals Include p-values in output (is this used?)
+#' @param pairwise_comparisons Vector of pairwise sample comparisons.
+#' @param include_cv_col Include CV in output matrices.
+#' @param categorical_anova Perform categorical ANOVA (alternatively numerical).
+#' @param include_anova_p Include ANOVA p-value in output.
+#' @param var_filter_frac Perform variance filtering of highly variant features.
+#' @param plot_rows Number of plot-rows in output documentation.
+#' @param plot_cols Number of plot-columns in output documentation.
+#' @param source_files Source code files (for development purposes only).
+#' @param source_base Base to source code files from (for development purposes only).
+#' @param zeroToNA Convert zero values to NA.
+#' @param sampleColName Column name in design matrix containing sample IDs.
+#' @param groupColName Column name in design matrix containing condition IDs.
+#' @param inputFormat Type of input format.
+#' @param skipAnalysis Only perform normalization steps.
 #' @return None
 #' @export
 #' @import MASS limma preprocessCore methods RcmdrMisc

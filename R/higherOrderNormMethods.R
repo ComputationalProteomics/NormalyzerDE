@@ -5,9 +5,10 @@
 #' @param retentionTimes Vector of retention times corresponding to rawMatrix
 #' @param normMethod The normalization method to apply to the time windows
 #' @param stepSizeMinutes Size of windows to be normalized
+#' @param windowMinCount Minimum number of values for window to not be expanded.
 #' @param offset Whether time window should shifted half step size
 #' @return Normalized matrix
-getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSizeMinutes, windowMinCount=50, offset=0) {
+getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSizeMinutes, windowMinCount=100, offset=0) {
     
     # targetSliceIndices - Indices in raw matrix for rows falling within retention time interval
     # normalizationSliceIndices - Rows used for normalization, can include wider interval than target slice
@@ -139,32 +140,20 @@ getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes)
 #' @param retentionTimes Vector of retention times corresponding to rawMatrix
 #' @param normMethod The normalization method to apply to the time windows
 #' @param stepSizeMinutes Size of windows to be normalized
-#' @param offset Whether time window should shifted half step size
+#' @param frame_shifts Number of frame shifts.
+#' @param win_size_min Minimum number of features within window.
+#' @param merge_method Layer merging approach. Mean or median.
 #' @return Normalized matrix
 getSmoothedRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSizeMinutes, 
-                                          frame_shifts=2, win_size_min=50, merge_method="mean", 
-                                          verbose=FALSE, debug_matrix_header=NULL, debug_matrix_rownames=NULL,
-                                          debug_id=NULL, debug_samples=NULL) {
+                                          frame_shifts=2, win_size_min=50, merge_method="mean") {
     
     matrices <- list()
 
-    if (verbose) {
-        print(paste("win_size_min", win_size_min, "frame_shifts", frame_shifts, "merge_method", merge_method))
-    }
-    
     for (i in 1:frame_shifts) {
         
         frac_shift <- (i - 1) * 1 / frame_shifts
         matrices[[i]] <- getRTNormalizedMatrix(rawMatrix, retentionTimes, normMethod, 
                                                stepSizeMinutes, windowMinCount=win_size_min, offset=frac_shift)
-        
-        current_matrix <- matrices[[i]]
-
-        rownames(current_matrix) <- debug_matrix_rownames
-        colnames(current_matrix) <- debug_matrix_header[2:length(debug_matrix_header)]
-        
-        # debug_sample_pattern <- paste0("dilA_[", paste(debug_samples, collapse=""), "]_")
-        # print(current_matrix[debug_id,which(grepl(debug_sample_pattern, colnames(current_matrix))), drop=F])
     }
 
     # mean, median, anonymous...

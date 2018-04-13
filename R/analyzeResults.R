@@ -2,6 +2,9 @@
 #' 
 #' @param nr Normalyzer results object with calculated results.
 #' @param name Name of the ongoing processing run.
+#' @param comparisons Target sample contrasts to run.
+#' @param categorical_anova ANOVA can be categorical or numerical.
+#' @param var_filter_frac Perform variance filtering before tests.
 #'
 #' @return Normalyzer results with attached evaluation results object.
 #' @export
@@ -70,6 +73,9 @@ calculateCorrelations <- function(nr, ner) {
 #' Setup normalization evaluation object 
 #' 
 #' @param nr Normalyzer results object to be evaluated
+#' @param comparisons Group comparisons to make
+#' @param categorical_anova If comparison should be made numerically or groupwise
+#' @param var_filter_frac Filtering high-variance samples
 #' @return Normalization evaluation object
 setupNormalizationEvaluationObject <- function(nr, 
                                                comparisons=NULL, 

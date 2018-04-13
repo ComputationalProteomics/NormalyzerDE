@@ -52,9 +52,10 @@ NormalizationEvaluationResults <- setClass("NormalizationEvaluationResults",
 #' Calculate coefficient of variation (relative standard deviation)
 #' Stores percentage variation compared to 
 #'
-#' @param nr Normalyzer results object.
+#' @param nr NormalyzerDE results object.
+#' @param ner NormalyzerDE evaluation object.
 #' @return None
-#' @rdname Calculate calculateCV
+#' @rdname calculateCV
 setGeneric(name="calculateCV", 
            function(ner, nr) standardGeneric("calculateCV"))
 
@@ -112,6 +113,7 @@ setMethod("calculateCV", "NormalizationEvaluationResults",
 #' Calculate median absolute deviation measures
 #'
 #' @param nr Normalyzer results object.
+#' @param ner NormalyzerDE evaluation object.
 #' @return None
 #' @rdname calculateMAD
 setGeneric(name="calculateMAD", 
@@ -160,7 +162,8 @@ setMethod("calculateMAD", "NormalizationEvaluationResults",
 
 #' Calculate average variation measures
 #'
-#' @param nr Normalyzer results object.
+#' @param ner NormalyzerDE evaluation object.
+#' @param nr NormalyzerDE results object.
 #' @return None
 #' @rdname calculateAvgVar
 setGeneric(name="calculateAvgVar", 
@@ -214,7 +217,10 @@ setMethod("calculateAvgVar", "NormalizationEvaluationResults",
 #' Calculate significance measures (p-value and FDR-value) for ANOVA and
 #' Kruskal-Wallis
 #'
+#' @param ner NormalyzerDE evaluation object.
 #' @param nr Normalyzer results object.
+#' @param categorical_anova Categorical groupwise comparison instead of numeric
+#' @param var_filter_frac Variance filter high variance data
 #' @return None
 #' @rdname calculateSignificanceMeasures
 setGeneric(name="calculateSignificanceMeasures", 
@@ -302,7 +308,9 @@ setMethod("calculateSignificanceMeasures", "NormalizationEvaluationResults",
 
 #' Calculate Welch t-test comparisons between target samples
 #'
-#' @param nr Normalyzer results object.
+#' @param ner Results evaluation object.
+#' @param nr Results object.
+#' @param comparisons Vector containing statistical contrasts.
 #' @return None
 #' @rdname calculatePairwiseComparisons
 setGeneric(name="calculatePairwiseComparisons", 
@@ -363,10 +371,3 @@ setMethod("calculatePairwiseComparisons", "NormalizationEvaluationResults",
               ner
           }
 )
-
-
-
-
-
-
-

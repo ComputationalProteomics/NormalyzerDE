@@ -2,6 +2,8 @@
 #' 
 #' @param nr Normalyzer results object.
 #' @param jobdir Path to output directory for run.
+#' @param plot_rows Number of plot rows.
+#' @param plot_cols Number of plot columns.
 #' @return None
 #' @export
 generatePlots <- function(nr, jobdir, plot_rows=3, plot_cols=4) {

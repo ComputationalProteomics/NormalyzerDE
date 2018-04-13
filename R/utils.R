@@ -214,6 +214,7 @@ filterLinesWithEmptySamples <- function(dataMatrix, replicateHeader) {
 #' @param dataMatrix Matrix with expression values for entities in replicate 
 #'  samples.
 #' @param replicateHeader Header showing how samples in matrix are replicated.
+#' @param minCount Minimum number of non-NA required for sample.
 #' @return Contrast vector
 getAllSamplesHaveValuesContrast <- function(dataMatrix, replicateHeader, minCount=1) {
     
@@ -257,6 +258,8 @@ getLowNALinesContrast <- function(dataMatrix, replicateHeader) {
 #' @param dataMatrix Matrix with expression values for entities in replicate 
 #'  samples.
 #' @param replicateHeader Header showing how samples in matrix are replicated.
+#' @param var_filter_frac Variance filtering fraction.
+#' @param minCount Minimum number of required values present in samples.
 #' @return Contrast vector
 getRowNAFilterContrast <- function(dataMatrix, 
                                    replicateHeader, 
