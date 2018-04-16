@@ -1,15 +1,8 @@
+library(NormalyzerDE)
+# source("../R/inputVerification.R")
+
 a <- 2
 b <- 3
-
-#print(getwd())
-#path <- base::file.path(devtools::inst(name="normalyzer"), "testdata/data.csv")
-# path <- system.file("testdata", package="normalyzer")
-# print(path)
-df <- read.csv("data.csv")
-#df <- read.csv("../../inst/testdata/data.csv")
-print(df)
-#df <- read.csv(system.file("testdata/data.tsv", ..., package="normalyzer"))
-#print(df)
 
 test_that("true is true", {
     expect_equal(TRUE, TRUE)
@@ -19,3 +12,9 @@ test_that("two isn't three", {
     expect_equal(2 != 3, TRUE)
     expect_equal(a != b, TRUE)
 })
+
+all_NA_one_replicate_set_m <- as.matrix(read.table("data/corner_cases/all_NA_one_replicate_set.tsv", header=FALSE, sep="\t", stringsAsFactors=FALSE, quote="", comment.char=""))
+test_that("Raw loading for standard file works", {
+    expect_equal(all_NA_one_replicate_set_m, loadRawDataFromFile("data/corner_cases/all_NA_one_replicate_set.tsv"))
+})
+
