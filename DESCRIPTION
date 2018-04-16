@@ -10,7 +10,6 @@ Imports:
     limma,
     MASS,
     ape,
-    raster,
     car,
     gridExtra,
     ggplot2,

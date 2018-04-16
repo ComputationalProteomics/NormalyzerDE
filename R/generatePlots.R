@@ -389,7 +389,7 @@ plotCVvsIntensity <- function(nr, currentLayout, pageno) {
         }
     }
     
-    tout <- matrix(1:((currentLayout$nrow-2)*(currentLayout$ncol-2)), ncol=(currentLayout$ncol-2), byrow=T)
+    tout <- matrix(1:((currentLayout$nrow-2)*(currentLayout$ncol-2)), ncol=(currentLayout$ncol-2), byrow=TRUE)
     graphics::layout(tout)
     graphics::par(mar=c(4, 4, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
     
@@ -460,7 +460,7 @@ plotScatter <- function(nr, currentLayout, pageno) {
     methodlist <- getNormalizationMatrices(nr)
     currentjob <- nds@jobName
     
-    tout <- matrix(1:((currentLayout$nrow-2)*(currentLayout$ncol-2)), ncol=(currentLayout$ncol-2), byrow=T)
+    tout <- matrix(1:((currentLayout$nrow-2)*(currentLayout$ncol-2)), ncol=(currentLayout$ncol-2), byrow=TRUE)
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(3, 2, 3, 2), xpd=NA)
     
@@ -521,7 +521,7 @@ plotBoxPlot <- function(nr, currentLayout, pageno) {
     filterED <- nds@sampleReplicateGroups
     filterrawdata <- nds@filterrawdata
     
-    tout <- matrix(1:((currentLayout$nrow-2)*(currentLayout$ncol-2)), ncol=(currentLayout$ncol-2), byrow=T)
+    tout <- matrix(1:((currentLayout$nrow-2)*(currentLayout$ncol-2)), ncol=(currentLayout$ncol-2), byrow=TRUE)
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(3, 2, 3, 2), xpd=NA)
     mindata <- 1000
@@ -570,7 +570,7 @@ plotRLE <- function(nr, currentLayout, pageno) {
     currentjob <- nds@jobName
     filterED <- nds@sampleReplicateGroups
     
-    tout <- matrix(1:((currentLayout$nrow-2)*(currentLayout$ncol-2)), ncol=(currentLayout$ncol-2), byrow=T)
+    tout <- matrix(1:((currentLayout$nrow-2)*(currentLayout$ncol-2)), ncol=(currentLayout$ncol-2), byrow=TRUE)
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(3, 2, 3, 2), xpd=NA)
     
@@ -598,7 +598,7 @@ plotDensity <- function(nr, currentLayout, pageno) {
     methodlist <- getNormalizationMatrices(nr)
     currentjob <- nds@jobName
     
-    tout <- matrix(1:((currentLayout$nrow-2)*(currentLayout$ncol-2)), ncol=(currentLayout$ncol-2), byrow=T)
+    tout <- matrix(1:((currentLayout$nrow-2)*(currentLayout$ncol-2)), ncol=(currentLayout$ncol-2), byrow=TRUE)
     graphics::layout(tout)
     graphics::par(mar=c(3, 2, 3, 1), oma=c(3, 2, 3, 2), xpd=NA)
     
@@ -637,7 +637,7 @@ plotMDS <- function(nr, currentLayout, pageno) {
     currentjob <- nds@jobName
     filterED <- nds@sampleReplicateGroups
     
-    tout <- matrix(1:((currentLayout$nrow-2)*(currentLayout$ncol-2)), ncol=(currentLayout$ncol-2), byrow=T)
+    tout <- matrix(1:((currentLayout$nrow-2)*(currentLayout$ncol-2)), ncol=(currentLayout$ncol-2), byrow=TRUE)
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(3, 2, 3, 2), xpd=NA)
     
@@ -759,7 +759,7 @@ plotDendrograms <- function(nr, currentLayout, pageno) {
     print(length(methodnames))
     print(length(filterED))
     
-    tout <- matrix(1:((currentLayout$nrow-2)*(currentLayout$ncol-2)), ncol=(currentLayout$ncol-2), byrow=T)
+    tout <- matrix(1:((currentLayout$nrow-2)*(currentLayout$ncol-2)), ncol=(currentLayout$ncol-2), byrow=TRUE)
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
     

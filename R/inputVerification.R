@@ -45,7 +45,7 @@ getVerifiedNormalyzerObject <- function(inputPath,
         rawData <- rawData[-1,]
     }
     else {
-        designMatrix <- utils::read.table(designMatrixPath, sep="\t", stringsAsFactors=F, header=T)
+        designMatrix <- utils::read.table(designMatrixPath, sep="\t", stringsAsFactors=FALSE, header=TRUE)
     }
     
     if (zeroToNA) {

@@ -121,7 +121,7 @@ getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes)
     widenedSlice <- sortedRts[newStartRtIndex:newEndRtIndex]
 
     if (length(widenedSlice) != minimumDatapoints) {
-        browser()
+        stop(paste("Widened slice should equal to minimum number of data points"))
     }
     
     stopifnot(length(widenedSlice) == minimumDatapoints)
@@ -137,7 +137,7 @@ getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes)
 #' Then return the mean of these matrices.
 #' 
 #' @param rawMatrix Target matrix to be normalized
-#' @param retentionTimes Vector of retention times corresponding to rawMatrix
+#' @param retentionTimes Vector of retention times corresponding to rawMatrigrid::x
 #' @param normMethod The normalization method to apply to the time windows
 #' @param stepSizeMinutes Size of windows to be normalized
 #' @param frame_shifts Number of frame shifts.

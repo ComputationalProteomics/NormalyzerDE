@@ -1,6 +1,4 @@
 
-
-
 legacyNormalyzerToDesign <- function(legacyMatrixFp, sep="\t") {
 
     fullRawData <- as.matrix(
@@ -13,14 +11,14 @@ legacyNormalyzerToDesign <- function(legacyMatrixFp, sep="\t") {
     
     sampleColumns <- fullRawData[2, allAnnotGroups > 0]
     
-    designDf <- data.frame(sample=sampleColumns, group=allAnnotGroups[allAnnotGroups > 0], stringsAsFactors=F)
+    designDf <- data.frame(sample=sampleColumns, group=allAnnotGroups[allAnnotGroups > 0], stringsAsFactors=FALSE)
     designDf
 }
 
 
 proteiosToNormalyzerLegacy <- function(proteiosFp, sep="\t") {
     
-    values_df <- utils::read.csv(proteiosFp, skip=9, sep=sep, header=F, na.strings="null", stringsAsFactors=FALSE, comment.char="", quote="")
+    values_df <- utils::read.csv(proteiosFp, skip=9, sep=sep, header=FALSE, na.strings="null", stringsAsFactors=FALSE, comment.char="", quote="")
     
     con <- file(proteiosFp, open="r")
     head_lines <- readLines(con, 9)
@@ -40,7 +38,7 @@ proteiosToNormalyzerLegacy <- function(proteiosFp, sep="\t") {
 
 proteiosToNormalyzer <- function(proteiosFp, sep="\t") {
     values_df <- as.matrix(
-        utils::read.table(inputPath, 
+        utils::read.table(proteiosFp, 
         header=FALSE, 
         sep="\t", 
         stringsAsFactors=FALSE,
@@ -60,7 +58,7 @@ maxQuantToNormalyzer <- function(maxQuantFp, protLevel, sep="\t") {
         annot_cols <- c("Protein.IDs", "Majority.protein.IDs", "Fasta.headers")
     }
     
-    full_df <- utils::read.csv(maxQuantFp, sep=sep, stringsAsFactors=FALSE, comment.char="", quote="", header=T)
+    full_df <- utils::read.csv(maxQuantFp, sep=sep, stringsAsFactors=FALSE, comment.char="", quote="", header=TRUE)
     cnames <- colnames(full_df)
     intensity_cols <- cnames[which(grepl(pep_intensity_pattern, cnames))]
     
