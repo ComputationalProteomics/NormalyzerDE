@@ -140,7 +140,7 @@ setGeneric(name="performReplicateBasedNormalizations",
 #' Perform retention time normalizations
 #'
 #' @param nr Results object.
-#' @param stepSize Size of normalization windows in minutes retention time.
+#' @param stepSizeMinutes Size of normalization windows in minutes retention time.
 #' @param overlapWindows Number of overlapping normalization windows.
 #' @return None
 #' @rdname performRTNormalizations

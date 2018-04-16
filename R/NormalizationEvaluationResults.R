@@ -335,7 +335,7 @@ setMethod("calculatePairwiseComparisons", "NormalizationEvaluationResults",
               }
 
               do_t_test <- function(c1_vals, c2_vals, default=NA) {
-                  if (length(na.omit(c1_vals)) > 1 && length(na.omit(c2_vals)) > 1) {
+                  if (length(stats::na.omit(c1_vals)) > 1 && length(stats::na.omit(c2_vals)) > 1) {
                       tryCatch(stats::t.test(c1_vals, c2_vals)[[3]],
                                error=function(x) NA)
                   }

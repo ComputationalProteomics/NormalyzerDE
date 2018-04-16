@@ -18,9 +18,9 @@ legacyNormalyzerToDesign <- function(legacyMatrixFp, sep="\t") {
 }
 
 
-proteoisToNormalyzerLegacy <- function(proteiosFp, sep="\t") {
+proteiosToNormalyzerLegacy <- function(proteiosFp, sep="\t") {
     
-    values_df <- read.csv(proteiosFp, skip=9, sep=sep, header=F, na.strings="null", stringsAsFactors=FALSE, comment.char="", quote="")
+    values_df <- utils::read.csv(proteiosFp, skip=9, sep=sep, header=F, na.strings="null", stringsAsFactors=FALSE, comment.char="", quote="")
     
     con <- file(proteiosFp, open="r")
     head_lines <- readLines(con, 9)
@@ -60,7 +60,7 @@ maxQuantToNormalyzer <- function(maxQuantFp, protLevel, sep="\t") {
         annot_cols <- c("Protein.IDs", "Majority.protein.IDs", "Fasta.headers")
     }
     
-    full_df <- read.csv(maxQuantFp, sep=sep, stringsAsFactors=FALSE, comment.char="", quote="", header=T)
+    full_df <- utils::read.csv(maxQuantFp, sep=sep, stringsAsFactors=FALSE, comment.char="", quote="", header=T)
     cnames <- colnames(full_df)
     intensity_cols <- cnames[which(grepl(pep_intensity_pattern, cnames))]
     

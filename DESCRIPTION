@@ -16,8 +16,6 @@ Imports:
     ggplot2,
     methods,
     Biobase,
-    limma,
-    MASS,
     RcmdrMisc,
 Suggests:
     knitr,

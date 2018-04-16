@@ -17,8 +17,8 @@ getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSiz
     
     sortedRT <- sort(retentionTimes)
     
-    startVal <- min(na.omit(retentionTimes))
-    endVal <- max(na.omit(retentionTimes))
+    startVal <- min(stats::na.omit(retentionTimes))
+    endVal <- max(stats::na.omit(retentionTimes))
     rowNumbers <- c()
 
     if (offset) {
@@ -85,8 +85,8 @@ getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes)
     currentRTSlice <- sortedRts[sortedRts >= rtStart & sortedRts < rtEnd] 
     
     # Get single element if multiple with exactly same RT
-    startIndex <- tail(which(sortedRts == min(currentRTSlice)), 1)
-    endIndex <- tail(which(sortedRts == max(currentRTSlice)), 1)
+    startIndex <- utils::tail(which(sortedRts == min(currentRTSlice)), 1)
+    endIndex <- utils::tail(which(sortedRts == max(currentRTSlice)), 1)
 
     currentCount <- length(currentRTSlice)
     remainingCount <- minimumDatapoints - currentCount
@@ -158,10 +158,10 @@ getSmoothedRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod,
 
     # mean, median, anonymous...
     if (merge_method == "mean") {
-        combinedMatrices <- getCombinedMatrix(matrices, mean)
+        combinedMatrices <- getCombinedMatrix(matrices, stats::mean)
     }
     else if (merge_method == "median") {
-        combinedMatrices <- getCombinedMatrix(matrices, median)
+        combinedMatrices <- getCombinedMatrix(matrices, stats::median)
     }
     else {
         stop(paste("Unknown merge method:", merge_method))

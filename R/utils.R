@@ -113,7 +113,7 @@ getNonReplicatedFromDf <- function(normalyzerDf) {
 #
 multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL, single_legend=FALSE) {
     
-    library(grid)
+    # library(grid)
     
     # Make a list from the ... arguments and plotlist
     plots <- c(list(...), plotlist)
@@ -134,15 +134,15 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL, single_lege
     } 
     else {
         # Set up the page
-        grid.newpage()
-        pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+        grid::grid.newpage()
+        grid::pushViewport(grid::viewport(layout = grid.layout(nrow(layout), ncol(layout))))
         
         # Make each plot, in the correct location
         for (i in 1:numPlots) {
             # Get the i,j matrix positions of the regions that contain this subplot
             matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
             
-            print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+            print(plots[[i]], vp = grid::viewport(layout.pos.row = matchidx$row,
                                             layout.pos.col = matchidx$col))
         }
     }
@@ -151,12 +151,12 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL, single_lege
 
 grid_arrange_shared_legend <- function(plots, ncol = length(list(...)), nrow = 1, position = c("bottom", "right"), plot_info="[no extra info]") {
     
-    library(grid)
-    library(gridExtra)
+    # library(grid)
+    # library(gridExtra)
     
     # plots <- list(...)
     position <- match.arg(position)
-    g <- ggplotGrob(plots[[1]] + theme(legend.position = position))$grobs
+    g <- ggplot2::ggplotGrob(plots[[1]] + theme(legend.position = position))$grobs
     legend <- g[[which(sapply(g, function(x) x$name) == "guide-box")]]
     lheight <- sum(legend$height)
     lwidth <- sum(legend$width)
@@ -164,18 +164,18 @@ grid_arrange_shared_legend <- function(plots, ncol = length(list(...)), nrow = 1
     gl <- c(gl, ncol = ncol, nrow = nrow)
     
     combined <- switch(position,
-                       "bottom" = arrangeGrob(do.call(arrangeGrob, gl),
+                       "bottom" = gridExtra::arrangeGrob(do.call(gridExtra::arrangeGrob, gl),
                                               legend,
                                               ncol = 1,
-                                              heights = unit.c(unit(1, "npc") - lheight, lheight)),
-                       "right" = arrangeGrob(do.call(arrangeGrob, gl),
+                                              heights = grid::unit.c(unit(1, "npc") - lheight, lheight)),
+                       "right" = gridExtra::arrangeGrob(do.call(gridExtra::arrangeGrob, gl),
                                              legend,
                                              ncol = 2,
-                                             widths = unit.c(unit(1, "npc") - lwidth, lwidth)),
-                       top = textGrob("test", vjust = 1, gp = gpar(fontface = "bold", cex = 1.5)))
+                                             widths = grid::unit.c(unit(1, "npc") - lwidth, lwidth)),
+                       top = grid::textGrob("test", vjust = 1, gp = grid::gpar(fontface = "bold", cex = 1.5)))
 
-    grid.draw(combined)
-    grid.text(plot_info, x=0.1, y=0.9, just="left")
+    grid::grid.draw(combined)
+    grid::grid.text(plot_info, x=0.1, y=0.9, just="left")
 }
 
 get_datestamp_string <- function() {
@@ -282,7 +282,7 @@ getRowNAFilterContrast <- function(dataMatrix,
 
 getVarFilteredContrast <- function(logMatrix, var_filter_frac) {
   
-    feature_vars <- apply(logMatrix, 1, function(x) {var(x, na.rm=TRUE)})
+    feature_vars <- apply(logMatrix, 1, function(x) {stats::var(x, na.rm=TRUE)})
     frac_thres <- sort(feature_vars)[(length(feature_vars) - 1)  * var_filter_frac + 1]
     feature_vars > frac_thres
 }

@@ -29,7 +29,7 @@ getVerifiedNormalyzerObject <- function(inputPath,
     if (inputFormat == "default") {
         rawData <- loadRawDataFromFile(inputPath)
     } else if (inputFormat == "proteios") {
-        rawData <- proteoisToNormalyzer(inputPath)
+        rawData <- proteiosToNormalyzer(inputPath)
     } else if (inputFormat == "maxquantpep") {
         rawData <- maxQuantToNormalyzer(inputPath, protLevel=FALSE)
     } else if (inputFormat == "maxquantprot") {
@@ -45,7 +45,7 @@ getVerifiedNormalyzerObject <- function(inputPath,
         rawData <- rawData[-1,]
     }
     else {
-        designMatrix <- read.table(designMatrixPath, sep="\t", stringsAsFactors=F, header=T)
+        designMatrix <- utils::read.table(designMatrixPath, sep="\t", stringsAsFactors=F, header=T)
     }
     
     if (zeroToNA) {
@@ -119,7 +119,7 @@ verifyValidNumbers <- function(rawDataOnly, groups) {
     
     regexPattern <- sprintf("^(%s)$", paste(validPatterns, collapse="|"))
     matches <- grep(regexPattern, rawDataOnly, perl=TRUE, ignore.case=TRUE)
-    nonMatches <- na.omit(rawDataOnly[-matches])
+    nonMatches <- stats::na.omit(rawDataOnly[-matches])
     
     # browser()
     
@@ -242,7 +242,7 @@ getLowCountSampleFiltered <- function(dataMatrix, groups, threshold=15, stopIfTo
     for (i in 1:length(sampleIndices)) {
         
         sampleIndex <- sampleIndices[i]
-        numberOfValues[i] <- length(na.omit(dataMatrix[, sampleIndex]))
+        numberOfValues[i] <- length(stats::na.omit(dataMatrix[, sampleIndex]))
     }
     
     notPassingThreshold <- which(numberOfValues < threshold)
