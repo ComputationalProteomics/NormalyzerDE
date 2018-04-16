@@ -135,7 +135,7 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL, single_lege
     else {
         # Set up the page
         grid::grid.newpage()
-        grid::pushViewport(grid::viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+        grid::pushViewport(grid::viewport(layout = grid::grid.layout(nrow(layout), ncol(layout))))
         
         # Make each plot, in the correct location
         for (i in 1:numPlots) {
@@ -156,22 +156,22 @@ grid_arrange_shared_legend <- function(plots, ncol = length(list(...)), nrow = 1
     
     # plots <- list(...)
     position <- match.arg(position)
-    g <- ggplot2::ggplotGrob(plots[[1]] + theme(legend.position = position))$grobs
+    g <- ggplot2::ggplotGrob(plots[[1]] + ggplot2::theme(legend.position = position))$grobs
     legend <- g[[which(sapply(g, function(x) x$name) == "guide-box")]]
     lheight <- sum(legend$height)
     lwidth <- sum(legend$width)
-    gl <- lapply(plots, function(x) x + theme(legend.position="none"))
+    gl <- lapply(plots, function(x) x + ggplot2::theme(legend.position="none"))
     gl <- c(gl, ncol = ncol, nrow = nrow)
     
     combined <- switch(position,
                        "bottom" = gridExtra::arrangeGrob(do.call(gridExtra::arrangeGrob, gl),
                                               legend,
                                               ncol = 1,
-                                              heights = grid::unit.c(unit(1, "npc") - lheight, lheight)),
+                                              heights = grid::unit.c(grid::unit(1, "npc") - lheight, lheight)),
                        "right" = gridExtra::arrangeGrob(do.call(gridExtra::arrangeGrob, gl),
                                              legend,
                                              ncol = 2,
-                                             widths = grid::unit.c(unit(1, "npc") - lwidth, lwidth)),
+                                             widths = grid::unit.c(grid::unit(1, "npc") - lwidth, lwidth)),
                        top = grid::textGrob("test", vjust = 1, gp = grid::gpar(fontface = "bold", cex = 1.5)))
 
     grid::grid.draw(combined)

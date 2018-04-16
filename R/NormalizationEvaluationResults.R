@@ -1,12 +1,13 @@
 #' S4 class to represent normalization evaluations
 #' 
 #' @slot avgcvmem Average coefficient of variance per method
-#' @slot avgmadmem Average median absolute deviation 
-#' @slot avgvarmem Average variance per method
 #' @slot avgcvmempdiff Percentage difference of mean coefficient of variance
 #'  compared to log2-transformed data
+#' @slot featureCVPerMethod CV calculated per feature and normalization method.  
+#' @slot avgmadmem Average median absolute deviation 
 #' @slot avgmadmempdiff Percentage difference of median absolute deviation
 #'  compared to log2-transformed data
+#' @slot avgvarmem Average variance per method
 #' @slot avgvarmempdiff Percentage difference of mean variance compared
 #'  to log2-transformed data
 #' @slot nonsiganfdrlist List of 5% least variable entries based on ANOVA
@@ -15,6 +16,11 @@
 #'  entries
 #' @slot anfdr TODO: Look into (FDR for ANOVA)
 #' @slot kwfdr TODO: Look into (FDR for Kruskal-Wallis)
+#' @slot anovaFDRWithNA ANOVA FDR with NA when not applicable (?)
+#' @slot krusWalFDRWithNA KruskalWallis FDR with NA when not applicable (?)
+#' @slot anova_p ANOVA calculated p-values
+#' @slot pairwise_comps List of pairwise comparisons
+#' @slot pairwise_comps_fdr FDR values for pairwise comparisons
 #' @slot avgpercorsum TODO: Look into (Average Pearson correlation sum)
 #' @slot avgspecorsum TODO: Look into (Average Spearman correlation sum)
 #' @export
@@ -89,7 +95,7 @@ setMethod("calculateCV", "NormalizationEvaluationResults",
                   
                   # Calculate sample-wise CV
                   cv <- function(row) {
-                      st_dev <- sd(row, na.rm=TRUE)
+                      st_dev <- stats::sd(row, na.rm=TRUE)
                       mean_val <- mean(unlist(row), na.rm=TRUE)
                       st_dev / mean(mean_val) * 100
                   }

@@ -38,6 +38,7 @@ outputNames <- c("Log2",
 #' @slot normfinderMaxThreshold Max threshold for running Normfinder normalization.
 #' @slot furtherNormalizationMinThreshold Min threshold for running extended normalizations.
 #' @slot houseKeepingVars Vector of house keeping variables found by Normfinder.
+#' @slot houseKeepingVarsVals ?
 #' @slot data2log2 Log2 of filtered raw data.
 #' @slot data2limloess Lim-Loess normalized raw data.
 #' @slot fittedLR Fitted Loess regression 
@@ -50,6 +51,9 @@ outputNames <- c("Log2",
 #' @slot data2mean Mean normalized data.
 #' @slot data2normfinder CTR-log normalized data 
 #' @slot data2quantile Quantile normalized data.
+#' @slot data2rtMed Retention time normalized for median.
+#' @slot data2rtMean Retention time normalized for Mean.
+#' @slot data2rtLoess Retention time normalized for Loess.
 #' @slot data2ctr CTR normalized data
 #' @slot data2mad MAD normalized data
 #' @export

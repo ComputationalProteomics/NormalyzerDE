@@ -1,16 +1,23 @@
 #' S4 class to represent dataset information
 #' 
-#' @slot jobName Name of the job represented by the dataset
-#' @slot rawData Matrix with raw values
+#' @slot jobName Name of the job represented by the dataset.
+#' @slot rawData Matrix with raw values.
+#' @slot sampleNameCol Name column for sample.
+#' @slot groupNameCol Name column for groups.
+#' @slot designMatrix Data frame containing design.
+#' @slot sampleNames Vector containing sample names.
 #' @slot filterrawdata Reduced raw data matrix where low abundance rows are 
 #'  removed - TODO: CHECK, IS THIS CURRENTLY WORKING?
 #' @slot normfinderFilterRawData Reduced raw data matrix used for Normfinder
 #'  normalization
-#' @slot inputHeaderValues Vector with sample descriptions
+#' @slot normfinderAnnot ?
 #' @slot sampleReplicateGroups Vector with sample replicate information
 #' @slot colsum Vector with sum of values for each column
 #' @slot medofdata Vector with median values for each column
 #' @slot meanofdata Vector with mean values for each column
+#' @slot annotationValues Annotation part of original dataframe.
+#' @slot retentionTimes Vector of retention time values.
+#' @slot singleReplicateRun Conditional whether run is single replicate.
 #' @export
 
 NormalyzerDataset <- setClass("NormalyzerDataset",
