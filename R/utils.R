@@ -1,34 +1,3 @@
-#' Debugging utility used to output "DEBUG" together with output
-#' @param ... Input to print
-#' @param debug Append text DEBUG in front of statement, default is TRUE
-#' @return None
-myprint <- function(..., debug=TRUE) {
-    if (debug) {
-        print(paste("DEBUG: ", ...))
-    }
-    else {
-        print(paste(...))
-    }
-}
-
-#' Debugging utility used to output information about variable together with
-#'  its content
-#' @param variable Target variable to print information about
-#' @param debug Append text DEBUG in front of statement, default is TRUE
-#' @return None
-varprint <- function(variable, debug=TRUE) {
-    varName <- deparse(substitute(variable))
-    
-    if (debug) {
-        cat(varName, variable, sprintf("[%s]", typeof(variable)), 
-            sprintf("[%s elements]", length(variable)), "\n")
-    }
-    else {
-        cat("DEBUG: ", varName, variable, sprintf("[%s]", typeof(variable)), 
-            sprintf("[%s elements]", length(variable)), "\n")
-    }
-}
-
 #' Create empty directory for run if not already present
 #' 
 #' @param jobName Name of the run.
@@ -37,11 +6,6 @@ varprint <- function(variable, debug=TRUE) {
 #' @export
 setupJobDir <- function(jobName, outputDir) {
     
-    print("DEBUG: Setup job dir called")
-    
-    varprint(jobName)
-    varprint(outputDir)
-    
     if (is.null(outputDir)) {
         jobDir <- paste(getwd(), "/", jobName[1], sep="")
     }
@@ -49,8 +13,6 @@ setupJobDir <- function(jobName, outputDir) {
         jobDir <- paste(outputDir, "/", jobName[1], sep="")
     }
     createDirectory(jobDir)
-    
-    varprint(jobDir)
     
     jobDir
 }

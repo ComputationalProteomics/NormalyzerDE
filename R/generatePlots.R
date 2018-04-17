@@ -27,87 +27,68 @@ generatePlots <- function(nr, jobdir, plot_rows=3, plot_cols=4) {
     isLimitedRun <- nr@nds@singleReplicateRun
     
     # TI
-    print("DEBUG: Plotting page 2")
     pageno <- 2
     plotSampleOutlierSummary(nr, currentLayout, pageno)
     
-    print(paste("IS SINGLE REP RUN:", isLimitedRun))
-    
-    # browser()
-    
     # CV
     if (!isLimitedRun) {
-        print("DEBUG: Plotting page 3")
         pageno <- pageno + 1
         plotReplicateVariance(nr, currentLayout, pageno)
 
         # Stable variables plot and CV in percent difference
-        print("DEBUG: Plotting page 4")
         pageno <- pageno + 1
         plotReplicateVarAndStableVariables(nr, currentLayout, pageno)
 
         # CVvsintensityplot
-        print("DEBUG: Plotting page 5")
         pageno <- pageno + 1
         plotCVvsIntensity(nr, currentLayout, pageno)
     }
 
     # MA plots
-    print("DEBUG: Plotting page 6!")
     pageno <- pageno + 1
     plotMA(nr, currentLayout, pageno)
 
     # Scatterplots
-    print("DEBUG: Plotting page 7")
     pageno <- pageno + 1
     plotScatter(nr, currentLayout, pageno)
 
     # QQplot
-    print("DEBUG: Plotting page 8")
     pageno <- pageno + 1
     plotQQ(nr, currentLayout, pageno)
 
     # Boxplot
-    print("DEBUG: Plotting page 9")
     pageno <- pageno + 1
     plotBoxPlot(nr, currentLayout, pageno)
 
     # RLE plots
-    print("DEBUG: Plotting page 10")
     pageno <- pageno + 1
     plotRLE(nr, currentLayout, pageno)
 
     # Density plots
-    print("DEBUG: Plotting page 11")
     pageno <- pageno + 1
     plotDensity(nr, currentLayout, pageno)
     
     # MDS plot
-    print("DEBUG: Plotting page 12")
     pageno <- pageno + 1
     plotMDS(nr, currentLayout, pageno)
 
     if (!isLimitedRun) {   
         
         # meanSDplot
-        print("DEBUG: Plotting page 13")
         pageno <- pageno + 1
         plotMeanSD(nr, currentLayout, pageno)
         
         # Correlation
-        print("DEBUG: Plotting page 15")
         pageno <- pageno + 1
         plotCorrelation(nr, currentLayout, pageno)
     }
      
     # Dendrograms
-    print("DEBUG: Plotting page 16")
     pageno <- pageno + 1
     plotDendrograms(nr, currentLayout, pageno)
 
     if (!isLimitedRun) {
         # DE plots
-        print("DEBUG: Plotting page 17")
         pageno <- pageno + 1
         plotDEPlots(nr, currentLayout, pageno)
     }
@@ -314,7 +295,7 @@ plotReplicateVarAndStableVariables <- function(nr, currentLayout, pageno) {
     graphics::axis(1, at=abc, labels=FALSE, lwd=0, lwd.ticks=1)
     graphics::text(abc, avgvarmempdiff, labels=round(avgvarmempdiff, digits=0), pos=3, las=2)
     
-    if (!is.na(nonsiganfdrlistcvpdiff)) {
+    if (!all(is.na(nonsiganfdrlistcvpdiff))) {
         
         if (min(avgcvmempdiff) < 0 || max(avgcvmempdiff) > 100 || 
             min(nonsiganfdrlistcvpdiff) < 0 || max(nonsiganfdrlistcvpdiff) > 100) {
@@ -432,11 +413,11 @@ plotMA <- function(nr, currentLayout, pageno) {
         df <- as.data.frame(cbind(avg, fc))
         
         Malist[[i]] <- ggplot2::ggplot(df, ggplot2::aes(avg, fc)) + 
-            ggplot2::geom_point(color="darkgray", size=0.7) + 
+            ggplot2::geom_point(color="darkgray", size=0.7, na.rm=TRUE) + 
             ggplot2::labs(x=("Replicate group mean"), 
                           y=("Replicate-1 Fold Change"),
                           title=methodnames[i]) + 
-            ggplot2::stat_smooth(method="loess", se=FALSE, colour="red") + 
+            ggplot2::stat_smooth(method="loess", se=FALSE, colour="red", na.rm=TRUE) + 
             ggplot2::geom_abline(intercept=0, slope=0, size=0.3)
     } 
     
@@ -496,8 +477,10 @@ plotQQ <- function(nr, currentLayout, pageno) {
         datastore <- methodlist[[i]]
         tempcolname <- colnames(datastore)
         #qqnorm(datastore[,1],main=paste(tempcolname[1],methodnames[i]),xlab="",ylab="")
-        qqlist[[i]] <- ggplot2::qplot(sample=datastore[, 1], stat="qq") + 
+        qqlist[[i]] <- ggplot2::qplot(sample=datastore[, 1], na.rm=T) + 
             ggplot2::labs(x="", y="", title=methodnames[i])
+        # qqlist[[i]] <- ggplot2::qplot(sample=datastore[, 1], stat="qq") + 
+        #     ggplot2::labs(x="", y="", title=methodnames[i])
     }
     
     grid::grid.newpage()
@@ -675,22 +658,15 @@ plotMeanSD <- function(nr, currentLayout, pageno) {
     for (i in 1:length(methodlist)) {
         
         datastore <- methodlist[[i]]
-        # print(paste("Feeding method name: ", methodnames[i]))
-        
-        msd <- vsn::meanSdPlot(datastore, xlab="", ylab="", plot=FALSE)
+        msd <- vsn::meanSdPlot(datastore, xlab="", ylab="", plot=FALSE, na.rm=TRUE)
         
         sdPlots[[i]] <- msd$gg + ggplot2::ggtitle(methodnames[i]) +
             ggplot2::theme(legend.position="none", plot.margin=ggplot2::unit(c(1,0,0,0), "cm"))
-        
-        # TODO: The main=methodnames[i] seemed to cause crash here // Jakob
-        # meanSdPlot(datastore, xlab="", ylab="", main=methodnames[i])
     }
     
     grid::grid.newpage()
     grid::pushViewport(grid::viewport(layout=currentLayout))
     printPlots(sdPlots, "MeanSDplots", pageno, currentjob, currentLayout)  
-
-    print(paste("Current page:", pageno))
 }
 
 #' Visualize correlations for plots
@@ -755,9 +731,6 @@ plotDendrograms <- function(nr, currentLayout, pageno) {
     methodlist <- getNormalizationMatrices(nr)
     currentjob <- nds@jobName
     filterED <- nds@sampleReplicateGroups
-    
-    print(length(methodnames))
-    print(length(filterED))
     
     tout <- matrix(1:((currentLayout$nrow-2)*(currentLayout$ncol-2)), ncol=(currentLayout$ncol-2), byrow=TRUE)
     graphics::layout(tout)

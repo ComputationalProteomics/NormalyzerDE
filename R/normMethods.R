@@ -26,8 +26,6 @@ generateNormalyzerResultsObject <- function(nds) {
     nr
 }
 
-
-
 #' Normalization adjusting based on total sample intensity
 #' 
 #' @param rawMatrix Target matrix to be normalized
@@ -97,7 +95,7 @@ meanNormalization <- function(rawMatrix) {
 #' @param rawMatrix Target matrix to be normalized
 #' @return Normalized matrix
 performVSNNormalization <- function(rawMatrix) {
-    normMatrix <- vsn::justvsn(rawMatrix)
+    normMatrix <- suppressMessages(vsn::justvsn(rawMatrix))
     colnames(normMatrix) <- colnames(rawMatrix)
     normMatrix
 }
@@ -189,5 +187,3 @@ performGlobalRLRNormalization <- function(rawMatrix) {
 performNoNormalization <- function(rawMatrix) {
     rawMatrix
 }
-
-

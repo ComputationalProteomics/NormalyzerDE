@@ -1,10 +1,3 @@
-# require("grDevices")
-# require("graphics")
-# require("methods")
-# require("stats")
-# require("utils")
-
-
 #' Normalyzer pipeline entry point
 #' 
 #' @param inputPath CSV delimited input file containing raw counts and 
@@ -51,7 +44,6 @@ normalyzer <- function(inputPath,
                        requireReplicates=TRUE,
                        normalizeRetentionTime=FALSE,
                        retentionTimeWindow=1,
-                       include_pvals=FALSE,
                        pairwise_comparisons=NULL,
                        include_cv_col=FALSE,
                        categorical_anova=TRUE,
@@ -66,26 +58,8 @@ normalyzer <- function(inputPath,
                        groupColName="group",
                        inputFormat="default",
                        skipAnalysis=FALSE) {
-    
-    print('start')
+
     startTime <- Sys.time()
-    
-    # require(RcmdrMisc)    # RcmdrMisc::numSummary, CRAN (could maybe be omitted after re-implementation of its 'numSummary' function?)
-    # require(vsn)          # Used for justvsn, BioConductor
-    # require(preprocessCore)     # Used for quantile normalization, BC
-    # require(limma)        # Used for normalizeCyclicLoess, BioConductor
-    # require(MASS)         # Used for rlm, BioConductor
-    # require(ape)          # ape::as.phylo
-    # require(raster)       # Used for raster::cv - Coefficient of variation
-    # require(car)          # Used for car::showLabels, BioConductor
-    # require(gridExtra)    # gridExtra::arrange, CRAN
-    # require(ggplot2)      # Extensively used for plotting, CRAN
-    # require(grid)         # grid::grid.layout, and much more for plotting, base
-    # require(hexbin)       # Needed for the meanSdPlot
-    # require(raster)       # CRAN package    
-    
-    # Biobase::rowMedians ??
-    
     
     if (source_files) {
         
@@ -107,10 +81,7 @@ normalyzer <- function(inputPath,
         source(paste(source_base, "outputUtils.R", sep="/"))
     }
 
-    
-    
-    # source("evaluationMain.R")
-    
+    print("[Step 1/5] Verifying input")
     normObj <- getVerifiedNormalyzerObject(inputPath,
                                            jobName,
                                            designMatrix,
@@ -122,48 +93,50 @@ normalyzer <- function(inputPath,
                                            sampleCol=sampleColName,
                                            groupCol=groupColName)
     jobDir <- setupJobDir(jobName, outputDir)
+    print(paste("[Step 1/5] Input verified, job directory prepared at:", jobDir))
     
-    print("Normalizing data...")
+    print("[Step 2/5] Performing normalizations")
     normalyzerResultsObject <- normMethods(normObj,
                                            jobName,
                                            forceAll=forceAllMethods,
                                            normalizeRetentionTime=normalizeRetentionTime,
                                            retentionTimeWindow=retentionTimeWindow)
-    print("Finished Normalization")
+    print("[Step 2/5] Done!")
     
     if (!skipAnalysis) {
-        print("Analyzing results...")
+        print("[Step 3/5] Generating evaluation measures...")
         normalyzerResultsObject <- analyzeNormalizations(normalyzerResultsObject, 
                                                          jobName, 
                                                          comparisons=pairwise_comparisons,
                                                          categorical_anova=categorical_anova,
                                                          var_filter_frac=var_filter_frac)
-        print("Finished analysing results")
+        print("[Step 3/5] Done!")
     }
     else {
-        "skipAnalysis flag set so no analysis performed"
+        "[Step 3/5] skipAnalysis flag set so no analysis performed"
     }
 
-    print("Writing matrices to file")
+    print("[Step 4/5] Writing matrices to file")
     writeNormalizedDatasets(normalyzerResultsObject, 
                             jobDir, 
-                            include_pvals=include_pvals, 
                             include_pairwise_comparisons=!is.null(pairwise_comparisons),
                             include_cv_col=include_cv_col,
                             include_anova_p=include_anova_p)
-
+    print("[Step 4/5] Matrices successfully written")
+    
     if (!skipAnalysis) {
-        print("Generating plots...")
+        print("[Step 5/5] Generating plots...")
         generatePlots(normalyzerResultsObject, jobDir, plot_rows=plot_rows, plot_cols=plot_cols)
+        print("[Step 5/5] Plots successfully generated")
     }
     else {
-        print("skipAnalysis flag set so no analysis performed - skipping evaluation plots")
+        print("[Step 5/5] skipAnalysis flag set so no analysis performed - skipping evaluation plots")
     }
     
-    print(paste("Done! Results are stored in ", jobDir))
-    
     endTime <- Sys.time()
-    print(difftime(endTime, startTime))
+    totTime <- difftime(endTime, startTime)
+    print(paste0("All done! Results are stored in: ", jobDir, ", processing time was ", round(totTime, 1), " seconds"))
+    
 }
 
 

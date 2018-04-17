@@ -19,7 +19,7 @@ analyzeNormalizations <- function(nr,
                                                  comparisons=comparisons,
                                                  categorical_anova=categorical_anova,
                                                  var_filter_frac=var_filter_frac)
-    print("Analysis finished. Next, preparing plots and report.")
+
     nr
 }
 

@@ -196,7 +196,7 @@ setMethod("setupRTColumn", "NormalyzerDataset",
               }
               else if (length(rtColumns) == 1) {
                   
-                  print("RT annotation column found")
+                  print(paste0("RT annotation column found (", rtColumns, ")"))
                   
                   rtValues <- nds@rawData[, rtColumns]
                   nds@retentionTimes <- as.numeric(rtValues)

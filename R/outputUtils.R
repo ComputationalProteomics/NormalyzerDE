@@ -6,7 +6,11 @@
 #' @param include_cv_col Include CV column in output.
 #' @param include_anova_p Include ANOVA p-value in output.
 #' @return None
-writeNormalizedDatasets <- function(nr, jobdir, include_pairwise_comparisons=FALSE, include_cv_col=FALSE, include_anova_p=FALSE) {
+writeNormalizedDatasets <- function(nr, jobdir, include_pairwise_comparisons=FALSE, 
+                                    include_cv_col=FALSE, include_anova_p=FALSE,
+                                    norm_suffix="-normalized.txt",
+                                    rawdata_name="submitted_rawdata.txt",
+                                    hkVarsName="housekeeping-variables.tsv") {
     
     nds <- nr@nds
     ner <- nr@ner
@@ -18,7 +22,7 @@ writeNormalizedDatasets <- function(nr, jobdir, include_pairwise_comparisons=FAL
     for (sampleIndex in 1:length(methodnames)) {
         
         currentMethod <- methodnames[sampleIndex]
-        filePath <- paste(jobdir, "/", currentMethod, "-normalized.txt", sep="")
+        filePath <- paste(jobdir, "/", currentMethod, norm_suffix, sep="")
         outputTable <- cbind(annotationColumns, methodlist[[sampleIndex]])
 
         # Redundant code?
@@ -38,7 +42,9 @@ writeNormalizedDatasets <- function(nr, jobdir, include_pairwise_comparisons=FAL
             anova_p <- ner@anova_p[,sampleIndex]
             
             if (nrow(outputTable) != length(anova_p)) {
-                stop(paste("Table row count:", nrow(outputTable), "must match p-value vector length for anova: ", length(anova_p)))
+                stop(paste("Table row count:", nrow(outputTable), 
+                           "must match p-value vector length for anova: ", 
+                           length(anova_p)))
             }
             
             outputTable <- cbind(outputTable, anova_p=anova_p)
@@ -66,14 +72,12 @@ writeNormalizedDatasets <- function(nr, jobdir, include_pairwise_comparisons=FAL
     }
     
     if (!all(is.na(nr@houseKeepingVars))) {
-        hkVarsName <- "housekeeping-variables.tsv"
         hkFilePath <- paste(jobdir, "/", hkVarsName, sep="")
         
         utils::write.table(file=hkFilePath, nr@houseKeepingVars, sep="\t", 
                            row.names=FALSE, quote=FALSE)
     }
     
-    rawdata_name <- "submitted_rawdata.tsv"
     rawFilePath <- paste(jobdir, "/", rawdata_name, sep="")
     rawOutputTable <- cbind(annotationColumns, nds@filterrawdata)
     

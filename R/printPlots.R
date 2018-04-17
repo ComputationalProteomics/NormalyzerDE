@@ -8,8 +8,6 @@
 #' @return None
 printPlots <- function(plotlist, plotname, pageno, jobname, currentLayout) {
     
-    print("In print plots!")
-    
     ncol <- currentLayout$ncol
     nrow <- currentLayout$nrow
     
@@ -40,9 +38,6 @@ printPlots <- function(plotlist, plotname, pageno, jobname, currentLayout) {
     pos_counter <- 0
     for (i in 1:length(plotlist)) {
         
-        # browser()
-        
-        # if (i != 1 && i %% grid_size == 1) {
         if (grid_size == 1 || (i != 1 && i %% grid_size == 1)) {
             print(paste("New page, row:", row, "col:", col))
             grid::grid.newpage()
@@ -57,8 +52,6 @@ printPlots <- function(plotlist, plotname, pageno, jobname, currentLayout) {
         row <- (pos_counter-1) %/% grid_cols + 2
         col <- (pos_counter-1) %% grid_cols + 2
 
-        # print(paste("i", i, "pos_counter", pos_counter, "row", row, "col", col, "grid cols", grid_cols, "grid rows", grid_rows))
-        
         print(plotlist[[i]], vp=grid::viewport(layout.pos.row=row, layout.pos.col=col))
     }
 }
