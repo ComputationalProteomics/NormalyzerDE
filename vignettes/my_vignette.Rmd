@@ -1,7 +1,7 @@
 ---
 title: "Vignette Title"
 author: "Vignette Author"
-date: "`r format(Sys.Date() '%m/%d/%Y')`"
+date: "`r format(Sys.Date(), '%m/%d/%Y')`"
 abstract: >
     When working with omics data you will encounter technical biases. These can often in part be remedied by using appropriate normalization approach. Normalyzer helps this process by both performing a number of readibly available normalizations as well as generating a summary document of the results.
     NormalyzerDE package version: `r packageVersion("NormalyzerDE")`
