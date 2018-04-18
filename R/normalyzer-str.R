@@ -36,7 +36,7 @@
 #' @importFrom raster cv
 #' @examples
 #' normalyzer("data.tsv", "my_jobname", designMatrix="design.tsv", outputDir="path/to/output")
-#' normalyzer("data.tsv", "my_jobname", designMatrix="design.tsv", outputDir="path/to/output", normalizeRetentionTime=T, retentionTimeWindow=2)
+#' normalyzer("data.tsv", "my_jobname", designMatrix="design.tsv", outputDir="path/to/output", normalizeRetentionTime=TRUE, retentionTimeWindow=2)
 #' normalyzer("data.tsv", "my_jobname", designMatrix="design.tsv", outputDir="path/to/output", inputFormat="maxquantprot")
 normalyzer <- function(inputPath, 
                        jobName, 
