@@ -1,0 +1,5 @@
+calculateStatistics <- function(nr) {
+    
+    
+    nr
+}

@@ -61,7 +61,7 @@ NormalyzerResults <- setClass("NormalyzerResults",
                               slots=c(
                                   nds = "NormalyzerDataset",
                                   ner = "NormalizationEvaluationResults",
-                                  
+
                                   methodnames = "character",
                                   normfinderMaxThreshold="numeric",
                                   furtherNormalizationMinThreshold="numeric",

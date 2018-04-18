@@ -9,13 +9,12 @@
 #' @examples
 #' normObj <- getVerifiedNormalyzerObject("data.tsv", "job_name", "design.tsv")
 #' normResults <- normMethods(normObj)
-#' normResultsWithEval <- analyzeNormalizations(normObj)
+#' normResultsWithEval <- analyzeNormalizations(normResults)
 #' generatePlots(normResultsWithEval, "path/to/output")
 generatePlots <- function(nr, jobdir, plot_rows=3, plot_cols=4) {
     
     nds <- nr@nds
     currentjob <- nds@jobName
-    
     nrows <- plot_rows + 2
     ncols <- plot_cols + 2
         
@@ -95,7 +94,8 @@ generatePlots <- function(nr, jobdir, plot_rows=3, plot_cols=4) {
     if (!isLimitedRun) {
         # DE plots
         pageno <- pageno + 1
-        plotDEPlots(nr, currentLayout, pageno)
+        # plotDEPlots(nr, currentLayout, pageno)
+        plotPHist(nr, currentLayout, pageno)
     }
     
     grDevices::dev.off()
@@ -785,15 +785,59 @@ plotDEPlots <- function(nr, currentLayout, pageno) {
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
     
-    graphics::barplot(sapply(anfdr, function(col) { length(col[col < fdr_threshold]) }), main="ANOVA", names=c(methodnames), 
+    graphics::barplot(sapply(anfdr, function(col) { length(col[col < fdr_threshold]) }), 
+                      main="ANOVA", names=c(methodnames), 
                       border="red", density=20, cex=0.5, cex.axis=0.9, las=2,
                       ylab=paste("No. of Variables with FDR <", fdr_threshold))
     
-    graphics::barplot(sapply(kwfdr, function(col) { length(col[col < fdr_threshold]) }), main="Kruskal Wallis", names=c(methodnames), 
+    graphics::barplot(sapply(kwfdr, function(col) { length(col[col < fdr_threshold]) }), 
+                      main="Kruskal Wallis", names=c(methodnames), 
                       border="red", density=20, cex=0.5, cex.axis=0.9, las=2, 
                       ylab=paste("No. of Variables with FDR <", fdr_threshold))
     
     grid::pushViewport(grid::viewport(layout=currentLayout))
     printMeta("Differential Expression", pageno, currentjob, currentLayout)
 }
+
+#' Generate P-histograms for ANOVA calculated after each normalization
+#' 
+#' @param nr Normalyzer results object.
+#' @param currentLayout Layout used for document.
+#' @param pageno Current page number.
+#' @return None
+plotPHist <- function(nr, currentLayout, pageno) {
+    
+    nds <- nr@nds
+    ner <- nr@ner
+    methodnames <- getUsedMethodNames(nr)
+    currentjob <- nds@jobName
+    anovaP <- ner@anova_p
+    histPlots <- list()
+    
+    for (i in 1:length(methodnames)) {
+        
+        anovaFDRVals <- anovaP[, i]
+        plt <- ggplot2::ggplot() + ggplot2::geom_histogram(ggplot2::aes(anovaFDRVals), na.rm=TRUE, binwidth=0.01)
+        histPlots[[i]] <- plt
+    }
+    
+    grid::grid.newpage()
+    grid::pushViewport(grid::viewport(layout=currentLayout))
+    printPlots(histPlots, "HistPlots", pageno, currentjob, currentLayout)  
+}
+
+# Not in use? What would make this work better?
+pdfListToPngList <- function(pdfPlots) {
+
+    pngPlots <- lapply(1:length(pdfPlots), function(i) {
+        grDevices::png("test.png")
+        plt <- pdfPlots[[i]]
+        print(plt)
+        dev.off()
+        grid::rasterGrob(png::readPNG("test.png", native=FALSE), interpolate=FALSE)
+    })
+    pngPlots
+}
+
+
 
