@@ -1,14 +1,13 @@
 #' Perform normalizations on Normalyzer dataset
 #' 
 #' @param nds Normalyzer dataset object.
-#' @param currentjob Name of the ongoing processing run.
 #' @param forceAll Force all methods to run despite not qualifying for thresholds.
 #' @param normalizeRetentionTime Perform retention time based normalization methods.
 #' @param retentionTimeWindow Default window size for retention times.
 #' @param runNormfinder Run the Normfinder normalization method.
 #' @return Returns Normalyzer results object with performed analyzes assigned
 #'  as attributes
-normMethods <- function(nds, currentjob, forceAll=FALSE, normalizeRetentionTime=FALSE, retentionTimeWindow=1, runNormfinder=TRUE) {
+normMethods <- function(nds, forceAll=FALSE, normalizeRetentionTime=TRUE, retentionTimeWindow=1, runNormfinder=TRUE) {
     
     nr <- generateNormalyzerResultsObject(nds)
     nr <- performNormalizations(nr, forceAll=forceAll, rtNorm=normalizeRetentionTime, rtWindow=retentionTimeWindow, runNormfinder=runNormfinder)
@@ -75,7 +74,7 @@ medianNormalization <- function(rawMatrix) {
 #' @return Normalized and log-transformed matrix
 meanNormalization <- function(rawMatrix) {
     
-    colMeans <-apply(rawMatrix, 2, FUN="mean", na.rm=TRUE)
+    colMeans <- apply(rawMatrix, 2, FUN="mean", na.rm=TRUE)
     avgColMean <- mean(colMeans, na.rm=TRUE)
     normMatrix <- matrix(nrow=nrow(rawMatrix), ncol=ncol(rawMatrix), byrow=TRUE)
     

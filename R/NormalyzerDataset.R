@@ -21,7 +21,7 @@
 #' @export
 
 NormalyzerDataset <- setClass("NormalyzerDataset",
-                              slots = c(
+                              representation(
                                   
                                   jobName = "character",
                                   rawData = "matrix",
@@ -46,6 +46,31 @@ NormalyzerDataset <- setClass("NormalyzerDataset",
                                                                     
                                   singleReplicateRun = "logical"
                               ),
+                              # slots = c(
+                              #     
+                              #     jobName = "character",
+                              #     rawData = "matrix",
+                              #     
+                              #     sampleNameCol = "character",
+                              #     groupNameCol = "character",
+                              #     
+                              #     designMatrix = "data.frame",
+                              #     sampleNames = "character",
+                              #     
+                              #     filterrawdata = "matrix",
+                              #     normfinderFilterRawData = "matrix",
+                              #     normfinderAnnot = "matrix",
+                              #     sampleReplicateGroups = "numeric",
+                              #     
+                              #     colsum = "numeric",
+                              #     medofdata = "numeric",
+                              #     meanofdata = "numeric",
+                              #     
+                              #     annotationValues = "matrix",
+                              #     retentionTimes = "numeric",
+                              #     
+                              #     singleReplicateRun = "logical"
+                              # ),
                               prototype=prototype(jobName=NULL, 
                                                   rawData=NULL,
                                                   designMatrix=NULL,

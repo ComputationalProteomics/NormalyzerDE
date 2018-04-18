@@ -1,7 +1,6 @@
 #' Calculate measures for normalization results
 #' 
 #' @param nr Normalyzer results object with calculated results.
-#' @param name Name of the ongoing processing run.
 #' @param comparisons Target sample contrasts to run.
 #' @param categorical_anova ANOVA can be categorical or numerical.
 #' @param var_filter_frac Perform variance filtering before tests.
@@ -9,7 +8,6 @@
 #' @return Normalyzer results with attached evaluation results object.
 #' @export
 analyzeNormalizations <- function(nr, 
-                                  name, 
                                   comparisons=NULL, 
                                   categorical_anova=FALSE,
                                   var_filter_frac=NULL) {

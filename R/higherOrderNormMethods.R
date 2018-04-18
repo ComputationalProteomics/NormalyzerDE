@@ -8,7 +8,8 @@
 #' @param windowMinCount Minimum number of values for window to not be expanded.
 #' @param offset Whether time window should shifted half step size
 #' @return Normalized matrix
-getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSizeMinutes, windowMinCount=100, offset=0) {
+#' @export
+getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSizeMinutes=1, windowMinCount=100, offset=0) {
     
     # targetSliceIndices - Indices in raw matrix for rows falling within retention time interval
     # normalizationSliceIndices - Rows used for normalization, can include wider interval than target slice
@@ -144,29 +145,31 @@ getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes)
 #' @param win_size_min Minimum number of features within window.
 #' @param merge_method Layer merging approach. Mean or median.
 #' @return Normalized matrix
+#' @export
 getSmoothedRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSizeMinutes, 
-                                          frame_shifts=2, win_size_min=50, merge_method="mean") {
+                                          frameShifts=2, windowMinCount=50, mergeMethod="mean") {
     
     matrices <- list()
 
-    for (i in 1:frame_shifts) {
+    for (i in 1:frameShifts) {
         
-        frac_shift <- (i - 1) * 1 / frame_shifts
+        frac_shift <- (i - 1) * 1 / frameShifts
         matrices[[i]] <- getRTNormalizedMatrix(rawMatrix, retentionTimes, normMethod, 
-                                               stepSizeMinutes, windowMinCount=win_size_min, offset=frac_shift)
+                                               stepSizeMinutes, windowMinCount=windowMinCount, offset=frac_shift)
     }
 
     # mean, median, anonymous...
-    if (merge_method == "mean") {
+    if (mergeMethod == "mean") {
         combinedMatrices <- getCombinedMatrix(matrices, mean)
     }
-    else if (merge_method == "median") {
+    else if (mergeMethod == "median") {
         combinedMatrices <- getCombinedMatrix(matrices, stats::median)
     }
     else {
-        stop(paste("Unknown merge method:", merge_method))
+        stop(paste("Unknown merge method:", mergeMethod))
     }
     
+    colnames(combinedMatrices) <- colnames(rawMatrix)
     combinedMatrices
 }
 

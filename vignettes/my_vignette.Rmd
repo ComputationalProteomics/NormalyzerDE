@@ -5,8 +5,7 @@ date: "`r format(Sys.Date(), '%m/%d/%Y')`"
 abstract: >
     When working with omics data you will encounter technical biases. These can often in part be remedied by using appropriate normalization approach. Normalyzer helps this process by both performing a number of readibly available normalizations as well as generating a summary document of the results.
     NormalyzerDE package version: `r packageVersion("NormalyzerDE")`
-output: rmarkdown::html_vignette:
-    toc: true
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Differential expression and countering technical biases using NormalyzerDE}
   %\VignetteEngine{knitr::rmarkdown}
@@ -150,6 +149,75 @@ Retention time based normalization can be performed with an arbitrary normalizat
 
 ## Basic usage
 
+There are two points of access for the higher order normalization. Either by calling `getRTNormalizedMatrix` which applies the target normalization approach stepwise over the matrix based on retention times, or by calling `getSmoothedRTNormalizedMatrix` which generates multiple layered matrices and combines them. To use them you need your raw data loaded into a matrix, a list containing retention times and a normalization matrix able to take a raw matrix and return a normalized in similar format.
+
+```{r}
+fullDf <- read.csv("data.tsv", sep="\t")
+designDf <- read.csv("design.tsv", sep="\t")
+head(fullDf)
+head(designDf)
+```
+
+At this point we have loaded the full data into dataframes. Next, we use the sample names present in the design matrix to extract sample columns from the raw data. Be careful that the sample names is a character vector. If it is a factor it will extract wrong columns.
+
+```{r}
+sampleNames <- as.character(designDf$sample)
+dataMat <- as.matrix(fullDf[, sampleNames])
+retentionTimes <- fullDf$Average.RT
+
+head(dataMat)
+```
+
+If everything is fine the data matrix should be `double`, and have the same number of rows as the number of retention time values we have.
+
+```{r}
+typeof(dataMat)
+
+print("Rows and columns of data")
+dim(dataMat)
+
+print("Number of retention times")
+length(retentionTimes)
+```
+
+The normalization function is expected to take a raw intensity matrix (?) and return log transformed values. We borrow the function for Loess normalization from NormalyzerDE. As long as it follow the same input/output format it could be replaced with a custom function.
+
+```{r}
+performCyclicLoessNormalization <- function(rawMatrix) {
+    log2Matrix <- log2(rawMatrix)
+    normMatrix <- limma::normalizeCyclicLoess(log2Matrix, method="fast")
+    colnames(normMatrix) <- colnames(rawMatrix)
+    normMatrix
+}
+```
+
+We are ready to perform the normalization.
+
+```{r}
+rtNormMat <- getRTNormalizedMatrix(dataMat, retentionTimes, performCyclicLoessNormalization, stepSizeMinutes=1, windowMinCount=100)
+```
+
+Let's double check the results. We expect a matrix in the same format and shape as before. Furthermore, we expect similar but not the exact same values as if we'd applied the normalization globally.
+
+```{r}
+globalNormMat <- performCyclicLoessNormalization(dataMat)
+dim(rtNormMat)
+dim(globalNormMat)
+head(rtNormMat, 1)
+head(globalNormMat, 1)
+```
+
+### Performing layered normalization
+
+We have everything set up to perform the layered normalization. The result here is expected to be overall similar to the normal retention time approach.
+
+```{r}
+layeredRtNormMat <- getSmoothedRTNormalizedMatrix(dataMat, retentionTimes, performCyclicLoessNormalization, stepSizeMinutes=1, windowMinCount=100, frameShifts=3, mergeMethod="mean")
+
+dim(layeredRtNormMat)
+head(layeredRtNormMat, 1)
+```
+
 ## Defining a wrapper
 
 # Stepwise processing
@@ -159,20 +227,20 @@ NormalyzerDE consists of a set of steps. You can influence the order of this pro
 ## Step 1: Loading data
 
 ```{r}
-normObj <- getVerifiedNormalyzerObject(...)
-jobDir <- setupJobDir(...)
+jobName <- "vignette_run"
+normObj <- getVerifiedNormalyzerObject("data.tsv", jobName, "design.tsv")
 ```
 
 ## Step 2: Generate normalizations
 
 ```{r}
-normObj <- getVerifiedNormalyzerObject(...)
+normResults <- normMethods(normObj)
 ```
 
 ## Step 3: Generate performance measures
 
 ```{r}
-normalyzerResultsObject <- normMethods(...)
+normResultsWithEval <- analyzeNormalizations(normResults)
 ```
 
 ## Step 4: Perform statistics
@@ -183,13 +251,14 @@ normalyzerResultsObject <- normMethods(...)
 ## Step 5: Output matrices to file
 
 ```{r}
-writeNormalizedDatasets(...)
+jobDir <- setupJobDir("vignette_run", ".")
+writeNormalizedDatasets(normResultsWithEval, jobDir)
 ```
 
 ## Step 6: Generate evaluation plots
 
 ```{r}
-generatePlots(...)
+generatePlots(normResultsWithEval, jobDir)
 ```
 
 

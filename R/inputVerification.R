@@ -64,8 +64,6 @@ getVerifiedNormalyzerObject <- function(inputPath,
     repSortedRawData <- getReplicateSortedData(dataMatrix, groups)
     processedRawData <- preprocessData(repSortedRawData)
     
-    # processedRawData <- preprocessData(dataMatrix)
-
     lowCountSampleFiltered <- getLowCountSampleFiltered(processedRawData, 
                                                         groups,
                                                         threshold=threshold, 
@@ -387,6 +385,7 @@ generateNormalyzerDataset <- function(fullRawMatrix, jobName, designMatrix, samp
     rawData <- fullRawMatrix[-1,]
     colnames(rawData) <- fullRawMatrix[1,]
     
+    browser()
     nds <- NormalyzerDataset(jobName=jobName, rawData=rawData, designMatrix=designMatrix, sampleNameCol=sampleNameCol, groupNameCol=groupNameCol)
     nds <- setupValues(nds)
     nds

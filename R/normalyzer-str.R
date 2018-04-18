@@ -97,7 +97,6 @@ normalyzer <- function(inputPath,
     
     print("[Step 2/5] Performing normalizations")
     normalyzerResultsObject <- normMethods(normObj,
-                                           jobName,
                                            forceAll=forceAllMethods,
                                            normalizeRetentionTime=normalizeRetentionTime,
                                            retentionTimeWindow=retentionTimeWindow)
@@ -106,7 +105,6 @@ normalyzer <- function(inputPath,
     if (!skipAnalysis) {
         print("[Step 3/5] Generating evaluation measures...")
         normalyzerResultsObject <- analyzeNormalizations(normalyzerResultsObject, 
-                                                         jobName, 
                                                          comparisons=pairwise_comparisons,
                                                          categorical_anova=categorical_anova,
                                                          var_filter_frac=var_filter_frac)
