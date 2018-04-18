@@ -1,6 +1,12 @@
 #' Normalize over slices in retention time, using either datapoints within the
 #' time interval, or if too few, use neighboring datapoints for normalization
 #' 
+#' Key variables:
+#'     targetSliceIndices - Indices in raw matrix for rows falling within retention time interval
+#'     normalizationSliceIndices - Rows used for normalization, can include wider interval than target slice
+#'                                 if target slice isn't containing enough data
+#'     indicesOfInterest - Target indices within the normalization slice window
+#' 
 #' @param rawMatrix Target matrix to be normalized
 #' @param retentionTimes Vector of retention times corresponding to rawMatrix
 #' @param normMethod The normalization method to apply to the time windows
@@ -9,12 +15,20 @@
 #' @param offset Whether time window should shifted half step size
 #' @return Normalized matrix
 #' @export
+#' @examples
+#' fullDf <- read.csv("data.tsv", sep="\t")
+#' designDf <- read.csv("design.tsv", sep="\t")
+#' sampleNames <- as.character(designDf$sample)
+#' dataMat <- as.matrix(fullDf[, sampleNames])
+#' retentionTimes <- fullDf$Average.RT
+#' performCyclicLoessNormalization <- function(rawMatrix) {
+#'     log2Matrix <- log2(rawMatrix)
+#'     normMatrix <- limma::normalizeCyclicLoess(log2Matrix, method="fast")
+#'     colnames(normMatrix) <- colnames(rawMatrix)
+#'     normMatrix
+#' }
+#' rtNormMat <- getRTNormalizedMatrix(dataMat, retentionTimes, performCyclicLoessNormalization, stepSizeMinutes=1, windowMinCount=100)
 getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSizeMinutes=1, windowMinCount=100, offset=0) {
-    
-    # targetSliceIndices - Indices in raw matrix for rows falling within retention time interval
-    # normalizationSliceIndices - Rows used for normalization, can include wider interval than target slice
-    #                              if target slice isn't containing enough data
-    # indicesOfInterest - Target indices within the normalization slice window
     
     sortedRT <- sort(retentionTimes)
     
@@ -138,16 +152,31 @@ getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes)
 #' Then return the mean of these matrices.
 #' 
 #' @param rawMatrix Target matrix to be normalized
-#' @param retentionTimes Vector of retention times corresponding to rawMatrigrid::x
+#' @param retentionTimes Vector of retention times corresponding to rawMatrix
 #' @param normMethod The normalization method to apply to the time windows
 #' @param stepSizeMinutes Size of windows to be normalized
-#' @param frame_shifts Number of frame shifts.
-#' @param win_size_min Minimum number of features within window.
-#' @param merge_method Layer merging approach. Mean or median.
+#' @param frameShifts Number of frame shifts.
+#' @param windowMinCount Minimum number of features within window.
+#' @param mergeMethod Layer merging approach. Mean or median.
 #' @return Normalized matrix
 #' @export
+#' @examples
+#' fullDf <- read.csv("data.tsv", sep="\t")
+#' designDf <- read.csv("design.tsv", sep="\t")
+#' sampleNames <- as.character(designDf$sample)
+#' dataMat <- as.matrix(fullDf[, sampleNames])
+#' retentionTimes <- fullDf$Average.RT
+#' performCyclicLoessNormalization <- function(rawMatrix) {
+#'     log2Matrix <- log2(rawMatrix)
+#'     normMatrix <- limma::normalizeCyclicLoess(log2Matrix, method="fast")
+#'     colnames(normMatrix) <- colnames(rawMatrix)
+#'     normMatrix
+#' }
+#' rtNormMat <- getSmoothedRTNormalizedMatrix(dataMat, retentionTimes, 
+#'     performCyclicLoessNormalization, stepSizeMinutes=1, windowMinCount=100, 
+#'     frameShifts=3, mergeMethod="median")
 getSmoothedRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSizeMinutes, 
-                                          frameShifts=2, windowMinCount=50, mergeMethod="mean") {
+                                          frameShifts=2, windowMinCount=100, mergeMethod="mean") {
     
     matrices <- list()
 

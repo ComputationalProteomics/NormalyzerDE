@@ -4,6 +4,8 @@
 #' @param outputDir Path to directory where to create the output directory.
 #' @return Path to newly created directory.
 #' @export
+#' @examples
+#' setupJobDir("job_name", "path/to/outdir")
 setupJobDir <- function(jobName, outputDir) {
     
     if (is.null(outputDir)) {
@@ -73,76 +75,76 @@ getNonReplicatedFromDf <- function(normalyzerDf) {
 # then plot 1 will go in the upper left, 2 will go in the upper right, and
 # 3 will go all the way across the bottom.
 #
-multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL, single_legend=FALSE) {
-    
-    # library(grid)
-    
-    # Make a list from the ... arguments and plotlist
-    plots <- c(list(...), plotlist)
-    numPlots = length(plots)
-    
-    # If layout is NULL, then use 'cols' to determine layout
-    if (is.null(layout)) {
-        # Make the panel
-        # ncol: Number of columns of plots
-        # nrow: Number of rows needed, calculated from # of cols
-        layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
-                         ncol = cols, nrow = ceiling(numPlots/cols))
-    }
-    
-    if (numPlots == 1) {
-        print(plots[[1]])
-        
-    } 
-    else {
-        # Set up the page
-        grid::grid.newpage()
-        grid::pushViewport(grid::viewport(layout = grid::grid.layout(nrow(layout), ncol(layout))))
-        
-        # Make each plot, in the correct location
-        for (i in 1:numPlots) {
-            # Get the i,j matrix positions of the regions that contain this subplot
-            matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
-            
-            print(plots[[i]], vp = grid::viewport(layout.pos.row = matchidx$row,
-                                            layout.pos.col = matchidx$col))
-        }
-    }
-}
+# multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL, single_legend=FALSE) {
+#     
+#     # library(grid)
+#     
+#     # Make a list from the ... arguments and plotlist
+#     plots <- c(list(...), plotlist)
+#     numPlots = length(plots)
+#     
+#     # If layout is NULL, then use 'cols' to determine layout
+#     if (is.null(layout)) {
+#         # Make the panel
+#         # ncol: Number of columns of plots
+#         # nrow: Number of rows needed, calculated from # of cols
+#         layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+#                          ncol = cols, nrow = ceiling(numPlots/cols))
+#     }
+#     
+#     if (numPlots == 1) {
+#         print(plots[[1]])
+#         
+#     } 
+#     else {
+#         # Set up the page
+#         grid::grid.newpage()
+#         grid::pushViewport(grid::viewport(layout = grid::grid.layout(nrow(layout), ncol(layout))))
+#         
+#         # Make each plot, in the correct location
+#         for (i in 1:numPlots) {
+#             # Get the i,j matrix positions of the regions that contain this subplot
+#             matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+#             
+#             print(plots[[i]], vp = grid::viewport(layout.pos.row = matchidx$row,
+#                                             layout.pos.col = matchidx$col))
+#         }
+#     }
+# }
 
 
-grid_arrange_shared_legend <- function(plots, ncol = length(list(...)), nrow = 1, position = c("bottom", "right"), plot_info="[no extra info]") {
-    
-    # library(grid)
-    # library(gridExtra)
-    
-    # plots <- list(...)
-    position <- match.arg(position)
-    g <- ggplot2::ggplotGrob(plots[[1]] + ggplot2::theme(legend.position = position))$grobs
-    legend <- g[[which(sapply(g, function(x) x$name) == "guide-box")]]
-    lheight <- sum(legend$height)
-    lwidth <- sum(legend$width)
-    gl <- lapply(plots, function(x) x + ggplot2::theme(legend.position="none"))
-    gl <- c(gl, ncol = ncol, nrow = nrow)
-    
-    combined <- switch(position,
-                       "bottom" = gridExtra::arrangeGrob(do.call(gridExtra::arrangeGrob, gl),
-                                              legend,
-                                              ncol = 1,
-                                              heights = grid::unit.c(grid::unit(1, "npc") - lheight, lheight)),
-                       "right" = gridExtra::arrangeGrob(do.call(gridExtra::arrangeGrob, gl),
-                                             legend,
-                                             ncol = 2,
-                                             widths = grid::unit.c(grid::unit(1, "npc") - lwidth, lwidth)),
-                       top = grid::textGrob("test", vjust = 1, gp = grid::gpar(fontface = "bold", cex = 1.5)))
+# grid_arrange_shared_legend <- function(plots, ncol = length(list(...)), nrow = 1, position = c("bottom", "right"), plot_info="[no extra info]") {
+#     
+#     # library(grid)
+#     # library(gridExtra)
+#     
+#     # plots <- list(...)
+#     position <- match.arg(position)
+#     g <- ggplot2::ggplotGrob(plots[[1]] + ggplot2::theme(legend.position = position))$grobs
+#     legend <- g[[which(sapply(g, function(x) x$name) == "guide-box")]]
+#     lheight <- sum(legend$height)
+#     lwidth <- sum(legend$width)
+#     gl <- lapply(plots, function(x) x + ggplot2::theme(legend.position="none"))
+#     gl <- c(gl, ncol = ncol, nrow = nrow)
+#     
+#     combined <- switch(position,
+#                        "bottom" = gridExtra::arrangeGrob(do.call(gridExtra::arrangeGrob, gl),
+#                                               legend,
+#                                               ncol = 1,
+#                                               heights = grid::unit.c(grid::unit(1, "npc") - lheight, lheight)),
+#                        "right" = gridExtra::arrangeGrob(do.call(gridExtra::arrangeGrob, gl),
+#                                              legend,
+#                                              ncol = 2,
+#                                              widths = grid::unit.c(grid::unit(1, "npc") - lwidth, lwidth)),
+#                        top = grid::textGrob("test", vjust = 1, gp = grid::gpar(fontface = "bold", cex = 1.5)))
+# 
+#     grid::grid.draw(combined)
+#     grid::grid.text(plot_info, x=0.1, y=0.9, just="left")
+# }
 
-    grid::grid.draw(combined)
-    grid::grid.text(plot_info, x=0.1, y=0.9, just="left")
-}
-
-get_datestamp_string <- function() {
-    format(Sys.time(), "%Y%m%d_%H%M%S")
-}
+# get_datestamp_string <- function() {
+#     format(Sys.time(), "%Y%m%d_%H%M%S")
+# }
 
 
 getIndexList <- function(targetVector) {

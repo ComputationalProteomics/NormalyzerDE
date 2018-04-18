@@ -15,6 +15,8 @@
 #'        "maxquantpep", "maxquantprot"
 #' @return Normalyzer data object representing verified input data.
 #' @export
+#' @examples
+#' normObj <- getVerifiedNormalyzerObject("data.tsv", "job_name", "design.tsv")
 getVerifiedNormalyzerObject <- function(inputPath, 
                                         jobName, 
                                         designMatrixPath=NULL,
@@ -385,7 +387,6 @@ generateNormalyzerDataset <- function(fullRawMatrix, jobName, designMatrix, samp
     rawData <- fullRawMatrix[-1,]
     colnames(rawData) <- fullRawMatrix[1,]
     
-    browser()
     nds <- NormalyzerDataset(jobName=jobName, rawData=rawData, designMatrix=designMatrix, sampleNameCol=sampleNameCol, groupNameCol=groupNameCol)
     nds <- setupValues(nds)
     nds

@@ -8,6 +8,9 @@
 #' @return Returns Normalyzer results object with performed analyzes assigned
 #'  as attributes
 #' @export
+#' @examples
+#' normObj <- getVerifiedNormalyzerObject("data.tsv", "job_name", "design.tsv")
+#' normResults <- normMethods(normObj)
 normMethods <- function(nds, forceAll=FALSE, normalizeRetentionTime=TRUE, retentionTimeWindow=1, runNormfinder=TRUE) {
     
     nr <- generateNormalyzerResultsObject(nds)

@@ -96,7 +96,6 @@ NormalyzerResults <- setClass("NormalyzerResults",
 #' @param nr Normalyzer results object.
 #' @return None
 #' @rdname initializeResultsObject
-#' @export
 setGeneric(name="initializeResultsObject", 
            function(nr) standardGeneric("initializeResultsObject"))
 
@@ -110,7 +109,6 @@ setGeneric(name="initializeResultsObject",
 #' @param runNormfinder Perform Normfinder normalization.
 #' @return None
 #' @rdname performNormalizations
-#' @export
 setGeneric(name="performNormalizations", 
            function(nr, forceAll, rtNorm, rtWindow, runNormfinder) standardGeneric("performNormalizations"))
 
@@ -119,7 +117,6 @@ setGeneric(name="performNormalizations",
 #' @param nr Normalyzer results object.
 #' @return None
 #' @rdname basicMetricNormalizations
-#' @export
 setGeneric(name="basicMetricNormalizations", 
            function(nr) standardGeneric("basicMetricNormalizations"))
 
@@ -128,7 +125,6 @@ setGeneric(name="basicMetricNormalizations",
 #' @param nr Normalyzer results object.
 #' @return None
 #' @rdname calculateHKdataForNormObj
-#' @export
 setGeneric(name="calculateHKdataForNormObj", 
            function(nr) standardGeneric("calculateHKdataForNormObj"))
 
@@ -137,7 +133,6 @@ setGeneric(name="calculateHKdataForNormObj",
 #' @param nr Normalyzer results object.
 #' @return None
 #' @rdname performReplicateBasedNormalizations
-#' @export
 setGeneric(name="performReplicateBasedNormalizations", 
            function(nr) standardGeneric("performReplicateBasedNormalizations"))
 
@@ -148,7 +143,6 @@ setGeneric(name="performReplicateBasedNormalizations",
 #' @param overlapWindows Number of overlapping normalization windows.
 #' @return None
 #' @rdname performRTNormalizations
-#' @export
 setGeneric(name="performRTNormalizations", 
            function(nr, stepSizeMinutes, overlapWindows) standardGeneric("performRTNormalizations"))
 
@@ -157,7 +151,6 @@ setGeneric(name="performRTNormalizations",
 #' @param nr Normalyzer results object.
 #' @return None
 #' @rdname getUsedMethodNames
-#' @export
 setGeneric(name="getUsedMethodNames", 
            function(nr) standardGeneric("getUsedMethodNames"))
 
@@ -166,7 +159,6 @@ setGeneric(name="getUsedMethodNames",
 #' @param nr Normalyzer results object.
 #' @return None
 #' @rdname getSlotNameList
-#' @export
 setGeneric(name="getSlotNameList", 
            function(nr) standardGeneric("getSlotNameList"))
 
@@ -175,7 +167,6 @@ setGeneric(name="getSlotNameList",
 #' @param nr Normalyzer results object.
 #' @return None
 #' @rdname getNormalizationMatrices
-#' @export
 setGeneric(name="getNormalizationMatrices", 
            function(nr) standardGeneric("getNormalizationMatrices"))
 

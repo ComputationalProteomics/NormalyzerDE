@@ -5,8 +5,16 @@
 #' @param include_pairwise_comparisons Include p-values for pairwise comparisons.
 #' @param include_cv_col Include CV column in output.
 #' @param include_anova_p Include ANOVA p-value in output.
+#' @param norm_suffix String used to name output together with normalization names.
+#' @param rawdata_name Name of output raw data file.
+#' @param hkVarsName Name out output housekeeping variables file.
 #' @return None
 #' @export
+#' @examples
+#' normObj <- getVerifiedNormalyzerObject("data.tsv", "job_name", "design.tsv")
+#' normResults <- normMethods(normObj)
+#' normResultsWithEval <- analyzeNormalizations(normObj)
+#' writeNormalizedDatasets(normResultsWithEval, "path/to/output")
 writeNormalizedDatasets <- function(nr, jobdir, include_pairwise_comparisons=FALSE, 
                                     include_cv_col=FALSE, include_anova_p=FALSE,
                                     norm_suffix="-normalized.txt",
@@ -26,19 +34,6 @@ writeNormalizedDatasets <- function(nr, jobdir, include_pairwise_comparisons=FAL
         filePath <- paste(jobdir, "/", currentMethod, norm_suffix, sep="")
         outputTable <- cbind(annotationColumns, methodlist[[sampleIndex]])
 
-        # Redundant code?
-        # if (include_pvals) {
-        #     
-        #     anova_col <- ner@anovaFDRWithNA[,sampleIndex]
-        #     kw_col <- ner@krusWalFDRWithNA[,sampleIndex]
-        #     
-        #     if (nrow(outputTable) != length(anova_col) || nrow(outputTable) != length(kw_col)) {
-        #         stop(paste("Table row count:", nrow(outputTable), "must match p-value vector lengths for anova:", 
-        #                    length(anova_col), "and and kruskal wallis:", length(kw_col)))
-        #     }
-        #     outputTable <- cbind(outputTable, anova=anova_col, kruskal_wallis=kw_col)
-        # }
-        
         if (include_anova_p) {
             anova_p <- ner@anova_p[,sampleIndex]
             

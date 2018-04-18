@@ -11,11 +11,11 @@ Imports:
     MASS,
     ape,
     car,
-    gridExtra,
     ggplot2,
     methods,
     Biobase,
     RcmdrMisc,
+    raster,
 Suggests:
     knitr,
     testthat,

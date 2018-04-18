@@ -6,6 +6,11 @@
 #' @param plot_cols Number of plot columns.
 #' @return None
 #' @export
+#' @examples
+#' normObj <- getVerifiedNormalyzerObject("data.tsv", "job_name", "design.tsv")
+#' normResults <- normMethods(normObj)
+#' normResultsWithEval <- analyzeNormalizations(normObj)
+#' generatePlots(normResultsWithEval, "path/to/output")
 generatePlots <- function(nr, jobdir, plot_rows=3, plot_cols=4) {
     
     nds <- nr@nds
@@ -476,11 +481,8 @@ plotQQ <- function(nr, currentLayout, pageno) {
     for (i in 1:length(methodlist)) {  
         datastore <- methodlist[[i]]
         tempcolname <- colnames(datastore)
-        #qqnorm(datastore[,1],main=paste(tempcolname[1],methodnames[i]),xlab="",ylab="")
-        qqlist[[i]] <- ggplot2::qplot(sample=datastore[, 1], na.rm=T) + 
+        qqlist[[i]] <- ggplot2::qplot(sample=datastore[, 1], na.rm=TRUE) + 
             ggplot2::labs(x="", y="", title=methodnames[i])
-        # qqlist[[i]] <- ggplot2::qplot(sample=datastore[, 1], stat="qq") + 
-        #     ggplot2::labs(x="", y="", title=methodnames[i])
     }
     
     grid::grid.newpage()

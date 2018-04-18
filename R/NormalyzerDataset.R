@@ -19,7 +19,6 @@
 #' @slot retentionTimes Vector of retention time values.
 #' @slot singleReplicateRun Conditional whether run is single replicate.
 #' @export
-
 NormalyzerDataset <- setClass("NormalyzerDataset",
                               representation(
                                   
@@ -82,7 +81,6 @@ NormalyzerDataset <- setClass("NormalyzerDataset",
 #' @param nds Normalyzer dataset
 #' @return None
 #' @rdname setupValues
-#' @export
 setGeneric(name="setupValues", function(nds) standardGeneric("setupValues"))
 
 #' @rdname setupValues

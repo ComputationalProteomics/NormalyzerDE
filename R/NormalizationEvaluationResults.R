@@ -24,7 +24,6 @@
 #' @slot avgpercorsum TODO: Look into (Average Pearson correlation sum)
 #' @slot avgspecorsum TODO: Look into (Average Spearman correlation sum)
 #' @export
-
 NormalizationEvaluationResults <- setClass("NormalizationEvaluationResults",
                                            slots=c(
                                                avgcvmem = "matrix",

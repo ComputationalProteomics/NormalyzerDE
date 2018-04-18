@@ -16,7 +16,6 @@
 #' @param requireReplicates Require multiple samples per condition to pass input validation.
 #' @param normalizeRetentionTime Perform normalizations over retention time.
 #' @param retentionTimeWindow Retention time normalization window size.
-#' @param include_pvals Include p-values in output (is this used?)
 #' @param pairwise_comparisons Vector of pairwise sample comparisons.
 #' @param include_cv_col Include CV in output matrices.
 #' @param categorical_anova Perform categorical ANOVA (alternatively numerical).
@@ -34,6 +33,11 @@
 #' @return None
 #' @export
 #' @import MASS limma preprocessCore methods RcmdrMisc
+#' @importFrom raster cv
+#' @examples
+#' normalyzer("data.tsv", "my_jobname", designMatrix="design.tsv", outputDir="path/to/output")
+#' normalyzer("data.tsv", "my_jobname", designMatrix="design.tsv", outputDir="path/to/output", normalizeRetentionTime=T, retentionTimeWindow=2)
+#' normalyzer("data.tsv", "my_jobname", designMatrix="design.tsv", outputDir="path/to/output", inputFormat="maxquantprot")
 normalyzer <- function(inputPath, 
                        jobName, 
                        designMatrix=NULL,
