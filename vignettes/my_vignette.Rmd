@@ -226,6 +226,8 @@ NormalyzerDE consists of a set of steps. You can influence the order of this pro
 
 ## Step 1: Loading data
 
+This step performs input validation of the data, and generates an object of the class NormalyzerDataset.
+
 ```{r}
 jobName <- "vignette_run"
 normObj <- getVerifiedNormalyzerObject("data.tsv", jobName, "design.tsv")
@@ -233,11 +235,15 @@ normObj <- getVerifiedNormalyzerObject("data.tsv", jobName, "design.tsv")
 
 ## Step 2: Generate normalizations
 
+Here, normalizations are performed. This generates a NormalyzerResults object containing both a reference to its original dataset object, but also generated normalization matrices.
+
 ```{r}
 normResults <- normMethods(normObj)
 ```
 
 ## Step 3: Generate performance measures
+
+Performance measures are calculated for normalizations. These are stored in an object NormalizationEvaluationResults. A NormalyzerResults object similar to the one sent in is returned, but with this field added.
 
 ```{r}
 normResultsWithEval <- analyzeNormalizations(normResults)
@@ -250,12 +256,16 @@ normResultsWithEval <- analyzeNormalizations(normResults)
 
 ## Step 5: Output matrices to file
 
+Generated normalization matrices are written to the provided folder.
+
 ```{r}
 jobDir <- setupJobDir("vignette_run", ".")
 writeNormalizedDatasets(normResultsWithEval, jobDir)
 ```
 
 ## Step 6: Generate evaluation plots
+
+Performance measures are used to generate evaluation figures which is written in an evaluation report.
 
 ```{r}
 generatePlots(normResultsWithEval, jobDir)

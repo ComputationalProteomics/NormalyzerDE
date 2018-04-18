@@ -7,6 +7,7 @@
 #' @param runNormfinder Run the Normfinder normalization method.
 #' @return Returns Normalyzer results object with performed analyzes assigned
 #'  as attributes
+#' @export
 normMethods <- function(nds, forceAll=FALSE, normalizeRetentionTime=TRUE, retentionTimeWindow=1, runNormfinder=TRUE) {
     
     nr <- generateNormalyzerResultsObject(nds)

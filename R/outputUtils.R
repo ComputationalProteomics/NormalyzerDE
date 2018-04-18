@@ -6,6 +6,7 @@
 #' @param include_cv_col Include CV column in output.
 #' @param include_anova_p Include ANOVA p-value in output.
 #' @return None
+#' @export
 writeNormalizedDatasets <- function(nr, jobdir, include_pairwise_comparisons=FALSE, 
                                     include_cv_col=FALSE, include_anova_p=FALSE,
                                     norm_suffix="-normalized.txt",

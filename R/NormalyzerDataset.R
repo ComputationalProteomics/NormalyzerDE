@@ -237,7 +237,6 @@ setMethod("setupRTColumn", "NormalyzerDataset",
 #' @param nds Normalyzer dataset.
 #' @return None
 #' @rdname setupFilterRawData
-#' @export
 setGeneric(name="setupFilterRawData", 
            function(nds) standardGeneric("setupFilterRawData"))
 
@@ -259,7 +258,6 @@ setMethod("setupFilterRawData", "NormalyzerDataset",
 #' @param nds Normalyzer dataset.
 #' @return None
 #' @rdname setupNormfinderFilterRawData
-#' @export
 setGeneric(name="setupNormfinderFilterRawData", 
            function(nds) standardGeneric("setupNormfinderFilterRawData"))
 
