@@ -10,7 +10,7 @@
 #' @examples
 #' normObj <- getVerifiedNormalyzerObject("data.tsv", "job_name", "design.tsv")
 #' normResults <- normMethods(normObj)
-#' normResultsWithEval <- analyzeNormalizations(normObj)
+#' normResultsWithEval <- analyzeNormalizations(normResults)
 analyzeNormalizations <- function(nr, 
                                   comparisons=NULL, 
                                   categoricalAnova=FALSE,

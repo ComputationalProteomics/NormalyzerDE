@@ -1,7 +1,7 @@
 #' S4 class to represent dataset information
 #' 
 #' @export
-NormalyzerStatistics <- setClass("NormalyzerResults",
+NormalyzerStatistics <- setClass("NormalyzerStatistics",
                                  representation(),
                                  prototype=prototype())
 
