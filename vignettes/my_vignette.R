@@ -13,26 +13,26 @@ library(NormalyzerDE)
 normalyzer("data.tsv", "vignette_run", designMatrix="design.tsv", outputDir="testout")
 
 ## ------------------------------------------------------------------------
-full_df <- read.csv("data.tsv", sep="\t")
-design_df <- read.csv("design.tsv", sep="\t")
-head(full_df)
-head(design_df)
+fullDf <- read.csv("data.tsv", sep="\t")
+designDf <- read.csv("design.tsv", sep="\t")
+head(fullDf)
+head(designDf)
 
 ## ------------------------------------------------------------------------
-sample_names <- as.character(design_df$sample)
-data_m <- as.matrix(full_df[, sample_names])
-retention_times <- full_df$Average.RT
+sampleNames <- as.character(designDf$sample)
+dataMat <- as.matrix(fullDf[, sampleNames])
+retentionTimes <- fullDf$Average.RT
 
-head(data_m)
+head(dataMat)
 
 ## ------------------------------------------------------------------------
-typeof(data_m)
+typeof(dataMat)
 
 print("Rows and columns of data")
-dim(data_m)
+dim(dataMat)
 
 print("Number of retention times")
-length(retention_times)
+length(retentionTimes)
 
 ## ------------------------------------------------------------------------
 performCyclicLoessNormalization <- function(rawMatrix) {
@@ -43,36 +43,37 @@ performCyclicLoessNormalization <- function(rawMatrix) {
 }
 
 ## ------------------------------------------------------------------------
-rt_norm_m <- getRTNormalizedMatrix(data_m, retention_times, performCyclicLoessNormalization, stepSizeMinutes=1, windowMinCount=100)
+rtNormMat <- getRTNormalizedMatrix(dataMat, retentionTimes, performCyclicLoessNormalization, stepSizeMinutes=1, windowMinCount=100)
 
 ## ------------------------------------------------------------------------
-global_norm_m <- performCyclicLoessNormalization(data_m)
-dim(rt_norm_m)
-dim(global_norm_m)
-head(rt_norm_m, 1)
-head(global_norm_m, 1)
+globalNormMat <- performCyclicLoessNormalization(dataMat)
+dim(rtNormMat)
+dim(globalNormMat)
+head(rtNormMat, 1)
+head(globalNormMat, 1)
 
 ## ------------------------------------------------------------------------
-layered_rt_norm_m <- getSmoothedRTNormalizedMatrix(data_m, retention_times, performCyclicLoessNormalization, stepSizeMinutes=1, windowMinCount=100, frameShifts=3, merge_method="mean")
+layeredRtNormMat <- getSmoothedRTNormalizedMatrix(dataMat, retentionTimes, performCyclicLoessNormalization, stepSizeMinutes=1, windowMinCount=100, frameShifts=3, mergeMethod="mean")
 
-dim(layered_rt_norm_m)
-head(layered_rt_norm_m, 1)
-
-## ------------------------------------------------------------------------
-normObj <- getVerifiedNormalyzerObject(...)
-jobDir <- setupJobDir(...)
+dim(layeredRtNormMat)
+head(layeredRtNormMat, 1)
 
 ## ------------------------------------------------------------------------
-normObj <- getVerifiedNormalyzerObject(...)
+jobName <- "vignette_run"
+normObj <- getVerifiedNormalyzerObject("data.tsv", jobName, "design.tsv")
 
 ## ------------------------------------------------------------------------
-normalyzerResultsObject <- normMethods(...)
+normResults <- normMethods(normObj)
+
+## ------------------------------------------------------------------------
+normResultsWithEval <- analyzeNormalizations(normResults)
 
 ## ------------------------------------------------------------------------
 
 ## ------------------------------------------------------------------------
-writeNormalizedDatasets(...)
+jobDir <- setupJobDir("vignette_run", ".")
+writeNormalizedDatasets(normResultsWithEval, jobDir)
 
 ## ------------------------------------------------------------------------
-generatePlots(...)
+generatePlots(normResultsWithEval, jobDir)
 

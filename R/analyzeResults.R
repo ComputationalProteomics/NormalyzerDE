@@ -13,14 +13,14 @@
 #' normResultsWithEval <- analyzeNormalizations(normObj)
 analyzeNormalizations <- function(nr, 
                                   comparisons=NULL, 
-                                  categorical_anova=FALSE,
-                                  var_filter_frac=NULL) {
+                                  categoricalAnova=FALSE,
+                                  varFilterFrac=NULL) {
     
     nds <- nr@nds
     nr@ner <- setupNormalizationEvaluationObject(nr, 
                                                  comparisons=comparisons,
-                                                 categorical_anova=categorical_anova,
-                                                 var_filter_frac=var_filter_frac)
+                                                 categorical_anova=categoricalAnova,
+                                                 var_filter_frac=varFilterFrac)
 
     nr
 }

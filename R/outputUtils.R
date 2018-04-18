@@ -15,10 +15,10 @@
 #' normResults <- normMethods(normObj)
 #' normResultsWithEval <- analyzeNormalizations(normObj)
 #' writeNormalizedDatasets(normResultsWithEval, "path/to/output")
-writeNormalizedDatasets <- function(nr, jobdir, include_pairwise_comparisons=FALSE, 
-                                    include_cv_col=FALSE, include_anova_p=FALSE,
-                                    norm_suffix="-normalized.txt",
-                                    rawdata_name="submitted_rawdata.txt",
+writeNormalizedDatasets <- function(nr, jobdir, includePairwiseComparisons=FALSE, 
+                                    includeCvCol=FALSE, includeAnovaP=FALSE,
+                                    normSuffix="-normalized.txt",
+                                    rawdataName="submitted_rawdata.txt",
                                     hkVarsName="housekeeping-variables.tsv") {
     
     nds <- nr@nds
@@ -31,10 +31,10 @@ writeNormalizedDatasets <- function(nr, jobdir, include_pairwise_comparisons=FAL
     for (sampleIndex in 1:length(methodnames)) {
         
         currentMethod <- methodnames[sampleIndex]
-        filePath <- paste(jobdir, "/", currentMethod, norm_suffix, sep="")
+        filePath <- paste(jobdir, "/", currentMethod, normSuffix, sep="")
         outputTable <- cbind(annotationColumns, methodlist[[sampleIndex]])
 
-        if (include_anova_p) {
+        if (includeAnovaP) {
             anova_p <- ner@anova_p[,sampleIndex]
             
             if (nrow(outputTable) != length(anova_p)) {
@@ -46,7 +46,7 @@ writeNormalizedDatasets <- function(nr, jobdir, include_pairwise_comparisons=FAL
             outputTable <- cbind(outputTable, anova_p=anova_p)
         }
         
-        if (include_pairwise_comparisons) {
+        if (includePairwiseComparisons) {
             
             for (comp in names(nr@ner@pairwise_comps)) {
                 
@@ -59,7 +59,7 @@ writeNormalizedDatasets <- function(nr, jobdir, include_pairwise_comparisons=FAL
             }
         }
         
-        if (include_cv_col) {
+        if (includeCvCol) {
             cv_col <- ner@featureCVPerMethod[,sampleIndex]
             outputTable <- cbind(outputTable, CV=cv_col)
         }
@@ -74,7 +74,7 @@ writeNormalizedDatasets <- function(nr, jobdir, include_pairwise_comparisons=FAL
                            row.names=FALSE, quote=FALSE)
     }
     
-    rawFilePath <- paste(jobdir, "/", rawdata_name, sep="")
+    rawFilePath <- paste(jobdir, "/", rawdataName, sep="")
     rawOutputTable <- cbind(annotationColumns, nds@filterrawdata)
     
     utils::write.table(rawOutputTable, file=rawFilePath, sep="\t", row.names=FALSE, quote=FALSE)

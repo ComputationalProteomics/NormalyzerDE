@@ -48,15 +48,15 @@ normalyzer <- function(inputPath,
                        requireReplicates=TRUE,
                        normalizeRetentionTime=FALSE,
                        retentionTimeWindow=1,
-                       pairwise_comparisons=NULL,
-                       include_cv_col=FALSE,
-                       categorical_anova=TRUE,
-                       include_anova_p=FALSE,
-                       var_filter_frac=NULL,
-                       plot_rows=3,
-                       plot_cols=4,
-                       source_files=FALSE,
-                       source_base=NULL,
+                       pairwiseComparisons=NULL,
+                       includeCvCol=FALSE,
+                       categoricalAnova=TRUE,
+                       includeAnovaP=FALSE,
+                       varFilterFrac=NULL,
+                       plotRows=3,
+                       plotCols=4,
+                       sourceFiles=FALSE,
+                       sourceBase=NULL,
                        zeroToNA=FALSE,
                        sampleColName="sample",
                        groupColName="group",
@@ -65,24 +65,24 @@ normalyzer <- function(inputPath,
 
     startTime <- Sys.time()
     
-    if (source_files) {
+    if (sourceFiles) {
         
-        source(paste(source_base, "generatePlots.R", sep="/"))
-        source(paste(source_base, "normfinder-pipeline.R", sep="/"))
-        source(paste(source_base, "normMethods.R", sep="/"))
-        source(paste(source_base, "higherOrderNormMethods.R", sep="/"))
-        source(paste(source_base, "printMeta.R", sep="/"))
-        source(paste(source_base, "printPlots.R", sep="/"))
+        source(paste(sourceBase, "generatePlots.R", sep="/"))
+        source(paste(sourceBase, "normfinder-pipeline.R", sep="/"))
+        source(paste(sourceBase, "normMethods.R", sep="/"))
+        source(paste(sourceBase, "higherOrderNormMethods.R", sep="/"))
+        source(paste(sourceBase, "printMeta.R", sep="/"))
+        source(paste(sourceBase, "printPlots.R", sep="/"))
 
-        source(paste(source_base, "NormalyzerDataset.R", sep="/"))
-        source(paste(source_base, "NormalizationEvaluationResults.R", sep="/"))
-        source(paste(source_base, "NormalyzerResults.R", sep="/"))
+        source(paste(sourceBase, "NormalyzerDataset.R", sep="/"))
+        source(paste(sourceBase, "NormalizationEvaluationResults.R", sep="/"))
+        source(paste(sourceBase, "NormalyzerResults.R", sep="/"))
 
-        source(paste(source_base, "utils.R", sep="/"))
-        source(paste(source_base, "inputVerification.R", sep="/"))
-        source(paste(source_base, "analyzeResults.R", sep="/"))
-        source(paste(source_base, "preparsers.R", sep="/"))
-        source(paste(source_base, "outputUtils.R", sep="/"))
+        source(paste(sourceBase, "utils.R", sep="/"))
+        source(paste(sourceBase, "inputVerification.R", sep="/"))
+        source(paste(sourceBase, "analyzeResults.R", sep="/"))
+        source(paste(sourceBase, "preparsers.R", sep="/"))
+        source(paste(sourceBase, "outputUtils.R", sep="/"))
     }
 
     print("[Step 1/5] Verifying input")
@@ -109,9 +109,9 @@ normalyzer <- function(inputPath,
     if (!skipAnalysis) {
         print("[Step 3/5] Generating evaluation measures...")
         normalyzerResultsObject <- analyzeNormalizations(normalyzerResultsObject, 
-                                                         comparisons=pairwise_comparisons,
-                                                         categorical_anova=categorical_anova,
-                                                         var_filter_frac=var_filter_frac)
+                                                         comparisons=pairwiseComparisons,
+                                                         categoricalAnova=categoricalAnova,
+                                                         varFilterFrac=varFilterFrac)
         print("[Step 3/5] Done!")
     }
     else {
@@ -121,14 +121,14 @@ normalyzer <- function(inputPath,
     print("[Step 4/5] Writing matrices to file")
     writeNormalizedDatasets(normalyzerResultsObject, 
                             jobDir, 
-                            include_pairwise_comparisons=!is.null(pairwise_comparisons),
-                            include_cv_col=include_cv_col,
-                            include_anova_p=include_anova_p)
+                            includePairwiseComparisons=!is.null(pairwiseComparisons),
+                            includeCvCol=includeCvCol,
+                            includeAnovaP=includeAnovaP)
     print("[Step 4/5] Matrices successfully written")
     
     if (!skipAnalysis) {
         print("[Step 5/5] Generating plots...")
-        generatePlots(normalyzerResultsObject, jobDir, plot_rows=plot_rows, plot_cols=plot_cols)
+        generatePlots(normalyzerResultsObject, jobDir, plot_rows=plotRows, plot_cols=plotCols)
         print("[Step 5/5] Plots successfully generated")
     }
     else {
