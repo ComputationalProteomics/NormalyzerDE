@@ -153,9 +153,15 @@ normalyzerDE <- function(dataFp, designFp, jobName, comparisons, logTrans=FALSE,
     
     nst <- calculateStatistics(dataFp, designFp, comparisons, logTrans=logTrans, limmaTest=limmaTest, robustLimma=robustLimma)
     # print(str(nst))
-    lapply(nst@pairwiseCompsFdr, function(comp) {
-        comp[comp < cutoff]
+    sapply(names(nst@pairwiseCompsFdr), function(name) {
+        comp <- nst@pairwiseCompsFdr[[name]]
+        print(name)
+        print(comp[comp < cutoff])
     })
+    
+    out <- outputAnnotatedMatrix(nst, "stat_out.tsv")
+    print(head(out))
+    outputStatsReport(nst, "stat_report.pdf")
 }
 
 

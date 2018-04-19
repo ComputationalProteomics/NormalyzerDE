@@ -43,3 +43,22 @@ setupStatisticsObject <- function(dataFp, designFp, comparisons, sampleCol="samp
     nst <- NormalyzerStatistics(annotMat=annotMat, dataMat=dataMat, designDf=designDf)
     nst
 }
+
+outputAnnotatedMatrix <- function(nst, outPath) {
+    
+    pairwiseHead <- paste(names(nst@pairwiseComps), "p", sep="_")
+    pairwiseHeadFdr <- paste(names(nst@pairwiseCompsFdr), "p.adj", sep="_")
+
+    pMat <- data.frame(nst@pairwiseComps)
+    colnames(pMat) <- pairwiseHead
+    
+    fdrMat <- data.frame(nst@pairwiseCompsFdr)
+    colnames(fdrMat) <- pairwiseHeadFdr
+    
+    outDf <- cbind(nst@annotMat, pMat, fdrMat, nst@dataMat)
+    outDf
+}
+
+outputStatsReport <- function(nst, outPath) {
+    
+}

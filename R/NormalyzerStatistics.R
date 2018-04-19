@@ -66,19 +66,19 @@ setMethod(f="calculatePairwiseComparisons",
                       stop(paste("Comparison should be in format cond1-cond2, here the split product was:", paste(compSplit, collapse=" ")))
                   }
                   
-                  sample1 <- compSplit[1]
-                  sample2 <- compSplit[2]
+                  level1 <- compSplit[1]
+                  level2 <- compSplit[2]
                   
-                  if (length(sampleReplicateGroupsStrings %in% sample1) == 0) {
-                      stop(paste("No samples matching condition", sample1, "found in conditions:", paste(sampleReplicateGroupsStrings, collapse=" ")))
+                  if (length(sampleReplicateGroupsStrings %in% level1) == 0) {
+                      stop(paste("No samples matching condition", level1, "found in conditions:", paste(sampleReplicateGroupsStrings, collapse=" ")))
                   }
                   
-                  if (length(sampleReplicateGroupsStrings %in% sample2) == 0) {
-                      stop(paste("No samples matching condition", sample2, "found in conditions:", paste(sampleReplicateGroupsStrings, collapse=" ")))
+                  if (length(sampleReplicateGroupsStrings %in% level2) == 0) {
+                      stop(paste("No samples matching condition", level2, "found in conditions:", paste(sampleReplicateGroupsStrings, collapse=" ")))
                   }
                   
-                  s1cols <- which(sampleReplicateGroupsStrings %in% sample1)
-                  s2cols <- which(sampleReplicateGroupsStrings %in% sample2)
+                  s1cols <- which(sampleReplicateGroupsStrings %in% level1)
+                  s2cols <- which(sampleReplicateGroupsStrings %in% level2)
                   
                   welchPValCol <- apply(dataStoreReplicateNAFiltered, 1, 
                                         function(row) do_t_test(row[s1cols], row[s2cols], default=NA))
