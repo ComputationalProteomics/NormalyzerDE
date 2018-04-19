@@ -45,9 +45,6 @@ NormalizationEvaluationResults <- setClass("NormalizationEvaluationResults",
                                                krusWalFDRWithNA = "matrix",
                                                anova_p = "matrix",
                                                
-                                               pairwise_comps = "list",
-                                               pairwise_comps_fdr = "list",
-                                               
                                                avgpercorsum = "list",
                                                avgspecorsum = "list"
                                            ),

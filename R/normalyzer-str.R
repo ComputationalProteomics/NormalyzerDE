@@ -120,7 +120,7 @@ normalyzer <- function(inputPath,
     
     if (!skipAnalysis) {
         print("[Step 4/6] Calculating statistics...")
-        normalyzerResultsObject <- calculateStatistics(normalyzerResultsObject)
+        normalyzerResultsObject <- calculateStatistics(normalyzerResultsObject, )
         print("[Step 4/6] Plots successfully generated")
     }
     else {
@@ -148,5 +148,29 @@ normalyzer <- function(inputPath,
     totTime <- difftime(endTime, startTime)
     print(paste0("All done! Results are stored in: ", jobDir, ", processing time was ", round(totTime, 1), " seconds"))
 }
+
+normalyzerDE <- function(dataFp, designFp, jobName, comparisons, logTrans=FALSE, limmaTest=TRUE, cutoff=0.1, robustLimma=FALSE) {
+    
+    nst <- calculateStatistics(dataFp, designFp, comparisons, logTrans=logTrans, limmaTest=limmaTest, robustLimma=robustLimma)
+    # print(str(nst))
+    lapply(nst@pairwiseCompsFdr, function(comp) {
+        comp[comp < cutoff]
+    })
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

@@ -61,7 +61,8 @@ NormalyzerResults <- setClass("NormalyzerResults",
                               slots=c(
                                   nds = "NormalyzerDataset",
                                   ner = "NormalizationEvaluationResults",
-
+                                  nst = "NormalyzerStatistics",
+                                  
                                   methodnames = "character",
                                   normfinderMaxThreshold="numeric",
                                   furtherNormalizationMinThreshold="numeric",
@@ -99,6 +100,18 @@ NormalyzerResults <- setClass("NormalyzerResults",
 setGeneric(name="initializeResultsObject", 
            function(nr) standardGeneric("initializeResultsObject"))
 
+#' @rdname initializeResultsObject
+setMethod("initializeResultsObject", "NormalyzerResults",
+          function(nr) {
+              
+              nds <- nr@nds
+              nr@data2log2 <- log2(nds@filterrawdata)
+              nr@data2ctr <- matrix(nrow=nrow(nds@filterrawdata),
+                                    ncol=ncol(nds@filterrawdata), byrow=TRUE)
+              nr
+          }
+)
+
 #' Main function for executing normalizations
 #'
 #' @param nr Normalyzer results object.
@@ -112,77 +125,6 @@ setGeneric(name="initializeResultsObject",
 setGeneric(name="performNormalizations", 
            function(nr, forceAll, rtNorm, rtWindow, runNormfinder) standardGeneric("performNormalizations"))
 
-#' Generate basic metrics normalizations
-#'
-#' @param nr Normalyzer results object.
-#' @return None
-#' @rdname basicMetricNormalizations
-setGeneric(name="basicMetricNormalizations", 
-           function(nr) standardGeneric("basicMetricNormalizations"))
-
-#' Calculate and assign housekeeping variables
-#'
-#' @param nr Normalyzer results object.
-#' @return None
-#' @rdname calculateHKdataForNormObj
-setGeneric(name="calculateHKdataForNormObj", 
-           function(nr) standardGeneric("calculateHKdataForNormObj"))
-
-#' Generate replicate based normalizations
-#'
-#' @param nr Normalyzer results object.
-#' @return None
-#' @rdname performReplicateBasedNormalizations
-setGeneric(name="performReplicateBasedNormalizations", 
-           function(nr) standardGeneric("performReplicateBasedNormalizations"))
-
-#' Perform retention time normalizations
-#'
-#' @param nr Results object.
-#' @param stepSizeMinutes Size of normalization windows in minutes retention time.
-#' @param overlapWindows Number of overlapping normalization windows.
-#' @return None
-#' @rdname performRTNormalizations
-setGeneric(name="performRTNormalizations", 
-           function(nr, stepSizeMinutes, overlapWindows) standardGeneric("performRTNormalizations"))
-
-#' Get vector of labels for used methods
-#'
-#' @param nr Normalyzer results object.
-#' @return None
-#' @rdname getUsedMethodNames
-setGeneric(name="getUsedMethodNames", 
-           function(nr) standardGeneric("getUsedMethodNames"))
-
-#' Get list of names for slots
-#'
-#' @param nr Normalyzer results object.
-#' @return None
-#' @rdname getSlotNameList
-setGeneric(name="getSlotNameList", 
-           function(nr) standardGeneric("getSlotNameList"))
-
-#' Get list with normalization matrices
-#'
-#' @param nr Normalyzer results object.
-#' @return None
-#' @rdname getNormalizationMatrices
-setGeneric(name="getNormalizationMatrices", 
-           function(nr) standardGeneric("getNormalizationMatrices"))
-
-
-#' @rdname initializeResultsObject
-setMethod("initializeResultsObject", "NormalyzerResults",
-          function(nr) {
-              
-              nds <- nr@nds
-              nr@data2log2 <- log2(nds@filterrawdata)
-              nr@data2ctr <- matrix(nrow=nrow(nds@filterrawdata),
-                                    ncol=ncol(nds@filterrawdata), byrow=TRUE)
-              nr
-          }
-)
-
 #' @rdname performNormalizations
 setMethod("performNormalizations", "NormalyzerResults",
           function(nr, forceAll=FALSE, rtNorm=FALSE, rtWindow=0.1, runNormfinder=TRUE) {
@@ -192,7 +134,7 @@ setMethod("performNormalizations", "NormalyzerResults",
               rtColPresent <- length(nds@retentionTimes) > 0
               
               if (nrow(nds@normfinderFilterRawData) < nr@normfinderMaxThreshold && runNormfinder || forceAll) {
-
+                  
                   if (!nds@singleReplicateRun) {
                       nr <- normfinder(nr)
                       # nr@houseKeepingVars <- normfinder(nds)
@@ -227,94 +169,129 @@ setMethod("performNormalizations", "NormalyzerResults",
                       print("No RT column specified (column named 'RT'). Skipping RT normalization.")
                   }
               }
-
+              
               nr
           }
 )
 
+
+#' Generate basic metrics normalizations
+#'
+#' @param nr Normalyzer results object.
+#' @return None
+#' @rdname basicMetricNormalizations
+setGeneric(name="basicMetricNormalizations", 
+           function(nr) standardGeneric("basicMetricNormalizations"))
+
 #' @rdname basicMetricNormalizations
 setMethod("basicMetricNormalizations", "NormalyzerResults",
           function(nr) {
-
-            nds <- nr@nds
-            nr@data2GI <- globalIntensityNormalization(nds@filterrawdata)
-            nr@data2med <- medianNormalization(nds@filterrawdata)
-            nr@data2mean <- meanNormalization(nds@filterrawdata)
-            nr
-        }
+              
+              nds <- nr@nds
+              nr@data2GI <- globalIntensityNormalization(nds@filterrawdata)
+              nr@data2med <- medianNormalization(nds@filterrawdata)
+              nr@data2mean <- meanNormalization(nds@filterrawdata)
+              nr
+          }
 )
+
+#' Calculate and assign housekeeping variables
+#'
+#' @param nr Normalyzer results object.
+#' @return None
+#' @rdname calculateHKdataForNormObj
+setGeneric(name="calculateHKdataForNormObj", 
+           function(nr) standardGeneric("calculateHKdataForNormObj"))
 
 #' @rdname calculateHKdataForNormObj
 setMethod("calculateHKdataForNormObj", "NormalyzerResults",
-        function(nr) {
+          function(nr) {
               
-            nds <- nr@nds
-            filterrawdata <- nds@filterrawdata
+              nds <- nr@nds
+              filterrawdata <- nds@filterrawdata
+              
+              houseKeepVals <- nr@houseKeepingVarsVals
+              # HKVarTemp <- as.matrix(nr@houseKeepingVars[, which(as.numeric(nds@sampleReplicateGroups) > 0)])
+              # class(HKVarTemp) <- "numeric"
+              colmedianctr <- apply(houseKeepVals, 2, FUN="mean")
+              
+              for(i in 1:nrow(filterrawdata)) {
+                  nr@data2ctr[i,] <- unlist(sapply(1:ncol(filterrawdata), 
+                                                   function(zd) { (filterrawdata[i, zd] / colmedianctr[zd]) * mean(colmedianctr) }))
+              }
+              
+              nr@data2normfinder <- log2(nr@data2ctr)
+              colnames(nr@data2normfinder) <- colnames(nds@filterrawdata)
+              
+              # browser()
+              
+              nr
+          })
 
-            houseKeepVals <- nr@houseKeepingVarsVals
-            # HKVarTemp <- as.matrix(nr@houseKeepingVars[, which(as.numeric(nds@sampleReplicateGroups) > 0)])
-            # class(HKVarTemp) <- "numeric"
-            colmedianctr <- apply(houseKeepVals, 2, FUN="mean")
-              
-            for(i in 1:nrow(filterrawdata)) {
-                nr@data2ctr[i,] <- unlist(sapply(1:ncol(filterrawdata), 
-                                                 function(zd) { (filterrawdata[i, zd] / colmedianctr[zd]) * mean(colmedianctr) }))
-            }
-              
-            nr@data2normfinder <- log2(nr@data2ctr)
-            colnames(nr@data2normfinder) <- colnames(nds@filterrawdata)
-            
-            # browser()
-            
-            nr
-        })
+#' Generate replicate based normalizations
+#'
+#' @param nr Normalyzer results object.
+#' @return None
+#' @rdname performReplicateBasedNormalizations
+setGeneric(name="performReplicateBasedNormalizations", 
+           function(nr) standardGeneric("performReplicateBasedNormalizations"))
 
 #' @rdname performReplicateBasedNormalizations
 setMethod("performReplicateBasedNormalizations", "NormalyzerResults",
-        function(nr) {
-            
-            ## NORMALIZATION within REPLICATES RLR, VSN and Loess
-            
-            nds <- nr@nds
+          function(nr) {
               
-            sampleReplicateGroups <- nds@sampleReplicateGroups
-            filterrawdata <- nds@filterrawdata
+              ## NORMALIZATION within REPLICATES RLR, VSN and Loess
+              
+              nds <- nr@nds
+              
+              sampleReplicateGroups <- nds@sampleReplicateGroups
+              filterrawdata <- nds@filterrawdata
+              
+              limLoessMatrix <- matrix(, nrow=nrow(filterrawdata), ncol=0)
+              vsnMatrix <- matrix(, nrow=nrow(filterrawdata), ncol=0)
+              fittedLRMatrix <- matrix(, nrow=nrow(filterrawdata), ncol=0)
+              
+              indexList <- getIndexList(sampleReplicateGroups)
+              colOrder <- c()
+              
+              for (repVal in names(indexList)) {
+                  
+                  repValNr <- strtoi(repVal)
+                  cols <- indexList[[repVal]]
+                  colOrder <- c(colOrder, cols)
+                  
+                  rawDataWindow <- filterrawdata[, cols]
+                  LRWindow <- performGlobalRLRNormalization(rawDataWindow)
+                  fittedLRMatrix <- cbind(fittedLRMatrix, LRWindow)
+                  
+                  loessDataWindow <- performCyclicLoessNormalization(rawDataWindow)
+                  limLoessMatrix <- cbind(limLoessMatrix, loessDataWindow)
+                  
+                  vsnDataWindow <- performVSNNormalization(rawDataWindow)
+                  vsnMatrix <- cbind(vsnMatrix, vsnDataWindow)
+              }
+              
+              origPos <- c()
+              for (i in 1:length(colOrder)) {
+                  origPos <- c(origPos, which(colOrder == i))
+              }
+              
+              nr@fittedLR <- fittedLRMatrix[, origPos]
+              nr@data2limloess <- limLoessMatrix[, origPos]
+              nr@data2vsnrep <- vsnMatrix[, origPos]
+              
+              nr
+          })
 
-            limLoessMatrix <- matrix(, nrow=nrow(filterrawdata), ncol=0)
-            vsnMatrix <- matrix(, nrow=nrow(filterrawdata), ncol=0)
-            fittedLRMatrix <- matrix(, nrow=nrow(filterrawdata), ncol=0)
-            
-            indexList <- getIndexList(sampleReplicateGroups)
-            colOrder <- c()
-            
-            for (repVal in names(indexList)) {
-                
-                repValNr <- strtoi(repVal)
-                cols <- indexList[[repVal]]
-                colOrder <- c(colOrder, cols)
-                
-                rawDataWindow <- filterrawdata[, cols]
-                LRWindow <- performGlobalRLRNormalization(rawDataWindow)
-                fittedLRMatrix <- cbind(fittedLRMatrix, LRWindow)
-    
-                loessDataWindow <- performCyclicLoessNormalization(rawDataWindow)
-                limLoessMatrix <- cbind(limLoessMatrix, loessDataWindow)
-    
-                vsnDataWindow <- performVSNNormalization(rawDataWindow)
-                vsnMatrix <- cbind(vsnMatrix, vsnDataWindow)
-            }
-            
-            origPos <- c()
-            for (i in 1:length(colOrder)) {
-                origPos <- c(origPos, which(colOrder == i))
-            }
-            
-            nr@fittedLR <- fittedLRMatrix[, origPos]
-            nr@data2limloess <- limLoessMatrix[, origPos]
-            nr@data2vsnrep <- vsnMatrix[, origPos]
-
-            nr
-        })
+#' Perform retention time normalizations
+#'
+#' @param nr Results object.
+#' @param stepSizeMinutes Size of normalization windows in minutes retention time.
+#' @param overlapWindows Number of overlapping normalization windows.
+#' @return None
+#' @rdname performRTNormalizations
+setGeneric(name="performRTNormalizations", 
+           function(nr, stepSizeMinutes, overlapWindows) standardGeneric("performRTNormalizations"))
 
 #' @rdname performRTNormalizations
 setMethod("performRTNormalizations", "NormalyzerResults",
@@ -332,60 +309,90 @@ setMethod("performRTNormalizations", "NormalyzerResults",
               nr
           })
 
+#' Get vector of labels for used methods
+#'
+#' @param nr Normalyzer results object.
+#' @return None
+#' @rdname getUsedMethodNames
+setGeneric(name="getUsedMethodNames", 
+           function(nr) standardGeneric("getUsedMethodNames"))
+
 #' @rdname getUsedMethodNames
 setMethod("getUsedMethodNames", "NormalyzerResults",
-        function(nr) {
+          function(nr) {
               
-            usedMethodNames <- c()
-            
-            for (i in 1:length(slotNames)) {
-                slotName <- slotNames[i]
-                fieldValue <- methods::slot(nr, slotName)
+              usedMethodNames <- c()
+              
+              for (i in 1:length(slotNames)) {
+                  slotName <- slotNames[i]
+                  fieldValue <- methods::slot(nr, slotName)
                   
-                if (!all(is.na(fieldValue))) {
-                    outputName <- outputNames[i]
-                    usedMethodNames <- c(usedMethodNames, outputName)
-                }
-            }
+                  if (!all(is.na(fieldValue))) {
+                      outputName <- outputNames[i]
+                      usedMethodNames <- c(usedMethodNames, outputName)
+                  }
+              }
               
-            usedMethodNames
-        })
+              usedMethodNames
+          })
+
+#' Get list of names for slots
+#'
+#' @param nr Normalyzer results object.
+#' @return None
+#' @rdname getSlotNameList
+setGeneric(name="getSlotNameList", 
+           function(nr) standardGeneric("getSlotNameList"))
 
 #' @rdname getSlotNameList
 setMethod("getSlotNameList", "NormalyzerResults",
-        function(nr) {
-            methodDataList <- c()
+          function(nr) {
+              methodDataList <- c()
               
-            for (i in 1:length(slotNames)) {
-                slotName <- slotNames[i]
-                fieldValue <- methods::slot(nr, slotName)
+              for (i in 1:length(slotNames)) {
+                  slotName <- slotNames[i]
+                  fieldValue <- methods::slot(nr, slotName)
                   
-                if (!all(is.na(fieldValue))) {
-                    methodDataList <- c(methodDataList, slotName)
-                }
-            }
+                  if (!all(is.na(fieldValue))) {
+                      methodDataList <- c(methodDataList, slotName)
+                  }
+              }
               
-            methodDataList
-        })
+              methodDataList
+          })
+
+#' Get list with normalization matrices
+#'
+#' @param nr Normalyzer results object.
+#' @return None
+#' @rdname getNormalizationMatrices
+setGeneric(name="getNormalizationMatrices", 
+           function(nr) standardGeneric("getNormalizationMatrices"))
 
 #' @rdname getNormalizationMatrices
 setMethod("getNormalizationMatrices", "NormalyzerResults",
-        function(nr) {
-            
-            methodDataList <- list()
-            listCounter <- 1
-            for (i in 1:length(slotNames)) {
-                slotName <- slotNames[i]
-                fieldValue <- methods::slot(nr, slotName)
+          function(nr) {
+              
+              methodDataList <- list()
+              listCounter <- 1
+              for (i in 1:length(slotNames)) {
+                  slotName <- slotNames[i]
+                  fieldValue <- methods::slot(nr, slotName)
                   
-                if (!all(is.na(fieldValue))) {
-                    methodDataList[[listCounter]] <- fieldValue
-                    listCounter <- listCounter + 1
-                }
-            }
-            
-            methodDataList
-        })
+                  if (!all(is.na(fieldValue))) {
+                      methodDataList[[listCounter]] <- fieldValue
+                      listCounter <- listCounter + 1
+                  }
+              }
+              
+              methodDataList
+          })
+
+
+
+
+
+
 
 
 

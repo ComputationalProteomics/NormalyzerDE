@@ -87,7 +87,7 @@ setupNormalizationEvaluationObject <- function(nr,
     ner <- NormalizationEvaluationResults()
     ner <- calculateCV(ner, nr)
     
-    singleRepRun <- nr@nds@singleReplicateRun 
+    singleRepRun <- nr@nds@singleReplicateRun
     
     if (!singleRepRun) {
         ner <- calculateMAD(ner, nr)

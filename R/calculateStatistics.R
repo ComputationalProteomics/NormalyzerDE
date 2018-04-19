@@ -10,11 +10,36 @@
 #' normObj <- getVerifiedNormalyzerObject("data.tsv", "job_name", "design.tsv")
 #' normResults <- normMethods(normObj)
 #' normStats <- calculateStatistics(normResults)
-calculateStatistics <- function(nr, comparisons, limmaTest=T, varFilterFrac=1) {
+calculateStatistics <- function(dataFp, designFp, comparisons, limmaTest=TRUE, varFilterFrac=1, logTrans=FALSE, robustLimma=FALSE) {
     
-    nst <- NormalyzerStatistics$new()
-    nr$nst <- nst
+    nst <- setupStatisticsObject(dataFp, designFp, comparisons, logTrans=logTrans)
     
-        
-    nr
+    if (limmaTest) {
+        nst <- calculatePairwiseComparisonsLimma(nst, comparisons, "group", robustLimma=robustLimma)
+    }
+    else {
+        nst <- calculatePairwiseComparisons(nst, comparisons, "group")
+    }
+    
+    nst
+}
+
+setupStatisticsObject <- function(dataFp, designFp, comparisons, sampleCol="sample", 
+                                  conditionCol="group", batchCol=NULL, logTrans=logTrans) {
+
+    fullDf <- read.csv(dataFp, sep="\t")
+    designDf <- read.csv(designFp, sep="\t")
+    designDf[, sampleCol] <- as.character(designDf[, sampleCol])
+    
+    dataCols <- designDf[, sampleCol]
+    annotMat <- as.matrix(fullDf[, which(!colnames(fullDf) %in% dataCols)])
+    dataMat <- as.matrix(fullDf[, which(colnames(fullDf) %in% dataCols)], )
+    
+    if (logTrans) {
+        dataMat <- log2(dataMat)
+    }
+    
+    # nst <- NormalyzerStatistics(dummyStr="test")
+    nst <- NormalyzerStatistics(annotMat=annotMat, dataMat=dataMat, designDf=designDf)
+    nst
 }
