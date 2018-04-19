@@ -152,7 +152,6 @@ normalyzer <- function(inputPath,
 normalyzerDE <- function(dataFp, designFp, jobName, comparisons, logTrans=FALSE, limmaTest=TRUE, cutoff=0.1, robustLimma=FALSE) {
     
     nst <- calculateStatistics(dataFp, designFp, comparisons, logTrans=logTrans, limmaTest=limmaTest, robustLimma=robustLimma)
-    # print(str(nst))
     sapply(names(nst@pairwiseCompsFdr), function(name) {
         comp <- nst@pairwiseCompsFdr[[name]]
         print(name)

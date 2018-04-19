@@ -18,7 +18,7 @@ calculateStatistics <- function(dataFp, designFp, comparisons, limmaTest=TRUE, v
         nst <- calculatePairwiseComparisonsLimma(nst, comparisons, "group", robustLimma=robustLimma)
     }
     else {
-        nst <- calculatePairwiseComparisons(nst, comparisons, "group")
+        nst <- calculateContrasts(nst, comparisons, "group")
     }
     
     nst
@@ -46,16 +46,23 @@ setupStatisticsObject <- function(dataFp, designFp, comparisons, sampleCol="samp
 
 outputAnnotatedMatrix <- function(nst, outPath) {
     
-    pairwiseHead <- paste(names(nst@pairwiseComps), "p", sep="_")
-    pairwiseHeadFdr <- paste(names(nst@pairwiseCompsFdr), "p.adj", sep="_")
-
-    pMat <- data.frame(nst@pairwiseComps)
+    pairwiseHead <- paste(names(nst@pairwiseCompsP), "p", sep="_")
+    pMat <- data.frame(nst@pairwiseCompsP)
     colnames(pMat) <- pairwiseHead
     
+    pairwiseHeadFdr <- paste(names(nst@pairwiseCompsFdr), "p.adj", sep="_")
     fdrMat <- data.frame(nst@pairwiseCompsFdr)
     colnames(fdrMat) <- pairwiseHeadFdr
     
-    outDf <- cbind(nst@annotMat, pMat, fdrMat, nst@dataMat)
+    pairwiseHeadAve <- paste(names(nst@pairwiseCompsAve), "ave.expr", sep="_")
+    aveMat <- data.frame(nst@pairwiseCompsAve)
+    colnames(aveMat) <- pairwiseHeadAve
+    
+    pairwiseHeadFold <- paste(names(nst@pairwiseCompsFold), "fold", sep="_")
+    foldMat <- data.frame(nst@pairwiseCompsFold)
+    colnames(foldMat) <- pairwiseHeadFold
+    
+    outDf <- cbind(nst@annotMat, pMat, fdrMat, aveMat, foldMat, nst@dataMat)
     outDf
 }
 
