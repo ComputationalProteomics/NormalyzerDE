@@ -32,12 +32,12 @@ NormalyzerStatistics <- setClass("NormalyzerStatistics",
 #' @return None
 #' @rdname calculateContrasts
 setGeneric(name="calculateContrasts", 
-           function(nst, comparisons, condCol, splitter="-", type="anova", robustLimma=FALSE) standardGeneric("calculateContrasts"))
+           function(nst, comparisons, condCol, batchCol=NULL, splitter="-", type="limma", robustLimma=FALSE) standardGeneric("calculateContrasts"))
 
 #' @rdname calculateContrasts
 setMethod(f="calculateContrasts", 
           signature=c("NormalyzerStatistics", "character"),
-          function(nst, comparisons, condCol, splitter="-", type="anova", robustLimma=FALSE) {
+          function(nst, comparisons, condCol, batchCol=NULL, splitter="-", type="limma", robustLimma=FALSE) {
               
               sampleReplicateGroups <- nst@designDf[, condCol]
               sampleReplicateGroupsStrings <- as.character(nst@designDf[, condCol])
@@ -49,8 +49,20 @@ setMethod(f="calculateContrasts",
               naFilterContrast <- getRowNAFilterContrast(processedDataMatrix, sampleReplicateGroups)
               dataMatNAFiltered <- processedDataMatrix[naFilterContrast, ]
               
-              Variable <- as.factor(nst@designDf[, condCol])
-              model <- ~0+Variable
+              if (is.null(batchCol)) {
+                  Variable <- as.factor(nst@designDf[, condCol])
+                  model <- ~0+Variable
+              }
+              else {
+                  if (type != "limma") {
+                      stop(paste("Batch compensation only compatible with Limma, got:", type))
+                  }
+                  Variable <- as.factor(nst@designDf[, condCol])
+                  Batch <- as.factor(nst@designDf[, batchCol])
+                  model <- ~0+Variable+Batch
+              }
+              
+              print(model)
               
               if (type == "limma") {
                   limmaDesign <- stats::model.matrix(model)
@@ -133,6 +145,31 @@ calculateWelch <- function(compLists, dataMat, naFilterContrast, s1cols, s2cols,
                                                          function(row) {
                                                              mean(row[s1cols]) - mean(row[s2cols])
                                                          })
+    compLists
+}
+
+calculateANOVAContrast <- function(compLists, dataMat, naFilterContrast, s1cols, s2cols, comp) {
+    
+    do_t_test <- function(c1_vals, c2_vals, default=NA) {
+        if (length(stats::na.omit(c1_vals)) > 1 && length(stats::na.omit(c2_vals)) > 1) {
+            tryCatch(stats::t.test(c1_vals, c2_vals)[[3]], error=function(x) NA)
+        }
+        else {
+            NA
+        }
+    }
+    
+    welchPValCol <- apply(dataMat, 1, 
+                          function(row) do_t_test(row[s1cols], row[s2cols], default=NA))
+    welchFDRCol <- stats::p.adjust(welchPValCol, method="BH")
+    
+    compLists[["P"]][[comp]][naFilterContrast] <- welchPValCol
+    compLists[["FDR"]][[comp]][naFilterContrast] <- welchFDRCol
+    compLists[["Ave"]][[comp]][naFilterContrast] <- apply(dataMat, 1, mean)
+    compLists[["Fold"]][[comp]][naFilterContrast] <- apply(dataMat, 1,
+                                                           function(row) {
+                                                               mean(row[s1cols]) - mean(row[s2cols])
+                                                           })
     compLists
 }
 

@@ -149,11 +149,12 @@ normalyzer <- function(inputPath,
     print(paste0("All done! Results are stored in: ", jobDir, ", processing time was ", round(totTime, 1), " seconds"))
 }
 
-normalyzerDE <- function(dataFp, designFp, jobName, comparisons, outputDir=NULL, logTrans=FALSE, limmaTest=TRUE, cutoff=0.1, robustLimma=FALSE, type="limma") {
+normalyzerDE <- function(dataFp, designFp, jobName, comparisons, outputDir=NULL, logTrans=FALSE, limmaTest=TRUE, cutoff=0.1, 
+                         robustLimma=FALSE, type="limma", batchCol=NULL) {
 
     jobDir <- setupJobDir(jobName, outputDir)
         
-    nst <- calculateStatistics(dataFp, designFp, comparisons, logTrans=logTrans, limmaTest=limmaTest, robustLimma=robustLimma, type=type)
+    nst <- calculateStatistics(dataFp, designFp, comparisons, logTrans=logTrans, limmaTest=limmaTest, robustLimma=robustLimma, type=type, batchCol=batchCol)
     sapply(names(nst@pairwiseCompsFdr), function(name) {
         comp <- nst@pairwiseCompsFdr[[name]]
         print(name)
@@ -161,6 +162,7 @@ normalyzerDE <- function(dataFp, designFp, jobName, comparisons, outputDir=NULL,
     })
     
     annotDf <- generateAnnotatedMatrix(nst)
+    write.table(annotDf, file=paste0(jobDir, "/", jobName, "_stats.tsv"), sep="\t", row.names = F)
     generateStatsReport(nst, jobName, jobDir)
 }
 

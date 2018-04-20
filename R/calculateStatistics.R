@@ -10,17 +10,13 @@
 #' normObj <- getVerifiedNormalyzerObject("data.tsv", "job_name", "design.tsv")
 #' normResults <- normMethods(normObj)
 #' normStats <- calculateStatistics(normResults)
-calculateStatistics <- function(dataFp, designFp, comparisons, limmaTest=TRUE, varFilterFrac=1, logTrans=FALSE, robustLimma=FALSE, type="limma") {
+calculateStatistics <- function(dataFp, designFp, comparisons, limmaTest=TRUE, varFilterFrac=1, 
+                                logTrans=FALSE, robustLimma=FALSE, type="limma", batchCol=NULL) {
     
     nst <- setupStatisticsObject(dataFp, designFp, comparisons, logTrans=logTrans)
     
-    if (limmaTest) {
-        nst <- calculatePairwiseComparisonsLimma(nst, comparisons, "group", robustLimma=robustLimma)
-    }
-    else {
-        nst <- calculateContrasts(nst, comparisons, "group", type=type)
-    }
-    
+    nst <- calculateContrasts(nst, comparisons, "group", type=type, batchCol=batchCol)
+
     nst
 }
 
