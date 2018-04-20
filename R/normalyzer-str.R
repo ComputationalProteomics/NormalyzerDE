@@ -145,25 +145,54 @@ normalyzer <- function(inputPath,
     }
     
     endTime <- Sys.time()
-    totTime <- difftime(endTime, startTime)
-    print(paste0("All done! Results are stored in: ", jobDir, ", processing time was ", round(totTime, 1), " seconds"))
+    totTime <- difftime(endTime, startTime, units="mins")
+    print(paste0("All done! Results are stored in: ", jobDir, ", processing time was ", round(totTime, 1), " minutes"))
 }
 
-normalyzerDE <- function(dataFp, designFp, jobName, comparisons, outputDir=NULL, logTrans=FALSE, limmaTest=TRUE, cutoff=0.1, 
-                         robustLimma=FALSE, type="limma", batchCol=NULL) {
+#' Normalyzer differential expression
+#' 
+#' @param dataFp File path to normalized matrix
+#' @param designFp File path to design matrix
+#' @param jobName Name of job
+#' @param comparisons Character vector containing target contrasts. If comparing condA with condB, then the
+#' vector would be c("condA-condB")
+#' @param outputDir Path to output directory
+#' @param logTrans Log transform the input (needed if providing non-logged input)
+#' @param robustLimma Perform robust Limma estimate in the eBayes fit step
+#' @param type Type of statistical comparison, "limma" or "welch"
+#' @param batchCol Provide an optional column for inclusion of possible batch variance in the model
+#' @return None
+#' @export
+#' @examples
+#' normalyzerDE("results/normalized.tsv", "design.tsv", "my_jobname", c("1-2", "1-4"),  outputDir="path/to/output")
+#' @export
+normalyzerDE <- function(dataFp, designFp, jobName, comparisons, outputDir=NULL, logTrans=FALSE, 
+                         robustLimma=FALSE, type="limma", sampleCol="sample", condCol="group", 
+                         batchCol=NULL, techRepCol=NULL) {
 
+    startTime <- Sys.time()
+    
     jobDir <- setupJobDir(jobName, outputDir)
         
-    nst <- calculateStatistics(dataFp, designFp, comparisons, logTrans=logTrans, limmaTest=limmaTest, robustLimma=robustLimma, type=type, batchCol=batchCol)
-    sapply(names(nst@pairwiseCompsFdr), function(name) {
-        comp <- nst@pairwiseCompsFdr[[name]]
-        print(name)
-        print(comp[comp < cutoff])
-    })
+    nst <- calculateStatistics(dataFp, designFp, comparisons, logTrans=logTrans, 
+                               limmaTest=limmaTest, robustLimma=robustLimma, type=type, batchCol=batchCol)
+    
+    if (!is.null(techRepCol)) {
+        nst@dataMat <- reduce_technical_replicates(nst@dataMat, nst@designDf[, techRepCol])
+        nst@designDf <- reduce_design(nst@designDf, nst@designDf[, techRepCol])
+    }
     
     annotDf <- generateAnnotatedMatrix(nst)
-    write.table(annotDf, file=paste0(jobDir, "/", jobName, "_stats.tsv"), sep="\t", row.names = F)
+    outPath <- paste0(jobDir, "/", jobName, "_stats.tsv")
+    
+    print(paste("Writing", nrow(annotDf), "annotated rows to", outPath))
+    write.table(annotDf, file=outPath, sep="\t", row.names = F)
+    print(paste("Writing statistics report"))
     generateStatsReport(nst, jobName, jobDir)
+    
+    endTime <- Sys.time()
+    totTime <- difftime(endTime, startTime, units="mins")
+    print(paste0("All done! Results are stored in: ", jobDir, ", processing time was ", round(totTime, 1), " minutes"))
 }
 
 

@@ -15,7 +15,7 @@ calculateStatistics <- function(dataFp, designFp, comparisons, limmaTest=TRUE, v
     
     nst <- setupStatisticsObject(dataFp, designFp, comparisons, logTrans=logTrans)
     
-    nst <- calculateContrasts(nst, comparisons, "group", type=type, batchCol=batchCol)
+    nst <- calculateContrasts(nst, comparisons, condCol="group", type=type, batchCol=batchCol)
 
     nst
 }
@@ -115,4 +115,67 @@ plotContrastPHists <- function(nst, jobName, currentLayout, pageno) {
     grid::pushViewport(grid::viewport(layout=currentLayout))
     printPlots(histPlots, "HistPlots", pageno, jobName, currentLayout)  
 }
+
+
+
+reduce_technical_replicates <- function(dataMat, techRepGroups) {
+    
+    uniqueGroups <- unique(techRepGroups)
+    indices <- lapply(uniqueGroups, function(i) { which(techRepGroups %in% i) })
+    
+    collDataMat <- as.matrix(data.frame(lapply(indices, function(inds) {rowMeans(dataMat[, inds])})))
+    colnames(collDataMat) <- uniqueGroups
+    collDataMat
+}
+
+reduce_design <- function(designMat, techRepGroups) {
+    
+    uniqueGroups <- unique(techRepGroups)
+    indices <- lapply(uniqueGroups, function(i) { which(techRepGroups %in% i) })
+    collDesignMatList <- lapply(indices, function(inds) { designMat[inds[1],] })
+    collDesignMat <- do.call(rbind.data.frame, collDesignMatList)
+    collDesignMat
+}
+
+# reduce_technical_replicates = function(data_m, sample_names, sample_numbers) {
+#     
+#     merge_df <- data.frame(matrix(NA, nrow=nrow(data_m), ncol=0))
+#     unique_samples <- unique(sample_numbers)
+#     
+#     for (sample_nbr in unique_samples[!is.na(unique_samples)]) {
+#         sample_indices <- which(!is.na(match(sample_numbers, sample_nbr)))
+#         target_names <- sample_names[sample_indices]
+#         data_cols <- data_m[, target_names, drop=F]
+#         if (ncol(data_cols) > 1) {
+#             mean_col <- data.frame(apply(data_cols, 1, function(row) { 
+#                 row_mean <- mean(na.omit(row)) 
+#                 if (!is.nan(row_mean)) {
+#                     row_mean
+#                 }
+#                 else {
+#                     NA
+#                 }
+#             }))
+#             colnames(mean_col) <- target_names[1]
+#             merge_df <- cbind(merge_df, mean_col)
+#         }
+#         else {
+#             merge_df <- cbind(merge_df, data_cols)
+#         }
+#     }
+#     
+#     # browser()
+#     
+#     # Include samples if any started as NA
+#     # no_sample_nbr_df <- data_m[which(is.na(sample_numbers))]
+#     # merge_m <- cbind(no_sample_nbr_df, merge_df)
+#     
+#     # Reorder to maintain original order
+#     # orig <- colnames(data_m)
+#     # updated <- colnames(merge_m)
+#     # new_names_orig_order <- orig[sort(match(updated, orig))]
+#     # merge_m <- merge_m[, new_names_orig_order]
+#     
+#     merge_m
+# }
 

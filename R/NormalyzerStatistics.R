@@ -36,7 +36,7 @@ setGeneric(name="calculateContrasts",
 
 #' @rdname calculateContrasts
 setMethod(f="calculateContrasts", 
-          signature=c("NormalyzerStatistics", "character"),
+          signature=c("NormalyzerStatistics"),
           function(nst, comparisons, condCol, batchCol=NULL, splitter="-", type="limma", robustLimma=FALSE) {
               
               sampleReplicateGroups <- nst@designDf[, condCol]
@@ -61,8 +61,6 @@ setMethod(f="calculateContrasts",
                   Batch <- as.factor(nst@designDf[, batchCol])
                   model <- ~0+Variable+Batch
               }
-              
-              print(model)
               
               if (type == "limma") {
                   limmaDesign <- stats::model.matrix(model)

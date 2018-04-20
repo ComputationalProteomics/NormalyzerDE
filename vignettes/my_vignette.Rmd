@@ -1,11 +1,12 @@
 ---
-title: "Vignette Title"
+title: "Evaluation and statistics of expression data using NormalyzerDE"
 author: "Jakob Willforss, Aakash Chawade and Fredrik Levander"
 date: "`r format(Sys.Date(), '%m/%d/%Y')`"
 abstract: >
     When working with omics data you will encounter technical biases. These can often in part be remedied by using appropriate normalization approach. Normalyzer helps this process by both performing a number of readibly available normalizations as well as generating a summary document of the results.
     NormalyzerDE package version: `r packageVersion("NormalyzerDE")`
-output: rmarkdown::html_vignette
+output: 
+  BiocStyle::pdf_document
 vignette: >
   %\VignetteIndexEntry{Differential expression and countering technical biases using NormalyzerDE}
   %\VignetteEngine{knitr::rmarkdown}
@@ -20,128 +21,142 @@ vignette: >
 
 # Default use
 
-Mention citing.
+## Citing
+
+Mention how to cite.
 
 ## Input format
 
-NormalyzerDE expects a raw data file in the following format:
+NormalyzerDE expects a raw data file. Columns can contain annotation information or sample data.
+Each column should start with a header.
 
 ```
-Example of format
+pepseq  s1      s2      s3      s4
+ATAAGG  20.0    21.2    19.4    18.5
+AWAG    23.3    24.1    23.5    17.3
+ACATGM  22.1    22.3    22.5    23.2
 ```
 
-Furthermore, it expects a design matrix:
+This data should be provided with a design matrix where all data samples should be represented.
+One column (default header "sample") should match the columns containing samples in the raw data.
+Another column (default header "group") should contain condition levels which could be used for group-based
+evaluations.
 
 ```
-Example of design matrix
+sample  group
+s1      condA
+s2      condA
+s3      condB
+s4      condB
 ```
 
-The data matrix can be replaced with the output matrix from Proteios or peptide or protein (names?) output from MaxQuant.
+## Running NormalyzerDE evaluation
 
-Finally, it is possible to process using the format used in Normalyzer. There, no design matrix was used and sample groups were instead specified by adding an extra row at the top of the matrix.
-
-```
-Example of old format
-```
-
-## Processing
-
-```{r}
-head(readLines("design.tsv"))
-```
-
-```{r}
-head(readLines("data.tsv"))
-```
+The evaluation step can be performed with one command, `normalyzer`.
+This command expects a path to the data file, a name for the run-job,
+a path to a design matrix and finally a path to an output directory.
 
 ```{r}
 library(NormalyzerDE)
 normalyzer("data.tsv", "vignette_run", designMatrix="design.tsv", outputDir="testout")
 ```
 
-## Evaluating results
+## Running NormalyzerDE statistical comparisons
 
-This will generate a PDF containing 
+When you after performing the evaluation and having evaluated the report have decided
+for which normalization approach seems to work best you can continue to the statistical step.
 
-### Detecting outliers
+Here, expected parameters are the path to the target normalization matrix, the sample design matrix as
+in the previous step, a job name, the path to an output directory and a list of the pairwise comparisons
+for which you want to calculate contrasts. They are provided as a character vector with conditions to
+compare separated by a dash ("-").
 
-The total intensity barplot can be used to see whether any samples has unusually high or low total intensity.
+```{r}
+normalyzerDE("testout/vignette_run/Loess-G-normalized.txt", "design.tsv", "vignette_run", 
+             outputDir="testoutstat", comparisons=c("1-2", "1-3", "1-4"))
+```
 
-![Total intensity](figs/1_tot_intensity.png)
+<!-- ## Evaluating results -->
 
-The total missing can show if any sample has an unusual number of missing values, which can indicate an outlier.
+<!-- This will generate a PDF containing  -->
 
-![Total NA](figs/2_tot_na.png)
+<!-- ### Detecting outliers -->
 
-The MDS plot gives an indication of how samples seems to group overall. We expect replicates to cluster closely - in particular for technical replicates. If one or a few samples are far of here it might indicate outliers.
+<!-- The total intensity barplot can be used to see whether any samples has unusually high or low total intensity. -->
 
-![MDS plot](figs/3_mds.png)
+<!-- ![Total intensity](figs/1_tot_intensity.png) -->
 
-### Variance investigations
+<!-- The total missing can show if any sample has an unusual number of missing values, which can indicate an outlier. -->
 
-After normalization intragroup variance is expected to be reduced within the group. This gives an assessment of how much the different normalizations influence the data, and sometimes which seems to perform the strongest.
+<!-- ![Total NA](figs/2_tot_na.png) -->
 
-![Intragroup variance](figs/4_variance.png)
+<!-- The MDS plot gives an indication of how samples seems to group overall. We expect replicates to cluster closely - in particular for technical replicates. If one or a few samples are far of here it might indicate outliers. -->
 
-Normalization usually reduces variance measures compared to when doing a simple log2 transform. Similarly to the previous plot this gives an indication of how normalization influenced the variance in the data.
+<!-- ![MDS plot](figs/3_mds.png) -->
 
-![Variance compared to log2](figs/5_comp_variance.png)
+<!-- ### Variance investigations -->
 
-The stable variables plot looks into features identified as particularly stable and checks how different normalization approaches influence their intragroup and overall variance. 
+<!-- After normalization intragroup variance is expected to be reduced within the group. This gives an assessment of how much the different normalizations influence the data, and sometimes which seems to perform the strongest. -->
 
-![Stable variables](figs/6_stable_var.png)
+<!-- ![Intragroup variance](figs/4_variance.png) -->
 
-### Normalization comparisons
+<!-- Normalization usually reduces variance measures compared to when doing a simple log2 transform. Similarly to the previous plot this gives an indication of how normalization influenced the variance in the data. -->
 
-The scatter plot shows a distribution of CV over raw intensity for different normalization approaches (?).
+<!-- ![Variance compared to log2](figs/5_comp_variance.png) -->
 
-![Scatter](figs/7_scatter.png)
+<!-- The stable variables plot looks into features identified as particularly stable and checks how different normalization approaches influence their intragroup and overall variance.  -->
 
-The MA plots shows the fold between the two first samples retrieved from the data matrix. Often in non-normalized there is a fold shift between samples which can be countered by normalization. Ideally the red fitting-line will go close to zero here.
+<!-- ![Stable variables](figs/6_stable_var.png) -->
 
-![MA plot](figs/8_ma.png)
+<!-- ### Normalization comparisons -->
 
-The scatter plot plots intensities of sample 1 against sample 2. This gives a sense of how the intensities varies between samples. There will always be a variation, but overall they are expected to be close to a linear trend, with similar variation around independent of intensity.
+<!-- The scatter plot shows a distribution of CV over raw intensity for different normalization approaches (?). -->
 
-![Scatter](figs/9_scatter.png)
+<!-- ![Scatter](figs/7_scatter.png) -->
 
-The QQ plot ...
+<!-- The MA plots shows the fold between the two first samples retrieved from the data matrix. Often in non-normalized there is a fold shift between samples which can be countered by normalization. Ideally the red fitting-line will go close to zero here. -->
 
-![QQ](figs/10_qq.png)
+<!-- ![MA plot](figs/8_ma.png) -->
 
-The intensity box plot...
+<!-- The scatter plot plots intensities of sample 1 against sample 2. This gives a sense of how the intensities varies between samples. There will always be a variation, but overall they are expected to be close to a linear trend, with similar variation around independent of intensity. -->
 
-![MDS plot](figs/11_intensity_box.png)
+<!-- ![Scatter](figs/9_scatter.png) -->
 
-The fold plot...
+<!-- The QQ plot ... -->
 
-![MDS plot](figs/12_fold.png)
+<!-- ![QQ](figs/10_qq.png) -->
 
-The sample density plots...
+<!-- The intensity box plot... -->
 
-![MDS plot](figs/13_density.png)
+<!-- ![MDS plot](figs/11_intensity_box.png) -->
 
-The MDS plots...
+<!-- The fold plot... -->
 
-![MDS plot](figs/14_mdses.png)
+<!-- ![MDS plot](figs/12_fold.png) -->
 
-The dispersion plots...
+<!-- The sample density plots... -->
 
-![MDS plot](figs/15_dispersion.png)
+<!-- ![MDS plot](figs/13_density.png) -->
 
-The correlation plots...
+<!-- The MDS plots... -->
 
-![MDS plot](figs/16_correlation.png)
+<!-- ![MDS plot](figs/14_mdses.png) -->
 
-The clustering plot...
+<!-- The dispersion plots... -->
 
-![MDS plot](figs/17_cluster.png)
+<!-- ![MDS plot](figs/15_dispersion.png) -->
 
-The differential expression plots...
+<!-- The correlation plots... -->
 
-![MDS plot](figs/18_de.png)
+<!-- ![MDS plot](figs/16_correlation.png) -->
 
-## Parameters
+<!-- The clustering plot... -->
+
+<!-- ![MDS plot](figs/17_cluster.png) -->
+
+<!-- The differential expression plots... -->
+
+<!-- ![MDS plot](figs/18_de.png) -->
 
 # Retention time normalization
 
@@ -154,18 +169,26 @@ There are two points of access for the higher order normalization. Either by cal
 ```{r}
 fullDf <- read.csv("data.tsv", sep="\t")
 designDf <- read.csv("design.tsv", sep="\t")
-head(fullDf)
-head(designDf)
+head(fullDf, 1)
+head(designDf, 1)
 ```
 
 At this point we have loaded the full data into dataframes. Next, we use the sample names present in the design matrix to extract sample columns from the raw data. Be careful that the sample names is a character vector. If it is a factor it will extract wrong columns.
 
+Make sure that sample names extracted from design matrix are in right format. We expect it to be in 'character' format.
+
 ```{r}
 sampleNames <- as.character(designDf$sample)
+typeof(sampleNames)
+```
+
+Now we are ready to extract the data matrix from the full matrix. We also need to get the retention time column from the full matrix.
+
+```{r}
 dataMat <- as.matrix(fullDf[, sampleNames])
 retentionTimes <- fullDf$Average.RT
 
-head(dataMat)
+head(dataMat, 1)
 ```
 
 If everything is fine the data matrix should be `double`, and have the same number of rows as the number of retention time values we have.
@@ -207,7 +230,7 @@ head(rtNormMat, 1)
 head(globalNormMat, 1)
 ```
 
-### Performing layered normalization
+## Performing layered normalization
 
 We have everything set up to perform the layered normalization. The result here is expected to be overall similar to the normal retention time approach.
 
@@ -249,12 +272,7 @@ Performance measures are calculated for normalizations. These are stored in an o
 normResultsWithEval <- analyzeNormalizations(normResults)
 ```
 
-## Step 4: Perform statistics
-
-```{r}
-```
-
-## Step 5: Output matrices to file
+## Step 4: Output matrices to file
 
 Generated normalization matrices are written to the provided folder.
 
@@ -263,7 +281,7 @@ jobDir <- setupJobDir("vignette_run", ".")
 writeNormalizedDatasets(normResultsWithEval, jobDir)
 ```
 
-## Step 6: Generate evaluation plots
+## Step 5: Generate evaluation plots
 
 Performance measures are used to generate evaluation figures which is written in an evaluation report.
 
@@ -271,7 +289,7 @@ Performance measures are used to generate evaluation figures which is written in
 generatePlots(normResultsWithEval, jobDir)
 ```
 
-
+After this evaluation of normalizations and progression to statistics follows as described previously in this report.
 
 
 
