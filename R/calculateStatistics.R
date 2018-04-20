@@ -39,12 +39,11 @@ setupStatisticsObject <- function(dataFp, designFp, comparisons, sampleCol="samp
         dataMat <- log2(dataMat)
     }
     
-    # nst <- NormalyzerStatistics(dummyStr="test")
-    nst <- NormalyzerStatistics(annotMat=annotMat, dataMat=dataMat, designDf=designDf)
+    nst <- NormalyzerStatistics(annotMat=annotMat, dataMat=dataMat, designDf=designDf, contrasts=comparisons)
     nst
 }
 
-outputAnnotatedMatrix <- function(nst, outPath) {
+generateAnnotatedMatrix <- function(nst) {
     
     pairwiseHead <- paste(names(nst@pairwiseCompsP), "p", sep="_")
     pMat <- data.frame(nst@pairwiseCompsP)
@@ -66,6 +65,60 @@ outputAnnotatedMatrix <- function(nst, outPath) {
     outDf
 }
 
-outputStatsReport <- function(nst, outPath) {
+#' Generate full output report plot document
+#' 
+#' @param nr Normalyzer results object.
+#' @param jobdir Path to output directory for run.
+#' @param plot_rows Number of plot rows.
+#' @param plot_cols Number of plot columns.
+#' @return None
+#' @export
+#' @examples
+#' normObj <- getVerifiedNormalyzerObject("data.tsv", "job_name", "design.tsv")
+#' normResults <- normMethods(normObj)
+#' normResultsWithEval <- analyzeNormalizations(normResults)
+#' generatePlots(normResultsWithEval, "path/to/output")
+generateStatsReport <- function(nst, jobName, jobDir, plot_rows=3, plot_cols=4) {
     
+    nrows <- plot_rows + 2
+    ncols <- plot_cols + 2
+    
+    currentLayout <- grid::grid.layout(nrow=nrows, ncol=ncols,
+                                       heights=c(0.1, rep(3 / (nrows-2), (nrows - 2)), 0.1), 
+                                       widths=c(0.1, rep(4 / (ncols-2), (ncols - 2)), 0.1), 
+                                       default.units=c("null", "null"))
+    
+    currentFont <- "Helvetica"
+    setupPlotting(jobName, jobDir, "Norm-stats-report")
+    plotFrontPage(jobName, currentFont)
+    pageNo <- 2
+    plotContrastPHists(nst, jobName, currentLayout, pageNo)
+    
+    grDevices::dev.off()
 }
+
+#' Generate P-histograms for each contrast
+#' 
+#' @param nr Normalyzer results object.
+#' @param currentLayout Layout used for document.
+#' @param pageno Current page number.
+#' @return None
+plotContrastPHists <- function(nst, jobName, currentLayout, pageno) {
+
+    contrastPLists <- nst@pairwiseCompsP
+    histPlots <- list()
+    
+    for (i in 1:length(contrastPLists)) {
+        contrast <- names(contrastPLists)[i]
+        pVals <- contrastPLists[[contrast]]
+        df <- data.frame(pVals=pVals)
+        histPlots[[i]] <- ggplot2::ggplot(df) + 
+            ggplot2::geom_histogram(ggplot2::aes(pVals), na.rm=TRUE, binwidth=0.01) +
+            ggplot2::ggtitle(paste("Contrast:", contrast))
+    }
+    
+    grid::grid.newpage()
+    grid::pushViewport(grid::viewport(layout=currentLayout))
+    printPlots(histPlots, "HistPlots", pageno, jobName, currentLayout)  
+}
+

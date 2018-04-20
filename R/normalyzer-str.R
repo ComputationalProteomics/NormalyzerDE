@@ -120,7 +120,7 @@ normalyzer <- function(inputPath,
     
     if (!skipAnalysis) {
         print("[Step 4/6] Calculating statistics...")
-        normalyzerResultsObject <- calculateStatistics(normalyzerResultsObject, )
+        # normalyzerResultsObject <- calculateStatistics(normalyzerResultsObject, )
         print("[Step 4/6] Plots successfully generated")
     }
     else {
@@ -149,8 +149,10 @@ normalyzer <- function(inputPath,
     print(paste0("All done! Results are stored in: ", jobDir, ", processing time was ", round(totTime, 1), " seconds"))
 }
 
-normalyzerDE <- function(dataFp, designFp, jobName, comparisons, logTrans=FALSE, limmaTest=TRUE, cutoff=0.1, robustLimma=FALSE, type="limma") {
-    
+normalyzerDE <- function(dataFp, designFp, jobName, comparisons, outputDir=NULL, logTrans=FALSE, limmaTest=TRUE, cutoff=0.1, robustLimma=FALSE, type="limma") {
+
+    jobDir <- setupJobDir(jobName, outputDir)
+        
     nst <- calculateStatistics(dataFp, designFp, comparisons, logTrans=logTrans, limmaTest=limmaTest, robustLimma=robustLimma, type=type)
     sapply(names(nst@pairwiseCompsFdr), function(name) {
         comp <- nst@pairwiseCompsFdr[[name]]
@@ -158,9 +160,8 @@ normalyzerDE <- function(dataFp, designFp, jobName, comparisons, logTrans=FALSE,
         print(comp[comp < cutoff])
     })
     
-    out <- outputAnnotatedMatrix(nst, "stat_out.tsv")
-    print(head(out))
-    outputStatsReport(nst, "stat_report.pdf")
+    annotDf <- generateAnnotatedMatrix(nst)
+    generateStatsReport(nst, jobName, jobDir)
 }
 
 

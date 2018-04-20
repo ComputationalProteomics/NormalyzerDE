@@ -6,6 +6,7 @@ NormalyzerStatistics <- setClass("NormalyzerStatistics",
                                      annotMat = "matrix",
                                      dataMat = "matrix",
                                      designDf = "data.frame",
+                                     contrasts = "vector",
                                      
                                      # sampleCol = "character",
                                      # conditionCol = "character",
@@ -19,7 +20,8 @@ NormalyzerStatistics <- setClass("NormalyzerStatistics",
                                  prototype=prototype(
                                      annotMat=NULL,
                                      dataMat=NULL,
-                                     designDf=NULL
+                                     designDf=NULL,
+                                     contrasts=NULL
                                  ))
 
 #' Calculate contrast
@@ -127,7 +129,7 @@ calculateWelch <- function(compLists, dataMat, naFilterContrast, s1cols, s2cols,
     compLists[["P"]][[comp]][naFilterContrast] <- welchPValCol
     compLists[["FDR"]][[comp]][naFilterContrast] <- welchFDRCol
     compLists[["Ave"]][[comp]][naFilterContrast] <- apply(dataMat, 1, mean)
-    compLists[["Fold"]][[comp]][naFilterContrast] <- apply(dataMat, 1, 
+    compLists[["Fold"]][[comp]][naFilterContrast] <- apply(dataMat, 1,
                                                          function(row) {
                                                              mean(row[s1cols]) - mean(row[s2cols])
                                                          })

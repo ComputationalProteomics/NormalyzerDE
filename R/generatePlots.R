@@ -17,17 +17,15 @@ generatePlots <- function(nr, jobdir, plot_rows=3, plot_cols=4) {
     currentjob <- nds@jobName
     nrows <- plot_rows + 2
     ncols <- plot_cols + 2
-        
+    
     currentLayout <- grid::grid.layout(nrow=nrows, ncol=ncols,
                                        heights=c(0.1, rep(3/(nrows-2), (nrows-2)), 0.1), 
                                        widths=c(0.1, rep(4/(ncols-2), (ncols-2)), 0.1), 
                                        default.units=c('null', 'null'))
         
     currentFont <- "Helvetica"
-    
-    setupPlotting(currentjob, jobdir)
+    setupPlotting(currentjob, jobdir, "Norm-report")
     plotFrontPage(currentjob, currentFont)
-    
     isLimitedRun <- nr@nds@singleReplicateRun
     
     # TI
@@ -106,14 +104,14 @@ generatePlots <- function(nr, jobdir, plot_rows=3, plot_cols=4) {
 #' @param currentjob Name of current run.
 #' @param jobdir Path to output directory for run.
 #' @return None
-setupPlotting <- function(currentjob, jobdir) {
+setupPlotting <- function(currentjob, jobdir, suffix) {
     
     grDevices::palette(c("red", "green", "blue", "orange", "darkgray", 
                          "blueviolet", "darkslateblue", "darkviolet", "gray", 
                          "bisque4", "brown", "cadetblue4", "darkgreen", 
                          "darkcyan", "darkmagenta", "darkgoldenrod4", "coral1"))
 
-    grDevices::pdf(file=paste(jobdir, "/Norm_report-", currentjob, ".pdf", sep=""), 
+    grDevices::pdf(file=paste(jobdir, "/", suffix, "-", currentjob, ".pdf", sep=""), 
                    paper="a4r", width=0, height=0)    
 
     theme_norm <- ggplot2::theme_set(ggplot2::theme_bw())
@@ -816,8 +814,8 @@ plotPHist <- function(nr, currentLayout, pageno) {
     
     for (i in 1:length(methodnames)) {
         
-        anovaFDRVals <- anovaP[, i]
-        plt <- ggplot2::ggplot() + ggplot2::geom_histogram(ggplot2::aes(anovaFDRVals), na.rm=TRUE, binwidth=0.01)
+        anovaPVals <- anovaP[, i]
+        plt <- ggplot2::ggplot() + ggplot2::geom_histogram(ggplot2::aes(anovaPVals), na.rm=TRUE, binwidth=0.01)
         histPlots[[i]] <- plt
     }
     
