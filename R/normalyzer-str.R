@@ -149,9 +149,9 @@ normalyzer <- function(inputPath,
     print(paste0("All done! Results are stored in: ", jobDir, ", processing time was ", round(totTime, 1), " seconds"))
 }
 
-normalyzerDE <- function(dataFp, designFp, jobName, comparisons, logTrans=FALSE, limmaTest=TRUE, cutoff=0.1, robustLimma=FALSE) {
+normalyzerDE <- function(dataFp, designFp, jobName, comparisons, logTrans=FALSE, limmaTest=TRUE, cutoff=0.1, robustLimma=FALSE, type="limma") {
     
-    nst <- calculateStatistics(dataFp, designFp, comparisons, logTrans=logTrans, limmaTest=limmaTest, robustLimma=robustLimma)
+    nst <- calculateStatistics(dataFp, designFp, comparisons, logTrans=logTrans, limmaTest=limmaTest, robustLimma=robustLimma, type=type)
     sapply(names(nst@pairwiseCompsFdr), function(name) {
         comp <- nst@pairwiseCompsFdr[[name]]
         print(name)
