@@ -171,7 +171,6 @@ normalyzerDE <- function(dataFp, designFp, jobName, comparisons, outputDir=NULL,
                          batchCol=NULL, techRepCol=NULL) {
 
     startTime <- Sys.time()
-    
     jobDir <- setupJobDir(jobName, outputDir)
         
     nst <- calculateStatistics(dataFp, designFp, comparisons, logTrans=logTrans, 
