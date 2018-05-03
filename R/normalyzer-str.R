@@ -66,23 +66,7 @@ normalyzer <- function(inputPath,
     startTime <- Sys.time()
     
     if (sourceFiles) {
-        
-        source(paste(sourceBase, "generatePlots.R", sep="/"))
-        source(paste(sourceBase, "normfinder-pipeline.R", sep="/"))
-        source(paste(sourceBase, "normMethods.R", sep="/"))
-        source(paste(sourceBase, "higherOrderNormMethods.R", sep="/"))
-        source(paste(sourceBase, "printMeta.R", sep="/"))
-        source(paste(sourceBase, "printPlots.R", sep="/"))
-
-        source(paste(sourceBase, "NormalyzerDataset.R", sep="/"))
-        source(paste(sourceBase, "NormalizationEvaluationResults.R", sep="/"))
-        source(paste(sourceBase, "NormalyzerResults.R", sep="/"))
-
-        source(paste(sourceBase, "utils.R", sep="/"))
-        source(paste(sourceBase, "inputVerification.R", sep="/"))
-        source(paste(sourceBase, "analyzeResults.R", sep="/"))
-        source(paste(sourceBase, "preparsers.R", sep="/"))
-        source(paste(sourceBase, "outputUtils.R", sep="/"))
+        sourceScripts(sourceBase)
     }
 
     print("[Step 1/6] Verifying input")
@@ -168,18 +152,31 @@ normalyzer <- function(inputPath,
 #' @export
 normalyzerDE <- function(dataFp, designFp, jobName, comparisons, outputDir=NULL, logTrans=FALSE, 
                          robustLimma=FALSE, type="limma", sampleCol="sample", condCol="group", 
-                         batchCol=NULL, techRepCol=NULL) {
+                         batchCol=NULL, techRepCol=NULL, leastRepCount=2, sourceFiles=FALSE,
+                         sourceBase=NULL) {
 
+    if (sourceFiles) {
+        sourceScripts(sourceBase)
+    }
+    
     startTime <- Sys.time()
     jobDir <- setupJobDir(jobName, outputDir)
-        
-    nst <- calculateStatistics(dataFp, designFp, comparisons, logTrans=logTrans, 
-                               limmaTest=limmaTest, robustLimma=robustLimma, type=type, batchCol=batchCol)
+
+    print("Setting up statistics object")
+    nst <- setupStatisticsObject(dataFp, designFp, comparisons, logTrans=logTrans, leastRepCount=leastRepCount)
     
     if (!is.null(techRepCol)) {
+        print("Reducing technical replicates")
         nst@dataMat <- reduce_technical_replicates(nst@dataMat, nst@designDf[, techRepCol])
         nst@designDf <- reduce_design(nst@designDf, nst@designDf[, techRepCol])
     }
+    
+    print("Calculating statistical contrasts...")
+    nst <- calculateContrasts(nst, comparisons, condCol="group", type=type, batchCol=batchCol)
+    print("Contrast calculations done!")
+    
+    # nst <- calculateStatistics(dataFp, designFp, comparisons, logTrans=logTrans, 
+    #                            limmaTest=limmaTest, robustLimma=robustLimma, type=type, batchCol=batchCol)
     
     annotDf <- generateAnnotatedMatrix(nst)
     outPath <- paste0(jobDir, "/", jobName, "_stats.tsv")
@@ -194,7 +191,24 @@ normalyzerDE <- function(dataFp, designFp, jobName, comparisons, outputDir=NULL,
     print(paste0("All done! Results are stored in: ", jobDir, ", processing time was ", round(totTime, 1), " minutes"))
 }
 
-
+sourceScripts <- function(sourceBase) {
+    source(paste(sourceBase, "generatePlots.R", sep="/"))
+    source(paste(sourceBase, "normfinder-pipeline.R", sep="/"))
+    source(paste(sourceBase, "normMethods.R", sep="/"))
+    source(paste(sourceBase, "higherOrderNormMethods.R", sep="/"))
+    source(paste(sourceBase, "printMeta.R", sep="/"))
+    source(paste(sourceBase, "printPlots.R", sep="/"))
+    
+    source(paste(sourceBase, "NormalyzerDataset.R", sep="/"))
+    source(paste(sourceBase, "NormalizationEvaluationResults.R", sep="/"))
+    source(paste(sourceBase, "NormalyzerResults.R", sep="/"))
+    
+    source(paste(sourceBase, "utils.R", sep="/"))
+    source(paste(sourceBase, "inputVerification.R", sep="/"))
+    source(paste(sourceBase, "analyzeResults.R", sep="/"))
+    source(paste(sourceBase, "preparsers.R", sep="/"))
+    source(paste(sourceBase, "outputUtils.R", sep="/"))
+}
 
 
 

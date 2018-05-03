@@ -5,8 +5,10 @@ NormalyzerStatistics <- setClass("NormalyzerStatistics",
                                  representation(
                                      annotMat = "matrix",
                                      dataMat = "matrix",
+                                     filteredDataMat = "matrix",
                                      designDf = "data.frame",
                                      contrasts = "vector",
+                                     filteringContrast = "vector",
                                      
                                      # sampleCol = "character",
                                      # conditionCol = "character",
@@ -44,10 +46,15 @@ setMethod(f="calculateContrasts",
               statMeasures <- c("P", "FDR", "Ave", "Fold")
               compLists <- setupStatMeasureLists(statMeasures, comparisons)
               
-              processedDataMatrix <- nst@dataMat
-              rownames(processedDataMatrix) <- 1:nrow(processedDataMatrix)
-              naFilterContrast <- getRowNAFilterContrast(processedDataMatrix, sampleReplicateGroups)
-              dataMatNAFiltered <- processedDataMatrix[naFilterContrast, ]
+              naFilterContrast <- nst@filteringContrast
+              dataMatNAFiltered <- nst@filteredDataMat
+          
+              # browser()
+              
+              # processedDataMatrix <- nst@dataMat
+              # rownames(processedDataMatrix) <- 1:nrow(processedDataMatrix)
+              # naFilterContrast <- getRowNAFilterContrast(processedDataMatrix, sampleReplicateGroups, minCount)
+              # dataMatNAFiltered <- processedDataMatrix[naFilterContrast, ]
               
               if (is.null(batchCol)) {
                   Variable <- as.factor(nst@designDf[, condCol])

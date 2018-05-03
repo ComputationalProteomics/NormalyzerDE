@@ -14,28 +14,43 @@ calculateStatistics <- function(dataFp, designFp, comparisons, limmaTest=TRUE, v
                                 logTrans=FALSE, robustLimma=FALSE, type="limma", batchCol=NULL) {
     
     nst <- setupStatisticsObject(dataFp, designFp, comparisons, logTrans=logTrans)
-    
     nst <- calculateContrasts(nst, comparisons, condCol="group", type=type, batchCol=batchCol)
 
     nst
 }
 
 setupStatisticsObject <- function(dataFp, designFp, comparisons, sampleCol="sample", 
-                                  conditionCol="group", batchCol=NULL, logTrans=logTrans) {
+                                  conditionCol="group", batchCol=NULL, logTrans=logTrans,
+                                  leastRepCount=2) {
 
     fullDf <- read.csv(dataFp, sep="\t")
     designDf <- read.csv(designFp, sep="\t")
     designDf[, sampleCol] <- as.character(designDf[, sampleCol])
+
+    # browser()
     
     dataCols <- designDf[, sampleCol]
     annotMat <- as.matrix(fullDf[, which(!colnames(fullDf) %in% dataCols)])
-    dataMat <- as.matrix(fullDf[, which(colnames(fullDf) %in% dataCols)], )
+    dataMat <- as.matrix(fullDf[, dataCols], )
+    
+    # processedDataMatrix <- nst@dataMat
+    rownames(dataMat) <- 1:nrow(dataMat)
+    naFilterContrast <- getRowNAFilterContrast(dataMat, designDf[, conditionCol], minCount=leastRepCount)
+    dataMatNAFiltered <- dataMat[naFilterContrast, ]
     
     if (logTrans) {
         dataMat <- log2(dataMat)
     }
     
-    nst <- NormalyzerStatistics(annotMat=annotMat, dataMat=dataMat, designDf=designDf, contrasts=comparisons)
+    nst <- NormalyzerStatistics(
+        annotMat=annotMat, 
+        dataMat=dataMat, 
+        designDf=designDf, 
+        contrasts=comparisons,
+        filteredDataMat=dataMatNAFiltered,
+        filteringContrast=naFilterContrast
+    )
+    
     nst
 }
 
