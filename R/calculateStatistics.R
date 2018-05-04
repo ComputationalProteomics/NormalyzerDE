@@ -19,24 +19,44 @@ calculateStatistics <- function(dataFp, designFp, comparisons, limmaTest=TRUE, v
     nst
 }
 
+filter_low_rep <- function(df, groups, least_rep = 2) {
+    row_meet_thres_contrast <- apply(df, 1, all_replicates_have_values, 
+                                     groups = groups, min_count = least_rep)
+    filtered_df <- df[row_meet_thres_contrast, ]
+    filtered_df
+}
+
+all_replicates_have_values <- function(row, groups, min_count) {
+    names(row) <- groups
+    rep_counts <- table(names(na.omit(row)))
+    length(rep_counts) == length(unique(groups)) && min(rep_counts) >= min_count
+}
+
 setupStatisticsObject <- function(dataFp, designFp, comparisons, sampleCol="sample", 
                                   conditionCol="group", batchCol=NULL, logTrans=logTrans,
                                   leastRepCount=2) {
 
+    # browser()
+    
     fullDf <- read.csv(dataFp, sep="\t")
     designDf <- read.csv(designFp, sep="\t")
     designDf[, sampleCol] <- as.character(designDf[, sampleCol])
 
-    # browser()
-    
     dataCols <- designDf[, sampleCol]
     annotMat <- as.matrix(fullDf[, which(!colnames(fullDf) %in% dataCols)])
     dataMat <- as.matrix(fullDf[, dataCols], )
     
     # processedDataMatrix <- nst@dataMat
     rownames(dataMat) <- 1:nrow(dataMat)
-    naFilterContrast <- getRowNAFilterContrast(dataMat, designDf[, conditionCol], minCount=leastRepCount)
-    dataMatNAFiltered <- dataMat[naFilterContrast, ]
+    # naFilterContrast <- getRowNAFilterContrast(dataMat, designDf[, conditionCol], minCount=leastRepCount)
+    # dataMatNAFiltered <- dataMat[naFilterContrast, ]
+  
+    dataMatNAFiltered <- filter_low_rep(dataMat, designDf[, conditionCol], least_rep=leastRepCount)
+    naFilterContrast <- rownames(dataMat) %in% rownames(dataMatNAFiltered)
+      
+    print(dim(dataMatNAFiltered))
+    
+    # browser()
     
     if (logTrans) {
         dataMat <- log2(dataMat)

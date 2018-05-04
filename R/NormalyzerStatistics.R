@@ -48,9 +48,8 @@ setMethod(f="calculateContrasts",
               
               naFilterContrast <- nst@filteringContrast
               dataMatNAFiltered <- nst@filteredDataMat
-          
-              # browser()
               
+              # browser()
               # processedDataMatrix <- nst@dataMat
               # rownames(processedDataMatrix) <- 1:nrow(processedDataMatrix)
               # naFilterContrast <- getRowNAFilterContrast(processedDataMatrix, sampleReplicateGroups, minCount)
@@ -179,7 +178,10 @@ calculateANOVAContrast <- function(compLists, dataMat, naFilterContrast, s1cols,
 }
 
 calculateLimmaContrast <- function(compLists, dataMatNAFiltered, naFilterContrast, limmaDesign, limmaFit, level1, level2, comp, robustLimma=FALSE) {
-    
+
+    print(head(dataMatNAFiltered))
+    print(dim(dataMatNAFiltered))
+        
     myContrast <- paste0("Variable", level1, "-", "Variable", level2)
     contrastMatrix <- limma::makeContrasts(contrasts=c(myContrast), levels=limmaDesign)
     fitContrasts <- limma::contrasts.fit(limmaFit, contrastMatrix)
