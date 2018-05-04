@@ -46,7 +46,7 @@ normalyzer <- function(inputPath,
                        omitLowAbundSamples=FALSE,
                        sampleAbundThres=15,
                        requireReplicates=TRUE,
-                       normalizeRetentionTime=FALSE,
+                       normalizeRetentionTime=TRUE,
                        retentionTimeWindow=1,
                        pairwiseComparisons=NULL,
                        includeCvCol=FALSE,
@@ -152,7 +152,7 @@ normalyzer <- function(inputPath,
 #' @export
 normalyzerDE <- function(dataFp, designFp, jobName, comparisons, outputDir=NULL, logTrans=FALSE, 
                          robustLimma=FALSE, type="limma", sampleCol="sample", condCol="group", 
-                         batchCol=NULL, techRepCol=NULL, leastRepCount=2, sourceFiles=FALSE,
+                         batchCol=NULL, techRepCol=NULL, leastRepCount=1, sourceFiles=FALSE,
                          sourceBase=NULL) {
 
     if (sourceFiles) {
@@ -174,9 +174,6 @@ normalyzerDE <- function(dataFp, designFp, jobName, comparisons, outputDir=NULL,
     print("Calculating statistical contrasts...")
     nst <- calculateContrasts(nst, comparisons, condCol="group", type=type, batchCol=batchCol)
     print("Contrast calculations done!")
-    
-    # nst <- calculateStatistics(dataFp, designFp, comparisons, logTrans=logTrans, 
-    #                            limmaTest=limmaTest, robustLimma=robustLimma, type=type, batchCol=batchCol)
     
     annotDf <- generateAnnotatedMatrix(nst)
     outPath <- paste0(jobDir, "/", jobName, "_stats.tsv")
