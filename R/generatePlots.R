@@ -135,6 +135,8 @@ plotFrontPage <- function(currentjob, currentFont) {
     # data(data4pdftitle)
     graphics::plot(1, type="n", axes=FALSE, xlab="", ylab="")
     
+    version <- packageVersion("NormalyzerDE")
+    
     # TODO: Re-insert nice illustration (figure?)
     # boxplot(data4pdftitle, axes=FALSE, col=c("green","green","red","red"))
     la1 <- grid::grid.layout(nrow=7, ncol=1, heights=c(0.2, 1, 0.1, 0.2, 0.1, 0.2, 0.2), default.units=c('null','null'))
@@ -145,7 +147,7 @@ plotFrontPage <- function(currentjob, currentFont) {
     
     grid::grid.text(paste("Project Name: ", currentjob, sep=""), vp=grid::viewport(layout.pos.row=3), just=c("center","center"), 
                     gp=grid::gpar(fontsize=12, fontfamily=currentFont, col="black"))
-    grid::grid.text(paste("Normalyzer (ver 1.1.1)"), vp=grid::viewport(layout.pos.row=4), just=c("center", "center"), 
+    grid::grid.text(paste0("Normalyzer (ver ", version, " )"), vp=grid::viewport(layout.pos.row=4), just=c("center", "center"), 
                     gp=grid::gpar(fontface="bold", fontsize=32, fontfamily=currentFont, col="darkblue"))
     
     grid::grid.text(paste("Report created on: ", Sys.Date(), sep=""), vp=grid::viewport(layout.pos.row=5), just=c("center","center"),

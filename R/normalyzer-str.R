@@ -195,10 +195,12 @@ sourceScripts <- function(sourceBase) {
     source(paste(sourceBase, "higherOrderNormMethods.R", sep="/"))
     source(paste(sourceBase, "printMeta.R", sep="/"))
     source(paste(sourceBase, "printPlots.R", sep="/"))
+    source(paste(sourceBase, "calculateStatistics.R", sep="/"))
     
     source(paste(sourceBase, "NormalyzerDataset.R", sep="/"))
     source(paste(sourceBase, "NormalizationEvaluationResults.R", sep="/"))
     source(paste(sourceBase, "NormalyzerResults.R", sep="/"))
+    source(paste(sourceBase, "NormalyzerStatistics.R", sep="/"))
     
     source(paste(sourceBase, "utils.R", sep="/"))
     source(paste(sourceBase, "inputVerification.R", sep="/"))
