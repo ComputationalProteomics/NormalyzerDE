@@ -41,19 +41,16 @@ getVerifiedNormalyzerObject <- function(inputPath,
         stop(paste("Unknown inputFormat:", inputFormat, "valids are:", paste(valids, collapse=", ")))
     }
     
-    if (is.null(designMatrixPath)) {
-        print("No design matrix providing, inferring it from legacy header")
-        designMatrix <- legacyNormalyzerToDesign(inputPath)
-        rawData <- rawData[-1,]
-    }
-    else {
-        designMatrix <- utils::read.table(designMatrixPath, sep="\t", stringsAsFactors=FALSE, header=TRUE)
-    }
-    
+    designMatrix <- utils::read.table(designMatrixPath, sep="\t", stringsAsFactors=FALSE, header=TRUE)
+
     if (zeroToNA) {
         rawData[rawData == "0"] <- NA
     }
-    
+
+    if (!groupCol %in% colnames(designMatrix)) {
+        stop(paste("Given groupCol:", groupCol, "was not present among design matrix columns"))
+    }
+        
     groups <- as.numeric(as.factor(designMatrix[, groupCol]))
     fullMatrix <- rawData[-1,]
     colnames(fullMatrix) <- rawData[1,]
@@ -103,6 +100,8 @@ loadRawDataFromFile <- function(inputPath) {
         }
     )
     
+    
+    
     rawData
 }
 
@@ -115,13 +114,11 @@ loadRawDataFromFile <- function(inputPath) {
 verifyValidNumbers <- function(rawDataOnly, groups) {
     
     # Fields expected to contain numbers in decimal or scientific notation, or containing NA or null
-    validPatterns <- c("\\d+(\\.\\d+)?", "NA", "null", "\\d+(\\.\\d+)?[eE]([\\+\\-])?\\d+$")
+    validPatterns <- c("\\d+(\\.\\d+)?", "NA", "\"NA\"", "null", "\\d+(\\.\\d+)?[eE]([\\+\\-])?\\d+$")
     
     regexPattern <- sprintf("^(%s)$", paste(validPatterns, collapse="|"))
     matches <- grep(regexPattern, rawDataOnly, perl=TRUE, ignore.case=TRUE)
     nonMatches <- stats::na.omit(rawDataOnly[-matches])
-    
-    # browser()
     
     if (length(nonMatches) > 0) {
         error_string <- paste(
