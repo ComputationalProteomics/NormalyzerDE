@@ -190,7 +190,6 @@ normalyzerDE <- function(dataFp, designFp, jobName, comparisons, outputDir=NULL,
 
 sourceScripts <- function(sourceBase) {
     source(paste(sourceBase, "generatePlots.R", sep="/"))
-    source(paste(sourceBase, "normfinder-pipeline.R", sep="/"))
     source(paste(sourceBase, "normMethods.R", sep="/"))
     source(paste(sourceBase, "higherOrderNormMethods.R", sep="/"))
     source(paste(sourceBase, "printMeta.R", sep="/"))

@@ -8,7 +8,6 @@ slotNames <- c("data2log2",
                "data2GI",
                "data2med",
                "data2mean",
-               "data2normfinder",
                "data2quantile",
                "data2rtMed",
                "data2rtMean",
@@ -35,10 +34,7 @@ outputNames <- c("Log2",
 #' @slot nds Normalyzer dataset representing run data.
 #' @slot ner Normalyzer evaluation results.
 #' @slot methodnames Short names for included normalization methods.
-#' @slot normfinderMaxThreshold Max threshold for running Normfinder normalization.
 #' @slot furtherNormalizationMinThreshold Min threshold for running extended normalizations.
-#' @slot houseKeepingVars Vector of house keeping variables found by Normfinder.
-#' @slot houseKeepingVarsVals ?
 #' @slot data2log2 Log2 of filtered raw data.
 #' @slot data2limloess Lim-Loess normalized raw data.
 #' @slot fittedLR Fitted Loess regression 
@@ -49,7 +45,6 @@ outputNames <- c("Log2",
 #' @slot data2GI GI-normalized data
 #' @slot data2med Median normalized data.
 #' @slot data2mean Mean normalized data.
-#' @slot data2normfinder CTR-log normalized data 
 #' @slot data2quantile Quantile normalized data.
 #' @slot data2rtMed Retention time normalized for median.
 #' @slot data2rtMean Retention time normalized for Mean.
@@ -63,11 +58,7 @@ NormalyzerResults <- setClass("NormalyzerResults",
                                   ner = "NormalizationEvaluationResults",
 
                                   methodnames = "character",
-                                  normfinderMaxThreshold="numeric",
                                   furtherNormalizationMinThreshold="numeric",
-                                  
-                                  houseKeepingVars="matrix",
-                                  houseKeepingVarsVals="matrix",
                                   
                                   data2log2 = "matrix",
                                   data2limloess = "matrix",
@@ -79,7 +70,6 @@ NormalyzerResults <- setClass("NormalyzerResults",
                                   data2GI = "matrix",
                                   data2med = "matrix",
                                   data2mean = "matrix",
-                                  data2normfinder = "matrix",
                                   data2quantile = "matrix",
                                   
                                   data2rtMed = "matrix",
@@ -89,7 +79,7 @@ NormalyzerResults <- setClass("NormalyzerResults",
                                   data2ctr = "matrix",
                                   data2mad = "matrix"
                               ),
-                              prototype=prototype(nds=NULL, normfinderMaxThreshold=1000, furtherNormalizationMinThreshold=100))
+                              prototype=prototype(nds=NULL, furtherNormalizationMinThreshold=100))
 
 #' Initialize Normalyzer results object
 #'
@@ -118,31 +108,18 @@ setMethod("initializeResultsObject", "NormalyzerResults",
 #'  (only meant for testing purposes)
 #' @param rtNorm Perform retention time based normalizations
 #' @param rtWindow Retention time window size.
-#' @param runNormfinder Perform Normfinder normalization.
 #' @return None
 #' @rdname performNormalizations
 setGeneric(name="performNormalizations", 
-           function(nr, forceAll, rtNorm, rtWindow, runNormfinder) standardGeneric("performNormalizations"))
+           function(nr, forceAll, rtNorm, rtWindow) standardGeneric("performNormalizations"))
 
 #' @rdname performNormalizations
 setMethod("performNormalizations", "NormalyzerResults",
-          function(nr, forceAll=FALSE, rtNorm=FALSE, rtWindow=0.1, runNormfinder=TRUE) {
+          function(nr, forceAll=FALSE, rtNorm=FALSE, rtWindow=0.1) {
               
               nds <- nr@nds
               nr <- basicMetricNormalizations(nr)
               rtColPresent <- length(nds@retentionTimes) > 0
-              
-              if (nrow(nds@normfinderFilterRawData) < nr@normfinderMaxThreshold && runNormfinder || forceAll) {
-                  
-                  if (!nds@singleReplicateRun) {
-                      nr <- normfinder(nr)
-                      # nr@houseKeepingVars <- normfinder(nds)
-                      nr <- calculateHKdataForNormObj(nr)
-                  }
-                  else {
-                      print("Processing in single replicate mode, Normfinder is omitted")
-                  }
-              }
               
               if (nrow(nds@filterrawdata) > nr@furtherNormalizationMinThreshold || forceAll) {
                   
@@ -194,38 +171,6 @@ setMethod("basicMetricNormalizations", "NormalyzerResults",
           }
 )
 
-#' Calculate and assign housekeeping variables
-#'
-#' @param nr Normalyzer results object.
-#' @return None
-#' @rdname calculateHKdataForNormObj
-setGeneric(name="calculateHKdataForNormObj", 
-           function(nr) standardGeneric("calculateHKdataForNormObj"))
-
-#' @rdname calculateHKdataForNormObj
-setMethod("calculateHKdataForNormObj", "NormalyzerResults",
-          function(nr) {
-              
-              nds <- nr@nds
-              filterrawdata <- nds@filterrawdata
-              
-              houseKeepVals <- nr@houseKeepingVarsVals
-              # HKVarTemp <- as.matrix(nr@houseKeepingVars[, which(as.numeric(nds@sampleReplicateGroups) > 0)])
-              # class(HKVarTemp) <- "numeric"
-              colmedianctr <- apply(houseKeepVals, 2, FUN="mean")
-              
-              for(i in 1:nrow(filterrawdata)) {
-                  nr@data2ctr[i,] <- unlist(sapply(1:ncol(filterrawdata), 
-                                                   function(zd) { (filterrawdata[i, zd] / colmedianctr[zd]) * mean(colmedianctr) }))
-              }
-              
-              nr@data2normfinder <- log2(nr@data2ctr)
-              colnames(nr@data2normfinder) <- colnames(nds@filterrawdata)
-              
-              # browser()
-              
-              nr
-          })
 
 #' Generate replicate based normalizations
 #'

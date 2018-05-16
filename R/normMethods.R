@@ -4,17 +4,16 @@
 #' @param forceAll Force all methods to run despite not qualifying for thresholds.
 #' @param normalizeRetentionTime Perform retention time based normalization methods.
 #' @param retentionTimeWindow Default window size for retention times.
-#' @param runNormfinder Run the Normfinder normalization method.
 #' @return Returns Normalyzer results object with performed analyzes assigned
 #'  as attributes
 #' @export
 #' @examples
 #' normObj <- getVerifiedNormalyzerObject("data.tsv", "job_name", "design.tsv")
 #' normResults <- normMethods(normObj)
-normMethods <- function(nds, forceAll=FALSE, normalizeRetentionTime=TRUE, retentionTimeWindow=1, runNormfinder=TRUE) {
+normMethods <- function(nds, forceAll=FALSE, normalizeRetentionTime=TRUE, retentionTimeWindow=1) {
     
     nr <- generateNormalyzerResultsObject(nds)
-    nr <- performNormalizations(nr, forceAll=forceAll, rtNorm=normalizeRetentionTime, rtWindow=retentionTimeWindow, runNormfinder=runNormfinder)
+    nr <- performNormalizations(nr, forceAll=forceAll, rtNorm=normalizeRetentionTime, rtWindow=retentionTimeWindow)
     
     return(nr)
 }

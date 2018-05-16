@@ -184,10 +184,8 @@ normfinder <- function(nr) {
 
     nr@houseKeepingVars <- housekeeping_full_rows
     nr@houseKeepingVarsVals <- house_keeping_vals
-    # nr@houseKeepingVarsValues <- nds@normfinder
-        
+
     return(nr)
-    # return(housekeeping_full_rows)
 }
 
 

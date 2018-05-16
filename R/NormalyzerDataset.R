@@ -8,9 +8,6 @@
 #' @slot sampleNames Vector containing sample names.
 #' @slot filterrawdata Reduced raw data matrix where low abundance rows are 
 #'  removed - TODO: CHECK, IS THIS CURRENTLY WORKING?
-#' @slot normfinderFilterRawData Reduced raw data matrix used for Normfinder
-#'  normalization
-#' @slot normfinderAnnot ?
 #' @slot sampleReplicateGroups Vector with sample replicate information
 #' @slot colsum Vector with sum of values for each column
 #' @slot medofdata Vector with median values for each column
@@ -32,8 +29,6 @@ NormalyzerDataset <- setClass("NormalyzerDataset",
                                   sampleNames = "character",
 
                                   filterrawdata = "matrix",
-                                  normfinderFilterRawData = "matrix",
-                                  normfinderAnnot = "matrix",
                                   sampleReplicateGroups = "numeric",
                                   
                                   colsum = "numeric",
@@ -45,31 +40,6 @@ NormalyzerDataset <- setClass("NormalyzerDataset",
                                                                     
                                   singleReplicateRun = "logical"
                               ),
-                              # slots = c(
-                              #     
-                              #     jobName = "character",
-                              #     rawData = "matrix",
-                              #     
-                              #     sampleNameCol = "character",
-                              #     groupNameCol = "character",
-                              #     
-                              #     designMatrix = "data.frame",
-                              #     sampleNames = "character",
-                              #     
-                              #     filterrawdata = "matrix",
-                              #     normfinderFilterRawData = "matrix",
-                              #     normfinderAnnot = "matrix",
-                              #     sampleReplicateGroups = "numeric",
-                              #     
-                              #     colsum = "numeric",
-                              #     medofdata = "numeric",
-                              #     meanofdata = "numeric",
-                              #     
-                              #     annotationValues = "matrix",
-                              #     retentionTimes = "numeric",
-                              #     
-                              #     singleReplicateRun = "logical"
-                              # ),
                               prototype=prototype(jobName=NULL, 
                                                   rawData=NULL,
                                                   designMatrix=NULL,
@@ -148,9 +118,8 @@ setGeneric(name="detectSingletonSample",
 #' @rdname detectSingletonSample
 setMethod("detectSingletonSample", "NormalyzerDataset",
           function(nds) {
-
-              fullHeader <- nds@rawData[1,]
-              groups <- fullHeader[fullHeader > 0]
+              
+              groups <- nds@sampleReplicateGroups
               distinctSamples <- unique(groups)
               singletonSamplePresent <- FALSE
               
@@ -183,12 +152,8 @@ setMethod("setupBasicValues", "NormalyzerDataset",
               
               nds@sampleReplicateGroups <- as.numeric(nds@sampleReplicateGroups)
               nds@annotationValues <- nds@rawData[, !(colnames(nds@rawData) %in% nds@sampleNames), drop=FALSE]
-
               nds <- setupFilterRawData(nds)
-              if (!nds@singleReplicateRun) {
-                  nds <- setupNormfinderFilterRawData(nds)
-              }
-              
+
               nds@colsum <- colSums(nds@filterrawdata, na.rm=TRUE)
               nds@medofdata <- apply(nds@filterrawdata, 2, FUN="median", na.rm=TRUE)
               nds@meanofdata <- apply(nds@filterrawdata, 2, FUN="mean", na.rm=TRUE)
@@ -250,32 +215,4 @@ setMethod("setupFilterRawData", "NormalyzerDataset",
               nds
           }
 )
-
-#' Setup Normfinder filtered raw data
-#'
-#' @param nds Normalyzer dataset.
-#' @return None
-#' @rdname setupNormfinderFilterRawData
-setGeneric(name="setupNormfinderFilterRawData", 
-           function(nds) standardGeneric("setupNormfinderFilterRawData"))
-
-#' @rdname setupNormfinderFilterRawData
-setMethod("setupNormfinderFilterRawData", "NormalyzerDataset",
-          function(nds) {
-              
-              stopifnot(!is.null(nds@rawData))
-              
-              filteredSampleHeader <- nds@sampleReplicateGroups
-              rowCountVals <- rowSums(!is.na(nds@filterrawdata))
-              totalNbrSamples <- 1 * ncol(nds@filterrawdata)
-              
-              passingRows <- which(rowCountVals >= totalNbrSamples)
-              
-              nds@normfinderAnnot <- nds@annotationValues[passingRows,,drop=FALSE]
-              nds@normfinderFilterRawData <- nds@filterrawdata[passingRows,,drop=FALSE]
-
-              nds
-          }
-)
-
 
