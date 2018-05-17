@@ -41,7 +41,7 @@ getVerifiedNormalyzerObject <- function(inputPath,
         stop(paste("Unknown inputFormat:", inputFormat, "valids are:", paste(valids, collapse=", ")))
     }
     
-    designMatrix <- utils::read.table(designMatrixPath, sep="\t", stringsAsFactors=FALSE, header=TRUE)
+    designMatrix <- utils::read.table(designMatrixPath, sep="\t", stringsAsFactors=FALSE, header=TRUE, comment.char="")
 
     if (zeroToNA) {
         rawData[rawData == "0"] <- NA
