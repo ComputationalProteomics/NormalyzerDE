@@ -54,10 +54,11 @@ getVerifiedNormalyzerObject <- function(inputPath,
     groups <- as.numeric(as.factor(designMatrix[, groupCol]))
     fullMatrix <- rawData[-1,]
     colnames(fullMatrix) <- rawData[1,]
-    
+
     verifyDesignMatrix(fullMatrix, designMatrix, sampleCol=sampleCol)
     dataMatrix <- fullMatrix[, designMatrix[, sampleCol]]
-    
+    annotationMatrix <- fullMatrix[, -which(colnames(fullMatrix) %in% designMatrix[, sampleCol])]
+        
     verifyValidNumbers(dataMatrix, groups)
     
     repSortedRawData <- getReplicateSortedData(dataMatrix, groups)
@@ -68,11 +69,13 @@ getVerifiedNormalyzerObject <- function(inputPath,
                                                         threshold=threshold, 
                                                         stopIfTooFew=!omitSamples)
     
+    designMatrix <- designMatrix[which(designMatrix$sample %in% colnames(lowCountSampleFiltered)), ]
+    
     # If no samples left after omitting, stop
     verifyMultipleSamplesPresent(lowCountSampleFiltered, groups, requireReplicates=requireReplicates)
     validateSampleReplication(lowCountSampleFiltered, groups, requireReplicates=requireReplicates)
     
-    nds <- generateNormalyzerDataset(rawData, jobName, designMatrix, sampleCol, groupCol)
+    nds <- generateNormalyzerDataset(cbind(annotationMatrix, lowCountSampleFiltered), jobName, designMatrix, sampleCol, groupCol)
     nds
 }
 
@@ -233,15 +236,8 @@ preprocessData <- function(dataMatrix) {
 #' @return None
 getLowCountSampleFiltered <- function(dataMatrix, groups, threshold=15, stopIfTooFew=TRUE) {
     
-    sampleIndices <- which(as.numeric(groups) > 0)
-    numberOfValues <- vector(length=length(sampleIndices), mode="numeric")
-    
-    for (i in 1:length(sampleIndices)) {
-        
-        sampleIndex <- sampleIndices[i]
-        numberOfValues[i] <- length(stats::na.omit(dataMatrix[, sampleIndex]))
-    }
-    
+    sampleIndices <- 1:length(groups)
+    numberOfValues <- colSums(!is.na(dataMatrix))
     notPassingThreshold <- which(numberOfValues < threshold)
     
     if (length(notPassingThreshold) == length(numberOfValues)) {
@@ -381,10 +377,11 @@ verifyMultipleSamplesPresent <- function(dataMatrix, groups, requireReplicates=T
 #' @return Data object representing loaded data.
 generateNormalyzerDataset <- function(fullRawMatrix, jobName, designMatrix, sampleNameCol, groupNameCol) {
     
-    rawData <- fullRawMatrix[-1,]
-    colnames(rawData) <- fullRawMatrix[1,]
+    # rawData <- fullRawMatrix[-1,]
+    # colnames(rawData) <- fullRawMatrix[1,]
     
-    nds <- NormalyzerDataset(jobName=jobName, rawData=rawData, designMatrix=designMatrix, sampleNameCol=sampleNameCol, groupNameCol=groupNameCol)
+    # nds <- NormalyzerDataset(jobName=jobName, rawData=rawData, designMatrix=designMatrix, sampleNameCol=sampleNameCol, groupNameCol=groupNameCol)
+    nds <- NormalyzerDataset(jobName=jobName, rawData=fullRawMatrix, designMatrix=designMatrix, sampleNameCol=sampleNameCol, groupNameCol=groupNameCol)
     nds <- setupValues(nds)
     nds
 }
