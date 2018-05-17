@@ -177,8 +177,6 @@ performGlobalRLRNormalization <- function(rawMatrix) {
         }
     }
     
-    print("Done")
-    
     colnames(globalFittedRLR) <- colnames(rawMatrix)
     
     globalFittedRLR
