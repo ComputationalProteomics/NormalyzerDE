@@ -818,7 +818,10 @@ plotPHist <- function(nr, currentLayout, pageno) {
         
         anovaPVals <- anovaP[, i]
         df <- data.frame(anovaPVals=anovaPVals)
-        histPlots[[i]] <- ggplot2::ggplot(df) + ggplot2::geom_histogram(ggplot2::aes(anovaPVals), na.rm=TRUE, binwidth=0.01)
+        histPlots[[i]] <- ggplot2::ggplot(df) + 
+            ggplot2::geom_histogram(ggplot2::aes(anovaPVals), na.rm=TRUE, binwidth=0.01) +
+            ggplot2::ggtitle(methodnames[i]) +
+            ggplot2::xlim(0,1)
     }
     
     grid::grid.newpage()
