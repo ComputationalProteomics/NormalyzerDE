@@ -129,12 +129,12 @@ setMethod("performNormalizations", "NormalyzerResults",
                   nr@data2loess <- performCyclicLoessNormalization(nds@filterrawdata)
                   nr@globalfittedRLR <- performGlobalRLRNormalization(nds@filterrawdata)
                   
-                  if (!nds@singleReplicateRun && !rtColPresent) {
-                      nr <- performReplicateBasedNormalizations(nr)
-                  }
-                  else if (nds@singleReplicateRun) {
-                      print("Processing in single replicate mode, replicate based normalizations are omitted")
-                  }
+                  # if (!nds@singleReplicateRun && !rtColPresent) {
+                  #     nr <- performReplicateBasedNormalizations(nr)
+                  # }
+                  # else if (nds@singleReplicateRun) {
+                  #     print("Processing in single replicate mode, replicate based normalizations are omitted")
+                  # }
               }
               
               if (rtNorm) {
