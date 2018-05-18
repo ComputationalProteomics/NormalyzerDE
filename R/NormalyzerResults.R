@@ -14,9 +14,6 @@ slotNames <- c("data2log2",
                "data2rtLoess")
 
 outputNames <- c("Log2",
-                 "Loess-R",
-                 "RLR-R",
-                 "VSN-R", 
                  "Loess-G",
                  "RLR-G",
                  "VSN-G",
