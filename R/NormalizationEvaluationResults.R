@@ -275,26 +275,27 @@ setMethod("calculateSignificanceMeasures", "NormalizationEvaluationResults",
                   krusWalFDRsWithNA[naFilterContrast, methodIndex] <- krusWalFDRCol
               }
               
+              
+              
               # Finds to 5% of least DE variables in log2 data based on ANOVA
-              # Generates error if it doesn't find least DE peptides
-              if (sum(anovaFDRs[[1]] >= min(utils::head(rev(sort(anovaFDRs[[1]])), n=(5 * length(anovaFDRs[[1]]) / 100)))) > 0) {
+              min_val <- min(utils::head(rev(sort(anovaFDRs[[1]])), n=(5 * length(anovaFDRs[[1]]) / 100)))
+              nbr_above_thres <- sum(anovaFDRs[[1]] >= min_val)
+              if (!is.infinite(min_val) && nbr_above_thres > 0) {
                   lowlyVariableFeatures <- which(anovaFDRs[[1]] >= min(utils::head(rev(sort(anovaFDRs[[1]])), n=(5 * length(anovaFDRs[[1]]) / 100))))
+                  
+                  nonsiganfdrlistcv <- vector()
+                  for (mlist in 1:methodCount) {
+                      tmpdata <- methodList[[mlist]][lowlyVariableFeatures, ]
+                      nonsiganfdrlistcv[mlist] <- mean(apply(tmpdata, 1, function(sampleIndex) raster::cv(sampleIndex, na.rm=TRUE)), na.rm=TRUE)
+                  }
+                  
+                  nonsiganfdrlistcvpdiff <- sapply(1:length(nonsiganfdrlistcv), function(sampleIndex) (nonsiganfdrlistcv[sampleIndex] * 100) / nonsiganfdrlistcv[1])
+                  ner@nonsiganfdrlist <- nonsiganfdrlistcv
+                  ner@nonsiganfdrlistcvpdiff <- nonsiganfdrlistcvpdiff
               }
-              
-              # if (sum(anovaFDRs[, 1] >= min(utils::head(rev(sort(anovaFDRs[, 1])), n=(5 * nrow(anovaFDRs) / 100)))) > 0) {
-              #     lowlyVariableFeatures <- which(anovaFDRs[, 1] >= min(utils::head(rev(sort(anovaFDRs[, 1])), n=(5 * nrow(anovaFDRs) / 100))))
-              # }
-
-              nonsiganfdrlistcv <- vector()
-              for (mlist in 1:methodCount) {
-                  tmpdata <- methodList[[mlist]][lowlyVariableFeatures, ]
-                  nonsiganfdrlistcv[mlist] <- mean(apply(tmpdata, 1, function(sampleIndex) raster::cv(sampleIndex, na.rm=TRUE)), na.rm=TRUE)
+              else {
+                  warning("Too few successful ANOVA calculations to generate lowly variable features")
               }
-              
-              nonsiganfdrlistcvpdiff <- sapply(1:length(nonsiganfdrlistcv), function(sampleIndex) (nonsiganfdrlistcv[sampleIndex] * 100) / nonsiganfdrlistcv[1])
-              
-              ner@nonsiganfdrlist <- nonsiganfdrlistcv
-              ner@nonsiganfdrlistcvpdiff <- nonsiganfdrlistcvpdiff
               
               ner@anova_p <- anovaPValsWithNA
               

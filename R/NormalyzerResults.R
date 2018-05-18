@@ -56,7 +56,7 @@ NormalyzerResults <- setClass("NormalyzerResults",
 
                                   methodnames = "character",
                                   furtherNormalizationMinThreshold="numeric",
-                                  
+
                                   data2log2 = "matrix",
                                   data2limloess = "matrix",
                                   fittedLR = "matrix",
@@ -68,11 +68,11 @@ NormalyzerResults <- setClass("NormalyzerResults",
                                   data2med = "matrix",
                                   data2mean = "matrix",
                                   data2quantile = "matrix",
-                                  
+
                                   data2rtMed = "matrix",
                                   data2rtMean = "matrix",
                                   data2rtLoess = "matrix",
-                                  
+
                                   data2ctr = "matrix",
                                   data2mad = "matrix"
                               ),
@@ -83,13 +83,13 @@ NormalyzerResults <- setClass("NormalyzerResults",
 #' @param nr Normalyzer results object.
 #' @return None
 #' @rdname initializeResultsObject
-setGeneric(name="initializeResultsObject", 
+setGeneric(name="initializeResultsObject",
            function(nr) standardGeneric("initializeResultsObject"))
 
 #' @rdname initializeResultsObject
 setMethod("initializeResultsObject", "NormalyzerResults",
           function(nr) {
-              
+
               nds <- nr@nds
               nr@data2log2 <- log2(nds@filterrawdata)
               nr@data2ctr <- matrix(nrow=nrow(nds@filterrawdata),
@@ -107,25 +107,25 @@ setMethod("initializeResultsObject", "NormalyzerResults",
 #' @param rtWindow Retention time window size.
 #' @return None
 #' @rdname performNormalizations
-setGeneric(name="performNormalizations", 
+setGeneric(name="performNormalizations",
            function(nr, forceAll, rtNorm, rtWindow) standardGeneric("performNormalizations"))
 
 #' @rdname performNormalizations
 setMethod("performNormalizations", "NormalyzerResults",
           function(nr, forceAll=FALSE, rtNorm=FALSE, rtWindow=0.1) {
-              
+
               nds <- nr@nds
               nr <- basicMetricNormalizations(nr)
               rtColPresent <- length(nds@retentionTimes) > 0
-              
+
               if (nrow(nds@filterrawdata) > nr@furtherNormalizationMinThreshold || forceAll) {
-                  
+
                   nr@data2vsn <- performVSNNormalization(nds@filterrawdata)
                   nr@data2quantile <- performQuantileNormalization(nds@filterrawdata)
                   nr@data2mad <- performSMADNormalization(nds@filterrawdata)
                   nr@data2loess <- performCyclicLoessNormalization(nds@filterrawdata)
                   nr@globalfittedRLR <- performGlobalRLRNormalization(nds@filterrawdata)
-                  
+
                   # if (!nds@singleReplicateRun && !rtColPresent) {
                   #     nr <- performReplicateBasedNormalizations(nr)
                   # }
@@ -133,7 +133,7 @@ setMethod("performNormalizations", "NormalyzerResults",
                   #     print("Processing in single replicate mode, replicate based normalizations are omitted")
                   # }
               }
-              
+
               if (rtNorm) {
                   if (rtColPresent) {
                       nr <- performRTNormalizations(nr, rtWindow)
@@ -142,7 +142,7 @@ setMethod("performNormalizations", "NormalyzerResults",
                       print("No RT column specified (column named 'RT'). Skipping RT normalization.")
                   }
               }
-              
+
               nr
           }
 )
@@ -153,13 +153,13 @@ setMethod("performNormalizations", "NormalyzerResults",
 #' @param nr Normalyzer results object.
 #' @return None
 #' @rdname basicMetricNormalizations
-setGeneric(name="basicMetricNormalizations", 
+setGeneric(name="basicMetricNormalizations",
            function(nr) standardGeneric("basicMetricNormalizations"))
 
 #' @rdname basicMetricNormalizations
 setMethod("basicMetricNormalizations", "NormalyzerResults",
           function(nr) {
-              
+
               nds <- nr@nds
               nr@data2GI <- globalIntensityNormalization(nds@filterrawdata)
               nr@data2med <- medianNormalization(nds@filterrawdata)
@@ -174,53 +174,53 @@ setMethod("basicMetricNormalizations", "NormalyzerResults",
 #' @param nr Normalyzer results object.
 #' @return None
 #' @rdname performReplicateBasedNormalizations
-setGeneric(name="performReplicateBasedNormalizations", 
+setGeneric(name="performReplicateBasedNormalizations",
            function(nr) standardGeneric("performReplicateBasedNormalizations"))
 
 #' @rdname performReplicateBasedNormalizations
 setMethod("performReplicateBasedNormalizations", "NormalyzerResults",
           function(nr) {
-              
+
               ## NORMALIZATION within REPLICATES RLR, VSN and Loess
-              
+
               nds <- nr@nds
-              
+
               sampleReplicateGroups <- nds@sampleReplicateGroups
               filterrawdata <- nds@filterrawdata
-              
+
               limLoessMatrix <- matrix(, nrow=nrow(filterrawdata), ncol=0)
               vsnMatrix <- matrix(, nrow=nrow(filterrawdata), ncol=0)
               fittedLRMatrix <- matrix(, nrow=nrow(filterrawdata), ncol=0)
-              
+
               indexList <- getIndexList(sampleReplicateGroups)
               colOrder <- c()
-              
+
               for (repVal in names(indexList)) {
-                  
+
                   repValNr <- strtoi(repVal)
                   cols <- indexList[[repVal]]
                   colOrder <- c(colOrder, cols)
-                  
+
                   rawDataWindow <- filterrawdata[, cols]
                   LRWindow <- performGlobalRLRNormalization(rawDataWindow)
                   fittedLRMatrix <- cbind(fittedLRMatrix, LRWindow)
-                  
+
                   loessDataWindow <- performCyclicLoessNormalization(rawDataWindow)
                   limLoessMatrix <- cbind(limLoessMatrix, loessDataWindow)
-                  
+
                   vsnDataWindow <- performVSNNormalization(rawDataWindow)
                   vsnMatrix <- cbind(vsnMatrix, vsnDataWindow)
               }
-              
+
               origPos <- c()
               for (i in 1:length(colOrder)) {
                   origPos <- c(origPos, which(colOrder == i))
               }
-              
+
               nr@fittedLR <- fittedLRMatrix[, origPos]
               nr@data2limloess <- limLoessMatrix[, origPos]
               nr@data2vsnrep <- vsnMatrix[, origPos]
-              
+
               nr
           })
 
@@ -231,19 +231,19 @@ setMethod("performReplicateBasedNormalizations", "NormalyzerResults",
 #' @param overlapWindows Number of overlapping normalization windows.
 #' @return None
 #' @rdname performRTNormalizations
-setGeneric(name="performRTNormalizations", 
+setGeneric(name="performRTNormalizations",
            function(nr, stepSizeMinutes, overlapWindows) standardGeneric("performRTNormalizations"))
 
 #' @rdname performRTNormalizations
 setMethod("performRTNormalizations", "NormalyzerResults",
           function(nr, stepSizeMinutes, overlapWindows=FALSE) {
-              
+
               nds <- nr@nds
-              
+
               smoothedRTMed <- getSmoothedRTNormalizedMatrix(nds@filterrawdata, nds@retentionTimes, medianNormalization, stepSizeMinutes)
               smoothedRTMean <- getSmoothedRTNormalizedMatrix(nds@filterrawdata, nds@retentionTimes, meanNormalization, stepSizeMinutes)
               smoothedRTLoess <- getSmoothedRTNormalizedMatrix(nds@filterrawdata, nds@retentionTimes, performCyclicLoessNormalization, stepSizeMinutes)
-              
+
               nr@data2rtMed <- smoothedRTMed
               nr@data2rtMean <- smoothedRTMean
               nr@data2rtLoess <- smoothedRTLoess
@@ -255,25 +255,25 @@ setMethod("performRTNormalizations", "NormalyzerResults",
 #' @param nr Normalyzer results object.
 #' @return None
 #' @rdname getUsedMethodNames
-setGeneric(name="getUsedMethodNames", 
+setGeneric(name="getUsedMethodNames",
            function(nr) standardGeneric("getUsedMethodNames"))
 
 #' @rdname getUsedMethodNames
 setMethod("getUsedMethodNames", "NormalyzerResults",
           function(nr) {
-              
+
               usedMethodNames <- c()
-              
+
               for (i in 1:length(slotNames)) {
                   slotName <- slotNames[i]
                   fieldValue <- methods::slot(nr, slotName)
-                  
+
                   if (!all(is.na(fieldValue))) {
                       outputName <- outputNames[i]
                       usedMethodNames <- c(usedMethodNames, outputName)
                   }
               }
-              
+
               usedMethodNames
           })
 
@@ -282,23 +282,23 @@ setMethod("getUsedMethodNames", "NormalyzerResults",
 #' @param nr Normalyzer results object.
 #' @return None
 #' @rdname getSlotNameList
-setGeneric(name="getSlotNameList", 
+setGeneric(name="getSlotNameList",
            function(nr) standardGeneric("getSlotNameList"))
 
 #' @rdname getSlotNameList
 setMethod("getSlotNameList", "NormalyzerResults",
           function(nr) {
               methodDataList <- c()
-              
+
               for (i in 1:length(slotNames)) {
                   slotName <- slotNames[i]
                   fieldValue <- methods::slot(nr, slotName)
-                  
+
                   if (!all(is.na(fieldValue))) {
                       methodDataList <- c(methodDataList, slotName)
                   }
               }
-              
+
               methodDataList
           })
 
@@ -307,25 +307,25 @@ setMethod("getSlotNameList", "NormalyzerResults",
 #' @param nr Normalyzer results object.
 #' @return None
 #' @rdname getNormalizationMatrices
-setGeneric(name="getNormalizationMatrices", 
+setGeneric(name="getNormalizationMatrices",
            function(nr) standardGeneric("getNormalizationMatrices"))
 
 #' @rdname getNormalizationMatrices
 setMethod("getNormalizationMatrices", "NormalyzerResults",
           function(nr) {
-              
+
               methodDataList <- list()
               listCounter <- 1
               for (i in 1:length(slotNames)) {
                   slotName <- slotNames[i]
                   fieldValue <- methods::slot(nr, slotName)
-                  
+
                   if (!all(is.na(fieldValue))) {
                       methodDataList[[listCounter]] <- fieldValue
                       listCounter <- listCounter + 1
                   }
               }
-              
+
               methodDataList
           })
 
