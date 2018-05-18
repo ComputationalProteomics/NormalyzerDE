@@ -23,7 +23,7 @@ writeNormalizedDatasets <- function(nr, jobdir, includePairwiseComparisons=FALSE
     
     nds <- nr@nds
     ner <- nr@ner
-    
+
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
     annotationColumns <- nds@annotationValues

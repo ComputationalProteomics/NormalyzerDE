@@ -1,30 +1,37 @@
-slotNames <- c("data2log2",
-               "data2limloess",
-               "fittedLR",
-               "data2vsnrep",
-               "data2loess",
-               "globalfittedRLR",
-               "data2vsn",
-               "data2GI",
-               "data2med",
-               "data2mean",
-               "data2quantile",
-               "data2rtMed",
-               "data2rtMean",
-               "data2rtLoess")
+slotNamesMap <- c("data2log2"="Log2",
+               "data2loess"="Loess-G",
+               "data2vsn"="VSN-G",
+               "data2GI"="AI-G",
+               "data2med"="MedI-G",
+               "data2mean"="MeanI-G",
+               "data2quantile"="Quantile",
+               "data2rtMed"="RT-med",
+               "data2rtMean"="RT-mean",
+               "data2rtLoess"="RT-Loess")
 
-outputNames <- c("Log2",
-                 "Loess-G",
-                 "RLR-G",
-                 "VSN-G",
-                 "TI-G",
-                 "MedI-G",
-                 "AI-G",
-                 "NF-G",
-                 "Quantile",
-                 "RT-mean",
-                 "RT-med",
-                 "RT-Loess")
+# slotOutput <- c("data2log2"="Log2",
+#                 "data2loess"="Loess-G",
+#                 "data2vsn"="VSN-G",
+#                 "data2rlr"="RLR-G",
+#                 "data2GI"="AI-G",
+#                 "data2med"="MedI-G",
+#                 "data2mean"="MeanI-G",
+#                 "data2quantile"="Quantile",
+#                 "data2rtMed"="RT-med",
+#                 "data2rtMean"="RT-mean",
+#                 "data2rtLoess"="RT-Loess")
+
+# outputNames <- c("Log2",
+#                  "Loess-G",
+#                  "VSN-G",
+#                  "RLR-G",
+#                  "TI-G",
+#                  "MedI-G",
+#                  "AI-G",
+#                  "Quantile",
+#                  "RT-mean",
+#                  "RT-med",
+#                  "RT-Loess")
 
 #' S4 class to represent dataset information
 #' 
@@ -118,13 +125,11 @@ setMethod("performNormalizations", "NormalyzerResults",
               nr <- basicMetricNormalizations(nr)
               rtColPresent <- length(nds@retentionTimes) > 0
 
-              if (nrow(nds@filterrawdata) > nr@furtherNormalizationMinThreshold || forceAll) {
-
-                  nr@data2vsn <- performVSNNormalization(nds@filterrawdata)
-                  nr@data2quantile <- performQuantileNormalization(nds@filterrawdata)
-                  nr@data2mad <- performSMADNormalization(nds@filterrawdata)
-                  nr@data2loess <- performCyclicLoessNormalization(nds@filterrawdata)
-                  nr@globalfittedRLR <- performGlobalRLRNormalization(nds@filterrawdata)
+                nr@data2vsn <- performVSNNormalization(nds@filterrawdata)
+                nr@data2quantile <- performQuantileNormalization(nds@filterrawdata)
+                nr@data2mad <- performSMADNormalization(nds@filterrawdata)
+                nr@data2loess <- performCyclicLoessNormalization(nds@filterrawdata)
+                nr@globalfittedRLR <- performGlobalRLRNormalization(nds@filterrawdata)
 
                   # if (!nds@singleReplicateRun && !rtColPresent) {
                   #     nr <- performReplicateBasedNormalizations(nr)
@@ -132,7 +137,7 @@ setMethod("performNormalizations", "NormalyzerResults",
                   # else if (nds@singleReplicateRun) {
                   #     print("Processing in single replicate mode, replicate based normalizations are omitted")
                   # }
-              }
+              # }
 
               if (rtNorm) {
                   if (rtColPresent) {
@@ -263,13 +268,12 @@ setMethod("getUsedMethodNames", "NormalyzerResults",
           function(nr) {
 
               usedMethodNames <- c()
-
-              for (i in 1:length(slotNames)) {
-                  slotName <- slotNames[i]
-                  fieldValue <- methods::slot(nr, slotName)
+              for (i in 1:length(slotNamesMap)) {
+                  name <- names(slotNamesMap)[i]
+                  fieldValue <- methods::slot(nr, name)
 
                   if (!all(is.na(fieldValue))) {
-                      outputName <- outputNames[i]
+                      outputName <- slotNamesMap[name]
                       usedMethodNames <- c(usedMethodNames, outputName)
                   }
               }
@@ -290,8 +294,8 @@ setMethod("getSlotNameList", "NormalyzerResults",
           function(nr) {
               methodDataList <- c()
 
-              for (i in 1:length(slotNames)) {
-                  slotName <- slotNames[i]
+              for (i in 1:length(slotNamesMap)) {
+                  slotName <- names(slotNamesMap)[i]
                   fieldValue <- methods::slot(nr, slotName)
 
                   if (!all(is.na(fieldValue))) {
@@ -316,14 +320,19 @@ setMethod("getNormalizationMatrices", "NormalyzerResults",
 
               methodDataList <- list()
               listCounter <- 1
-              for (i in 1:length(slotNames)) {
-                  slotName <- slotNames[i]
+              for (i in 1:length(slotNamesMap)) {
+                  slotName <- names(slotNamesMap)[i]
                   fieldValue <- methods::slot(nr, slotName)
 
                   if (!all(is.na(fieldValue))) {
                       methodDataList[[listCounter]] <- fieldValue
                       listCounter <- listCounter + 1
                   }
+                  
+                  # if (!all(is.na(fieldValue))) {
+                  #   methodDataList[[listCounter]] <- fieldValue
+                  #   listCounter <- listCounter + 1
+                  # }
               }
 
               methodDataList

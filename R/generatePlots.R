@@ -135,7 +135,12 @@ plotFrontPage <- function(currentjob, currentFont) {
     # data(data4pdftitle)
     graphics::plot(1, type="n", axes=FALSE, xlab="", ylab="")
     
-    version <- packageVersion("NormalyzerDE")
+    if ("NormalyzerDE" %in% rownames(installed.packages())) {
+      version <- packageVersion("NormalyzerDE")
+    }
+    else {
+      version <- "(version not found)"
+    }
     
     # TODO: Re-insert nice illustration (figure?)
     # boxplot(data4pdftitle, axes=FALSE, col=c("green","green","red","red"))
