@@ -24,7 +24,7 @@
 #' @slot avgpercorsum TODO: Look into (Average Pearson correlation sum)
 #' @slot avgspecorsum TODO: Look into (Average Spearman correlation sum)
 #' @export
-NormalizationEvaluationResults <- setClass("NormalizationEvaluationResults",
+NormalyzerEvaluationResults <- setClass("NormalyzerEvaluationResults",
                                            representation(
                                                avgcvmem = "matrix",
                                                avgcvmempdiff = "numeric",
@@ -62,7 +62,7 @@ setGeneric(name="calculateCV",
            function(ner, nr) standardGeneric("calculateCV"))
 
 #' @rdname calculateCV
-setMethod("calculateCV", "NormalizationEvaluationResults",
+setMethod("calculateCV", "NormalyzerEvaluationResults",
           function(ner, nr) {
               
               sampleReplicateGroups <- nr@nds@sampleReplicateGroups
@@ -122,7 +122,7 @@ setGeneric(name="calculateMAD",
            function(ner, nr) standardGeneric("calculateMAD"))
 
 #' @rdname calculateMAD
-setMethod("calculateMAD", "NormalizationEvaluationResults",
+setMethod("calculateMAD", "NormalyzerEvaluationResults",
           function(ner, nr) {
               
               # Setup
@@ -172,7 +172,7 @@ setGeneric(name="calculateAvgVar",
            function(ner, nr) standardGeneric("calculateAvgVar"))
 
 #' @rdname calculateAvgVar
-setMethod("calculateAvgVar", "NormalizationEvaluationResults",
+setMethod("calculateAvgVar", "NormalyzerEvaluationResults",
           function(ner, nr) {
               
               # Setup
@@ -229,7 +229,7 @@ setGeneric(name="calculateSignificanceMeasures",
            function(ner, nr, categorical_anova, var_filter_frac) standardGeneric("calculateSignificanceMeasures"))
 
 #' @rdname calculateSignificanceMeasures
-setMethod("calculateSignificanceMeasures", "NormalizationEvaluationResults",
+setMethod("calculateSignificanceMeasures", "NormalyzerEvaluationResults",
           function(ner, nr, 
                    categorical_anova=FALSE, 
                    var_filter_frac=NULL) {

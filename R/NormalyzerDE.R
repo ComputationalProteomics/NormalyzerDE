@@ -189,7 +189,7 @@ sourceScripts <- function(sourceBase) {
     source(paste(sourceBase, "calculateStatistics.R", sep="/"))
     
     source(paste(sourceBase, "NormalyzerDataset.R", sep="/"))
-    source(paste(sourceBase, "NormalizationEvaluationResults.R", sep="/"))
+    source(paste(sourceBase, "NormalyzerEvaluationResults.R", sep="/"))
     source(paste(sourceBase, "NormalyzerResults.R", sep="/"))
     source(paste(sourceBase, "NormalyzerStatistics.R", sep="/"))
     

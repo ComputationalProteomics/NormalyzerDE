@@ -84,7 +84,7 @@ setupNormalizationEvaluationObject <- function(nr,
                                                categorical_anova=FALSE,
                                                var_filter_frac=NULL) {
     
-    ner <- NormalizationEvaluationResults()
+    ner <- NormalyzerEvaluationResults()
     ner <- calculateCV(ner, nr)
     
     singleRepRun <- nr@nds@singleReplicateRun

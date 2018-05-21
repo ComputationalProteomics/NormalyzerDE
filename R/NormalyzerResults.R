@@ -35,7 +35,7 @@ slotNamesMap <- c("data2log2"="Log2",
 NormalyzerResults <- setClass("NormalyzerResults",
                               slots=c(
                                   nds = "NormalyzerDataset",
-                                  ner = "NormalizationEvaluationResults",
+                                  ner = "NormalyzerEvaluationResults",
                                   
                                   methodnames = "character",
                                   furtherNormalizationMinThreshold="numeric",
