@@ -1,19 +1,60 @@
 library(NormalyzerDE)
 
+designPath <- "data/regression_cases/web_dataset/test_design.tsv"
 
-normalyzer("data/regression_cases/web_dataset/test_data.tsv")
+normalyzer(jobName="RegressionTest",
+           designPath=designPath,
+           dataPath="data/regression_cases/web_dataset/test_data.tsv",
+           outputDir=".")
 
-test_that("true is true", {
-    expect_equal(TRUE, TRUE)
+normalizations <- c(
+    "AI-G"="AI-G-normalized.txt", 
+    "Loess-G"="Loess-G-normalized.txt", 
+    "Log-2"="Log2-normalized.txt", 
+    "MeanI-G"="MeanI-G-normalized.txt", 
+    "MedI-G"="MedI-G-normalized.txt", 
+    "Quantile"="Quantile-normalized.txt", 
+    "submitted_rawdata"="submitted_rawdata.txt", 
+    "VSN-G"="VSN-G-normalized.txt"
+)
+
+test_that("Evaluation matrices are identical", {
+    
+    baseline_base <- "data/regression_cases/web_dataset/output/eval"
+    curr_base <- "RegressionTest/"
+    
+    for (norm in normalizations) {
+        
+        baseline_md5 <- tools::md5sum(paste(baseline_base, norm, sep="/"))
+        current_md5 <- tools::md5sum(paste(curr_base, norm, sep="/"))
+        expect_true(baseline_md5 == current_md5, info = paste("Testing for normalization:", norm))
+    }
+    
 })
 
-test_that("two isn't three", {
-    expect_equal(2 != 3, TRUE)
-    expect_equal(a != b, TRUE)
-})
+for (norm_name in names(normalizations)) {
 
-all_NA_one_replicate_set_m <- as.matrix(read.table("data/corner_cases/all_NA_one_replicate_set.tsv", header=FALSE, sep="\t", stringsAsFactors=FALSE, quote="", comment.char=""))
-test_that("Raw loading for standard file works", {
-    expect_equal(all_NA_one_replicate_set_m, loadRawDataFromFile("data/corner_cases/all_NA_one_replicate_set.tsv"))
-})
+    norm <- normalizations[norm_name]
+    
+    normalyzerDE(
+        jobName=paste("RegressionTestDE", norm_name, sep="_"), 
+        designPath=designPath, 
+        dataPath=paste0("data/regression_cases/web_dataset/output/de/", norm_name, "/", norm_name, "/", norm_name, "_stats.tsv"),
+        outputDir=".",
+        comparisons=c("2-3")
+    )
+    
+    test_that("DE runs are identical", {
+        
+        baseline_base <- paste("data/regression_cases/web_dataset/output/de", norm_name, norm_name, sep="/")
+        curr_base <- paste("RegressionTestDE", norm_name, sep="_")
+        
+        browser()
+        
+        baseline_md5 <- tools::md5sum(paste(baseline_base, "test_stats.tsv", sep="/"))
+        current_md5 <- tools::md5sum(paste0(curr_base, "RegressionTestDE_", norm_name, "_stats.tsv", sep="/"))
+        
+        expect_true(baseline_md5 == current_md5, info = paste("Testing for normalization:", norm))
+    })
+}
 

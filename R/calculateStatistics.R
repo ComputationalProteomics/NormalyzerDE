@@ -32,7 +32,7 @@ allReplicatesHaveValuesContrast <- function(row, groups, min_count) {
     length(rep_counts) == length(unique(groups)) && min(rep_counts) >= min_count
 }
 
-setupStatisticsObject <- function(dataFp, designFp, comparisons, sampleCol="sample", 
+setupStatisticsObject <- function(designFp, dataFp, comparisons, sampleCol="sample", 
                                   conditionCol="group", batchCol=NULL, logTrans=logTrans,
                                   leastRepCount=2) {
 

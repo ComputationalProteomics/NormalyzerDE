@@ -10,10 +10,6 @@ NormalyzerStatistics <- setClass("NormalyzerStatistics",
                                      contrasts = "vector",
                                      filteringContrast = "vector",
                                      
-                                     # sampleCol = "character",
-                                     # conditionCol = "character",
-                                     # batchCol = "character",
-                                     
                                      pairwiseCompsP = "list",
                                      pairwiseCompsFdr = "list",
                                      pairwiseCompsAve = "list",
@@ -48,12 +44,6 @@ setMethod(f="calculateContrasts",
               
               naFilterContrast <- nst@filteringContrast
               dataMatNAFiltered <- nst@filteredDataMat
-              
-              # browser()
-              # processedDataMatrix <- nst@dataMat
-              # rownames(processedDataMatrix) <- 1:nrow(processedDataMatrix)
-              # naFilterContrast <- getRowNAFilterContrast(processedDataMatrix, sampleReplicateGroups, minCount)
-              # dataMatNAFiltered <- processedDataMatrix[naFilterContrast, ]
               
               if (is.null(batchCol)) {
                   Variable <- as.factor(nst@designDf[, condCol])
@@ -179,9 +169,6 @@ calculateANOVAContrast <- function(compLists, dataMat, naFilterContrast, s1cols,
 
 calculateLimmaContrast <- function(compLists, dataMatNAFiltered, naFilterContrast, limmaDesign, limmaFit, level1, level2, comp, robustLimma=FALSE) {
 
-    print(head(dataMatNAFiltered))
-    print(dim(dataMatNAFiltered))
-        
     myContrast <- paste0("Variable", level1, "-", "Variable", level2)
     contrastMatrix <- limma::makeContrasts(contrasts=c(myContrast), levels=limmaDesign)
     fitContrasts <- limma::contrasts.fit(limmaFit, contrastMatrix)

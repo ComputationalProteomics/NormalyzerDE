@@ -70,7 +70,7 @@ normalyzer <- function(jobName,
         sourceScripts(sourceBase)
     }
 
-    print("[Step 1/6] Verifying input")
+    print("[Step 1/5] Verifying input")
     normObj <- getVerifiedNormalyzerObject(jobName=jobName,
                                            designPath=designPath,
                                            dataPath=dataPath,
@@ -82,25 +82,25 @@ normalyzer <- function(jobName,
                                            sampleCol=sampleColName,
                                            groupCol=groupColName)
     jobDir <- setupJobDir(jobName, outputDir)
-    print(paste("[Step 1/6] Input verified, job directory prepared at:", jobDir))
+    print(paste("[Step 1/5] Input verified, job directory prepared at:", jobDir))
     
-    print("[Step 2/6] Performing normalizations")
+    print("[Step 2/5] Performing normalizations")
     normalyzerResultsObject <- normMethods(normObj,
                                            forceAll=forceAllMethods,
                                            normalizeRetentionTime=normalizeRetentionTime,
                                            retentionTimeWindow=retentionTimeWindow)
-    print("[Step 2/6] Done!")
+    print("[Step 2/5] Done!")
     
     if (!skipAnalysis) {
-        print("[Step 3/6] Generating evaluation measures...")
+        print("[Step 3/5] Generating evaluation measures...")
         normalyzerResultsObject <- analyzeNormalizations(normalyzerResultsObject, 
                                                          comparisons=pairwiseComparisons,
                                                          categoricalAnova=categoricalAnova,
                                                          varFilterFrac=varFilterFrac)
-        print("[Step 3/6] Done!")
+        print("[Step 3/5] Done!")
     }
     else {
-        "[Step 3/6] skipAnalysis flag set so no analysis performed"
+        "[Step 3/5] skipAnalysis flag set so no analysis performed"
     }
     
     print("[Step 4/5] Writing matrices to file")
@@ -142,7 +142,7 @@ normalyzer <- function(jobName,
 #' @examples
 #' normalyzerDE("results/normalized.tsv", "design.tsv", "my_jobname", c("1-2", "1-4"),  outputDir="path/to/output")
 #' @export
-normalyzerDE <- function(dataFp, designFp, jobName, comparisons, outputDir=NULL, logTrans=FALSE, 
+normalyzerDE <- function(jobName, designPath, dataPath, comparisons, outputDir=".", logTrans=FALSE, 
                          robustLimma=FALSE, type="limma", sampleCol="sample", condCol="group", 
                          batchCol=NULL, techRepCol=NULL, leastRepCount=1, sourceFiles=FALSE,
                          sourceBase=NULL) {
@@ -155,7 +155,7 @@ normalyzerDE <- function(dataFp, designFp, jobName, comparisons, outputDir=NULL,
     jobDir <- setupJobDir(jobName, outputDir)
 
     print("Setting up statistics object")
-    nst <- setupStatisticsObject(dataFp, designFp, comparisons, logTrans=logTrans, leastRepCount=leastRepCount)
+    nst <- setupStatisticsObject(designPath, dataPath, comparisons, logTrans=logTrans, leastRepCount=leastRepCount)
     
     if (!is.null(techRepCol)) {
         print("Reducing technical replicates")
@@ -199,18 +199,4 @@ sourceScripts <- function(sourceBase) {
     source(paste(sourceBase, "preparsers.R", sep="/"))
     source(paste(sourceBase, "outputUtils.R", sep="/"))
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

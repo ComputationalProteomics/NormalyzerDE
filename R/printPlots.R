@@ -34,12 +34,7 @@ printPlots <- function(plotlist, plotname, pageno, jobname, currentLayout) {
 
     row <- 2  # Start value
     col <- 2  # Start value
-        
-    options(warn=2)
-    print(plotname)
-    
-    
-    
+
     pos_counter <- 0
     for (i in 1:length(plotlist)) {
         
