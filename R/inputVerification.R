@@ -83,6 +83,7 @@ getVerifiedNormalyzerObject <- function(jobName,
 #' 
 #' @param inputPath Path to Normalyzer data.
 #' @return Table containing raw data from input file.
+#' @keywords internal
 loadRawDataFromFile <- function(inputPath) {
     
     tryCatch(
@@ -114,6 +115,7 @@ loadRawDataFromFile <- function(inputPath) {
 #' @param rawDataOnly Dataframe with input data.
 #' @param groups Condition levels for comparisons.
 #' @return Parsed rawdata where 0 values are replaced with NA
+#' @keywords internal
 verifyValidNumbers <- function(rawDataOnly, groups) {
     
     # Fields expected to contain numbers in decimal or scientific notation, or containing NA or null
@@ -157,6 +159,7 @@ verifyValidNumbers <- function(rawDataOnly, groups) {
 #' @param sampleCol Column in design matrix containing sample IDs.
 #' 
 #' @return None
+#' @keywords internal
 verifyDesignMatrix <- function(fullMatrix, designMatrix, sampleCol="sample") {
 
     designColnames <- designMatrix[, sampleCol]
@@ -202,6 +205,7 @@ verifyDesignMatrix <- function(fullMatrix, designMatrix, sampleCol="sample") {
 #' @param rawDataOnly Dataframe with unparsed input data matrix.
 #' @param groups Vector containing condition levels.
 #' @return rawData sorted on replicate
+#' @keywords internal
 getReplicateSortedData <- function(rawDataOnly, groups) {
 
     factorLevels <- sort(as.numeric(unique(groups)))
@@ -219,6 +223,7 @@ getReplicateSortedData <- function(rawDataOnly, groups) {
 #' 
 #' @param dataMatrix Matrix with raw data.
 #' @return Parsed rawdata where 0 values are replaced with NA
+#' @keywords internal
 preprocessData <- function(dataMatrix) {
 
     dataMatrix[which(dataMatrix == 0)] <- NA
@@ -234,6 +239,7 @@ preprocessData <- function(dataMatrix) {
 #' @param stopIfTooFew Abort run if lower than threshold number of values in
 #'        column
 #' @return None
+#' @keywords internal
 getLowCountSampleFiltered <- function(dataMatrix, groups, threshold=15, stopIfTooFew=TRUE) {
     
     sampleIndices <- 1:length(groups)
@@ -289,6 +295,7 @@ getLowCountSampleFiltered <- function(dataMatrix, groups, threshold=15, stopIfTo
 #' @param requireReplicates By default stops processing if not all samples
 #'  have replicates
 #' @return None
+#' @keywords internal
 validateSampleReplication <- function(dataMatrix, groups, requireReplicates=TRUE) {
     
     headerCounts <- table(groups)
@@ -324,6 +331,7 @@ validateSampleReplication <- function(dataMatrix, groups, requireReplicates=TRUE
 #' @param requireReplicates By default stops processing if not all samples
 #'  have replicates
 #' @return None
+#' @keywords internal
 verifyMultipleSamplesPresent <- function(dataMatrix, groups, requireReplicates=TRUE) {
     
     samples <- groups[which(as.numeric(groups) > 0)]
@@ -375,6 +383,7 @@ verifyMultipleSamplesPresent <- function(dataMatrix, groups, requireReplicates=T
 #' @param sampleNameCol Name of column in design matrix containing sample names.
 #' @param groupNameCol Name of column in design matrix contaning conditions.
 #' @return Data object representing loaded data.
+#' @keywords internal
 generateNormalyzerDataset <- function(fullRawMatrix, jobName, designMatrix, sampleNameCol, groupNameCol) {
     
     # rawData <- fullRawMatrix[-1,]

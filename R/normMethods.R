@@ -22,6 +22,7 @@ normMethods <- function(nds, forceAll=FALSE, normalizeRetentionTime=TRUE, retent
 #' 
 #' @param nds Normalyzer dataset object.
 #' @return Empty Normalyzer results object.
+#' @keywords internal
 generateNormalyzerResultsObject <- function(nds) {
     nr <- NormalyzerResults(nds=nds)
     nr <- initializeResultsObject(nr)
@@ -32,6 +33,7 @@ generateNormalyzerResultsObject <- function(nds) {
 #' 
 #' @param rawMatrix Target matrix to be normalized
 #' @return Normalized and log-transformed matrix
+#' @export
 globalIntensityNormalization <- function(rawMatrix) {
     
     colsums <- colSums(rawMatrix, na.rm=TRUE)
@@ -53,6 +55,7 @@ globalIntensityNormalization <- function(rawMatrix) {
 #' 
 #' @param rawMatrix Target matrix to be normalized
 #' @return Normalized and log-transformed matrix
+#' @export
 medianNormalization <- function(rawMatrix) {
     
     colMedians <- apply(rawMatrix, 2, FUN="median", na.rm=TRUE)
@@ -75,6 +78,7 @@ medianNormalization <- function(rawMatrix) {
 #' 
 #' @param rawMatrix Target matrix to be normalized
 #' @return Normalized and log-transformed matrix
+#' @export
 meanNormalization <- function(rawMatrix) {
     
     colMeans <- apply(rawMatrix, 2, FUN="mean", na.rm=TRUE)
@@ -96,9 +100,10 @@ meanNormalization <- function(rawMatrix) {
 #' 
 #' @param rawMatrix Target matrix to be normalized
 #' @return Normalized matrix
+#' @export
 performVSNNormalization <- function(rawMatrix) {
-    normMatrix <- suppressMessages(vsn::justvsn(rawMatrix))
     
+    normMatrix <- suppressMessages(vsn::justvsn(rawMatrix))
     colnames(normMatrix) <- colnames(rawMatrix)
     normMatrix
 }
@@ -109,6 +114,7 @@ performVSNNormalization <- function(rawMatrix) {
 #' 
 #' @param rawMatrix Target matrix to be normalized
 #' @return Normalized matrix
+#' @export
 performQuantileNormalization <- function(rawMatrix) {
     
     log2Matrix <- log2(rawMatrix)
@@ -124,6 +130,7 @@ performQuantileNormalization <- function(rawMatrix) {
 #' 
 #' @param rawMatrix Target matrix to be normalized
 #' @return Normalized matrix
+#' @export
 performSMADNormalization <- function(rawMatrix) {
     
     log2Matrix <- log2(rawMatrix)
@@ -142,6 +149,7 @@ performSMADNormalization <- function(rawMatrix) {
 #' 
 #' @param rawMatrix Target matrix to be normalized
 #' @return Normalized matrix
+#' @export
 performCyclicLoessNormalization <- function(rawMatrix) {
     
     log2Matrix <- log2(rawMatrix)
@@ -155,6 +163,7 @@ performCyclicLoessNormalization <- function(rawMatrix) {
 #' 
 #' @param rawMatrix Target matrix to be normalized
 #' @return Normalized matrix
+#' @export
 performGlobalRLRNormalization <- function(rawMatrix) {
     
     log2Matrix <- log2(rawMatrix)
@@ -187,6 +196,7 @@ performGlobalRLRNormalization <- function(rawMatrix) {
 #' 
 #' @param rawMatrix Target matrix to be normalized
 #' @return Normalized matrix
+#' @keywords internal
 performNoNormalization <- function(rawMatrix) {
     rawMatrix
 }

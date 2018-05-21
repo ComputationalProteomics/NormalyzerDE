@@ -61,16 +61,16 @@ normalyzer <- function(jobName,
                        sampleColName="sample",
                        groupColName="group",
                        inputFormat="default",
-                       skipAnalysis=FALSE) {
+                       skipAnalysis=FALSE,
+                       quiet=FALSE) {
 
     startTime <- Sys.time()
     
-    options(warn=0)
     if (sourceFiles) {
         sourceScripts(sourceBase)
     }
 
-    print("[Step 1/5] Verifying input")
+    if (!quiet) print("[Step 1/5] Verifying input")
     normObj <- getVerifiedNormalyzerObject(jobName=jobName,
                                            designPath=designPath,
                                            dataPath=dataPath,
@@ -82,47 +82,47 @@ normalyzer <- function(jobName,
                                            sampleCol=sampleColName,
                                            groupCol=groupColName)
     jobDir <- setupJobDir(jobName, outputDir)
-    print(paste("[Step 1/5] Input verified, job directory prepared at:", jobDir))
+    if (!quiet) print(paste("[Step 1/5] Input verified, job directory prepared at:", jobDir))
     
-    print("[Step 2/5] Performing normalizations")
+    if (!quiet) print("[Step 2/5] Performing normalizations")
     normalyzerResultsObject <- normMethods(normObj,
                                            forceAll=forceAllMethods,
                                            normalizeRetentionTime=normalizeRetentionTime,
                                            retentionTimeWindow=retentionTimeWindow)
-    print("[Step 2/5] Done!")
+    if (!quiet) print("[Step 2/5] Done!")
     
     if (!skipAnalysis) {
-        print("[Step 3/5] Generating evaluation measures...")
+        if (!quiet) print("[Step 3/5] Generating evaluation measures...")
         normalyzerResultsObject <- analyzeNormalizations(normalyzerResultsObject, 
                                                          comparisons=pairwiseComparisons,
                                                          categoricalAnova=categoricalAnova,
                                                          varFilterFrac=varFilterFrac)
-        print("[Step 3/5] Done!")
+        if (!quiet) print("[Step 3/5] Done!")
     }
     else {
-        "[Step 3/5] skipAnalysis flag set so no analysis performed"
+        if (!quiet) print("[Step 3/5] skipAnalysis flag set so no analysis performed")
     }
     
-    print("[Step 4/5] Writing matrices to file")
+    if (!quiet) print("[Step 4/5] Writing matrices to file")
     writeNormalizedDatasets(normalyzerResultsObject, 
                             jobDir, 
                             includePairwiseComparisons=!is.null(pairwiseComparisons),
                             includeCvCol=includeCvCol,
                             includeAnovaP=includeAnovaP)
-    print("[Step 4/5] Matrices successfully written")
+    if (!quiet) print("[Step 4/5] Matrices successfully written")
     
     if (!skipAnalysis) {
-        print("[Step 5/5] Generating plots...")
+        if (!quiet) print("[Step 5/5] Generating plots...")
         generatePlots(normalyzerResultsObject, jobDir, plot_rows=plotRows, plot_cols=plotCols)
-        print("[Step 5/5] Plots successfully generated")
+        if (!quiet) print("[Step 5/5] Plots successfully generated")
     }
     else {
-        print("[Step 5/5] skipAnalysis flag set so no plots generated")
+        if (!quiet) print("[Step 5/5] skipAnalysis flag set so no plots generated")
     }
     
     endTime <- Sys.time()
     totTime <- difftime(endTime, startTime, units="mins")
-    print(paste0("All done! Results are stored in: ", jobDir, ", processing time was ", round(totTime, 1), " minutes"))
+    if (!quiet) print(paste0("All done! Results are stored in: ", jobDir, ", processing time was ", round(totTime, 1), " minutes"))
 }
 
 #' Normalyzer differential expression
@@ -145,7 +145,7 @@ normalyzer <- function(jobName,
 normalyzerDE <- function(jobName, designPath, dataPath, comparisons, outputDir=".", logTrans=FALSE, 
                          robustLimma=FALSE, type="limma", sampleCol="sample", condCol="group", 
                          batchCol=NULL, techRepCol=NULL, leastRepCount=1, sourceFiles=FALSE,
-                         sourceBase=NULL) {
+                         sourceBase=NULL, quiet=FALSE) {
 
     if (sourceFiles) {
         sourceScripts(sourceBase)
@@ -154,30 +154,30 @@ normalyzerDE <- function(jobName, designPath, dataPath, comparisons, outputDir="
     startTime <- Sys.time()
     jobDir <- setupJobDir(jobName, outputDir)
 
-    print("Setting up statistics object")
+    if (!quiet) print("Setting up statistics object")
     nst <- setupStatisticsObject(designPath, dataPath, comparisons, logTrans=logTrans, leastRepCount=leastRepCount)
     
     if (!is.null(techRepCol)) {
-        print("Reducing technical replicates")
+        if (!quiet) print("Reducing technical replicates")
         nst@dataMat <- reduce_technical_replicates(nst@dataMat, nst@designDf[, techRepCol])
         nst@designDf <- reduce_design(nst@designDf, nst@designDf[, techRepCol])
     }
     
-    print("Calculating statistical contrasts...")
+    if (!quiet) print("Calculating statistical contrasts...")
     nst <- calculateContrasts(nst, comparisons, condCol="group", type=type, batchCol=batchCol)
-    print("Contrast calculations done!")
+    if (!quiet) print("Contrast calculations done!")
     
     annotDf <- generateAnnotatedMatrix(nst)
     outPath <- paste0(jobDir, "/", jobName, "_stats.tsv")
     
-    print(paste("Writing", nrow(annotDf), "annotated rows to", outPath))
+    if (!quiet) print(paste("Writing", nrow(annotDf), "annotated rows to", outPath))
     write.table(annotDf, file=outPath, sep="\t", row.names = F)
-    print(paste("Writing statistics report"))
+    if (!quiet) print(paste("Writing statistics report"))
     generateStatsReport(nst, jobName, jobDir)
     
     endTime <- Sys.time()
     totTime <- difftime(endTime, startTime, units="mins")
-    print(paste0("All done! Results are stored in: ", jobDir, ", processing time was ", round(totTime, 1), " minutes"))
+    if (!quiet) print(paste0("All done! Results are stored in: ", jobDir, ", processing time was ", round(totTime, 1), " minutes"))
 }
 
 sourceScripts <- function(sourceBase) {

@@ -1,13 +1,13 @@
 slotNamesMap <- c("data2log2"="Log2",
-               "data2loess"="Loess-G",
-               "data2vsn"="VSN-G",
-               "data2GI"="AI-G",
-               "data2med"="MedI-G",
-               "data2mean"="MeanI-G",
-               "data2quantile"="Quantile",
-               "data2rtMed"="RT-med",
-               "data2rtMean"="RT-mean",
-               "data2rtLoess"="RT-Loess")
+                  "data2loess"="Loess-G",
+                  "data2vsn"="VSN-G",
+                  "data2GI"="AI-G",
+                  "data2med"="MedI-G",
+                  "data2mean"="MeanI-G",
+                  "data2quantile"="Quantile",
+                  "data2rtMed"="RT-med",
+                  "data2rtMean"="RT-mean",
+                  "data2rtLoess"="RT-Loess")
 
 #' S4 class to represent dataset information
 #' 
@@ -36,10 +36,10 @@ NormalyzerResults <- setClass("NormalyzerResults",
                               slots=c(
                                   nds = "NormalyzerDataset",
                                   ner = "NormalizationEvaluationResults",
-
+                                  
                                   methodnames = "character",
                                   furtherNormalizationMinThreshold="numeric",
-
+                                  
                                   data2log2 = "matrix",
                                   data2limloess = "matrix",
                                   fittedLR = "matrix",
@@ -51,11 +51,11 @@ NormalyzerResults <- setClass("NormalyzerResults",
                                   data2med = "matrix",
                                   data2mean = "matrix",
                                   data2quantile = "matrix",
-
+                                  
                                   data2rtMed = "matrix",
                                   data2rtMean = "matrix",
                                   data2rtLoess = "matrix",
-
+                                  
                                   data2ctr = "matrix",
                                   data2mad = "matrix"
                               ),
@@ -72,7 +72,7 @@ setGeneric(name="initializeResultsObject",
 #' @rdname initializeResultsObject
 setMethod("initializeResultsObject", "NormalyzerResults",
           function(nr) {
-
+              
               nds <- nr@nds
               nr@data2log2 <- log2(nds@filterrawdata)
               nr@data2ctr <- matrix(nrow=nrow(nds@filterrawdata),
@@ -90,31 +90,24 @@ setMethod("initializeResultsObject", "NormalyzerResults",
 #' @param rtWindow Retention time window size.
 #' @return None
 #' @rdname performNormalizations
+#' @keywords internal
 setGeneric(name="performNormalizations",
            function(nr, forceAll, rtNorm, rtWindow) standardGeneric("performNormalizations"))
 
 #' @rdname performNormalizations
 setMethod("performNormalizations", "NormalyzerResults",
           function(nr, forceAll=FALSE, rtNorm=FALSE, rtWindow=0.1) {
-
+              
               nds <- nr@nds
               nr <- basicMetricNormalizations(nr)
               rtColPresent <- length(nds@retentionTimes) > 0
-
-                nr@data2vsn <- performVSNNormalization(nds@filterrawdata)
-                nr@data2quantile <- performQuantileNormalization(nds@filterrawdata)
-                nr@data2mad <- performSMADNormalization(nds@filterrawdata)
-                nr@data2loess <- performCyclicLoessNormalization(nds@filterrawdata)
-                nr@globalfittedRLR <- performGlobalRLRNormalization(nds@filterrawdata)
-
-                  # if (!nds@singleReplicateRun && !rtColPresent) {
-                  #     nr <- performReplicateBasedNormalizations(nr)
-                  # }
-                  # else if (nds@singleReplicateRun) {
-                  #     print("Processing in single replicate mode, replicate based normalizations are omitted")
-                  # }
-              # }
-
+              
+              nr@data2vsn <- performVSNNormalization(nds@filterrawdata)
+              nr@data2quantile <- performQuantileNormalization(nds@filterrawdata)
+              nr@data2mad <- performSMADNormalization(nds@filterrawdata)
+              nr@data2loess <- performCyclicLoessNormalization(nds@filterrawdata)
+              nr@globalfittedRLR <- performGlobalRLRNormalization(nds@filterrawdata)
+              
               if (rtNorm) {
                   if (rtColPresent) {
                       nr <- performRTNormalizations(nr, rtWindow)
@@ -123,7 +116,7 @@ setMethod("performNormalizations", "NormalyzerResults",
                       print("No RT column specified (column named 'RT'). Skipping RT normalization.")
                   }
               }
-
+              
               nr
           }
 )
@@ -140,7 +133,7 @@ setGeneric(name="basicMetricNormalizations",
 #' @rdname basicMetricNormalizations
 setMethod("basicMetricNormalizations", "NormalyzerResults",
           function(nr) {
-
+              
               nds <- nr@nds
               nr@data2GI <- globalIntensityNormalization(nds@filterrawdata)
               nr@data2med <- medianNormalization(nds@filterrawdata)
@@ -161,47 +154,47 @@ setGeneric(name="performReplicateBasedNormalizations",
 #' @rdname performReplicateBasedNormalizations
 setMethod("performReplicateBasedNormalizations", "NormalyzerResults",
           function(nr) {
-
+              
               ## NORMALIZATION within REPLICATES RLR, VSN and Loess
-
+              
               nds <- nr@nds
-
+              
               sampleReplicateGroups <- nds@sampleReplicateGroups
               filterrawdata <- nds@filterrawdata
-
+              
               limLoessMatrix <- matrix(, nrow=nrow(filterrawdata), ncol=0)
               vsnMatrix <- matrix(, nrow=nrow(filterrawdata), ncol=0)
               fittedLRMatrix <- matrix(, nrow=nrow(filterrawdata), ncol=0)
-
+              
               indexList <- getIndexList(sampleReplicateGroups)
               colOrder <- c()
-
+              
               for (repVal in names(indexList)) {
-
+                  
                   repValNr <- strtoi(repVal)
                   cols <- indexList[[repVal]]
                   colOrder <- c(colOrder, cols)
-
+                  
                   rawDataWindow <- filterrawdata[, cols]
                   LRWindow <- performGlobalRLRNormalization(rawDataWindow)
                   fittedLRMatrix <- cbind(fittedLRMatrix, LRWindow)
-
+                  
                   loessDataWindow <- performCyclicLoessNormalization(rawDataWindow)
                   limLoessMatrix <- cbind(limLoessMatrix, loessDataWindow)
-
+                  
                   vsnDataWindow <- performVSNNormalization(rawDataWindow)
                   vsnMatrix <- cbind(vsnMatrix, vsnDataWindow)
               }
-
+              
               origPos <- c()
               for (i in 1:length(colOrder)) {
                   origPos <- c(origPos, which(colOrder == i))
               }
-
+              
               nr@fittedLR <- fittedLRMatrix[, origPos]
               nr@data2limloess <- limLoessMatrix[, origPos]
               nr@data2vsnrep <- vsnMatrix[, origPos]
-
+              
               nr
           })
 
@@ -218,13 +211,13 @@ setGeneric(name="performRTNormalizations",
 #' @rdname performRTNormalizations
 setMethod("performRTNormalizations", "NormalyzerResults",
           function(nr, stepSizeMinutes, overlapWindows=FALSE) {
-
+              
               nds <- nr@nds
-
+              
               smoothedRTMed <- getSmoothedRTNormalizedMatrix(nds@filterrawdata, nds@retentionTimes, medianNormalization, stepSizeMinutes)
               smoothedRTMean <- getSmoothedRTNormalizedMatrix(nds@filterrawdata, nds@retentionTimes, meanNormalization, stepSizeMinutes)
               smoothedRTLoess <- getSmoothedRTNormalizedMatrix(nds@filterrawdata, nds@retentionTimes, performCyclicLoessNormalization, stepSizeMinutes)
-
+              
               nr@data2rtMed <- smoothedRTMed
               nr@data2rtMean <- smoothedRTMean
               nr@data2rtLoess <- smoothedRTLoess
@@ -242,18 +235,18 @@ setGeneric(name="getUsedMethodNames",
 #' @rdname getUsedMethodNames
 setMethod("getUsedMethodNames", "NormalyzerResults",
           function(nr) {
-
+              
               usedMethodNames <- c()
               for (i in 1:length(slotNamesMap)) {
                   name <- names(slotNamesMap)[i]
                   fieldValue <- methods::slot(nr, name)
-
+                  
                   if (!all(is.na(fieldValue))) {
                       outputName <- slotNamesMap[name]
                       usedMethodNames <- c(usedMethodNames, outputName)
                   }
               }
-
+              
               usedMethodNames
           })
 
@@ -269,16 +262,16 @@ setGeneric(name="getSlotNameList",
 setMethod("getSlotNameList", "NormalyzerResults",
           function(nr) {
               methodDataList <- c()
-
+              
               for (i in 1:length(slotNamesMap)) {
                   slotName <- names(slotNamesMap)[i]
                   fieldValue <- methods::slot(nr, slotName)
-
+                  
                   if (!all(is.na(fieldValue))) {
                       methodDataList <- c(methodDataList, slotName)
                   }
               }
-
+              
               methodDataList
           })
 
@@ -293,13 +286,13 @@ setGeneric(name="getNormalizationMatrices",
 #' @rdname getNormalizationMatrices
 setMethod("getNormalizationMatrices", "NormalyzerResults",
           function(nr) {
-
+              
               methodDataList <- list()
               listCounter <- 1
               for (i in 1:length(slotNamesMap)) {
                   slotName <- names(slotNamesMap)[i]
                   fieldValue <- methods::slot(nr, slotName)
-
+                  
                   if (!all(is.na(fieldValue))) {
                       methodDataList[[listCounter]] <- fieldValue
                       listCounter <- listCounter + 1
@@ -310,7 +303,7 @@ setMethod("getNormalizationMatrices", "NormalyzerResults",
                   #   listCounter <- listCounter + 1
                   # }
               }
-
+              
               methodDataList
           })
 

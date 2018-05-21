@@ -51,6 +51,7 @@ NormalyzerDataset <- setClass("NormalyzerDataset",
 #' @param nds Normalyzer dataset
 #' @return None
 #' @rdname setupValues
+#' @keywords internal
 setGeneric(name="setupValues", function(nds) standardGeneric("setupValues"))
 
 #' @rdname setupValues
@@ -83,6 +84,7 @@ setMethod("setupValues", "NormalyzerDataset",
 #' @param nds Normalyzer dataset
 #' @return bool on whether sample contains only one sample group
 #' @rdname detectSingleReplicate
+#' @keywords internal
 setGeneric(name="detectSingleReplicate", 
            function(nds) standardGeneric("detectSingleReplicate"))
 
@@ -112,6 +114,7 @@ setMethod("detectSingleReplicate", "NormalyzerDataset",
 #' @param nds Normalyzer dataset.
 #' @return None
 #' @rdname detectSingletonSample
+#' @keywords internal
 setGeneric(name="detectSingletonSample", 
            function(nds) standardGeneric("detectSingletonSample"))
 
@@ -143,6 +146,7 @@ setMethod("detectSingletonSample", "NormalyzerDataset",
 #' @param nds Normalyzer dataset
 #' @return Updated dataset object
 #' @rdname setupBasicValues
+#' @keywords internal
 setGeneric(name="setupBasicValues", 
            function(nds) standardGeneric("setupBasicValues"))
 
@@ -167,6 +171,7 @@ setMethod("setupBasicValues", "NormalyzerDataset",
 #' @param nds Normalyzer dataset
 #' @return Updated dataset object
 #' @rdname setupRTColumn
+#' @keywords internal
 setGeneric(name="setupRTColumn", 
            function(nds) standardGeneric("setupRTColumn"))
 
@@ -200,6 +205,7 @@ setMethod("setupRTColumn", "NormalyzerDataset",
 #' @param nds Normalyzer dataset.
 #' @return None
 #' @rdname setupFilterRawData
+#' @keywords internal
 setGeneric(name="setupFilterRawData", 
            function(nds) standardGeneric("setupFilterRawData"))
 
