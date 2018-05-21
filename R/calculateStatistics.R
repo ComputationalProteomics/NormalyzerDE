@@ -66,15 +66,15 @@ setupStatisticsObject <- function(dataFp, designFp, comparisons, sampleCol="samp
 
 generateAnnotatedMatrix <- function(nst) {
     
-    pairwiseHead <- paste(names(nst@pairwiseCompsP), "p", sep="_")
+    pairwiseHead <- paste(names(nst@pairwiseCompsP), "PValue", sep="_")
     pMat <- data.frame(nst@pairwiseCompsP)
     colnames(pMat) <- pairwiseHead
     
-    pairwiseHeadFdr <- paste(names(nst@pairwiseCompsFdr), "p.adj", sep="_")
+    pairwiseHeadFdr <- paste(names(nst@pairwiseCompsFdr), "AdjPVal", sep="_")
     fdrMat <- data.frame(nst@pairwiseCompsFdr)
     colnames(fdrMat) <- pairwiseHeadFdr
     
-    pairwiseHeadFold <- paste(names(nst@pairwiseCompsFold), "fold", sep="_")
+    pairwiseHeadFold <- paste(names(nst@pairwiseCompsFold), "log2FoldChange", sep="_")
     foldMat <- data.frame(nst@pairwiseCompsFold)
     colnames(foldMat) <- pairwiseHeadFold
     
