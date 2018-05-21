@@ -39,20 +39,21 @@ for (norm_name in names(normalizations)) {
     normalyzerDE(
         jobName=paste("RegressionTestDE", norm_name, sep="_"), 
         designPath=designPath, 
-        dataPath=paste0("data/regression_cases/web_dataset/output/de/", norm_name, "/", norm_name, "/", norm_name, "_stats.tsv"),
+        dataPath=paste0("data/regression_cases/web_dataset/output/eval/", norm),
         outputDir=".",
-        comparisons=c("2-3")
+        comparisons=c("2-3", "2-4", "3-4"),
+        type="limma"
     )
     
     test_that("DE runs are identical", {
         
-        baseline_base <- paste("data/regression_cases/web_dataset/output/de", norm_name, norm_name, sep="/")
+        baseline_base <- paste0("data/regression_cases/web_dataset/output/de", "/", norm_name, "/", norm_name)
         curr_base <- paste("RegressionTestDE", norm_name, sep="_")
         
-        browser()
+        baseline_md5 <- tools::md5sum(paste0(baseline_base, "/", norm_name, "_stats.tsv"))
+        current_md5 <- tools::md5sum(paste0(curr_base, "/", "RegressionTestDE_", norm_name, "_stats.tsv"))
         
-        baseline_md5 <- tools::md5sum(paste(baseline_base, "test_stats.tsv", sep="/"))
-        current_md5 <- tools::md5sum(paste0(curr_base, "RegressionTestDE_", norm_name, "_stats.tsv", sep="/"))
+        # browser()
         
         expect_true(baseline_md5 == current_md5, info = paste("Testing for normalization:", norm))
     })
