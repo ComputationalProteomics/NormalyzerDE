@@ -178,7 +178,6 @@ performGlobalRLRNormalization <- function(rawMatrix) {
         coeffs1 <- coeffs[1]
         
         if (isFirstSample) {
-            value_to_assign <- (log2Matrix[, j] - coeffs1) / coeffs2
             globalFittedRLR <- (log2Matrix[, j] - coeffs1) / coeffs2
             isFirstSample <- FALSE
         }

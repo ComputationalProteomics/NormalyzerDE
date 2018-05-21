@@ -182,9 +182,9 @@ getSmoothedRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod,
 
     for (i in 1:frameShifts) {
         
-        frac_shift <- (i - 1) * 1 / frameShifts
+        fracShift <- (i - 1) * 1 / frameShifts
         matrices[[i]] <- getRTNormalizedMatrix(rawMatrix, retentionTimes, normMethod, 
-                                               stepSizeMinutes, windowMinCount=windowMinCount, offset=frac_shift)
+                                               stepSizeMinutes, windowMinCount=windowMinCount, offset=fracShift)
     }
 
     # mean, median, anonymous...
@@ -202,21 +202,21 @@ getSmoothedRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod,
     combinedMatrices
 }
 
-getCombinedMatrix <- function(m_list, comb_func) {
+getCombinedMatrix <- function(mList, combFunc) {
     
-    matrix_count <- length(m_list)
-    rows <- nrow(m_list[[1]])
-    cols <- ncol(m_list[[1]])
-    m_length <- rows * cols
-    combined_matrix <- matrix(0, nrow=rows, ncol=cols)
+    matrixCount <- length(mList)
+    rows <- nrow(mList[[1]])
+    cols <- ncol(mList[[1]])
+    mLength <- rows * cols
+    combinedMatrix <- matrix(0, nrow=rows, ncol=cols)
     
-    for (i in 1:m_length) {
-        elem_vals <- sapply(m_list, function(mat) {mat[[i]]})
-        target_val <- comb_func(elem_vals)
-        combined_matrix[i] <- target_val
+    for (i in 1:mLength) {
+        elemVals <- sapply(mList, function(mat) {mat[[i]]})
+        targetVal <- combFunc(elemVals)
+        combinedMatrix[i] <- targetVal
     }
     
-    combined_matrix
+    combinedMatrix
 }
 
 

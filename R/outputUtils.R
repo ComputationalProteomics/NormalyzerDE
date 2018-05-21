@@ -2,16 +2,16 @@
 #' 
 #' @param nr Results object.
 #' @param jobdir Path to output directory.
-#' @param include_pairwise_comparisons Include p-values for pairwise comparisons.
-#' @param include_cv_col Include CV column in output.
-#' @param include_anova_p Include ANOVA p-value in output.
-#' @param norm_suffix String used to name output together with normalization names.
-#' @param rawdata_name Name of output raw data file.
+#' @param includePairwiseComparisons Include p-values for pairwise comparisons.
+#' @param includeCvCol Include CV column in output.
+#' @param includeAnovaP Include ANOVA p-value in output.
+#' @param normSuffix String used to name output together with normalization names.
+#' @param rawdataName Name of output raw data file.
 #' @param hkVarsName Name out output housekeeping variables file.
 #' @return None
 #' @export
 #' @examples
-#' normObj <- getVerifiedNormalyzerObject("data.tsv", "job_name", "design.tsv")
+#' normObj <- getVerifiedNormalyzerObject("data.tsv", "jobName", "design.tsv")
 #' normResults <- normMethods(normObj)
 #' normResultsWithEval <- analyzeNormalizations(normObj)
 #' writeNormalizedDatasets(normResultsWithEval, "path/to/output")
@@ -35,33 +35,33 @@ writeNormalizedDatasets <- function(nr, jobdir, includePairwiseComparisons=FALSE
         outputTable <- cbind(annotationColumns, methodlist[[sampleIndex]])
 
         if (includeAnovaP) {
-            anova_p <- ner@anova_p[,sampleIndex]
+            anovaP <- ner@anovaP[,sampleIndex]
             
-            if (nrow(outputTable) != length(anova_p)) {
+            if (nrow(outputTable) != length(anovaP)) {
                 stop(paste("Table row count:", nrow(outputTable), 
                            "must match p-value vector length for anova: ", 
-                           length(anova_p)))
+                           length(anovaP)))
             }
             
-            outputTable <- cbind(outputTable, anova_p=anova_p)
+            outputTable <- cbind(outputTable, anovaP=anovaP)
         }
         
         if (includePairwiseComparisons) {
             
-            for (comp in names(nr@ner@pairwise_comps)) {
+            for (comp in names(nr@ner@pairwiseComps)) {
                 
-                comp_col_p <- ner@pairwise_comps[[comp]][,sampleIndex]
-                comp_col_fdr <- ner@pairwise_comps_fdr[[comp]][,sampleIndex]
+                compColP <- ner@pairwiseComps[[comp]][, sampleIndex]
+                compColFdr <- ner@pairwiseCompsFdr[[comp]][, sampleIndex]
                 
-                new_colnames <- c(colnames(outputTable), paste("comp", comp, "p", sep="_"), paste("comp", comp, "fdr", sep="_"))
-                outputTable <- cbind(outputTable, comp_col_p, comp_col_fdr)
-                colnames(outputTable) <- new_colnames
+                newColnames <- c(colnames(outputTable), paste("comp", comp, "p", sep="_"), paste("comp", comp, "fdr", sep="_"))
+                outputTable <- cbind(outputTable, compColP, compColFdr)
+                colnames(outputTable) <- newColnames
             }
         }
         
         if (includeCvCol) {
-            cv_col <- ner@featureCVPerMethod[,sampleIndex]
-            outputTable <- cbind(outputTable, CV=cv_col)
+            cvCol <- ner@featureCVPerMethod[, sampleIndex]
+            outputTable <- cbind(outputTable, CV=cvCol)
         }
 
         utils::write.table(outputTable, file=filePath, sep="\t", row.names=FALSE, quote=FALSE)

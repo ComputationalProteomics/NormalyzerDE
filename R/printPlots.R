@@ -14,7 +14,7 @@ printPlots <- function(plotlist, plotname, pageno, jobname, currentLayout) {
     gp <- grid::gpar(fontsize=11, fontfamily="Helvetica", col="black", fontface="bold")
     gpfill <- grid::gpar(fill="gray90", lwd=0, lty=0)
     
-    draw_rectangles(nrow, ncol, gpfill, gp)
+    drawRectangles(nrow, ncol, gpfill, gp)
     
     grid::grid.text(plotname, 
                     vp=grid::viewport(layout.pos.row=1, layout.pos.col=1),
@@ -28,36 +28,36 @@ printPlots <- function(plotlist, plotname, pageno, jobname, currentLayout) {
     grid::grid.text(paste("Project: ", jobname, sep=""),
                     vp=grid::viewport(layout.pos.row=nrow, layout.pos.col=1), just=c("left", "center"), gp=gp)
     
-    grid_rows <- nrow - 2
-    grid_cols <- ncol - 2
-    grid_size <- grid_rows * grid_cols
+    gridRows <- nrow - 2
+    gridCols <- ncol - 2
+    gridSize <- gridRows * gridCols
 
     row <- 2  # Start value
     col <- 2  # Start value
 
-    pos_counter <- 0
+    posCounter <- 0
     for (i in 1:length(plotlist)) {
         
-        if (grid_size == 1 || (i != 1 && i %% grid_size == 1)) {
+        if (gridSize == 1 || (i != 1 && i %% gridSize == 1)) {
             print(paste("New page, row:", row, "col:", col))
             grid::grid.newpage()
             grid::pushViewport(grid::viewport(layout=currentLayout))
             
             grid::grid.rect(vp=grid::viewport(layout.pos.row=row, layout.pos.col=col), gp=gpfill)
-            pos_counter <- 0
+            posCounter <- 0
         }
         
-        pos_counter <- pos_counter + 1
+        posCounter <- posCounter + 1
         
-        row <- (pos_counter-1) %/% grid_cols + 2
-        col <- (pos_counter-1) %% grid_cols + 2
+        row <- (posCounter - 1) %/% gridCols + 2
+        col <- (posCounter - 1) %% gridCols + 2
         
         print(plotlist[[i]], vp=grid::viewport(layout.pos.row=row, layout.pos.col=col))
     }
 }
 
-draw_rectangles <- function(nrow, ncol, gpfill, gp) {
-    for (pos in 1:(ncol-1)*(nrow-1)) {
+drawRectangles <- function(nrow, ncol, gpfill, gp) {
+    for (pos in 1:(ncol - 1) * (nrow - 1)) {
         if (pos <= ncol) row <- 1
         else row <- nrow
         

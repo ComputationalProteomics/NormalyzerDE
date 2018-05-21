@@ -126,7 +126,7 @@ verifyValidNumbers <- function(rawDataOnly, groups) {
     nonMatches <- stats::na.omit(rawDataOnly[-matches])
     
     if (length(nonMatches) > 0) {
-        error_string <- paste(
+        errorString <- paste(
             "Invalid values encountered in input data.",
             "Only valid data is numeric and NA- or na-fields",
             "Invalid fields: ",
@@ -135,18 +135,18 @@ verifyValidNumbers <- function(rawDataOnly, groups) {
             sep="\n"
         )
         
-        stop(error_string)
+        stop(errorString)
     }
     
     zeroRegexPattern <- c("^0$")
     zeroMatches <- grep(zeroRegexPattern, rawDataOnly, perl=TRUE)
     if (length(zeroMatches) > 0) {
-        error_string <- paste(
+        errorString <- paste(
             "Encountered zeroes in data. Must be replaced with NA before processing.",
             "This can be done automatically setting the zeroToNA-flag option to TRUE.",
             sep="\n"
         )
-        stop(error_string)
+        stop(errorString)
     }
 
     print("Input data checked. All fields are valid.")
@@ -247,7 +247,7 @@ getLowCountSampleFiltered <- function(dataMatrix, groups, threshold=15, stopIfTo
     notPassingThreshold <- which(numberOfValues < threshold)
     
     if (length(notPassingThreshold) == length(numberOfValues)) {
-        error_string <- paste(
+        errorString <- paste(
             "None of the samples had enough valid non-NA values",
             "Found number of non-NA values:",
             paste(numberOfValues[notPassingThreshold], collapse=" "),
@@ -257,10 +257,10 @@ getLowCountSampleFiltered <- function(dataMatrix, groups, threshold=15, stopIfTo
             "Be aware that this will likely lead to downstream crashes.",
             sep="\n"
         )
-        stop(error_string)
+        stop(errorString)
     }
     else if (length(notPassingThreshold) > 0) {
-        error_string <- paste(
+        errorString <- paste(
             "Following samples does not contain enough non-NA values:",
             paste(sampleIndices[notPassingThreshold], collapse=" "),
             "Found number of values:",
@@ -272,10 +272,10 @@ getLowCountSampleFiltered <- function(dataMatrix, groups, threshold=15, stopIfTo
             sep="\n")
         
         if (stopIfTooFew) {
-            stop(error_string)
+            stop(errorString)
         }
         else {
-            warning(error_string)
+            warning(errorString)
         }
     }
     
@@ -303,7 +303,7 @@ validateSampleReplication <- function(dataMatrix, groups, requireReplicates=TRUE
 
     if (length(nonReplicatedSamples) > 0) {
         
-        error_string <- paste(
+        errorString <- paste(
             "Following samples does not have replicates:",
             paste(nonReplicatedSamples, collapse=" "),
             "By default this is not allowed.",
@@ -312,10 +312,10 @@ validateSampleReplication <- function(dataMatrix, groups, requireReplicates=TRUE
             sep="\n")
         
         if (requireReplicates) {
-            stop(error_string)
+            stop(errorString)
         }
         else {
-            warning(error_string)
+            warning(errorString)
         }
     }
     else {
@@ -338,18 +338,18 @@ verifyMultipleSamplesPresent <- function(dataMatrix, groups, requireReplicates=T
     distinctSamples <- unique(samples)
 
     if (length(samples) < 2) {
-        error_string <- paste(
+        errorString <- paste(
             "At least two samples are required to run Normalyzer",
             "Here, we found:",
             paste(samples, collapse=" "),
             sep="\n")
         
-        stop(error_string)
+        stop(errorString)
     }
             
     if (length(distinctSamples) == 1) {
         
-        error_string <- paste(
+        errorString <- paste(
             "Found less than two distinct samples. Following was found:",
             paste(distinctSamples, collapse=" "),
             "For full processing two samples are required",
@@ -358,10 +358,10 @@ verifyMultipleSamplesPresent <- function(dataMatrix, groups, requireReplicates=T
             sep="\n")
         
         if (requireReplicates) {
-            stop(error_string)
+            stop(errorString)
         }
         else {
-            warning(error_string)
+            warning(errorString)
         }
     }
     else if (length(distinctSamples) == 0) {

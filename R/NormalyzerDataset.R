@@ -182,10 +182,10 @@ setMethod("setupRTColumn", "NormalyzerDataset",
               rtColumns <- grep("\\bRT\\b", colnames(nds@rawData))
               
               if (length(rtColumns) > 1) {
-                  error_message <- paste(
+                  errorMessage <- paste(
                       "Only able to handle single RT column (name containing RT standing by itself)",
                       "Please change name or remove unwanted RT columns")
-                  stop(error_message)
+                  stop(errorMessage)
               }
               else if (length(rtColumns) == 1) {
                   

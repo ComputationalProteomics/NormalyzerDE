@@ -26,10 +26,10 @@ setupJobDir <- function(jobName, outputDir) {
 createDirectory <- function(targetPath) {
     
     if (file.exists(targetPath)) {
-        error_handler <- "Directory already exists"
-        class(error_handler) <- "try-error"
-        if (inherits(error_handler, "try-error")) {
-            return(error_handler)
+        errorHandler <- "Directory already exists"
+        class(errorHandler) <- "try-error"
+        if (inherits(errorHandler, "try-error")) {
+            return(errorHandler)
         }
         stop("Directory already exists")
     } 
@@ -51,45 +51,16 @@ elapsedSecondsBetweenSystimes <- function(start, end) {
     elapsed
 }
 
-#' Returns samples present only once in Normalyzer header
-#' 
-#' @param normalyzerDf Normalyzer data frame
-#' @return Vector with names of non-replicated samples
-# getNonReplicatedFromDf <- function(normalyzerDf) {
-#     
-#     header <- normalyzerDf[1,]
-#     sampleValues <- header[which(as.numeric(header) > 0)]
-#     headerCounts <- table(sampleValues)
-#     
-#     nonReplicatedSamples <- names(headerCounts[which(headerCounts == 1)])
-#     nonReplicatedSamples
-# }
-
-
 
 getIndexList <- function(targetVector) {
     
     indexList <- list()
-    uniq_vals <- unique(targetVector)
-    for (val in uniq_vals) {
+    uniqVals <- unique(targetVector)
+    for (val in uniqVals) {
         indexList[[toString(val)]] <- which(targetVector == val)
     }
     indexList
 }
-
-
-#' Removes rows from matrix where replicates aren't represented by at least
-#' one value
-#' 
-#' @param dataMatrix Matrix with expression values for entities in replicate 
-#'  samples.
-#' @param replicateHeader Header showing how samples in matrix are replicated.
-#' @return Reduced matrix where rows without any number are excluded.
-# filterLinesWithEmptySamples <- function(dataMatrix, replicateHeader) {
-#     
-#     replicatesHaveDataCtr <- getAllSamplesHaveValuesContrast(dataMatrix, replicateHeader)
-#     dataMatrix[replicatesHaveDataCtr, ]
-# }
 
 
 #' Get contrast vector (TRUE/FALSE-values) indicating whether all samples
@@ -142,19 +113,19 @@ getLowNALinesContrast <- function(dataMatrix, replicateHeader) {
 #' @param dataMatrix Matrix with expression values for entities in replicate 
 #'  samples.
 #' @param replicateHeader Header showing how samples in matrix are replicated.
-#' @param var_filter_frac Variance filtering fraction.
+#' @param varFilterFrac Variance filtering fraction.
 #' @param minCount Minimum number of required values present in samples.
 #' @return Contrast vector
 getRowNAFilterContrast <- function(dataMatrix, 
                                    replicateHeader, 
-                                   var_filter_frac=NULL,
+                                   varFilterFrac=NULL,
                                    minCount=1) {
     
     lowNALinesContrast <- getLowNALinesContrast(dataMatrix, replicateHeader)
     samplesHaveValuesContrast <- getLowRepCountFilterContrast(dataMatrix, replicateHeader, minCount=minCount)
     
-    if (!is.null(var_filter_frac)) {
-        samplesPassVarThres <- getVarFilteredContrast(dataMatrix, var_filter_frac)
+    if (!is.null(varFilterFrac)) {
+        samplesPassVarThres <- getVarFilteredContrast(dataMatrix, varFilterFrac)
     }
     else {
         samplesPassVarThres <- rep(TRUE, nrow(dataMatrix))
@@ -164,11 +135,11 @@ getRowNAFilterContrast <- function(dataMatrix,
 }
 
 
-getVarFilteredContrast <- function(logMatrix, var_filter_frac) {
+getVarFilteredContrast <- function(logMatrix, varFilterFrac) {
   
-    feature_vars <- apply(logMatrix, 1, function(x) {stats::var(x, na.rm=TRUE)})
-    frac_thres <- sort(feature_vars)[(length(feature_vars) - 1)  * var_filter_frac + 1]
-    feature_vars > frac_thres
+    featureVars <- apply(logMatrix, 1, function(x) {stats::var(x, na.rm=TRUE)})
+    fracThres <- sort(featureVars)[(length(featureVars) - 1)  * varFilterFrac + 1]
+    featureVars > fracThres
 }
 
 

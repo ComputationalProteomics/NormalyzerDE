@@ -16,15 +16,15 @@
 #' @param requireReplicates Require multiple samples per condition to pass input validation.
 #' @param normalizeRetentionTime Perform normalizations over retention time.
 #' @param retentionTimeWindow Retention time normalization window size.
-#' @param pairwise_comparisons Vector of pairwise sample comparisons.
-#' @param include_cv_col Include CV in output matrices.
-#' @param categorical_anova Perform categorical ANOVA (alternatively numerical).
-#' @param include_anova_p Include ANOVA p-value in output.
-#' @param var_filter_frac Perform variance filtering of highly variant features.
-#' @param plot_rows Number of plot-rows in output documentation.
-#' @param plot_cols Number of plot-columns in output documentation.
-#' @param source_files Source code files (for development purposes only).
-#' @param source_base Base to source code files from (for development purposes only).
+#' @param pairwiseComparisons Vector of pairwise sample comparisons.
+#' @param includeCvCol Include CV in output matrices.
+#' @param categoricalAnova Perform categorical ANOVA (alternatively numerical).
+#' @param includeAnovaP Include ANOVA p-value in output.
+#' @param varFilterFrac Perform variance filtering of highly variant features.
+#' @param plotRows Number of plot-rows in output documentation.
+#' @param plotCols Number of plot-columns in output documentation.
+#' @param sourceFiles Source code files (for development purposes only).
+#' @param sourceBase Base to source code files from (for development purposes only).
 #' @param zeroToNA Convert zero values to NA.
 #' @param sampleColName Column name in design matrix containing sample IDs.
 #' @param groupColName Column name in design matrix containing condition IDs.
@@ -113,7 +113,7 @@ normalyzer <- function(jobName,
     
     if (!skipAnalysis) {
         if (!quiet) print("[Step 5/5] Generating plots...")
-        generatePlots(normalyzerResultsObject, jobDir, plot_rows=plotRows, plot_cols=plotCols)
+        generatePlots(normalyzerResultsObject, jobDir, plotRows=plotRows, plotCols=plotCols)
         if (!quiet) print("[Step 5/5] Plots successfully generated")
     }
     else {
@@ -159,8 +159,8 @@ normalyzerDE <- function(jobName, designPath, dataPath, comparisons, outputDir="
     
     if (!is.null(techRepCol)) {
         if (!quiet) print("Reducing technical replicates")
-        nst@dataMat <- reduce_technical_replicates(nst@dataMat, nst@designDf[, techRepCol])
-        nst@designDf <- reduce_design(nst@designDf, nst@designDf[, techRepCol])
+        nst@dataMat <- reduceTechnicalReplicates(nst@dataMat, nst@designDf[, techRepCol])
+        nst@designDf <- reduceDesign(nst@designDf, nst@designDf[, techRepCol])
     }
     
     if (!quiet) print("Calculating statistical contrasts...")

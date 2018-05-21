@@ -2,8 +2,8 @@
 #' 
 #' @param nr Normalyzer results object with calculated results.
 #' @param comparisons Target sample contrasts to run.
-#' @param categorical_anova ANOVA can be categorical or numerical.
-#' @param var_filter_frac Perform variance filtering before tests.
+#' @param categoricalAnova ANOVA can be categorical or numerical.
+#' @param varFilterFrac Perform variance filtering before tests.
 #'
 #' @return Normalyzer results with attached evaluation results object.
 #' @export
@@ -19,8 +19,8 @@ analyzeNormalizations <- function(nr,
     nds <- nr@nds
     nr@ner <- setupNormalizationEvaluationObject(nr, 
                                                  comparisons=comparisons,
-                                                 categorical_anova=categoricalAnova,
-                                                 var_filter_frac=varFilterFrac)
+                                                 categoricalAnova=categoricalAnova,
+                                                 varFilterFrac=varFilterFrac)
 
     nr
 }
@@ -76,13 +76,13 @@ calculateCorrelations <- function(nr, ner) {
 #' 
 #' @param nr Normalyzer results object to be evaluated
 #' @param comparisons Group comparisons to make
-#' @param categorical_anova If comparison should be made numerically or groupwise
-#' @param var_filter_frac Filtering high-variance samples
+#' @param categoricalAnova If comparison should be made numerically or groupwise
+#' @param varFilterFrac Filtering high-variance samples
 #' @return Normalization evaluation object
 setupNormalizationEvaluationObject <- function(nr, 
                                                comparisons=NULL, 
-                                               categorical_anova=FALSE,
-                                               var_filter_frac=NULL) {
+                                               categoricalAnova=FALSE,
+                                               varFilterFrac=NULL) {
     
     ner <- NormalyzerEvaluationResults()
     ner <- calculateCV(ner, nr)
@@ -94,8 +94,8 @@ setupNormalizationEvaluationObject <- function(nr,
         ner <- calculateAvgVar(ner, nr)
         ner <- calculateSignificanceMeasures(ner, 
                                              nr, 
-                                             categorical_anova=categorical_anova,
-                                             var_filter_frac=var_filter_frac)
+                                             categoricalAnova=categoricalAnova,
+                                             varFilterFrac=varFilterFrac)
         
         if (!is.null(comparisons)) {
             ner <- calculatePairwiseComparisons(ner, nr, comparisons)

@@ -2,8 +2,8 @@
 #' 
 #' @param nr Normalyzer results object.
 #' @param jobdir Path to output directory for run.
-#' @param plot_rows Number of plot rows.
-#' @param plot_cols Number of plot columns.
+#' @param plotRows Number of plot rows.
+#' @param plotCols Number of plot columns.
 #' @return None
 #' @export
 #' @examples
@@ -11,12 +11,12 @@
 #' normResults <- normMethods(normObj)
 #' normResultsWithEval <- analyzeNormalizations(normResults)
 #' generatePlots(normResultsWithEval, "path/to/output")
-generatePlots <- function(nr, jobdir, plot_rows=3, plot_cols=4) {
+generatePlots <- function(nr, jobdir, plotRows=3, plotCols=4) {
     
     nds <- nr@nds
     currentjob <- nds@jobName
-    nrows <- plot_rows + 2
-    ncols <- plot_cols + 2
+    nrows <- plotRows + 2
+    ncols <- plotCols + 2
     
     currentLayout <- grid::grid.layout(nrow=nrows, ncol=ncols,
                                        heights=c(0.1, rep(3/(nrows-2), (nrows-2)), 0.1), 
@@ -114,8 +114,8 @@ setupPlotting <- function(currentjob, jobdir, suffix) {
     grDevices::pdf(file=paste(jobdir, "/", suffix, "-", currentjob, ".pdf", sep=""), 
                    paper="a4r", width=0, height=0)    
 
-    theme_norm <- ggplot2::theme_set(ggplot2::theme_bw())
-    theme_norm <- ggplot2::theme_update(panel.grid.minor=ggplot2::element_blank(), 
+    themeNorm <- ggplot2::theme_set(ggplot2::theme_bw())
+    themeNorm <- ggplot2::theme_update(panel.grid.minor=ggplot2::element_blank(), 
                                         axis.text=ggplot2::element_text(size=7), 
                                         axis.title=ggplot2::element_text(size=8), 
                                         plot.title=ggplot2::element_text(size=8), 
@@ -742,17 +742,17 @@ plotDendrograms <- function(nr, currentLayout, pageno) {
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
     
-    color_vect <- c("red", "green", "blue", "orange", "darkgray", "blueviolet", 
+    colorVect <- c("red", "green", "blue", "orange", "darkgray", "blueviolet", 
                     "darkslateblue", "darkviolet", "gray", "bisque4", "brown", 
                     "cadetblue4", "darkgreen", "darkcyan", "darkmagenta", 
                     "darkgoldenrod4", "coral1")
-    colt <- rep(color_vect, ceiling(length(filterED) / length(color_vect)))
+    colt <- rep(colorVect, ceiling(length(filterED) / length(colorVect)))
     
     for (j in 1:length(methodlist)) {
         
-        data_matrix <- stats::na.omit(methodlist[[j]])
-        colnames(data_matrix) <- filterED
-        scaledTransposedMatrix <- scale(t(data_matrix), center=TRUE, scale=TRUE)
+        dataMatrix <- stats::na.omit(methodlist[[j]])
+        colnames(dataMatrix) <- filterED
+        scaledTransposedMatrix <- scale(t(dataMatrix), center=TRUE, scale=TRUE)
 
         hc <- stats::hclust(stats::dist(scaledTransposedMatrix), "ave")
         
@@ -774,7 +774,7 @@ plotDendrograms <- function(nr, currentLayout, pageno) {
 #' @return None
 plotDEPlots <- function(nr, currentLayout, pageno) {
     
-    fdr_threshold <- 0.05
+    fdrThreshold <- 0.05
     
     nds <- nr@nds
     methodnames <- getUsedMethodNames(nr)
@@ -789,15 +789,16 @@ plotDEPlots <- function(nr, currentLayout, pageno) {
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
     
-    graphics::barplot(sapply(anfdr, function(col) { length(col[col < fdr_threshold]) }), 
+    graphics::barplot(sapply(anfdr, function(col) { length(col[col < fdrThreshold]) }), 
                       main="ANOVA", names=c(methodnames), 
                       border="red", density=20, cex=0.5, cex.axis=0.9, las=2,
-                      ylab=paste("No. of Variables with FDR <", fdr_threshold))
+                      ylab=paste("No. of Variables with FDR <", fdrThreshold))
     
-    graphics::barplot(sapply(kwfdr, function(col) { length(col[col < fdr_threshold]) }), 
+    graphics::barplot(sapply(kwfdr, function(col) { length(col[col < fdrThreshold]) }), 
                       main="Kruskal Wallis", names=c(methodnames), 
                       border="red", density=20, cex=0.5, cex.axis=0.9, las=2, 
-                      ylab=paste("No. of Variables with FDR <", fdr_threshold))
+                      ylab=paste("No. of Variables with FDR <", fdrThreshold
+                             ))
     
     grid::pushViewport(grid::viewport(layout=currentLayout))
     printMeta("Differential Expression", pageno, currentjob, currentLayout)
@@ -815,7 +816,7 @@ plotPHist <- function(nr, currentLayout, pageno) {
     ner <- nr@ner
     methodnames <- getUsedMethodNames(nr)
     currentjob <- nds@jobName
-    anovaP <- ner@anova_p
+    anovaP <- ner@anovaP
     histPlots <- list()
     
     for (i in 1:length(methodnames)) {
@@ -832,19 +833,4 @@ plotPHist <- function(nr, currentLayout, pageno) {
     grid::pushViewport(grid::viewport(layout=currentLayout))
     printPlots(histPlots, "HistPlots", pageno, currentjob, currentLayout)  
 }
-
-# Not in use? What would make this work better?
-pdfListToPngList <- function(pdfPlots) {
-
-    pngPlots <- lapply(1:length(pdfPlots), function(i) {
-        grDevices::png("test.png")
-        plt <- pdfPlots[[i]]
-        print(plt)
-        dev.off()
-        grid::rasterGrob(png::readPNG("test.png", native=FALSE), interpolate=FALSE)
-    })
-    pngPlots
-}
-
-
 

@@ -119,9 +119,9 @@ setupStatMeasureLists <- function(measures, comparisons) {
 
 calculateWelch <- function(compLists, dataMat, naFilterContrast, s1cols, s2cols, comp) {
     
-    do_t_test <- function(c1_vals, c2_vals, default=NA) {
-        if (length(stats::na.omit(c1_vals)) > 1 && length(stats::na.omit(c2_vals)) > 1) {
-            tryCatch(stats::t.test(c1_vals, c2_vals)[[3]], error=function(x) NA)
+    doTTest <- function(c1Vals, c2Vals, default=NA) {
+        if (length(stats::na.omit(c1Vals)) > 1 && length(stats::na.omit(c2Vals)) > 1) {
+            tryCatch(stats::t.test(c1Vals, c2Vals)[[3]], error=function(x) NA)
         }
         else {
             NA
@@ -129,7 +129,7 @@ calculateWelch <- function(compLists, dataMat, naFilterContrast, s1cols, s2cols,
     }
     
     welchPValCol <- apply(dataMat, 1, 
-                          function(row) do_t_test(row[s1cols], row[s2cols], default=NA))
+                          function(row) doTTtest(row[s1cols], row[s2cols], default=NA))
     welchFDRCol <- stats::p.adjust(welchPValCol, method="BH")
 
     compLists[["P"]][[comp]][naFilterContrast] <- welchPValCol
@@ -144,9 +144,9 @@ calculateWelch <- function(compLists, dataMat, naFilterContrast, s1cols, s2cols,
 
 calculateANOVAContrast <- function(compLists, dataMat, naFilterContrast, s1cols, s2cols, comp) {
     
-    do_t_test <- function(c1_vals, c2_vals, default=NA) {
-        if (length(stats::na.omit(c1_vals)) > 1 && length(stats::na.omit(c2_vals)) > 1) {
-            tryCatch(stats::t.test(c1_vals, c2_vals)[[3]], error=function(x) NA)
+    doTTest <- function(c1Vals, c2Vals, default=NA) {
+        if (length(stats::na.omit(c1Vals)) > 1 && length(stats::na.omit(c2Vals)) > 1) {
+            tryCatch(stats::t.test(c1Vals, c2Vals)[[3]], error=function(x) NA)
         }
         else {
             NA
@@ -154,7 +154,7 @@ calculateANOVAContrast <- function(compLists, dataMat, naFilterContrast, s1cols,
     }
     
     welchPValCol <- apply(dataMat, 1, 
-                          function(row) do_t_test(row[s1cols], row[s2cols], default=NA))
+                          function(row) doTTest(row[s1cols], row[s2cols], default=NA))
     welchFDRCol <- stats::p.adjust(welchPValCol, method="BH")
     
     compLists[["P"]][[comp]][naFilterContrast] <- welchPValCol

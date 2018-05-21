@@ -19,17 +19,17 @@ calculateStatistics <- function(dataFp, designFp, comparisons, limmaTest=TRUE, v
     nst
 }
 
-filterLowRep <- function(df, groups, least_rep = 2) {
-    row_meet_thres_contrast <- apply(df, 1, allReplicatesHaveValuesContrast, 
-                                     groups = groups, min_count = least_rep)
-    filtered_df <- df[row_meet_thres_contrast, ]
-    filtered_df
+filterLowRep <- function(df, groups, leastRep = 2) {
+    rowMeetThresContrast <- apply(df, 1, allReplicatesHaveValuesContrast, 
+                                     groups = groups, minCount = leastRep)
+    filteredDf <- df[rowMeetThresContrast, ]
+    filteredDf
 }
 
-allReplicatesHaveValuesContrast <- function(row, groups, min_count) {
+allReplicatesHaveValuesContrast <- function(row, groups, minCount) {
     names(row) <- groups
-    rep_counts <- table(names(na.omit(row)))
-    length(rep_counts) == length(unique(groups)) && min(rep_counts) >= min_count
+    repCounts <- table(names(na.omit(row)))
+    length(repCounts) == length(unique(groups)) && min(repCounts) >= minCount
 }
 
 setupStatisticsObject <- function(designFp, dataFp, comparisons, sampleCol="sample", 
@@ -45,7 +45,7 @@ setupStatisticsObject <- function(designFp, dataFp, comparisons, sampleCol="samp
     dataMat <- as.matrix(fullDf[, dataCols], )
     
     rownames(dataMat) <- 1:nrow(dataMat)
-    dataMatNAFiltered <- filterLowRep(dataMat, designDf[, conditionCol], least_rep=leastRepCount)
+    dataMatNAFiltered <- filterLowRep(dataMat, designDf[, conditionCol], leastRep=leastRepCount)
     naFilterContrast <- rownames(dataMat) %in% rownames(dataMatNAFiltered)
       
     if (logTrans) {
@@ -88,8 +88,8 @@ generateAnnotatedMatrix <- function(nst) {
 #' 
 #' @param nr Normalyzer results object.
 #' @param jobdir Path to output directory for run.
-#' @param plot_rows Number of plot rows.
-#' @param plot_cols Number of plot columns.
+#' @param plotRows Number of plot rows.
+#' @param plotCols Number of plot columns.
 #' @return None
 #' @export
 #' @examples
@@ -97,10 +97,10 @@ generateAnnotatedMatrix <- function(nst) {
 #' normResults <- normMethods(normObj)
 #' normResultsWithEval <- analyzeNormalizations(normResults)
 #' generatePlots(normResultsWithEval, "path/to/output")
-generateStatsReport <- function(nst, jobName, jobDir, plot_rows=3, plot_cols=4) {
+generateStatsReport <- function(nst, jobName, jobDir, plotRows=3, plotCols=4) {
     
-    nrows <- plot_rows + 2
-    ncols <- plot_cols + 2
+    nrows <- plotRows + 2
+    ncols <- plotCols + 2
     
     currentLayout <- grid::grid.layout(nrow=nrows, ncol=ncols,
                                        heights=c(0.1, rep(3 / (nrows-2), (nrows - 2)), 0.1), 
@@ -142,7 +142,7 @@ plotContrastPHists <- function(nst, jobName, currentLayout, pageno) {
 }
 
 
-reduce_technical_replicates <- function(dataMat, techRepGroups) {
+reduceTechnicalReplicates <- function(dataMat, techRepGroups) {
     
     uniqueGroups <- unique(techRepGroups)
     indices <- lapply(uniqueGroups, function(i) { which(techRepGroups %in% i) })
@@ -153,7 +153,7 @@ reduce_technical_replicates <- function(dataMat, techRepGroups) {
 }
 
 
-reduce_design <- function(designMat, techRepGroups) {
+reduceDesign <- function(designMat, techRepGroups) {
     
     uniqueGroups <- unique(techRepGroups)
     indices <- lapply(uniqueGroups, function(i) { which(techRepGroups %in% i) })
