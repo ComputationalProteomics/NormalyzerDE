@@ -187,7 +187,6 @@ getSmoothedRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod,
                                                stepSizeMinutes, windowMinCount=windowMinCount, offset=fracShift)
     }
 
-    # mean, median, anonymous...
     if (mergeMethod == "mean") {
         combinedMatrices <- getCombinedMatrix(matrices, mean)
     }

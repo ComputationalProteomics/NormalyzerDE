@@ -30,6 +30,7 @@
 #' @param groupColName Column name in design matrix containing condition IDs.
 #' @param inputFormat Type of input format.
 #' @param skipAnalysis Only perform normalization steps.
+#' @param quiet Omit status messages printed during run
 #' @return None
 #' @export
 #' @import MASS limma preprocessCore methods RcmdrMisc
@@ -137,6 +138,7 @@ normalyzer <- function(jobName,
 #' @param robustLimma Perform robust Limma estimate in the eBayes fit step
 #' @param type Type of statistical comparison, "limma" or "welch"
 #' @param batchCol Provide an optional column for inclusion of possible batch variance in the model
+#' @param quiet Omit status messages printed during run
 #' @return None
 #' @export
 #' @examples
