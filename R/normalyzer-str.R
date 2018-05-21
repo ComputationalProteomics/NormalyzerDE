@@ -38,10 +38,10 @@
 #' normalyzer("data.tsv", "my_jobname", designMatrix="design.tsv", outputDir="path/to/output")
 #' normalyzer("data.tsv", "my_jobname", designMatrix="design.tsv", outputDir="path/to/output", normalizeRetentionTime=TRUE, retentionTimeWindow=2)
 #' normalyzer("data.tsv", "my_jobname", designMatrix="design.tsv", outputDir="path/to/output", inputFormat="maxquantprot")
-normalyzer <- function(inputPath, 
-                       jobName, 
-                       designMatrix=NULL,
-                       outputDir=NULL,
+normalyzer <- function(jobName,
+                       designPath, 
+                       dataPath,
+                       outputDir=".",
                        forceAllMethods=FALSE,
                        omitLowAbundSamples=FALSE,
                        sampleAbundThres=15,
@@ -65,14 +65,15 @@ normalyzer <- function(inputPath,
 
     startTime <- Sys.time()
     
+    options(warn=0)
     if (sourceFiles) {
         sourceScripts(sourceBase)
     }
 
     print("[Step 1/6] Verifying input")
-    normObj <- getVerifiedNormalyzerObject(inputPath,
-                                           jobName,
-                                           designMatrix,
+    normObj <- getVerifiedNormalyzerObject(jobName=jobName,
+                                           designPath=designPath,
+                                           dataPath=dataPath,
                                            threshold=sampleAbundThres,
                                            omitSamples=omitLowAbundSamples,
                                            requireReplicates=requireReplicates,
@@ -102,30 +103,21 @@ normalyzer <- function(inputPath,
         "[Step 3/6] skipAnalysis flag set so no analysis performed"
     }
     
-    if (!skipAnalysis) {
-        print("[Step 4/6] Calculating statistics...")
-        # normalyzerResultsObject <- calculateStatistics(normalyzerResultsObject, )
-        print("[Step 4/6] Plots successfully generated")
-    }
-    else {
-        "[Step 4/6] skipAnalysis flag set so no statistics calculated"
-    }
-
-    print("[Step 5/6] Writing matrices to file")
+    print("[Step 4/5] Writing matrices to file")
     writeNormalizedDatasets(normalyzerResultsObject, 
                             jobDir, 
                             includePairwiseComparisons=!is.null(pairwiseComparisons),
                             includeCvCol=includeCvCol,
                             includeAnovaP=includeAnovaP)
-    print("[Step 5/6] Matrices successfully written")
+    print("[Step 4/5] Matrices successfully written")
     
     if (!skipAnalysis) {
-        print("[Step 6/6] Generating plots...")
+        print("[Step 5/5] Generating plots...")
         generatePlots(normalyzerResultsObject, jobDir, plot_rows=plotRows, plot_cols=plotCols)
-        print("[Step 6/6] Plots successfully generated")
+        print("[Step 5/5] Plots successfully generated")
     }
     else {
-        print("[Step 6/6] skipAnalysis flag set so no plots generated")
+        print("[Step 5/5] skipAnalysis flag set so no plots generated")
     }
     
     endTime <- Sys.time()

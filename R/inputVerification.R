@@ -17,9 +17,9 @@
 #' @export
 #' @examples
 #' normObj <- getVerifiedNormalyzerObject("data.tsv", "job_name", "design.tsv")
-getVerifiedNormalyzerObject <- function(inputPath, 
-                                        jobName, 
-                                        designMatrixPath=NULL,
+getVerifiedNormalyzerObject <- function(jobName, 
+                                        designPath, 
+                                        dataPath,
                                         threshold=15, 
                                         omitSamples=FALSE,
                                         requireReplicates=TRUE,
@@ -29,24 +29,24 @@ getVerifiedNormalyzerObject <- function(inputPath,
                                         inputFormat="default") {
 
     if (inputFormat == "default") {
-        rawData <- loadRawDataFromFile(inputPath)
+        rawData <- loadRawDataFromFile(dataPath)
     } else if (inputFormat == "proteios") {
-        rawData <- proteiosToNormalyzer(inputPath)
+        rawData <- proteiosToNormalyzer(dataPath)
     } else if (inputFormat == "maxquantpep") {
-        rawData <- maxQuantToNormalyzer(inputPath, protLevel=FALSE)
+        rawData <- maxQuantToNormalyzer(dataPath, protLevel=FALSE)
     } else if (inputFormat == "maxquantprot") {
-        rawData <- maxQuantToNormalyzer(inputPath, protLevel=TRUE)
+        rawData <- maxQuantToNormalyzer(dataPath, protLevel=TRUE)
     } else {
         valids <- c("default", "proteios", "maxquantpep", "maxquantprot")
         stop(paste("Unknown inputFormat:", inputFormat, "valids are:", paste(valids, collapse=", ")))
     }
     
-    designMatrix <- utils::read.table(designMatrixPath, sep="\t", stringsAsFactors=FALSE, header=TRUE, comment.char="")
+    designMatrix <- utils::read.table(designPath, sep="\t", stringsAsFactors=FALSE, header=TRUE, comment.char="")
 
     if (zeroToNA) {
         rawData[rawData == "0"] <- NA
     }
-
+    
     if (!groupCol %in% colnames(designMatrix)) {
         stop(paste("Given groupCol:", groupCol, "was not present among design matrix columns"))
     }

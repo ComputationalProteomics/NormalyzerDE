@@ -98,6 +98,7 @@ meanNormalization <- function(rawMatrix) {
 #' @return Normalized matrix
 performVSNNormalization <- function(rawMatrix) {
     normMatrix <- suppressMessages(vsn::justvsn(rawMatrix))
+    
     colnames(normMatrix) <- colnames(rawMatrix)
     normMatrix
 }

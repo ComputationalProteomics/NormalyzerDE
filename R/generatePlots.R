@@ -647,7 +647,6 @@ plotMDS <- function(nr, currentLayout, pageno) {
 }
 
 #' Visualize standard deviation over (expression?) for different values
-#' TODO: What is on the x-axis here?
 #' 
 #' @param nr Normalyzer results object.
 #' @param currentLayout Layout used for document.

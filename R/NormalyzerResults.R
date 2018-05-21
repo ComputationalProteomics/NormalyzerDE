@@ -9,30 +9,6 @@ slotNamesMap <- c("data2log2"="Log2",
                "data2rtMean"="RT-mean",
                "data2rtLoess"="RT-Loess")
 
-# slotOutput <- c("data2log2"="Log2",
-#                 "data2loess"="Loess-G",
-#                 "data2vsn"="VSN-G",
-#                 "data2rlr"="RLR-G",
-#                 "data2GI"="AI-G",
-#                 "data2med"="MedI-G",
-#                 "data2mean"="MeanI-G",
-#                 "data2quantile"="Quantile",
-#                 "data2rtMed"="RT-med",
-#                 "data2rtMean"="RT-mean",
-#                 "data2rtLoess"="RT-Loess")
-
-# outputNames <- c("Log2",
-#                  "Loess-G",
-#                  "VSN-G",
-#                  "RLR-G",
-#                  "TI-G",
-#                  "MedI-G",
-#                  "AI-G",
-#                  "Quantile",
-#                  "RT-mean",
-#                  "RT-med",
-#                  "RT-Loess")
-
 #' S4 class to represent dataset information
 #' 
 #' @slot nds Normalyzer dataset representing run data.

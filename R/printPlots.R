@@ -35,6 +35,11 @@ printPlots <- function(plotlist, plotname, pageno, jobname, currentLayout) {
     row <- 2  # Start value
     col <- 2  # Start value
         
+    options(warn=2)
+    print(plotname)
+    
+    
+    
     pos_counter <- 0
     for (i in 1:length(plotlist)) {
         
@@ -51,7 +56,7 @@ printPlots <- function(plotlist, plotname, pageno, jobname, currentLayout) {
         
         row <- (pos_counter-1) %/% grid_cols + 2
         col <- (pos_counter-1) %% grid_cols + 2
-
+        
         print(plotlist[[i]], vp=grid::viewport(layout.pos.row=row, layout.pos.col=col))
     }
 }
