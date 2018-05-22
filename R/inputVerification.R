@@ -26,7 +26,8 @@ getVerifiedNormalyzerObject <- function(jobName,
                                         sampleCol="sample",
                                         groupCol="group",
                                         zeroToNA=FALSE,
-                                        inputFormat="default") {
+                                        inputFormat="default",
+                                        quiet=FALSE) {
 
     if (inputFormat == "default") {
         rawData <- loadRawDataFromFile(dataPath)
@@ -72,8 +73,8 @@ getVerifiedNormalyzerObject <- function(jobName,
     designMatrix <- designMatrix[which(designMatrix$sample %in% colnames(lowCountSampleFiltered)), ]
     
     # If no samples left after omitting, stop
-    verifyMultipleSamplesPresent(lowCountSampleFiltered, groups, requireReplicates=requireReplicates)
-    validateSampleReplication(lowCountSampleFiltered, groups, requireReplicates=requireReplicates)
+    verifyMultipleSamplesPresent(lowCountSampleFiltered, groups, requireReplicates=requireReplicates, quiet=quiet)
+    validateSampleReplication(lowCountSampleFiltered, groups, requireReplicates=requireReplicates, quiet=quiet)
     
     nds <- generateNormalyzerDataset(cbind(annotationMatrix, lowCountSampleFiltered), jobName, designMatrix, sampleCol, groupCol)
     nds
@@ -296,7 +297,7 @@ getLowCountSampleFiltered <- function(dataMatrix, groups, threshold=15, stopIfTo
 #'  have replicates
 #' @return None
 #' @keywords internal
-validateSampleReplication <- function(dataMatrix, groups, requireReplicates=TRUE) {
+validateSampleReplication <- function(dataMatrix, groups, requireReplicates=TRUE, quiet=FALSE) {
     
     headerCounts <- table(groups)
     nonReplicatedSamples <- names(headerCounts[which(headerCounts == 1)])
@@ -319,7 +320,7 @@ validateSampleReplication <- function(dataMatrix, groups, requireReplicates=TRUE
         }
     }
     else {
-        print("Sample replication check: All samples have replicates")
+        if (!quiet) print("Sample replication check: All samples have replicates")
     }
 }
 
@@ -332,7 +333,7 @@ validateSampleReplication <- function(dataMatrix, groups, requireReplicates=TRUE
 #'  have replicates
 #' @return None
 #' @keywords internal
-verifyMultipleSamplesPresent <- function(dataMatrix, groups, requireReplicates=TRUE) {
+verifyMultipleSamplesPresent <- function(dataMatrix, groups, requireReplicates=TRUE, quiet=FALSE) {
     
     samples <- groups[which(as.numeric(groups) > 0)]
     distinctSamples <- unique(samples)
@@ -370,7 +371,7 @@ verifyMultipleSamplesPresent <- function(dataMatrix, groups, requireReplicates=T
              input validation steps.")
     }
     else {
-        print("Sample check: More than one sample group found")
+        if (!quiet) print("Sample check: More than one sample group found")
     }
 }
 

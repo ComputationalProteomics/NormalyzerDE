@@ -2,7 +2,7 @@ context("Global check of evaluation and DE by MD5sum comparisons to previous run
 
 library(NormalyzerDE)
 
-outBase <- "BasicRunWithDE"
+outBase <- "output/BasicRunWithDE"
 outEvalBase <- outBase
 outDEBase <- paste(outBase, "RegressionTestDE", sep="/")
 

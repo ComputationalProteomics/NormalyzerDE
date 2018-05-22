@@ -10,10 +10,10 @@
 #' @examples
 #' normObj <- getVerifiedNormalyzerObject("data.tsv", "job_name", "design.tsv")
 #' normResults <- normMethods(normObj)
-normMethods <- function(nds, forceAll=FALSE, normalizeRetentionTime=TRUE, retentionTimeWindow=1) {
+normMethods <- function(nds, forceAll=FALSE, normalizeRetentionTime=TRUE, retentionTimeWindow=1, quiet=FALSE) {
     
     nr <- generateNormalyzerResultsObject(nds)
-    nr <- performNormalizations(nr, forceAll=forceAll, rtNorm=normalizeRetentionTime, rtWindow=retentionTimeWindow)
+    nr <- performNormalizations(nr, forceAll=forceAll, rtNorm=normalizeRetentionTime, rtWindow=retentionTimeWindow, quiet=quiet)
     
     return(nr)
 }

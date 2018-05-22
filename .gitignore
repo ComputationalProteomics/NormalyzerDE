@@ -26,3 +26,4 @@ OldRSubDirs/
 vignettes/testout/
 vignettes/vignette_run/
 tests/testthat/RegressionTestDE_*
+tests/testthat/output

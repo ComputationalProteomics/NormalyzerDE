@@ -49,11 +49,11 @@ normalyzer <- function(jobName,
                        requireReplicates=TRUE,
                        normalizeRetentionTime=TRUE,
                        retentionTimeWindow=1,
-                       pairwiseComparisons=NULL,
-                       includeCvCol=FALSE,
-                       categoricalAnova=TRUE,
-                       includeAnovaP=FALSE,
-                       varFilterFrac=NULL,
+                       # pairwiseComparisons=NULL,
+                       # includeCvCol=FALSE,
+                       # categoricalAnova=TRUE,
+                       # includeAnovaP=FALSE,
+                       # varFilterFrac=NULL,
                        plotRows=3,
                        plotCols=4,
                        sourceFiles=FALSE,
@@ -81,7 +81,8 @@ normalyzer <- function(jobName,
                                            zeroToNA=zeroToNA,
                                            inputFormat=inputFormat,
                                            sampleCol=sampleColName,
-                                           groupCol=groupColName)
+                                           groupCol=groupColName,
+                                           quiet=quiet)
     jobDir <- setupJobDir(jobName, outputDir)
     if (!quiet) print(paste("[Step 1/5] Input verified, job directory prepared at:", jobDir))
     
@@ -89,15 +90,17 @@ normalyzer <- function(jobName,
     normalyzerResultsObject <- normMethods(normObj,
                                            forceAll=forceAllMethods,
                                            normalizeRetentionTime=normalizeRetentionTime,
-                                           retentionTimeWindow=retentionTimeWindow)
+                                           retentionTimeWindow=retentionTimeWindow,
+                                           quiet=quiet)
     if (!quiet) print("[Step 2/5] Done!")
     
     if (!skipAnalysis) {
         if (!quiet) print("[Step 3/5] Generating evaluation measures...")
         normalyzerResultsObject <- analyzeNormalizations(normalyzerResultsObject, 
-                                                         comparisons=pairwiseComparisons,
-                                                         categoricalAnova=categoricalAnova,
-                                                         varFilterFrac=varFilterFrac)
+                                                         # comparisons=pairwiseComparisons,
+                                                         # categoricalAnova=categoricalAnova,
+                                                         # varFilterFrac=varFilterFrac
+                                                         )
         if (!quiet) print("[Step 3/5] Done!")
     }
     else {
@@ -107,9 +110,10 @@ normalyzer <- function(jobName,
     if (!quiet) print("[Step 4/5] Writing matrices to file")
     writeNormalizedDatasets(normalyzerResultsObject, 
                             jobDir, 
-                            includePairwiseComparisons=!is.null(pairwiseComparisons),
-                            includeCvCol=includeCvCol,
-                            includeAnovaP=includeAnovaP)
+                            # includePairwiseComparisons=!is.null(pairwiseComparisons),
+                            # includeCvCol=includeCvCol,
+                            # includeAnovaP=includeAnovaP
+                            )
     if (!quiet) print("[Step 4/5] Matrices successfully written")
     
     if (!skipAnalysis) {
