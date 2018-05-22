@@ -7,7 +7,8 @@ slotNamesMap <- c("data2log2"="Log2",
                   "data2quantile"="Quantile",
                   "data2rtMed"="RT-med",
                   "data2rtMean"="RT-mean",
-                  "data2rtLoess"="RT-Loess")
+                  "data2rtLoess"="RT-Loess",
+                  "data2rtVSN"="RT-VSN")
 
 #' S4 class to represent dataset information
 #' 
@@ -16,9 +17,7 @@ slotNamesMap <- c("data2log2"="Log2",
 #' @slot methodnames Short names for included normalization methods.
 #' @slot furtherNormalizationMinThreshold Min threshold for running extended normalizations.
 #' @slot data2log2 Log2 of filtered raw data.
-#' @slot data2limloess Lim-Loess normalized raw data.
 #' @slot fittedLR Fitted Loess regression 
-#' @slot data2vsnrep Replicate based VSN normalization.
 #' @slot data2loess Loess normalization.
 #' @slot globalfittedRLR Global fitted RLR normalization
 #' @slot data2vsn Global VSN normalized data.
@@ -41,9 +40,7 @@ NormalyzerResults <- setClass("NormalyzerResults",
                                   furtherNormalizationMinThreshold="numeric",
                                   
                                   data2log2 = "matrix",
-                                  data2limloess = "matrix",
                                   fittedLR = "matrix",
-                                  data2vsnrep = "matrix",
                                   data2loess = "matrix",
                                   globalfittedRLR = "matrix",
                                   data2vsn = "matrix",
@@ -55,6 +52,7 @@ NormalyzerResults <- setClass("NormalyzerResults",
                                   data2rtMed = "matrix",
                                   data2rtMean = "matrix",
                                   data2rtLoess = "matrix",
+                                  data2rtVSN = "matrix",
                                   
                                   data2ctr = "matrix",
                                   data2mad = "matrix"
@@ -143,60 +141,60 @@ setMethod("basicMetricNormalizations", "NormalyzerResults",
 )
 
 
-#' Generate replicate based normalizations
-#'
-#' @param nr Normalyzer results object.
-#' @return None
-#' @rdname performReplicateBasedNormalizations
-setGeneric(name="performReplicateBasedNormalizations",
-           function(nr) standardGeneric("performReplicateBasedNormalizations"))
-
-#' @rdname performReplicateBasedNormalizations
-setMethod("performReplicateBasedNormalizations", "NormalyzerResults",
-          function(nr) {
-              
-              ## NORMALIZATION within REPLICATES RLR, VSN and Loess
-              
-              nds <- nr@nds
-              
-              sampleReplicateGroups <- nds@sampleReplicateGroups
-              filterrawdata <- nds@filterrawdata
-              
-              limLoessMatrix <- matrix(, nrow=nrow(filterrawdata), ncol=0)
-              vsnMatrix <- matrix(, nrow=nrow(filterrawdata), ncol=0)
-              fittedLRMatrix <- matrix(, nrow=nrow(filterrawdata), ncol=0)
-              
-              indexList <- getIndexList(sampleReplicateGroups)
-              colOrder <- c()
-              
-              for (repVal in names(indexList)) {
-                  
-                  repValNr <- strtoi(repVal)
-                  cols <- indexList[[repVal]]
-                  colOrder <- c(colOrder, cols)
-                  
-                  rawDataWindow <- filterrawdata[, cols]
-                  LRWindow <- performGlobalRLRNormalization(rawDataWindow)
-                  fittedLRMatrix <- cbind(fittedLRMatrix, LRWindow)
-                  
-                  loessDataWindow <- performCyclicLoessNormalization(rawDataWindow)
-                  limLoessMatrix <- cbind(limLoessMatrix, loessDataWindow)
-                  
-                  vsnDataWindow <- performVSNNormalization(rawDataWindow)
-                  vsnMatrix <- cbind(vsnMatrix, vsnDataWindow)
-              }
-              
-              origPos <- c()
-              for (i in 1:length(colOrder)) {
-                  origPos <- c(origPos, which(colOrder == i))
-              }
-              
-              nr@fittedLR <- fittedLRMatrix[, origPos]
-              nr@data2limloess <- limLoessMatrix[, origPos]
-              nr@data2vsnrep <- vsnMatrix[, origPos]
-              
-              nr
-          })
+#' #' Generate replicate based normalizations
+#' #'
+#' #' @param nr Normalyzer results object.
+#' #' @return None
+#' #' @rdname performReplicateBasedNormalizations
+#' setGeneric(name="performReplicateBasedNormalizations",
+#'            function(nr) standardGeneric("performReplicateBasedNormalizations"))
+#' 
+#' #' @rdname performReplicateBasedNormalizations
+#' setMethod("performReplicateBasedNormalizations", "NormalyzerResults",
+#'           function(nr) {
+#'               
+#'               ## NORMALIZATION within REPLICATES RLR, VSN and Loess
+#'               
+#'               nds <- nr@nds
+#'               
+#'               sampleReplicateGroups <- nds@sampleReplicateGroups
+#'               filterrawdata <- nds@filterrawdata
+#'               
+#'               limLoessMatrix <- matrix(, nrow=nrow(filterrawdata), ncol=0)
+#'               vsnMatrix <- matrix(, nrow=nrow(filterrawdata), ncol=0)
+#'               fittedLRMatrix <- matrix(, nrow=nrow(filterrawdata), ncol=0)
+#'               
+#'               indexList <- getIndexList(sampleReplicateGroups)
+#'               colOrder <- c()
+#'               
+#'               for (repVal in names(indexList)) {
+#'                   
+#'                   repValNr <- strtoi(repVal)
+#'                   cols <- indexList[[repVal]]
+#'                   colOrder <- c(colOrder, cols)
+#'                   
+#'                   rawDataWindow <- filterrawdata[, cols]
+#'                   LRWindow <- performGlobalRLRNormalization(rawDataWindow)
+#'                   fittedLRMatrix <- cbind(fittedLRMatrix, LRWindow)
+#'                   
+#'                   loessDataWindow <- performCyclicLoessNormalization(rawDataWindow)
+#'                   limLoessMatrix <- cbind(limLoessMatrix, loessDataWindow)
+#'                   
+#'                   vsnDataWindow <- performVSNNormalization(rawDataWindow)
+#'                   vsnMatrix <- cbind(vsnMatrix, vsnDataWindow)
+#'               }
+#'               
+#'               origPos <- c()
+#'               for (i in 1:length(colOrder)) {
+#'                   origPos <- c(origPos, which(colOrder == i))
+#'               }
+#'               
+#'               nr@fittedLR <- fittedLRMatrix[, origPos]
+#'               nr@data2limloess <- limLoessMatrix[, origPos]
+#'               nr@data2vsnrep <- vsnMatrix[, origPos]
+#'               
+#'               nr
+#'           })
 
 #' Perform retention time normalizations
 #'
@@ -217,10 +215,12 @@ setMethod("performRTNormalizations", "NormalyzerResults",
               smoothedRTMed <- getSmoothedRTNormalizedMatrix(nds@filterrawdata, nds@retentionTimes, medianNormalization, stepSizeMinutes)
               smoothedRTMean <- getSmoothedRTNormalizedMatrix(nds@filterrawdata, nds@retentionTimes, meanNormalization, stepSizeMinutes)
               smoothedRTLoess <- getSmoothedRTNormalizedMatrix(nds@filterrawdata, nds@retentionTimes, performCyclicLoessNormalization, stepSizeMinutes)
+              smoothedRTVSN <- getSmoothedRTNormalizedMatrix(nds@filterrawdata, nds@retentionTimes, performVSNNormalization, stepSizeMinutes)
               
               nr@data2rtMed <- smoothedRTMed
               nr@data2rtMean <- smoothedRTMean
               nr@data2rtLoess <- smoothedRTLoess
+              nr@data2rtVSN <- smoothedRTVSN
               nr
           })
 
