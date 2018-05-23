@@ -9,6 +9,7 @@
 #' @slot filterrawdata Reduced raw data matrix where low abundance rows are 
 #'  removed - TODO: CHECK, IS THIS CURRENTLY WORKING?
 #' @slot sampleReplicateGroups Vector with sample replicate information
+#' @slot samplesGroupsWithReplicates Vector with replicated sample replicate information
 #' @slot colsum Vector with sum of values for each column
 #' @slot medofdata Vector with median values for each column
 #' @slot meanofdata Vector with mean values for each column
@@ -30,6 +31,7 @@ NormalyzerDataset <- setClass("NormalyzerDataset",
 
                                   filterrawdata = "matrix",
                                   sampleReplicateGroups = "numeric",
+                                  samplesGroupsWithReplicates = "numeric",
                                   
                                   colsum = "numeric",
                                   medofdata = "numeric",
@@ -58,7 +60,10 @@ setGeneric(name="setupValues", function(nds, quiet) standardGeneric("setupValues
 setMethod("setupValues", "NormalyzerDataset",
           function(nds, quiet=FALSE) {
               
-              nds@sampleReplicateGroups <- as.factor(nds@designMatrix[, nds@groupNameCol])
+              # browser()
+              
+              nds@sampleReplicateGroups <- as.numeric(as.factor(nds@designMatrix[, nds@groupNameCol]))
+              nds@samplesGroupsWithReplicates <- as.numeric(names(table(nds@sampleReplicateGroups)[which(table(nds@sampleReplicateGroups) > 1)]))
               nds@sampleNames <- nds@designMatrix[, nds@sampleNameCol]
 
               singleReplicateRun <- detectSingleReplicate(nds)
@@ -154,7 +159,7 @@ setGeneric(name="setupBasicValues",
 setMethod("setupBasicValues", "NormalyzerDataset",
           function(nds) {
               
-              nds@sampleReplicateGroups <- as.numeric(nds@sampleReplicateGroups)
+              # nds@sampleReplicateGroups <- as.numeric(nds@sampleReplicateGroups)
               nds@annotationValues <- nds@rawData[, !(colnames(nds@rawData) %in% nds@sampleNames), drop=FALSE]
               nds <- setupFilterRawData(nds)
 

@@ -34,36 +34,45 @@ analyzeNormalizations <- function(nr,
 calculateCorrelations <- function(nr, ner) {
     
     methodlist <- getNormalizationMatrices(nr)
-    filterED <- nr@nds@sampleReplicateGroups
-    
+    allReplicateGroups <- nr@nds@sampleReplicateGroups
+
     graphics::par(mfrow=c(1,1))
     avgpercorsum <- list()
     avgspecorsum <- list()
     corsum <- vector()
     
     for (i in 1:length(methodlist)) {
-        percorsum <- vector()
-        specorsum <- vector()
+        pearCorSum <- vector()
+        spearCorSum <- vector()
         
-        flag1 <- 1
+        # flag1 <- 1
         datastore <- as.matrix(methodlist[[i]])
-        un <- unique(filterED)
+        sampleGroupsWithReplicates <- nr@nds@samplesGroupsWithReplicates
+        # allUniqueRepGroups <- unique(allReplicateGroups)
         
-        for (uq in 1:length(un)) {
+        # browser()
+        
+        for (groupNbr in 1:length(sampleGroupsWithReplicates)) {
             
-            dt <- as.matrix(datastore[, which(filterED == un[uq])])
+            # print(paste("Calculating for group:", groupNbr))
+            # 
+            # browser()
+            
+            dt <- as.matrix(datastore[, which(allReplicateGroups == sampleGroupsWithReplicates[groupNbr])])
             class(dt) <- "numeric"
-            percor <- stats::cor(dt, use="pairwise.complete.obs", method="pearson")
-            spercor <- stats::cor(dt, use="pairwise.complete.obs", method="spearman")
+            pearCor <- stats::cor(dt, use="pairwise.complete.obs", method="pearson")
+            spearCor <- stats::cor(dt, use="pairwise.complete.obs", method="spearman")
             
             for (rn in 1:(ncol(dt) - 1)) {
-                percorsum <- c(percorsum, percor[rn, -(1:rn)])
-                specorsum <- c(specorsum, spercor[rn, -(1:rn)])
+                pearCorSum <- c(pearCorSum, pearCor[rn, -(1:rn)])
+                spearCorSum <- c(spearCorSum, spearCor[rn, -(1:rn)])
             }
         }
         
-        avgpercorsum[[i]] <- percorsum
-        avgspecorsum[[i]] <- specorsum
+        # browser()
+
+        avgpercorsum[[i]] <- pearCorSum
+        avgspecorsum[[i]] <- spearCorSum
     }
     
     ner@avgpercorsum <- avgpercorsum
