@@ -59,8 +59,8 @@ getVerifiedNormalyzerObject <- function(jobName,
     verifyDesignMatrix(fullMatrix, designMatrix, sampleCol=sampleCol)
     dataMatrix <- fullMatrix[, designMatrix[, sampleCol]]
     annotationMatrix <- fullMatrix[, -which(colnames(fullMatrix) %in% designMatrix[, sampleCol])]
-        
-    verifyValidNumbers(dataMatrix, groups)
+
+    verifyValidNumbers(dataMatrix, groups, quiet=quiet)
     
     repSortedRawData <- getReplicateSortedData(dataMatrix, groups)
     processedRawData <- preprocessData(repSortedRawData)
@@ -76,7 +76,7 @@ getVerifiedNormalyzerObject <- function(jobName,
     verifyMultipleSamplesPresent(lowCountSampleFiltered, groups, requireReplicates=requireReplicates, quiet=quiet)
     validateSampleReplication(lowCountSampleFiltered, groups, requireReplicates=requireReplicates, quiet=quiet)
     
-    nds <- generateNormalyzerDataset(cbind(annotationMatrix, lowCountSampleFiltered), jobName, designMatrix, sampleCol, groupCol)
+    nds <- generateNormalyzerDataset(cbind(annotationMatrix, lowCountSampleFiltered), jobName, designMatrix, sampleCol, groupCol, quiet=quiet)
     nds
 }
 
@@ -117,7 +117,7 @@ loadRawDataFromFile <- function(inputPath) {
 #' @param groups Condition levels for comparisons.
 #' @return Parsed rawdata where 0 values are replaced with NA
 #' @keywords internal
-verifyValidNumbers <- function(rawDataOnly, groups) {
+verifyValidNumbers <- function(rawDataOnly, groups, quiet=FALSE) {
     
     # Fields expected to contain numbers in decimal or scientific notation, or containing NA or null
     validPatterns <- c("\\d+(\\.\\d+)?", "NA", "\"NA\"", "null", "\\d+(\\.\\d+)?[eE]([\\+\\-])?\\d+$")
@@ -150,7 +150,7 @@ verifyValidNumbers <- function(rawDataOnly, groups) {
         stop(errorString)
     }
 
-    print("Input data checked. All fields are valid.")
+    if (!quiet) print("Input data checked. All fields are valid.")
 }
 
 #' Verify that design matrix setup matches the data matrix
@@ -385,14 +385,14 @@ verifyMultipleSamplesPresent <- function(dataMatrix, groups, requireReplicates=T
 #' @param groupNameCol Name of column in design matrix contaning conditions.
 #' @return Data object representing loaded data.
 #' @keywords internal
-generateNormalyzerDataset <- function(fullRawMatrix, jobName, designMatrix, sampleNameCol, groupNameCol) {
+generateNormalyzerDataset <- function(fullRawMatrix, jobName, designMatrix, sampleNameCol, groupNameCol, quiet=FALSE) {
     
     # rawData <- fullRawMatrix[-1,]
     # colnames(rawData) <- fullRawMatrix[1,]
     
     # nds <- NormalyzerDataset(jobName=jobName, rawData=rawData, designMatrix=designMatrix, sampleNameCol=sampleNameCol, groupNameCol=groupNameCol)
     nds <- NormalyzerDataset(jobName=jobName, rawData=fullRawMatrix, designMatrix=designMatrix, sampleNameCol=sampleNameCol, groupNameCol=groupNameCol)
-    nds <- setupValues(nds)
+    nds <- setupValues(nds, quiet=quiet)
     nds
 }
 

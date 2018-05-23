@@ -1,16 +1,17 @@
-context("Global check of evaluation and DE by MD5sum comparisons to previous runs")
+context("Basic run including DE evaluation")
 
 library(NormalyzerDE)
 
+deName <- "RegressionTestDE"
 outBase <- "output/BasicRunWithDE"
 outEvalBase <- outBase
-outDEBase <- paste(outBase, "RegressionTestDE", sep="/")
+outDEBase <- paste(outBase, deName, sep="/")
 
-designPath <- "data/regression_cases/web_dataset/test_design.tsv"
-dataPath <- "data/regression_cases/web_dataset/test_data.tsv"
+designPath <- "data/basic_regression/test_design.tsv"
+dataPath <- "data/basic_regression/test_data_w_val.tsv"
 
-baselineEvalDir <- "data/regression_cases/web_dataset/output/eval"
-baselineDEDir <- "data/regression_cases/web_dataset/output/de"
+baselineEvalDir <- "data/basic_regression/BasicRunWithDE/RegressionTest"
+baselineDEDir <- "data/basic_regression/BasicRunWithDE/RegressionTestDE"
 
 normalyzer(jobName="RegressionTest",
            designPath=designPath,
@@ -31,9 +32,6 @@ normalizations <- c(
 
 test_that("Evaluation matrices are identical", {
     
-    # baseline_base <- "data/regression_cases/web_dataset/output/eval"
-    # curr_base <- "RegressionTest/"
-    
     for (norm in normalizations) {
         
         baseline_md5 <- tools::md5sum(paste(baselineEvalDir, norm, sep="/"))
@@ -50,22 +48,24 @@ for (norm_name in names(normalizations)) {
     allComps <- c("2-3", "2-4", "3-4")
     
     normalyzerDE(
-        jobName=paste("RegressionTestDE", norm_name, sep="_"), 
+        jobName=paste(deName, norm_name, sep="_"), 
         designPath=designPath, 
         dataPath=paste(baselineEvalDir, norm, sep="/"),
         outputDir=outDEBase,
         comparisons=allComps,
         type="limma",
-        quiet=TRUE
+        quiet=TRUE    
     )
     
     test_that("DE runs are identical", {
         
-        baseline_base <- paste0(baselineDEDir, "/", norm_name, "/", norm_name)
-        curr_base <- paste0(outDEBase, "/", "RegressionTestDE_", norm_name)
+        currDeName <- paste(deName, norm_name, sep="_")
         
-        baseline_md5 <- tools::md5sum(paste0(baseline_base, "/", norm_name, "_stats.tsv"))
-        current_md5 <- tools::md5sum(paste0(curr_base, "/", "RegressionTestDE_", norm_name, "_stats.tsv"))
+        baseline_base <- paste0(baselineDEDir, "/", currDeName)
+        curr_base <- paste0(outDEBase, "/", currDeName)
+        
+        baseline_md5 <- tools::md5sum(paste0(baseline_base, "/", currDeName, "_stats.tsv"))
+        current_md5 <- tools::md5sum(paste0(curr_base, "/", currDeName, "_stats.tsv"))
 
         expect_true(baseline_md5 == current_md5, info = paste("Testing for normalization:", norm))
     })

@@ -1,4 +1,4 @@
-context("Global check of evaluation and DE by MD5sum comparisons to previous runs")
+context("RT run evaluation")
 
 library(NormalyzerDE)
 
@@ -24,8 +24,8 @@ normalyzer(jobName=runName,
 
 normalizations <- c(
     "RT-Loess"   = "RT-Loess-normalized.txt", 
-    "RT-Mean"    = "RT-mean-normalized.txt", 
-    "RT-Med"     = "RT-med-normalized.txt"
+    "RT-mean"    = "RT-mean-normalized.txt", 
+    "RT-med"     = "RT-med-normalized.txt"
 )
 
 test_that("Evaluation matrices are identical", {
@@ -52,7 +52,8 @@ for (norm_name in names(normalizations)) {
         outputDir=outBase,
         comparisons=allComps,
         type="limma",
-        quiet=TRUE
+        quiet=TRUE,
+        batchCol="batch"
     )
     
     test_that("DE runs are identical", {

@@ -4,6 +4,7 @@
 #' @param forceAll Force all methods to run despite not qualifying for thresholds.
 #' @param normalizeRetentionTime Perform retention time based normalization methods.
 #' @param retentionTimeWindow Default window size for retention times.
+#' @param quiet Prevent diagnostic output
 #' @return Returns Normalyzer results object with performed analyzes assigned
 #'  as attributes
 #' @export

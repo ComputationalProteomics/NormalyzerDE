@@ -90,7 +90,7 @@ setMethod("initializeResultsObject", "NormalyzerResults",
 #' @rdname performNormalizations
 #' @keywords internal
 setGeneric(name="performNormalizations",
-           function(nr, forceAll, rtNorm, rtWindow) standardGeneric("performNormalizations"))
+           function(nr, forceAll, rtNorm, rtWindow, quiet) standardGeneric("performNormalizations"))
 
 #' @rdname performNormalizations
 setMethod("performNormalizations", "NormalyzerResults",

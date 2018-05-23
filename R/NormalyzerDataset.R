@@ -52,11 +52,11 @@ NormalyzerDataset <- setClass("NormalyzerDataset",
 #' @return None
 #' @rdname setupValues
 #' @keywords internal
-setGeneric(name="setupValues", function(nds) standardGeneric("setupValues"))
+setGeneric(name="setupValues", function(nds, quiet) standardGeneric("setupValues"))
 
 #' @rdname setupValues
 setMethod("setupValues", "NormalyzerDataset",
-          function(nds) {
+          function(nds, quiet=FALSE) {
               
               nds@sampleReplicateGroups <- as.factor(nds@designMatrix[, nds@groupNameCol])
               nds@sampleNames <- nds@designMatrix[, nds@sampleNameCol]
@@ -72,7 +72,7 @@ setMethod("setupValues", "NormalyzerDataset",
               }
               
               nds <- setupBasicValues(nds)
-              nds <- setupRTColumn(nds)
+              nds <- setupRTColumn(nds, quiet=quiet)
               
               nds
           }
@@ -173,11 +173,11 @@ setMethod("setupBasicValues", "NormalyzerDataset",
 #' @rdname setupRTColumn
 #' @keywords internal
 setGeneric(name="setupRTColumn", 
-           function(nds) standardGeneric("setupRTColumn"))
+           function(nds, quiet) standardGeneric("setupRTColumn"))
 
 #' @rdname setupRTColumn
 setMethod("setupRTColumn", "NormalyzerDataset",
-          function(nds) {
+          function(nds, quiet=FALSE) {
               
               rtColumns <- grep("\\bRT\\b", colnames(nds@rawData))
               
@@ -189,7 +189,7 @@ setMethod("setupRTColumn", "NormalyzerDataset",
               }
               else if (length(rtColumns) == 1) {
                   
-                  print(paste0("RT annotation column found (", rtColumns, ")"))
+                  if (!quiet) print(paste0("RT annotation column found (", rtColumns, ")"))
                   
                   rtValues <- nds@rawData[, rtColumns]
                   nds@retentionTimes <- as.numeric(rtValues)
