@@ -28,27 +28,37 @@ normalizations <- c(
     "RT-med"     = "RT-med-normalized.txt"
 )
 
+# Read prepared MD5-sums into map
+normalizationsMd5Fp <- "data/rt_regression/md5sums/normalizations.md5"
+normalizationsMd5Df <- read.csv(normalizationsMd5Fp, sep="", col.names=c("md5", "name"), header=F)
+normalizationsMd5Map <- as.vector(normalizationsMd5Df[["md5"]])
+names(normalizationsMd5Map) <- normalizationsMd5Df[["name"]]
+
+statisticsMd5Fp <- "data/rt_regression/md5sums/statistics.md5"
+statisticsMd5Df <- read.csv(statisticsMd5Fp, sep="", col.names=c("md5", "name"), header=F)
+statisticsMd5Map <- as.vector(statisticsMd5Df[["md5"]])
+names(statisticsMd5Map) <- statisticsMd5Df[["name"]]
+
+# Perform tests
 test_that("Evaluation matrices are identical", {
     
-    for (norm in normalizations) {
+    for (normName in normalizations) {
         
-        baseline_path <- paste(baselineEvalDir, norm, sep="/")
-        eval_path <- paste(outBase, runName, norm, sep="/")
-        
-        baseline_md5 <- tools::md5sum(baseline_path)
-        current_md5 <- tools::md5sum(eval_path)
-        expect_true(baseline_md5 == current_md5, info = paste("Testing for normalization:", norm))
+        baselineMd5 <- normalizationsMd5Map[[normName]]
+        evalPath <- paste(outBase, runName, normName, sep="/")
+        currentMd5 <- tools::md5sum(evalPath)
+        expect_true(baselineMd5 == currentMd5, info = paste("Testing for normalization:", normName))
     }
 })
 
-for (norm_name in names(normalizations)) {
+for (normNameRaw in names(normalizations)) {
 
-    norm <- normalizations[norm_name]
+    normName <- normalizations[normNameRaw]
     
     normalyzerDE(
-        jobName=paste(runNameDE, norm_name, sep="_"), 
+        jobName=paste(runNameDE, normName, sep="_"), 
         designPath=designPath, 
-        dataPath=paste(baselineEvalDir, norm, sep="/"),
+        dataPath=paste(baselineEvalDir, normName, sep="/"),
         outputDir=outBase,
         comparisons=allComps,
         type="limma",
@@ -58,13 +68,11 @@ for (norm_name in names(normalizations)) {
     
     test_that("DE runs are identical", {
         
-        baseline_base <- paste0(baselineDEDir, "/", norm_name)
-        curr_base <- paste0(outBase, "/", runNameDE, "_", norm_name)
-        
-        baseline_md5 <- tools::md5sum(paste0(baseline_base, "/", norm_name, "_stats.tsv"))
-        current_md5 <- tools::md5sum(paste0(curr_base, "/", runNameDE, "_", norm_name, "_stats.tsv"))
+        currBase <- paste0(outBase, "/", runNameDE, "_", normName)
+        baselineMd5 <- statisticsMd5Map[[paste0(normNameRaw, "_stats.tsv")]]
+        currentMd5 <- tools::md5sum(paste0(currBase, "/", runNameDE, "_", currDeName))
 
-        expect_true(baseline_md5 == current_md5, info = paste("Testing for normalization:", norm))
+        expect_true(baselineMd5 == currentMd5, info = paste("Testing for normalization:", normName))
     })
 }
 
