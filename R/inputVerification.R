@@ -17,18 +17,20 @@
 #' @return Normalyzer data object representing verified input data.
 #' @export
 #' @examples
-#' normObj <- getVerifiedNormalyzerObject("data.tsv", "job_name", "design.tsv")
-getVerifiedNormalyzerObject <- function(jobName, 
-                                        designPath, 
-                                        dataPath,
-                                        threshold=15, 
-                                        omitSamples=FALSE,
-                                        requireReplicates=TRUE,
-                                        sampleCol="sample",
-                                        groupCol="group",
-                                        zeroToNA=FALSE,
-                                        inputFormat="default",
-                                        quiet=FALSE) {
+#' normObj <- getVerifiedNormalyzerObject("job_name", "design.tsv", "data.tsv")
+getVerifiedNormalyzerObject <- function(
+        jobName, 
+        designPath, 
+        dataPath,
+        threshold=15, 
+        omitSamples=FALSE,
+        requireReplicates=TRUE,
+        sampleCol="sample",
+        groupCol="group",
+        zeroToNA=FALSE,
+        inputFormat="default",
+        quiet=FALSE
+    ) {
 
     if (inputFormat == "default") {
         rawData <- loadRawDataFromFile(dataPath)

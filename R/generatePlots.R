@@ -7,7 +7,7 @@
 #' @return None
 #' @export
 #' @examples
-#' normObj <- getVerifiedNormalyzerObject("data.tsv", "job_name", "design.tsv")
+#' normObj <- getVerifiedNormalyzerObject("job_name", "design.tsv", "data.tsv")
 #' normResults <- normMethods(normObj)
 #' normResultsWithEval <- analyzeNormalizations(normResults)
 #' generatePlots(normResultsWithEval, "path/to/output")
@@ -137,7 +137,7 @@ plotFrontPage <- function(currentjob, currentFont) {
     graphics::plot(1, type="n", axes=FALSE, xlab="", ylab="")
     
     if ("NormalyzerDE" %in% rownames(utils::installed.packages())) {
-      version <- packageVersion("NormalyzerDE")
+      version <- utils::packageVersion("NormalyzerDE")
     }
     else {
       version <- "(version not found)"

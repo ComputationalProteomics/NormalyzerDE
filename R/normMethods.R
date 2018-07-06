@@ -9,7 +9,7 @@
 #'  as attributes
 #' @export
 #' @examples
-#' normObj <- getVerifiedNormalyzerObject("data.tsv", "job_name", "design.tsv")
+#' normObj <- getVerifiedNormalyzerObject("job_name", "design.tsv", "data.tsv")
 #' normResults <- normMethods(normObj)
 normMethods <- function(nds, forceAll=FALSE, normalizeRetentionTime=TRUE, retentionTimeWindow=1, quiet=FALSE) {
     
@@ -24,6 +24,10 @@ normMethods <- function(nds, forceAll=FALSE, normalizeRetentionTime=TRUE, retent
 #' @param nds Normalyzer dataset object.
 #' @return Empty Normalyzer results object.
 #' @keywords internal
+#' @export
+#' @examples
+#' normObj <- getVerifiedNormalyzerObject("job_name", "design.tsv", "data.tsv")
+#' normResObj <- generateNormalyzerResultsObject(normObj)
 generateNormalyzerResultsObject <- function(nds) {
     nr <- NormalyzerResults(nds=nds)
     nr <- initializeResultsObject(nr)
@@ -35,6 +39,9 @@ generateNormalyzerResultsObject <- function(nds) {
 #' @param rawMatrix Target matrix to be normalized
 #' @return Normalized and log-transformed matrix
 #' @export
+#' @examples
+#' rawMatrix <- read.csv("data.tsv", sep="\t")
+#' normMatrix <- globalIntensityNormalization(rawMatrix)
 globalIntensityNormalization <- function(rawMatrix) {
     
     colSums <- colSums(rawMatrix, na.rm=TRUE)
@@ -57,6 +64,9 @@ globalIntensityNormalization <- function(rawMatrix) {
 #' @param rawMatrix Target matrix to be normalized
 #' @return Normalized and log-transformed matrix
 #' @export
+#' @examples
+#' rawMatrix <- read.csv("data.tsv", sep="\t")
+#' normMatrix <- medianNormalization(rawMatrix)
 medianNormalization <- function(rawMatrix) {
     
     colMedians <- apply(rawMatrix, 2, FUN="median", na.rm=TRUE)
@@ -78,6 +88,9 @@ medianNormalization <- function(rawMatrix) {
 #' @param rawMatrix Target matrix to be normalized
 #' @return Normalized and log-transformed matrix
 #' @export
+#' @examples
+#' rawMatrix <- read.csv("data.tsv", sep="\t")
+#' normMatrix <- meanNormalization(rawMatrix)
 meanNormalization <- function(rawMatrix) {
     
     colMeans <- apply(rawMatrix, 2, FUN="mean", na.rm=TRUE)
@@ -100,6 +113,9 @@ meanNormalization <- function(rawMatrix) {
 #' @param rawMatrix Target matrix to be normalized
 #' @return Normalized matrix
 #' @export
+#' @examples
+#' rawMatrix <- read.csv("data.tsv", sep="\t")
+#' normMatrix <- performVSNNormalization(rawMatrix)
 performVSNNormalization <- function(rawMatrix) {
     
     normMatrix <- suppressMessages(vsn::justvsn(rawMatrix))
@@ -114,6 +130,9 @@ performVSNNormalization <- function(rawMatrix) {
 #' @param rawMatrix Target matrix to be normalized
 #' @return Normalized matrix
 #' @export
+#' @examples
+#' rawMatrix <- read.csv("data.tsv", sep="\t")
+#' normMatrix <- performQuantileNormalization(rawMatrix)
 performQuantileNormalization <- function(rawMatrix) {
     
     log2Matrix <- log2(rawMatrix)
@@ -130,6 +149,9 @@ performQuantileNormalization <- function(rawMatrix) {
 #' @param rawMatrix Target matrix to be normalized
 #' @return Normalized matrix
 #' @export
+#' @examples
+#' rawMatrix <- read.csv("data.tsv", sep="\t")
+#' normMatrix <- performSMADNormalization(rawMatrix)
 performSMADNormalization <- function(rawMatrix) {
     
     log2Matrix <- log2(rawMatrix)
@@ -149,6 +171,9 @@ performSMADNormalization <- function(rawMatrix) {
 #' @param rawMatrix Target matrix to be normalized
 #' @return Normalized matrix
 #' @export
+#' @examples
+#' rawMatrix <- read.csv("data.tsv", sep="\t")
+#' normMatrix <- performCyclicLoessNormalization(rawMatrix)
 performCyclicLoessNormalization <- function(rawMatrix) {
     
     log2Matrix <- log2(rawMatrix)
@@ -163,6 +188,9 @@ performCyclicLoessNormalization <- function(rawMatrix) {
 #' @param rawMatrix Target matrix to be normalized
 #' @return Normalized matrix
 #' @export
+#' @examples
+#' rawMatrix <- read.csv("data.tsv", sep="\t")
+#' normMatrix <- performGlobalRLRNormalization(rawMatrix)
 performGlobalRLRNormalization <- function(rawMatrix) {
     
     log2Matrix <- log2(rawMatrix)

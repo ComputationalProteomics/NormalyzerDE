@@ -7,7 +7,7 @@
 # #' @return Normalyzer results with attached statistics object.
 # #' @export
 # #' @examples
-# #' normObj <- getVerifiedNormalyzerObject("data.tsv", "job_name", "design.tsv")
+# #' normObj <- getVerifiedNormalyzerObject("job_name", "design.tsv", "data.tsv")
 # #' normResults <- normMethods(normObj)
 # #' normStats <- calculateStatistics(normResults)
 # calculateStatistics <- function(dataFp, designFp, comparisons, limmaTest=TRUE, varFilterFrac=1, 
@@ -94,7 +94,7 @@ generateAnnotatedMatrix <- function(nst) {
 #' @return None
 #' @export
 #' @examples
-#' normObj <- getVerifiedNormalyzerObject("data.tsv", "job_name", "design.tsv")
+#' normObj <- getVerifiedNormalyzerObject("job_name", "design.tsv", "data.tsv")
 #' normResults <- normMethods(normObj)
 #' normResultsWithEval <- analyzeNormalizations(normResults)
 #' generatePlots(normResultsWithEval, "path/to/output")

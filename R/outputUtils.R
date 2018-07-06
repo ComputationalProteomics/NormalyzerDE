@@ -11,7 +11,7 @@
 #' @return None
 #' @export
 #' @examples
-#' normObj <- getVerifiedNormalyzerObject("data.tsv", "jobName", "design.tsv")
+#' normObj <- getVerifiedNormalyzerObject("job_name", "design.tsv", "data.tsv")
 #' normResults <- normMethods(normObj)
 #' normResultsWithEval <- analyzeNormalizations(normObj)
 #' writeNormalizedDatasets(normResultsWithEval, "path/to/output")

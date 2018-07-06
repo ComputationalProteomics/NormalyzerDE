@@ -8,7 +8,7 @@
 #' @return Normalyzer results with attached evaluation results object.
 #' @export
 #' @examples
-#' normObj <- getVerifiedNormalyzerObject("data.tsv", "job_name", "design.tsv")
+#' normObj <- getVerifiedNormalyzerObject("job_name", "design.tsv", "data.tsv")
 #' normResults <- normMethods(normObj)
 #' normResultsWithEval <- analyzeNormalizations(normResults)
 analyzeNormalizations <- function(nr, 
