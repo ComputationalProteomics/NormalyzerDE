@@ -16,8 +16,8 @@
 #' @return Normalized matrix
 #' @export
 #' @examples
-#' fullDf <- read.csv("data.tsv", sep="\t")
-#' designDf <- read.csv("design.tsv", sep="\t")
+#' fullDf <- utils::read.csv("data.tsv", sep="\t")
+#' designDf <- utils::read.csv("design.tsv", sep="\t")
 #' sampleNames <- as.character(designDf$sample)
 #' dataMat <- as.matrix(fullDf[, sampleNames])
 #' retentionTimes <- fullDf$Average.RT
@@ -161,8 +161,8 @@ getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes)
 #' @return Normalized matrix
 #' @export
 #' @examples
-#' fullDf <- read.csv("data.tsv", sep="\t")
-#' designDf <- read.csv("design.tsv", sep="\t")
+#' fullDf <- utils::read.csv("data.tsv", sep="\t")
+#' designDf <- utils::read.csv("design.tsv", sep="\t")
 #' sampleNames <- as.character(designDf$sample)
 #' dataMat <- as.matrix(fullDf[, sampleNames])
 #' retentionTimes <- fullDf$Average.RT

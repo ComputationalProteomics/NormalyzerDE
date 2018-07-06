@@ -106,9 +106,6 @@ setupNormalizationEvaluationObject <- function(nr,
                                              categoricalAnova=categoricalAnova,
                                              varFilterFrac=varFilterFrac)
         
-        if (!is.null(comparisons)) {
-            ner <- calculatePairwiseComparisons(ner, nr, comparisons)
-        }
     }
     
     ner <- calculateCorrelations(nr, ner)

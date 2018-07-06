@@ -1,23 +1,23 @@
-#' Calculate statistics measures
-#' 
-#' @param nr Normalyzer results object with calculated results.
-#' @param comparisons Target sample contrasts to run.
-#' @param varFilterFrac Perform variance filtering before tests.
-#'
-#' @return Normalyzer results with attached statistics object.
-#' @export
-#' @examples
-#' normObj <- getVerifiedNormalyzerObject("data.tsv", "job_name", "design.tsv")
-#' normResults <- normMethods(normObj)
-#' normStats <- calculateStatistics(normResults)
-calculateStatistics <- function(dataFp, designFp, comparisons, limmaTest=TRUE, varFilterFrac=1, 
-                                logTrans=FALSE, robustLimma=FALSE, type="limma", batchCol=NULL) {
-    
-    nst <- setupStatisticsObject(dataFp, designFp, comparisons, logTrans=logTrans)
-    nst <- calculateContrasts(nst, comparisons, condCol="group", type=type, batchCol=batchCol)
-
-    nst
-}
+# #' Calculate statistics measures
+# #' 
+# #' @param nr Normalyzer results object with calculated results.
+# #' @param comparisons Target sample contrasts to run.
+# #' @param varFilterFrac Perform variance filtering before tests.
+# #'
+# #' @return Normalyzer results with attached statistics object.
+# #' @export
+# #' @examples
+# #' normObj <- getVerifiedNormalyzerObject("data.tsv", "job_name", "design.tsv")
+# #' normResults <- normMethods(normObj)
+# #' normStats <- calculateStatistics(normResults)
+# calculateStatistics <- function(dataFp, designFp, comparisons, limmaTest=TRUE, varFilterFrac=1, 
+#                                 logTrans=FALSE, robustLimma=FALSE, type="limma", batchCol=NULL) {
+#     
+#     nst <- setupStatisticsObject(dataFp, designFp, comparisons, logTrans=logTrans)
+#     nst <- calculateContrasts(nst, comparisons, condCol="group", type=type, batchCol=batchCol)
+# 
+#     nst
+# }
 
 filterLowRep <- function(df, groups, leastRep = 2) {
     rowMeetThresContrast <- apply(df, 1, allReplicatesHaveValuesContrast, 
@@ -28,7 +28,7 @@ filterLowRep <- function(df, groups, leastRep = 2) {
 
 allReplicatesHaveValuesContrast <- function(row, groups, minCount) {
     names(row) <- groups
-    repCounts <- table(names(na.omit(row)))
+    repCounts <- table(names(stats::na.omit(row)))
     length(repCounts) == length(unique(groups)) && min(repCounts) >= minCount
 }
 
@@ -36,8 +36,8 @@ setupStatisticsObject <- function(designFp, dataFp, comparisons, sampleCol="samp
                                   conditionCol="group", batchCol=NULL, logTrans=logTrans,
                                   leastRepCount=2) {
 
-    fullDf <- read.csv(dataFp, sep="\t")
-    designDf <- read.csv(designFp, sep="\t")
+    fullDf <- utils::read.csv(dataFp, sep="\t")
+    designDf <- utils::read.csv(designFp, sep="\t")
     designDf[, sampleCol] <- as.character(designDf[, sampleCol])
 
     dataCols <- designDf[, sampleCol]
@@ -86,8 +86,9 @@ generateAnnotatedMatrix <- function(nst) {
 
 #' Generate full output report plot document
 #' 
-#' @param nr Normalyzer results object.
-#' @param jobdir Path to output directory for run.
+#' @param nst NormalyzerDE statistics object.
+#' @param jobName Name of processing run.
+#' @param jobDir Path to output directory.
 #' @param plotRows Number of plot rows.
 #' @param plotCols Number of plot columns.
 #' @return None
@@ -118,7 +119,8 @@ generateStatsReport <- function(nst, jobName, jobDir, plotRows=3, plotCols=4) {
 
 #' Generate P-histograms for each contrast
 #' 
-#' @param nr Normalyzer results object.
+#' @param nst NormalyzerDE statistics object.
+#' @param jobName Name of processing run.
 #' @param currentLayout Layout used for document.
 #' @param pageno Current page number.
 #' @return None
@@ -147,7 +149,7 @@ reduceTechnicalReplicates <- function(dataMat, techRepGroups) {
     uniqueGroups <- unique(techRepGroups)
     indices <- lapply(uniqueGroups, function(i) { which(techRepGroups %in% i) })
     
-    collDataMat <- as.matrix(data.frame(lapply(indices, function(inds) {rowMeans(dataMat[, inds], na.rm = T)})))
+    collDataMat <- as.matrix(data.frame(lapply(indices, function(inds) {rowMeans(dataMat[, inds], na.rm = TRUE)})))
     colnames(collDataMat) <- uniqueGroups
     collDataMat
 }

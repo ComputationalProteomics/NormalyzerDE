@@ -1,9 +1,9 @@
 #' Verify that input data is in correct format, and if so, return a generated
 #'  Normalyzer data object from that input data
 #' 
-#' @param inputPath Path to file with raw input to Normalyzer.
 #' @param jobName Name of ongoing run.
-#' @param designMatrixPath File path to design matrix.
+#' @param designPath File path to design matrix.
+#' @param dataPath File path to design matrix.
 #' @param threshold Minimum number of features.
 #' @param omitSamples Automatically omit invalid samples from analysis.
 #' @param requireReplicates Require there to be at least to samples per
@@ -13,6 +13,7 @@
 #' @param zeroToNA Automatically convert zero values to NAs.
 #' @param inputFormat Type of input matrix: "default", "proteios", 
 #'        "maxquantpep", "maxquantprot"
+#' @param quiet Don't print output messages during processing 
 #' @return Normalyzer data object representing verified input data.
 #' @export
 #' @examples

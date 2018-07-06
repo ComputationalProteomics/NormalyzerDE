@@ -33,12 +33,12 @@ NormalyzerStatistics <- setClass("NormalyzerStatistics",
 #' @return None
 #' @rdname calculateContrasts
 setGeneric(name="calculateContrasts", 
-           function(nst, comparisons, condCol, batchCol=NULL, splitter="-", type="limma", robustLimma=FALSE) standardGeneric("calculateContrasts"))
+           function(nst, comparisons, condCol, batchCol=NULL, splitter="-", type="limma") standardGeneric("calculateContrasts"))
 
 #' @rdname calculateContrasts
 setMethod(f="calculateContrasts", 
           signature=c("NormalyzerStatistics"),
-          function(nst, comparisons, condCol, batchCol=NULL, splitter="-", type="limma", robustLimma=FALSE) {
+          function(nst, comparisons, condCol, batchCol=NULL, splitter="-", type="limma") {
               
               sampleReplicateGroups <- nst@designDf[, condCol]
               sampleReplicateGroupsStrings <- as.character(nst@designDf[, condCol])
@@ -132,7 +132,7 @@ calculateWelch <- function(compLists, dataMat, naFilterContrast, s1cols, s2cols,
     }
     
     welchPValCol <- apply(dataMat, 1, 
-                          function(row) doTTtest(row[s1cols], row[s2cols], default=NA))
+                          function(row) doTTest(row[s1cols], row[s2cols], default=NA))
     welchFDRCol <- stats::p.adjust(welchPValCol, method="BH")
 
     compLists[["P"]][[comp]][naFilterContrast] <- welchPValCol
@@ -170,12 +170,12 @@ calculateANOVAContrast <- function(compLists, dataMat, naFilterContrast, s1cols,
     compLists
 }
 
-calculateLimmaContrast <- function(compLists, dataMatNAFiltered, naFilterContrast, limmaDesign, limmaFit, level1, level2, comp, robustLimma=FALSE) {
+calculateLimmaContrast <- function(compLists, dataMatNAFiltered, naFilterContrast, limmaDesign, limmaFit, level1, level2, comp) {
 
     myContrast <- paste0("Variable", level1, "-", "Variable", level2)
     contrastMatrix <- limma::makeContrasts(contrasts=c(myContrast), levels=limmaDesign)
     fitContrasts <- limma::contrasts.fit(limmaFit, contrastMatrix)
-    fitBayes <- limma::eBayes(fitContrasts, robust=robustLimma)
+    fitBayes <- limma::eBayes(fitContrasts)
     limmaTable <- limma::topTable(fitBayes, coef=1, number=Inf)
     limmaTable <- limmaTable[rownames(dataMatNAFiltered), ]
     
@@ -188,18 +188,19 @@ calculateLimmaContrast <- function(compLists, dataMatNAFiltered, naFilterContras
 
 #' Calculate Limma comparisons between target samples
 #'
-#' @param ner Results evaluation object.
-#' @param nr Results object.
+#' @param nst NormalyzerDE statistics object
 #' @param comparisons Vector containing statistical contrasts.
+#' @param condCol Column name in design matrix containing condition values
+#' @param splitter String splitting the comparisons into condition levels
 #' @return None
 #' @rdname calculatePairwiseComparisonsLimma
 setGeneric(name="calculatePairwiseComparisonsLimma", 
-           function(nst, comparisons, condCol, splitter="-", robustLimma) standardGeneric("calculatePairwiseComparisonsLimma"))
+           function(nst, comparisons, condCol, splitter="-") standardGeneric("calculatePairwiseComparisonsLimma"))
 
 #' @rdname calculatePairwiseComparisonsLimma
 setMethod(f="calculatePairwiseComparisonsLimma", 
           signature=c("NormalyzerStatistics", "character", "character"),
-          function(nst, comparisons, condCol, splitter="-", robustLimma=FALSE) {
+          function(nst, comparisons, condCol, splitter="-") {
               
               sampleReplicateGroups <- nst@designDf[, condCol]
               sampleReplicateGroupsStrings <- as.character(nst@designDf[, condCol])
@@ -250,7 +251,7 @@ setMethod(f="calculatePairwiseComparisonsLimma",
                   myContrast <- paste0("Variable", level1, "-", "Variable", level2)
                   contrastMatrix <- limma::makeContrasts(contrasts=c(myContrast), levels=limmaDesign)
                   fitContrasts <- limma::contrasts.fit(limmaFit, contrastMatrix)
-                  fitBayes <- limma::eBayes(fitContrasts, robust=robustLimma)
+                  fitBayes <- limma::eBayes(fitContrasts)
                   limmaTable <- limma::topTable(fitBayes, coef=1, number=Inf)
                   limmaTable <- limmaTable[rownames(dataMatNAFiltered), ]
 

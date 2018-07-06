@@ -101,17 +101,18 @@ generatePlots <- function(nr, jobdir, plotRows=3, plotCols=4) {
 
 #' Setup PDF report settings
 #' 
-#' @param currentjob Name of current run.
-#' @param jobdir Path to output directory for run.
+#' @param currentJob Name of current run.
+#' @param jobDir Path to output directory for run.
+#' @param suffix Text to add to output filename.
 #' @return None
-setupPlotting <- function(currentjob, jobdir, suffix) {
+setupPlotting <- function(currentJob, jobDir, suffix) {
     
     grDevices::palette(c("red", "green", "blue", "orange", "darkgray", 
                          "blueviolet", "darkslateblue", "darkviolet", "gray", 
                          "bisque4", "brown", "cadetblue4", "darkgreen", 
                          "darkcyan", "darkmagenta", "darkgoldenrod4", "coral1"))
 
-    grDevices::pdf(file=paste(jobdir, "/", suffix, "-", currentjob, ".pdf", sep=""), 
+    grDevices::pdf(file=paste(jobDir, "/", suffix, "-", currentJob, ".pdf", sep=""), 
                    paper="a4r", width=0, height=0)    
 
     themeNorm <- ggplot2::theme_set(ggplot2::theme_bw())
@@ -135,7 +136,7 @@ plotFrontPage <- function(currentjob, currentFont) {
     # data(data4pdftitle)
     graphics::plot(1, type="n", axes=FALSE, xlab="", ylab="")
     
-    if ("NormalyzerDE" %in% rownames(installed.packages())) {
+    if ("NormalyzerDE" %in% rownames(utils::installed.packages())) {
       version <- packageVersion("NormalyzerDE")
     }
     else {
