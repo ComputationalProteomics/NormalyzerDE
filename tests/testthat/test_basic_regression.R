@@ -2,6 +2,7 @@ context("Basic run including DE evaluation")
 
 library(NormalyzerDE)
 
+evalName <- "RegressionTest"
 deName <- "RegressionTestDE"
 outBase <- "output/BasicRunWithDE"
 outEvalBase <- outBase
@@ -10,10 +11,7 @@ outDEBase <- paste(outBase, deName, sep="/")
 designPath <- "data/basic_regression/test_design.tsv"
 dataPath <- "data/basic_regression/test_data_w_val.tsv"
 
-baselineEvalDir <- "data/basic_regression/BasicRunWithDE/RegressionTest"
-baselineDEDir <- "data/basic_regression/BasicRunWithDE/RegressionTestDE"
-
-normalyzer(jobName="RegressionTest",
+normalyzer(jobName=evalName,
            designPath=designPath,
            dataPath=dataPath,
            outputDir=outEvalBase,
@@ -62,7 +60,7 @@ for (normName in names(normalizations)) {
     normalyzerDE(
         jobName=paste(deName, normName, sep="_"), 
         designPath=designPath, 
-        dataPath=paste(baselineEvalDir, norm, sep="/"),
+        dataPath=paste(outEvalBase, evalName, norm, sep="/"),
         outputDir=outDEBase,
         comparisons=allComps,
         type="limma",
