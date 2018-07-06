@@ -12,22 +12,23 @@ slotNamesMap <- c("data2log2"="Log2",
 
 #' S4 class to represent dataset information
 #' 
-#' @slot nds Normalyzer dataset representing run data.
-#' @slot ner Normalyzer evaluation results.
-#' @slot methodnames Short names for included normalization methods.
-#' @slot furtherNormalizationMinThreshold Min threshold for running extended normalizations.
-#' @slot data2log2 Log2 of filtered raw data.
+#' @slot nds Normalyzer dataset representing run data
+#' @slot ner Normalyzer evaluation results
+#' @slot methodnames Short names for included normalization methods
+#' @slot furtherNormalizationMinThreshold Min threshold for running extended normalizations
+#' @slot data2log2 Log2 of filtered raw data
 #' @slot fittedLR Fitted Loess regression 
-#' @slot data2loess Loess normalization.
+#' @slot data2loess Loess normalization
 #' @slot globalfittedRLR Global fitted RLR normalization
-#' @slot data2vsn Global VSN normalized data.
+#' @slot data2vsn Global VSN normalized data
 #' @slot data2GI GI-normalized data
-#' @slot data2med Median normalized data.
-#' @slot data2mean Mean normalized data.
-#' @slot data2quantile Quantile normalized data.
-#' @slot data2rtMed Retention time normalized for median.
-#' @slot data2rtMean Retention time normalized for Mean.
-#' @slot data2rtLoess Retention time normalized for Loess.
+#' @slot data2med Median normalized data
+#' @slot data2mean Mean normalized data
+#' @slot data2quantile Quantile normalized data
+#' @slot data2rtMed Retention time normalized for median
+#' @slot data2rtMean Retention time normalized for Mean
+#' @slot data2rtLoess Retention time normalized for Loess
+#' @slot data2rtVSN Retention time normalized for VSN
 #' @slot data2ctr CTR normalized data
 #' @slot data2mad MAD normalized data
 #' @export
@@ -241,13 +242,7 @@ setMethod("getNormalizationMatrices", "NormalyzerResults",
                       methodDataList[[listCounter]] <- fieldValue
                       listCounter <- listCounter + 1
                   }
-                  
-                  # if (!all(is.na(fieldValue))) {
-                  #   methodDataList[[listCounter]] <- fieldValue
-                  #   listCounter <- listCounter + 1
-                  # }
               }
-              
               methodDataList
           })
 

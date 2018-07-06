@@ -22,11 +22,14 @@ NormalyzerStatistics <- setClass("NormalyzerStatistics",
                                      contrasts=NULL
                                  ))
 
-#' Calculate contrast
+#' Main method for contrast calculation
 #'
-#' @param ner Results evaluation object.
-#' @param nr Results object.
-#' @param comparisons Vector containing statistical contrasts.
+#' @param nst Results evaluation object.
+#' @param comparisons String with comparisons for contrasts.
+#' @param condCol Column name in design matrix containing condition information.
+#' @param batchCol Column name in design matrix containing batch information.
+#' @param splitter Character dividing contrast conditions.
+#' @param type Type of statistical test (Limma or ANOVA).
 #' @return None
 #' @rdname calculateContrasts
 setGeneric(name="calculateContrasts", 

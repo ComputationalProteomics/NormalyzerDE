@@ -1,7 +1,7 @@
 Package: NormalyzerDE
-Title: Evaluation of normalization methods and statistical evaluation
-Version: 0.98.10
-Author: Jakob Willforss, Aakash Chawade
+Title: Evaluation of normalization methods and calculation of differential expression analysis statistics
+Version: 0.98.11
+Author: Jakob Willforss
 Maintainer: Jakob Willforss <jakob.willforss@immun.lth.se>
 Description: Evaluation of normalization methods applied to proteomic data.
 Imports:
@@ -16,6 +16,8 @@ Imports:
     Biobase,
     RcmdrMisc,
     raster,
+    utils,
+    stats
 Suggests:
     knitr,
     testthat,
@@ -23,7 +25,7 @@ Suggests:
 VignetteBuilder: knitr
 biocViews:
     Normalization,
-License: GPL (>=2)
+License: Artistic-2.0
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.0.1
