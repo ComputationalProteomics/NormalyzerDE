@@ -67,6 +67,12 @@ for (normNameRaw in names(normalizations)) {
         currBase <- paste0(outBase, "/", runNameDE, "_", normName)
         baselineMd5 <- statisticsMd5Map[[paste0(normNameRaw, "_stats.tsv")]]
         currentMd5 <- tools::md5sum(paste0(currBase, "/", runNameDE, "_", normName, "_stats.tsv"))
+<<<<<<< Updated upstream
+=======
+
+        print(paste0(currBase,  "/", runNameDE, "_", normName))
+        print(paste("Comparing:", baselineMd5, currentMd5))
+>>>>>>> Stashed changes
 
         print(paste("MD5s", baselineMd5, currentMd5))
         
