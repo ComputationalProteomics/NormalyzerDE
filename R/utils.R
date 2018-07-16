@@ -134,12 +134,60 @@ getRowNAFilterContrast <- function(dataMatrix,
     return (lowNALinesContrast & samplesHaveValuesContrast & samplesPassVarThres)
 }
 
-
 getVarFilteredContrast <- function(logMatrix, varFilterFrac) {
   
     featureVars <- apply(logMatrix, 1, function(x) {stats::var(x, na.rm=TRUE)})
     fracThres <- sort(featureVars)[(length(featureVars) - 1)  * varFilterFrac + 1]
     featureVars > fracThres
 }
+
+#' Generate a random test dataset with features, sample values and retention times
+#' 
+#' @param nSamples Number of samples
+#' @param nFeatures Number of features
+#' @param rtMin Minimum retention time
+#' @param rtMax Maximum retention time
+#' @param mean Mean value for sample intensities
+#' @param sd Standard deviation for sample intensities
+#' @return Test dataset
+#' @export
+#' @examples
+#' df <- setupTestData(6, 20)
+#' df <- setupTestData(6, 20, mean=15, sd=1)
+setupTestData <- function(nSamples, nFeatures, rtMin=40, rtMax=80, mean=20, sd=4) {
+
+    featureNames <- paste0("feature_", seq(1, nFeatures))
+    set.seed(37)
+    sampleData <- matrix(rnorm(nSamples * nFeatures, mean, sd), nFeatures, nSamples)
+    rtData <- runif(nFeatures, rtMin, rtMax)
+
+    df <- data.frame(feature=featureNames, 
+                     RT=rtData, 
+                     as.data.frame(sampleData))
+
+    colnames(df) <- c("feature", "RT", paste0("S", seq(1, nSamples)))
+    df
+}
+
+
+#' Generate design matrix
+#' 
+#' @param nSamples Number of samples
+#' @return Design matrix
+#' @export
+#' @examples
+#' df <- setupTestDesign(6)
+setupTestDesign <- function(nSamples) {
+    
+    df <- data.frame(sample=rep(NA, nSamples), condition=rep(NA, nSamples))
+    for (i in 1:nSamples) {
+        row <- c(sample=paste0("S", i), condition=as.character(as.factor(i %% 2)))
+        df[i, ] <- row
+    }
+    df
+}
+
+
+
 
 

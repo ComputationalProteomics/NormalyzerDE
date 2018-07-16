@@ -29,7 +29,8 @@ getVerifiedNormalyzerObject <- function(
         groupCol="group",
         zeroToNA=FALSE,
         inputFormat="default",
-        quiet=FALSE
+        quiet=FALSE,
+        inputAsVariables=FALSE
     ) {
 
     if (inputFormat == "default") {
@@ -79,7 +80,7 @@ getVerifiedNormalyzerObject <- function(
     verifyMultipleSamplesPresent(lowCountSampleFiltered, groups, requireReplicates=requireReplicates, quiet=quiet)
     validateSampleReplication(lowCountSampleFiltered, groups, requireReplicates=requireReplicates, quiet=quiet)
     
-    nds <- generateNormalyzerDataset(cbind(annotationMatrix, lowCountSampleFiltered), jobName, designMatrix, sampleCol, groupCol, quiet=quiet)
+    nds <- generateNormalyzerDataset(jobName, designMatrix, cbind(annotationMatrix, lowCountSampleFiltered), sampleCol, groupCol, quiet=quiet)
     nds
 }
 
@@ -381,19 +382,15 @@ verifyMultipleSamplesPresent <- function(dataMatrix, groups, requireReplicates=T
 
 #' Setup Normalyzer dataset from given raw data
 #' 
-#' @param fullRawMatrix Dataframe with unparsed input data.
 #' @param jobName Name of ongoing run.
 #' @param designMatrix Dataframe containing condition matrix.
+#' @param fullRawMatrix Dataframe with unparsed input data.
 #' @param sampleNameCol Name of column in design matrix containing sample names.
 #' @param groupNameCol Name of column in design matrix contaning conditions.
 #' @return Data object representing loaded data.
 #' @keywords internal
-generateNormalyzerDataset <- function(fullRawMatrix, jobName, designMatrix, sampleNameCol, groupNameCol, quiet=FALSE) {
+generateNormalyzerDataset <- function(jobName, designMatrix, fullRawMatrix, sampleNameCol, groupNameCol, quiet=FALSE) {
     
-    # rawData <- fullRawMatrix[-1,]
-    # colnames(rawData) <- fullRawMatrix[1,]
-    
-    # nds <- NormalyzerDataset(jobName=jobName, rawData=rawData, designMatrix=designMatrix, sampleNameCol=sampleNameCol, groupNameCol=groupNameCol)
     nds <- NormalyzerDataset(jobName=jobName, rawData=fullRawMatrix, designMatrix=designMatrix, sampleNameCol=sampleNameCol, groupNameCol=groupNameCol)
     nds <- setupValues(nds, quiet=quiet)
     nds

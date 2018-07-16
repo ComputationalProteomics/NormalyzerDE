@@ -26,7 +26,6 @@ analyzeNormalizations <- function(nr,
 }
 
 #' Pearson and Spearman correlation calculations for methods and samples
-#' ! Needs some further investigations (why? speed or something else?)
 #' 
 #' @param nr Normalyzer results object with calculated results.
 #' @param ner Normalyzer evaluation object.
@@ -45,18 +44,10 @@ calculateCorrelations <- function(nr, ner) {
         pearCorSum <- vector()
         spearCorSum <- vector()
         
-        # flag1 <- 1
         datastore <- as.matrix(methodlist[[i]])
         sampleGroupsWithReplicates <- nr@nds@samplesGroupsWithReplicates
-        # allUniqueRepGroups <- unique(allReplicateGroups)
-        
-        # browser()
-        
+
         for (groupNbr in 1:length(sampleGroupsWithReplicates)) {
-            
-            # print(paste("Calculating for group:", groupNbr))
-            # 
-            # browser()
             
             dt <- as.matrix(datastore[, which(allReplicateGroups == sampleGroupsWithReplicates[groupNbr])])
             class(dt) <- "numeric"
@@ -69,8 +60,6 @@ calculateCorrelations <- function(nr, ner) {
             }
         }
         
-        # browser()
-
         avgpercorsum[[i]] <- pearCorSum
         avgspecorsum[[i]] <- spearCorSum
     }
