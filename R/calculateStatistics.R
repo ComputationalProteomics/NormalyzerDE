@@ -1,24 +1,3 @@
-# #' Calculate statistics measures
-# #' 
-# #' @param nr Normalyzer results object with calculated results.
-# #' @param comparisons Target sample contrasts to run.
-# #' @param varFilterFrac Perform variance filtering before tests.
-# #'
-# #' @return Normalyzer results with attached statistics object.
-# #' @export
-# #' @examples
-# #' normObj <- getVerifiedNormalyzerObject("job_name", "design.tsv", "data.tsv")
-# #' normResults <- normMethods(normObj)
-# #' normStats <- calculateStatistics(normResults)
-# calculateStatistics <- function(dataFp, designFp, comparisons, limmaTest=TRUE, varFilterFrac=1, 
-#                                 logTrans=FALSE, robustLimma=FALSE, type="limma", batchCol=NULL) {
-#     
-#     nst <- setupStatisticsObject(dataFp, designFp, comparisons, logTrans=logTrans)
-#     nst <- calculateContrasts(nst, comparisons, condCol="group", type=type, batchCol=batchCol)
-# 
-#     nst
-# }
-
 filterLowRep <- function(df, groups, leastRep = 2) {
     rowMeetThresContrast <- apply(df, 1, allReplicatesHaveValuesContrast, 
                                      groups = groups, minCount = leastRep)
@@ -32,13 +11,27 @@ allReplicatesHaveValuesContrast <- function(row, groups, minCount) {
     length(repCounts) == length(unique(groups)) && min(repCounts) >= minCount
 }
 
-setupStatisticsObject <- function(designFp, dataFp, comparisons, sampleCol="sample", 
-                                  conditionCol="group", batchCol=NULL, logTrans=logTrans,
-                                  leastRepCount=2) {
 
-    fullDf <- utils::read.csv(dataFp, sep="\t")
-    designDf <- utils::read.csv(designFp, sep="\t")
-    designDf[, sampleCol] <- as.character(designDf[, sampleCol])
+#' Setup NormalyzerDE statistics object
+#' 
+#' @param designDf Design matrix.
+#' @param fullDf Full data matrix containing expression data and annotation data.
+#' @param comparisons Vector containing contrasts to perform. Format: c("condA-condB", "condB-condC")
+#' @param sampleCol Name of column containing sample IDs.
+#' @param conditionCol Name of column containing condition levels.
+#' @param batchCol Optional name of column containing batch effect levels.
+#' @param logTrans Option for log transforming input data.
+#' @param leastRepCount Lowest number of replicate required.
+#' @return Prepared statistics object.
+#' @export
+#' @examples \dontrun{
+#' data(example_design)
+#' data(example_data)
+#' setupStatisticsObject(example_design, example_data, c("1-2", "2-3"))
+#' }
+setupStatisticsObject <- function(designDf, fullDf, comparisons, sampleCol="sample", 
+                                  conditionCol="group", batchCol=NULL, logTrans=FALSE,
+                                  leastRepCount=2) {
 
     dataCols <- designDf[, sampleCol]
     annotMat <- as.matrix(fullDf[, which(!colnames(fullDf) %in% dataCols)])
@@ -94,10 +87,11 @@ generateAnnotatedMatrix <- function(nst) {
 #' @return None
 #' @export
 #' @examples
-#' normObj <- getVerifiedNormalyzerObject("job_name", "design.tsv", "data.tsv")
-#' normResults <- normMethods(normObj)
-#' normResultsWithEval <- analyzeNormalizations(normResults)
-#' generatePlots(normResultsWithEval, "path/to/output")
+#' data(example_data)
+#' data(example_design)
+#' statObj <- setupStatisticsObject(example_design, example_data, comparisons=c("1-2", "2-3"), logTrans=TRUE)
+#' dir.create("outputDir", showWarnings=FALSE)
+#' generateStatsReport(statObj, "jobName", "outputDir")
 generateStatsReport <- function(nst, jobName, jobDir, plotRows=3, plotCols=4) {
     
     nrows <- plotRows + 2

@@ -9,7 +9,9 @@
 #'  as attributes
 #' @export
 #' @examples
-#' normObj <- getVerifiedNormalyzerObject("job_name", "design.tsv", "data.tsv")
+#' data(example_data)
+#' data(example_design)
+#' normObj <- getVerifiedNormalyzerObject("job_name", example_design, example_data)
 #' normResults <- normMethods(normObj)
 normMethods <- function(nds, forceAll=FALSE, normalizeRetentionTime=TRUE, retentionTimeWindow=1, quiet=FALSE) {
     
@@ -26,7 +28,9 @@ normMethods <- function(nds, forceAll=FALSE, normalizeRetentionTime=TRUE, retent
 #' @keywords internal
 #' @export
 #' @examples
-#' normObj <- getVerifiedNormalyzerObject("job_name", "design.tsv", "data.tsv")
+#' data(example_data)
+#' data(example_design)
+#' normObj <- getVerifiedNormalyzerObject("job_name", example_design, example_data)
 #' normResObj <- generateNormalyzerResultsObject(normObj)
 generateNormalyzerResultsObject <- function(nds) {
     nr <- NormalyzerResults(nds=nds)

@@ -158,8 +158,8 @@ setupTestData <- function(nSamples, nFeatures, rtMin=40, rtMax=80, mean=20, sd=4
 
     featureNames <- paste0("feature_", seq(1, nFeatures))
     set.seed(37)
-    sampleData <- matrix(rnorm(nSamples * nFeatures, mean, sd), nFeatures, nSamples)
-    rtData <- runif(nFeatures, rtMin, rtMax)
+    sampleData <- matrix(stats::rnorm(nSamples * nFeatures, mean, sd), nFeatures, nSamples)
+    rtData <- stats::runif(nFeatures, rtMin, rtMax)
 
     df <- data.frame(feature=featureNames, 
                      RT=rtData, 

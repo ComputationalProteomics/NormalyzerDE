@@ -7,10 +7,13 @@
 #' @return None
 #' @export
 #' @examples
-#' normObj <- getVerifiedNormalyzerObject("job_name", "design.tsv", "data.tsv")
+#' data(example_data)
+#' data(example_design)
+#' normObj <- getVerifiedNormalyzerObject("job_name", example_design, example_data)
 #' normResults <- normMethods(normObj)
 #' normResultsWithEval <- analyzeNormalizations(normResults)
-#' generatePlots(normResultsWithEval, "path/to/output")
+#' dir.create("outputDir", showWarnings=FALSE)
+#' generatePlots(normResultsWithEval, "outputDir")
 generatePlots <- function(nr, jobdir, plotRows=3, plotCols=4) {
     
     nds <- nr@nds

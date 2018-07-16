@@ -1,38 +1,16 @@
-#' Verify that input data is in correct format, and if so, return a generated
-#'  Normalyzer data object from that input data
+#' Load raw data into dataframe
 #' 
-#' @param jobName Name of ongoing run.
-#' @param designPath File path to design matrix.
 #' @param dataPath File path to design matrix.
-#' @param threshold Minimum number of features.
-#' @param omitSamples Automatically omit invalid samples from analysis.
-#' @param requireReplicates Require there to be at least to samples per
-#'        condition
-#' @param sampleCol Name of the column containing samples in design matrix.
-#' @param groupCol Name of column containing conditions in design matrix.
-#' @param zeroToNA Automatically convert zero values to NAs.
-#' @param inputFormat Type of input matrix: "default", "proteios", 
-#'        "maxquantpep", "maxquantprot"
-#' @param quiet Don't print output messages during processing 
-#' @return Normalyzer data object representing verified input data.
+#' @param inputFormat If input is given in standard NormalyzerDE format, Proteios format
+#'   or in MaxQuant protein or peptide format
+#' @param zeroToNA Automatically convert zeroes to NA values
+#' @return rawData Raw data loaded into data frame
+#' @examples \dontrun{
+#' df <- loadData("data.tsv")
+#' }
 #' @export
-#' @examples
-#' normObj <- getVerifiedNormalyzerObject("job_name", "design.tsv", "data.tsv")
-getVerifiedNormalyzerObject <- function(
-        jobName, 
-        designPath, 
-        dataPath,
-        threshold=15, 
-        omitSamples=FALSE,
-        requireReplicates=TRUE,
-        sampleCol="sample",
-        groupCol="group",
-        zeroToNA=FALSE,
-        inputFormat="default",
-        quiet=FALSE,
-        inputAsVariables=FALSE
-    ) {
-
+loadData <- function(dataPath, inputFormat="default", zeroToNA=FALSE) {
+    
     if (inputFormat == "default") {
         rawData <- loadRawDataFromFile(dataPath)
     } else if (inputFormat == "proteios") {
@@ -46,23 +24,70 @@ getVerifiedNormalyzerObject <- function(
         stop(paste("Unknown inputFormat:", inputFormat, "valids are:", paste(valids, collapse=", ")))
     }
     
-    designMatrix <- utils::read.table(designPath, sep="\t", stringsAsFactors=FALSE, header=TRUE, comment.char="")
-
     if (zeroToNA) {
         rawData[rawData == "0"] <- NA
     }
     
+    rawData
+}
+
+#' Load raw design into dataframe
+#' 
+#' @param designPath File path to design matrix.
+#' @return designMatrix Design data loaded into data frame
+#' @examples \dontrun{
+#' df <- loadDesign("design.tsv")
+#' }
+#' @export
+loadDesign <- function(designPath) {
+    designMatrix <- utils::read.table(designPath, sep="\t", stringsAsFactors=FALSE, header=TRUE, comment.char="")
+    designMatrix
+}
+
+#' Verify that input data is in correct format, and if so, return a generated
+#'  Normalyzer data object from that input data
+#' 
+#' @param jobName Name of ongoing run.
+#' @param designMatrix Data frame containing design data.
+#' @param rawData Data frame containing raw data.
+#' @param threshold Minimum number of features.
+#' @param omitSamples Automatically omit invalid samples from analysis.
+#' @param requireReplicates Require there to be at least to samples per
+#'        condition
+#' @param sampleCol Name of the column containing samples in design matrix.
+#' @param groupCol Name of column containing conditions in design matrix.
+#' @param quiet Don't print output messages during processing 
+#' @return Normalyzer data object representing verified input data.
+#' @export
+#' @examples
+#' data(example_data)
+#' data(example_design)
+#' normObj <- getVerifiedNormalyzerObject("job_name", example_design, example_data)
+getVerifiedNormalyzerObject <- function(
+        jobName, 
+        designMatrix, 
+        rawData,
+        threshold=15, 
+        omitSamples=FALSE,
+        requireReplicates=TRUE,
+        sampleCol="sample",
+        groupCol="group",
+        quiet=FALSE
+    ) {
+
     if (!groupCol %in% colnames(designMatrix)) {
-        stop(paste("Given groupCol:", groupCol, "was not present among design matrix columns"))
+        stop(paste0("Given groupCol: '", groupCol, "' was not present among design matrix columns"))
     }
-        
+
     groups <- as.numeric(as.factor(designMatrix[, groupCol]))
+    samples <- as.character(designMatrix[, sampleCol])
+    
     fullMatrix <- rawData[-1,]
     colnames(fullMatrix) <- rawData[1,]
 
     verifyDesignMatrix(fullMatrix, designMatrix, sampleCol=sampleCol)
-    dataMatrix <- fullMatrix[, designMatrix[, sampleCol]]
-    annotationMatrix <- fullMatrix[, -which(colnames(fullMatrix) %in% designMatrix[, sampleCol])]
+    dataMatrix <- fullMatrix[, samples]
+    annotationMatrix <- fullMatrix[, -which(colnames(fullMatrix) %in% samples)]
 
     verifyValidNumbers(dataMatrix, groups, quiet=quiet)
     
@@ -108,8 +133,6 @@ loadRawDataFromFile <- function(inputPath) {
             stop("Please provide a valid input file.")
         }
     )
-    
-    
     
     rawData
 }

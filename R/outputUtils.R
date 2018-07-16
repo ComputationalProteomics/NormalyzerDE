@@ -11,10 +11,12 @@
 #' @return None
 #' @export
 #' @examples
-#' normObj <- getVerifiedNormalyzerObject("job_name", "design.tsv", "data.tsv")
+#' data(example_data)
+#' data(example_design)
+#' normObj <- getVerifiedNormalyzerObject("job_name", example_design, example_data)
 #' normResults <- normMethods(normObj)
 #' normResultsWithEval <- analyzeNormalizations(normObj)
-#' writeNormalizedDatasets(normResultsWithEval, "path/to/output")
+#' writeNormalizedDatasets(normResultsWithEval, "outputDir")
 writeNormalizedDatasets <- function(nr, jobdir, includePairwiseComparisons=FALSE, 
                                     includeCvCol=FALSE, includeAnovaP=FALSE,
                                     normSuffix="-normalized.txt",

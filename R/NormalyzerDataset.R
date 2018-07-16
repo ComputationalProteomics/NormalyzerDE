@@ -60,11 +60,9 @@ setGeneric(name="setupValues", function(nds, quiet) standardGeneric("setupValues
 setMethod("setupValues", "NormalyzerDataset",
           function(nds, quiet=FALSE) {
               
-              # browser()
-              
               nds@sampleReplicateGroups <- as.numeric(as.factor(nds@designMatrix[, nds@groupNameCol]))
               nds@samplesGroupsWithReplicates <- as.numeric(names(table(nds@sampleReplicateGroups)[which(table(nds@sampleReplicateGroups) > 1)]))
-              nds@sampleNames <- nds@designMatrix[, nds@sampleNameCol]
+              nds@sampleNames <- as.character(nds@designMatrix[, nds@sampleNameCol])
 
               singleReplicateRun <- detectSingleReplicate(nds)
               singletonSamplePresent <- detectSingletonSample(nds)

@@ -27,10 +27,11 @@
 #' @export
 #' @import MASS limma preprocessCore methods RcmdrMisc
 #' @importFrom raster cv
-#' @examples
+#' @examples \dontrun{
 #' normalyzer("data.tsv", "my_jobname", designMatrix="design.tsv", outputDir="path/to/output")
 #' normalyzer("data.tsv", "my_jobname", designMatrix="design.tsv", outputDir="path/to/output", normalizeRetentionTime=TRUE, retentionTimeWindow=2)
 #' normalyzer("data.tsv", "my_jobname", designMatrix="design.tsv", outputDir="path/to/output", inputFormat="maxquantprot")
+#' }
 normalyzer <- function(
         jobName,
         designPath, 
@@ -54,36 +55,35 @@ normalyzer <- function(
 
     startTime <- Sys.time()
     
-    if (!quiet) print("[Step 1/5] Verifying input")
-    normObj <- getVerifiedNormalyzerObject(jobName=jobName,
-                                           designPath=designPath,
-                                           dataPath=dataPath,
-                                           threshold=sampleAbundThres,
-                                           omitSamples=omitLowAbundSamples,
-                                           requireReplicates=requireReplicates,
-                                           zeroToNA=zeroToNA,
-                                           inputFormat=inputFormat,
-                                           sampleCol=sampleColName,
-                                           groupCol=groupColName,
-                                           quiet=quiet)
+    if (!quiet) print("[Step 1/5] Load data and verify input")
+    rawDesign <- loadDesign(designPath)
+    rawData <- loadData(dataPath, inputFormat=inputFormat, zeroToNA=zeroToNA)
+    
+    normObj <- getVerifiedNormalyzerObject(
+        jobName=jobName,
+        designMatrix=rawDesign,
+        rawData=rawData,
+        threshold=sampleAbundThres,
+        omitSamples=omitLowAbundSamples,
+        requireReplicates=requireReplicates,
+        sampleCol=sampleColName,
+        groupCol=groupColName,
+        quiet=quiet)
     jobDir <- setupJobDir(jobName, outputDir)
     if (!quiet) print(paste("[Step 1/5] Input verified, job directory prepared at:", jobDir))
     
     if (!quiet) print("[Step 2/5] Performing normalizations")
-    normalyzerResultsObject <- normMethods(normObj,
-                                           forceAll=forceAllMethods,
-                                           normalizeRetentionTime=normalizeRetentionTime,
-                                           retentionTimeWindow=retentionTimeWindow,
-                                           quiet=quiet)
+    normalyzerResultsObject <- normMethods(
+        normObj,
+        forceAll=forceAllMethods,
+        normalizeRetentionTime=normalizeRetentionTime,
+        retentionTimeWindow=retentionTimeWindow,
+        quiet=quiet)
     if (!quiet) print("[Step 2/5] Done!")
     
     if (!skipAnalysis) {
         if (!quiet) print("[Step 3/5] Generating evaluation measures...")
-        normalyzerResultsObject <- analyzeNormalizations(normalyzerResultsObject 
-                                                         # comparisons=pairwiseComparisons,
-                                                         # categoricalAnova=categoricalAnova,
-                                                         # varFilterFrac=varFilterFrac
-                                                         )
+        normalyzerResultsObject <- analyzeNormalizations(normalyzerResultsObject)
         if (!quiet) print("[Step 3/5] Done!")
     }
     else {
@@ -92,11 +92,7 @@ normalyzer <- function(
     
     if (!quiet) print("[Step 4/5] Writing matrices to file")
     writeNormalizedDatasets(normalyzerResultsObject, 
-                            jobDir
-                            # includePairwiseComparisons=!is.null(pairwiseComparisons),
-                            # includeCvCol=includeCvCol,
-                            # includeAnovaP=includeAnovaP
-                            )
+                            jobDir)
     if (!quiet) print("[Step 4/5] Matrices successfully written")
     
     if (!skipAnalysis) {
@@ -131,8 +127,9 @@ normalyzer <- function(
 #' @param quiet Omit status messages printed during run
 #' @return None
 #' @export
-#' @examples
+#' @examples \dontrun{
 #' normalyzerDE("results/normalized.tsv", "design.tsv", "my_jobname", c("1-2", "1-4"),  outputDir="path/to/output")
+#' }
 #' @export
 normalyzerDE <- function(jobName, designPath, dataPath, comparisons, outputDir=".", logTrans=FALSE, 
                          type="limma", sampleCol="sample", condCol="group", 
@@ -142,7 +139,10 @@ normalyzerDE <- function(jobName, designPath, dataPath, comparisons, outputDir="
     jobDir <- setupJobDir(jobName, outputDir)
 
     if (!quiet) print("Setting up statistics object")
-    nst <- setupStatisticsObject(designPath, dataPath, comparisons, logTrans=logTrans, leastRepCount=leastRepCount)
+    fullDf <- utils::read.csv(dataPath, sep="\t")
+    designDf <- utils::read.csv(designPath, sep="\t")
+    designDf[, sampleCol] <- as.character(designDf[, sampleCol])
+    nst <- setupStatisticsObject(designDf, fullDf, comparisons, logTrans=logTrans, leastRepCount=leastRepCount)
     
     if (!is.null(techRepCol)) {
         if (!quiet) print("Reducing technical replicates")
