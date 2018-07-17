@@ -19,6 +19,15 @@ vignette: >
 # error=FALSE, warning=TRUE)
 ```
 
+# Installation
+
+Installation should preferably be performed using BiocManager:
+
+```
+install.packages("BiocManager")
+BiocManager::install("NormalyzerDE")
+```
+
 # Default use
 
 ## Citing
@@ -164,6 +173,7 @@ head(layeredRtNormMat, 1)
 # Stepwise processing
 
 NormalyzerDE consists of a set of steps. You can influence the order of this processing using options (X and X), but they can also be called directly from R.
+#' data(example_design)
 
 ## Step 1: Loading data
 
@@ -171,7 +181,9 @@ This step performs input validation of the data, and generates an object of the 
 
 ```{r}
 jobName <- "vignette_run"
-normObj <- getVerifiedNormalyzerObject(jobName, "design.tsv", "data.tsv")
+designDf <- loadDesign("design.tsv")
+dataDf <- loadData("data.tsv")
+normObj <- getVerifiedNormalyzerObject(jobName, designDf, dataDf)
 ```
 
 ## Step 2: Generate normalizations

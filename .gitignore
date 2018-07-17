@@ -10,6 +10,7 @@ R/Rplots.pdf
 NAMESPACE
 man/
 inst/doc
+vignettes/data/
 
 hidden_file_ext = (
     ".renviron", ".rprofile", ".rproj", ".rproj.user", ".rhistory",
