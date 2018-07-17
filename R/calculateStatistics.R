@@ -88,8 +88,8 @@ generateAnnotatedMatrix <- function(nst) {
 #' data(example_design)
 #' statObj <- setupStatisticsObject(example_design, example_stat_data)
 #' statObj <- calculateContrasts(statObj, comparisons=c("1-2", "2-3"), condCol="group", type="limma")
-#' dir.create("outputDir", showWarnings=FALSE)
-#' generateStatsReport(statObj, "jobName", "outputDir")
+#' outputDir <- tempdir()
+#' generateStatsReport(statObj, "jobName", outputDir)
 generateStatsReport <- function(nst, jobName, jobDir, plotRows=3, plotCols=4) {
     
     nrows <- plotRows + 2

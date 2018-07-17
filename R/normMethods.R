@@ -148,7 +148,6 @@ performQuantileNormalization <- function(rawMatrix) {
 
 #' Median absolute deviation normalization
 #' Scales values with MAD and adds it with logged sample median
-#' TODO: Dig into this one a bit more
 #' 
 #' @param rawMatrix Target matrix to be normalized
 #' @return Normalized matrix

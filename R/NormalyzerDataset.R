@@ -7,7 +7,7 @@
 #' @slot designMatrix Data frame containing design.
 #' @slot sampleNames Vector containing sample names.
 #' @slot filterrawdata Reduced raw data matrix where low abundance rows are 
-#'  removed - TODO: CHECK, IS THIS CURRENTLY WORKING?
+#'  removed
 #' @slot sampleReplicateGroups Vector with sample replicate information
 #' @slot samplesGroupsWithReplicates Vector with replicated sample replicate information
 #' @slot colsum Vector with sum of values for each column

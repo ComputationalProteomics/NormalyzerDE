@@ -12,8 +12,8 @@
 #' normObj <- getVerifiedNormalyzerObject("job_name", example_design, example_data)
 #' normResults <- normMethods(normObj)
 #' normResultsWithEval <- analyzeNormalizations(normResults)
-#' dir.create("outputDir", showWarnings=FALSE)
-#' generatePlots(normResultsWithEval, "outputDir")
+#' outputDir <- tempdir()
+#' generatePlots(normResultsWithEval, outputDir)
 generatePlots <- function(nr, jobdir, plotRows=3, plotCols=4) {
     
     nds <- nr@nds
@@ -399,7 +399,7 @@ plotCVvsIntensity <- function(nr, currentLayout, pageno) {
 }
 
 #' Expression vs. fold-change for variables for each normalization method
-#' ! TODO: Need to investigate what the actual fold change is here
+#' 
 #' 
 #' @param nr Normalyzer results object.
 #' @param currentLayout Layout used for document.
@@ -410,28 +410,27 @@ plotCVvsIntensity <- function(nr, currentLayout, pageno) {
 plotMA <- function(nr, currentLayout, pageno) {
     
     nds <- nr@nds
-    methodnames <- getUsedMethodNames(nr)
-    methodlist <- getNormalizationMatrices(nr)
+    methodNames <- getUsedMethodNames(nr)
+    normalizedDataList <- getNormalizationMatrices(nr)
     currentjob <- nds@jobName
     sampleReplicateGroups <- nds@sampleReplicateGroups
     filterrawdata <- nds@filterrawdata
     
     Malist <- list()
-    for (i in seq_len(length(methodlist))) {
+    for (i in seq_len(length(normalizedDataList))) {
         
-        methodData <- as.matrix(methodlist[[i]])
-        tempcolname <- colnames(methodData)
-        methodData <- methodData[, sampleReplicateGroups == min(sampleReplicateGroups)]
-        nonNACol1 <- methodData[!is.na(methodData[, 1]), ]
-        avg <- rowMeans(nonNACol1)
-        fc <- apply(cbind(nonNACol1[, 1], avg), 1, function(x) x[1] - x[2])
-        df <- as.data.frame(cbind(avg, fc))
+        methodData <- as.matrix(normalizedDataList[[i]])
+        methodDataFirstCond <- methodData[, sampleReplicateGroups == min(sampleReplicateGroups)]
+        firstColWoNA <- methodDataFirstCond[!is.na(methodDataFirstCond[, 1]), ]
+        avgExpr <- rowMeans(firstColWoNA)
+        fold <- apply(cbind(firstColWoNA[, 1], avgExpr), 1, function(x) x[1] - x[2])
+        plotDf <- as.data.frame(cbind(avgExpr, fold))
         
-        Malist[[i]] <- ggplot2::ggplot(df, ggplot2::aes(avg, fc)) + 
+        Malist[[i]] <- ggplot2::ggplot(plotDf, ggplot2::aes(avgExpr, fold)) + 
             ggplot2::geom_point(color="darkgray", size=0.7, na.rm=TRUE) + 
             ggplot2::labs(x=("Replicate group mean"), 
                           y=("Replicate-1 Fold Change"),
-                          title=methodnames[i]) + 
+                          title=methodNames[i]) + 
             ggplot2::stat_smooth(method="loess", se=FALSE, colour="red", na.rm=TRUE) + 
             ggplot2::geom_abline(intercept=0, slope=0, size=0.3)
     } 

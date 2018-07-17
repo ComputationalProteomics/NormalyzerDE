@@ -14,13 +14,13 @@
 #'  for log2-transformed data
 #' @slot nonsiganfdrlistcvpdiff Coefficient of variance for least variable
 #'  entries
-#' @slot anfdr TODO: Look into (FDR for ANOVA)
-#' @slot kwfdr TODO: Look into (FDR for Kruskal-Wallis)
-#' @slot anovaFDRWithNA ANOVA FDR with NA when not applicable (?)
-#' @slot krusWalFDRWithNA KruskalWallis FDR with NA when not applicable (?)
+#' @slot anfdr ANOVA FDR values
+#' @slot kwfdr Kruskal-Wallis FDR values
+#' @slot anovaFDRWithNA ANOVA FDR with NA when not applicable
+#' @slot krusWalFDRWithNA KruskalWallis FDR with NA when not applicable
 #' @slot anovaP ANOVA calculated p-values
-#' @slot avgpercorsum TODO: Look into (Average Pearson correlation sum)
-#' @slot avgspecorsum TODO: Look into (Average Spearman correlation sum)
+#' @slot avgpercorsum Within group Pearson correlations
+#' @slot avgspecorsum Within group Spearman correlations
 #' @export
 NormalyzerEvaluationResults <- setClass("NormalyzerEvaluationResults",
                                            representation(

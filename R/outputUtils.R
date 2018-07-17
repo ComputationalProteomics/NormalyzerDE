@@ -16,8 +16,8 @@
 #' normObj <- getVerifiedNormalyzerObject("job_name", example_design, example_data)
 #' normResults <- normMethods(normObj)
 #' normResultsWithEval <- analyzeNormalizations(normResults)
-#' dir.create("outputDir")
-#' writeNormalizedDatasets(normResultsWithEval, "outputDir")
+#' outputDir <- tempdir()
+#' writeNormalizedDatasets(normResultsWithEval, outputDir)
 writeNormalizedDatasets <- function(nr, jobdir, includePairwiseComparisons=FALSE, 
                                     includeCvCol=FALSE, includeAnovaP=FALSE,
                                     normSuffix="-normalized.txt",

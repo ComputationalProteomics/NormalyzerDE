@@ -28,6 +28,7 @@ analyzeNormalizations <- function(nr,
 }
 
 #' Pearson and Spearman correlation calculations for methods and samples
+#' Calculates internal correlation per condition
 #' 
 #' @param nr Normalyzer results object with calculated results.
 #' @param ner Normalyzer evaluation object.
@@ -38,28 +39,26 @@ calculateCorrelations <- function(nr, ner) {
     methodlist <- getNormalizationMatrices(nr)
     allReplicateGroups <- nr@nds@sampleReplicateGroups
 
-    graphics::par(mfrow=c(1,1))
     avgpercorsum <- list()
     avgspecorsum <- list()
-    corsum <- vector()
-    
+
     for (i in seq_len(length(methodlist))) {
+        
         pearCorSum <- vector()
         spearCorSum <- vector()
-        
-        datastore <- as.matrix(methodlist[[i]])
+        methodData <- as.matrix(methodlist[[i]])
         sampleGroupsWithReplicates <- nr@nds@samplesGroupsWithReplicates
 
         for (groupNbr in seq_len(length(sampleGroupsWithReplicates))) {
             
-            dt <- as.matrix(datastore[, which(allReplicateGroups == sampleGroupsWithReplicates[groupNbr])])
-            class(dt) <- "numeric"
-            pearCor <- stats::cor(dt, use="pairwise.complete.obs", method="pearson")
-            spearCor <- stats::cor(dt, use="pairwise.complete.obs", method="spearman")
+            specificReplicateVals <- as.matrix(methodData[, which(allReplicateGroups == sampleGroupsWithReplicates[groupNbr])])
+            class(specificReplicateVals) <- "numeric"
+            pearCor <- stats::cor(specificReplicateVals , use="pairwise.complete.obs", method="pearson")
+            spearCor <- stats::cor(specificReplicateVals , use="pairwise.complete.obs", method="spearman")
             
-            for (rn in seq_len(ncol(dt) - 1)) {
-                pearCorSum <- c(pearCorSum, pearCor[rn, -(seq_len(rn))])
-                spearCorSum <- c(spearCorSum, spearCor[rn, -(seq_len(rn))])
+            for (index in seq_len(ncol(specificReplicateVals) - 1)) {
+                pearCorSum <- c(pearCorSum, pearCor[index, -(seq_len(index))])
+                spearCorSum <- c(spearCorSum, spearCor[index, -(seq_len(index))])
             }
         }
         

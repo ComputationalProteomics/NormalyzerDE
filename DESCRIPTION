@@ -22,13 +22,13 @@ Imports:
     RcmdrMisc,
     raster,
     utils,
-    stats,
-    hexbin
+    stats
 Suggests:
     knitr,
     testthat,
     rmarkdown,
-    roxygen2
+    roxygen2,
+    hexbin
 VignetteBuilder: knitr
 biocViews:
     Normalization, MultipleComparison, Visualization, Bayesian, Proteomics, Metabolomics, DifferentialExpression
