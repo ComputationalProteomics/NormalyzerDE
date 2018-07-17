@@ -1,9 +1,14 @@
 Package: NormalyzerDE
 Title: Evaluation of normalization methods and calculation of differential expression analysis statistics
-Version: 0.98.11
+Version: 0.98.12
 Author: Jakob Willforss
 Maintainer: Jakob Willforss <jakob.willforss@immun.lth.se>
-Description: Evaluation of normalization methods applied to proteomic data.
+Description: NormalyzerDE provides screening of normalization methods for 
+    LC-MS based expression data. It calculates a range of normalized matrices 
+    using both existing approaches and a novel time-segmented approach, 
+    calculates performance measures and generates an evaluation report. 
+    Furthermore, it provides an easy utility for Limma- or ANOVA- based 
+    differential expression analysis.
 Imports:
     vsn,
     preprocessCore,
@@ -17,15 +22,16 @@ Imports:
     RcmdrMisc,
     raster,
     utils,
-    stats
+    stats,
+    hexbin
 Suggests:
     knitr,
     testthat,
-    rmarkdown
+    rmarkdown,
+    roxygen2
 VignetteBuilder: knitr
 biocViews:
-    Normalization,
+    Normalization, MultipleComparison, Visualization, Bayesian, Proteomics, Metabolomics, DifferentialExpression
 License: Artistic-2.0
 Encoding: UTF-8
-LazyData: true
 RoxygenNote: 6.0.1

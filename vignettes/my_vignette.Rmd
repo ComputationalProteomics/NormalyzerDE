@@ -3,7 +3,7 @@ title: "Evaluation and statistics of expression data using NormalyzerDE"
 author: "Jakob Willforss, Aakash Chawade and Fredrik Levander"
 date: "`r format(Sys.Date(), '%m/%d/%Y')`"
 abstract: >
-    When working with omics data you will encounter technical biases. These can often in part be remedied by using appropriate normalization approach. Normalyzer helps this process by both performing a number of readibly available normalizations as well as generating a summary document of the results.
+    When working with omics data you will encounter technical biases. These can often in part be remedied by using appropriate normalization approach. Normalyzer helps this process by both performing a number of popular normalizations as well as a newly implemented approach to counter retention-time dependent bias. Furthermore, NormalyzerDE provides means to easily perform differential expression statistics using either the empirical Bayes Limma approach or ANOVA. Evaluation visualizations are available for both normalization performance measures and as P-value histograms for the subsequent differential expression analysis comparisons. 
     NormalyzerDE package version: `r packageVersion("NormalyzerDE")`
 output: 
   BiocStyle::pdf_document
@@ -67,7 +67,8 @@ a path to a design matrix and finally a path to an output directory.
 
 ```{r}
 library(NormalyzerDE)
-normalyzer(jobName="vignette_run", designPath="design.tsv", dataPath="data.tsv", outputDir="testout")
+normalyzer(jobName="vignette_run", designPath="design.tsv", dataPath="data.tsv", 
+           outputDir="testout")
 ```
 
 ## Running NormalyzerDE statistical comparisons
@@ -81,8 +82,11 @@ for which you want to calculate contrasts. They are provided as a character vect
 compare separated by a dash ("-").
 
 ```{r}
-normalyzerDE("vignette_run", "design.tsv", "testout/vignette_run/Loess-G-normalized.txt", 
-             outputDir="testoutstat", comparisons=c("1-2", "1-3", "1-4"))
+normalyzerDE("vignette_run", 
+             "design.tsv", 
+             "testout/vignette_run/Loess-G-normalized.txt", 
+             outputDir="testoutstat", 
+             comparisons=c("1-2", "1-3", "1-4"))
 ```
 
 # Retention time normalization
@@ -144,7 +148,11 @@ performCyclicLoessNormalization <- function(rawMatrix) {
 We are ready to perform the normalization.
 
 ```{r}
-rtNormMat <- getRTNormalizedMatrix(dataMat, retentionTimes, performCyclicLoessNormalization, stepSizeMinutes=1, windowMinCount=100)
+rtNormMat <- getRTNormalizedMatrix(dataMat, 
+                                   retentionTimes, 
+                                   performCyclicLoessNormalization, 
+                                   stepSizeMinutes=1, 
+                                   windowMinCount=100)
 ```
 
 Let's double check the results. We expect a matrix in the same format and shape as before. Furthermore, we expect similar but not the exact same values as if we'd applied the normalization globally.
@@ -162,7 +170,14 @@ head(globalNormMat, 1)
 We have everything set up to perform the layered normalization. The result here is expected to be overall similar to the normal retention time approach.
 
 ```{r}
-layeredRtNormMat <- getSmoothedRTNormalizedMatrix(dataMat, retentionTimes, performCyclicLoessNormalization, stepSizeMinutes=1, windowMinCount=100, frameShifts=3, mergeMethod="mean")
+layeredRtNormMat <- getSmoothedRTNormalizedMatrix(
+    dataMat, 
+    retentionTimes, 
+    performCyclicLoessNormalization, 
+    stepSizeMinutes=1, 
+    windowMinCount=100, 
+    frameShifts=3, 
+    mergeMethod="mean")
 
 dim(layeredRtNormMat)
 head(layeredRtNormMat, 1)
