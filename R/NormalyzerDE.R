@@ -72,7 +72,7 @@ normalyzer <- function(
     startTime <- Sys.time()
     
     if (!quiet) print("[Step 1/5] Load data and verify input")
-    rawDesign <- loadDesign(designPath)
+    rawDesign <- loadDesign(designPath, sampleCol=sampleColName, groupCol=groupColName)
     rawData <- loadData(dataPath, inputFormat=inputFormat, zeroToNA=zeroToNA)
     
     normObj <- getVerifiedNormalyzerObject(

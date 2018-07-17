@@ -39,8 +39,10 @@ loadData <- function(dataPath, inputFormat="default", zeroToNA=FALSE) {
 #' df <- loadDesign("design.tsv")
 #' }
 #' @export
-loadDesign <- function(designPath) {
+loadDesign <- function(designPath, sampleCol="sample", groupCol="group") {
     designMatrix <- utils::read.table(designPath, sep="\t", stringsAsFactors=FALSE, header=TRUE, comment.char="")
+    designMatrix[, sampleCol] <- as.character(designMatrix[, sampleCol])
+    designMatrix[, groupCol] <- as.factor(as.character(designMatrix[, groupCol]))
     designMatrix
 }
 
