@@ -42,23 +42,23 @@ calculateCorrelations <- function(nr, ner) {
     avgspecorsum <- list()
     corsum <- vector()
     
-    for (i in 1:length(methodlist)) {
+    for (i in seq_len(length(methodlist))) {
         pearCorSum <- vector()
         spearCorSum <- vector()
         
         datastore <- as.matrix(methodlist[[i]])
         sampleGroupsWithReplicates <- nr@nds@samplesGroupsWithReplicates
 
-        for (groupNbr in 1:length(sampleGroupsWithReplicates)) {
+        for (groupNbr in seq_len(length(sampleGroupsWithReplicates))) {
             
             dt <- as.matrix(datastore[, which(allReplicateGroups == sampleGroupsWithReplicates[groupNbr])])
             class(dt) <- "numeric"
             pearCor <- stats::cor(dt, use="pairwise.complete.obs", method="pearson")
             spearCor <- stats::cor(dt, use="pairwise.complete.obs", method="spearman")
             
-            for (rn in 1:(ncol(dt) - 1)) {
-                pearCorSum <- c(pearCorSum, pearCor[rn, -(1:rn)])
-                spearCorSum <- c(spearCorSum, spearCor[rn, -(1:rn)])
+            for (rn in seq_len(ncol(dt) - 1)) {
+                pearCorSum <- c(pearCorSum, pearCor[rn, -(seq_len(rn))])
+                spearCorSum <- c(spearCorSum, spearCor[rn, -(seq_len(rn))])
             }
         }
         

@@ -142,7 +142,7 @@ normalyzerDE <- function(jobName, designPath, dataPath, comparisons, outputDir="
     fullDf <- utils::read.csv(dataPath, sep="\t")
     designDf <- utils::read.csv(designPath, sep="\t")
     designDf[, sampleCol] <- as.character(designDf[, sampleCol])
-    nst <- setupStatisticsObject(designDf, fullDf, comparisons, logTrans=logTrans, leastRepCount=leastRepCount)
+    nst <- setupStatisticsObject(designDf, fullDf, logTrans=logTrans, leastRepCount=leastRepCount)
     
     if (!is.null(techRepCol)) {
         if (!quiet) print("Reducing technical replicates")

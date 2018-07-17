@@ -16,11 +16,11 @@
 #' @return Normalized matrix
 #' @export
 #' @examples
-#' fullDf <- utils::read.csv("data.tsv", sep="\t")
-#' designDf <- utils::read.csv("design.tsv", sep="\t")
-#' sampleNames <- as.character(designDf$sample)
-#' dataMat <- as.matrix(fullDf[, sampleNames])
-#' retentionTimes <- fullDf$Average.RT
+#' data(example_stat_data)
+#' data(example_design)
+#' sampleNames <- as.character(example_design$sample)
+#' dataMat <- as.matrix(example_stat_data[, sampleNames])
+#' retentionTimes <- example_stat_data$Average.RT
 #' performCyclicLoessNormalization <- function(rawMatrix) {
 #'     log2Matrix <- log2(rawMatrix)
 #'     normMatrix <- limma::normalizeCyclicLoess(log2Matrix, method="fast")
@@ -161,11 +161,12 @@ getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes)
 #' @return Normalized matrix
 #' @export
 #' @examples
-#' fullDf <- utils::read.csv("data.tsv", sep="\t")
-#' designDf <- utils::read.csv("design.tsv", sep="\t")
-#' sampleNames <- as.character(designDf$sample)
-#' dataMat <- as.matrix(fullDf[, sampleNames])
-#' retentionTimes <- fullDf$Average.RT
+#' 
+#' data(example_stat_data)
+#' data(example_design)
+#' sampleNames <- as.character(example_design$sample)
+#' dataMat <- as.matrix(example_stat_data[, sampleNames])
+#' retentionTimes <- example_stat_data$Average.RT
 #' performCyclicLoessNormalization <- function(rawMatrix) {
 #'     log2Matrix <- log2(rawMatrix)
 #'     normMatrix <- limma::normalizeCyclicLoess(log2Matrix, method="fast")
@@ -180,7 +181,7 @@ getSmoothedRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod,
     
     matrices <- list()
 
-    for (i in 1:frameShifts) {
+    for (i in seq_len(frameShifts)) {
         
         fracShift <- (i - 1) * 1 / frameShifts
         matrices[[i]] <- getRTNormalizedMatrix(rawMatrix, retentionTimes, normMethod, 
@@ -209,7 +210,7 @@ getCombinedMatrix <- function(mList, combFunc) {
     mLength <- rows * cols
     combinedMatrix <- matrix(0, nrow=rows, ncol=cols)
     
-    for (i in 1:mLength) {
+    for (i in seq_len(mLength)) {
         elemVals <- sapply(mList, function(mat) {mat[[i]]})
         targetVal <- combFunc(elemVals)
         combinedMatrix[i] <- targetVal

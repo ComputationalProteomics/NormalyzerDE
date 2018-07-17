@@ -36,7 +36,7 @@ printPlots <- function(plotlist, plotname, pageno, jobname, currentLayout) {
     col <- 2  # Start value
 
     posCounter <- 0
-    for (i in 1:length(plotlist)) {
+    for (i in seq_len(length(plotlist))) {
         
         if (gridSize == 1 || (i != 1 && i %% gridSize == 1)) {
             print(paste("New page, row:", row, "col:", col))
@@ -57,7 +57,7 @@ printPlots <- function(plotlist, plotname, pageno, jobname, currentLayout) {
 }
 
 drawRectangles <- function(nrow, ncol, gpfill, gp) {
-    for (pos in 1:(ncol - 1) * (nrow - 1)) {
+    for (pos in seq_len((ncol - 1) * (nrow - 1))) {
         if (pos <= ncol) row <- 1
         else row <- nrow
         

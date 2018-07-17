@@ -72,12 +72,12 @@ setMethod("calculateCV", "NormalyzerEvaluationResults",
               matrixCvs <- matrix(nrow=numberFeatures, ncol=methodCount)
               avgCVPerNormAndReplicates <- matrix(nrow=rowCount, ncol=methodCount, byrow=TRUE)
               
-              for (methodIndex in 1:methodCount) {
+              for (methodIndex in seq_len(methodCount)) {
                   
                   processedDataMatrix <- methodList[[methodIndex]]
                   tempCVMatrix <- matrix(nrow=nrow(processedDataMatrix), ncol=length(levels(as.factor(unlist(sampleReplicateGroups)))), byrow=TRUE)
                   
-                  for (i in 1:nrow(processedDataMatrix)) {
+                  for (i in seq_len(nrow(processedDataMatrix))) {
                       
                       tempCV <- RcmdrMisc::numSummary(processedDataMatrix[i, ], statistics=c("cv"), groups=unlist(sampleReplicateGroups))
                       tempCVMatrix[i, ] <- tempCV$table
@@ -98,7 +98,7 @@ setMethod("calculateCV", "NormalyzerEvaluationResults",
               }
               
               # Requires log normalized data to be at first index
-              cvPercentVarFromLog <- sapply(1:ncol(avgCVPerNormAndReplicates), 
+              cvPercentVarFromLog <- sapply(seq_len(ncol(avgCVPerNormAndReplicates)), 
                                             function (sampleIndex) (mean(avgCVPerNormAndReplicates[, sampleIndex]) * 100) / mean(avgCVPerNormAndReplicates[, 1]))
               
               ner@avgcvmem <- avgCVPerNormAndReplicates
@@ -132,7 +132,7 @@ setMethod("calculateMAD", "NormalyzerEvaluationResults",
               avgmadmem <- matrix(nrow=rowCount, ncol=methodCount, byrow=TRUE)
               indexList <- getIndexList(sampleReplicateGroups)
               
-              for (methodIndex in 1:methodCount) {
+              for (methodIndex in seq_len(methodCount)) {
                   
                   processedDataMatrix <- methodList[[methodIndex]]
 
@@ -140,7 +140,7 @@ setMethod("calculateMAD", "NormalyzerEvaluationResults",
                                             ncol=length(levels(as.factor(unlist(sampleReplicateGroups)))), 
                                             byrow=TRUE)
                   
-                  for (sampleIndex in 1:length(names(indexList))) {
+                  for (sampleIndex in seq_len(length(names(indexList)))) {
                       repVal <- names(indexList)[sampleIndex]
                       cols <- indexList[[repVal]]
                       medianAbsDevMem[, sampleIndex] <- apply(processedDataMatrix[, cols], 1, function(x) { stats::mad(x, na.rm=TRUE) })
@@ -151,7 +151,7 @@ setMethod("calculateMAD", "NormalyzerEvaluationResults",
                   avgmadmem[, methodIndex] <- temmadmatsum
               }
               
-              avgmadmempdiff <- sapply(1:ncol(avgmadmem), function (sampleIndex) (mean(avgmadmem[, sampleIndex]) * 100) / mean(avgmadmem[, 1]))
+              avgmadmempdiff <- sapply(seq_len(ncol(avgmadmem)), function (sampleIndex) (mean(avgmadmem[, sampleIndex]) * 100) / mean(avgmadmem[, 1]))
               ner@avgmadmem <- avgmadmem
               ner@avgmadmempdiff <- avgmadmempdiff
               
@@ -182,14 +182,14 @@ setMethod("calculateAvgVar", "NormalyzerEvaluationResults",
               avgvarmem <- matrix(nrow=rowCount, ncol=methodCount, byrow=TRUE)
               indexList <- getIndexList(sampleReplicateGroups)
               
-              for (methodIndex in 1:methodCount) {
+              for (methodIndex in seq_len(methodCount)) {
                   
                   replicateGroupVariance <- vector()
                   rowVariances <- vector()
                   
                   processedDataMatrix <- methodList[[methodIndex]]
                   
-                  for (sampleIndex in 1:length(names(indexList))) {
+                  for (sampleIndex in seq_len(length(names(indexList)))) {
                       
                       repVal <- names(indexList)[sampleIndex]
                       cols <- indexList[[repVal]]
@@ -203,7 +203,7 @@ setMethod("calculateAvgVar", "NormalyzerEvaluationResults",
                   
               }
               
-              avgvarmempdiff <- sapply(1:ncol(avgvarmem), function (sampleIndex) (mean(avgvarmem[, sampleIndex]) * 100) / mean(avgvarmem[, 1]))
+              avgvarmempdiff <- sapply(seq_len(ncol(avgvarmem)), function (sampleIndex) (mean(avgvarmem[, sampleIndex]) * 100) / mean(avgvarmem[, 1]))
               ner@avgvarmem <- avgvarmem
               ner@avgvarmempdiff <- avgvarmempdiff
               
@@ -240,7 +240,7 @@ setMethod("calculateSignificanceMeasures", "NormalyzerEvaluationResults",
               krusValFDRs <- list()
               krusWalFDRsWithNA <- matrix(NA, ncol=methodCount, nrow=nrow(methodList[[1]]))
               
-              for (methodIndex in 1:methodCount) {
+              for (methodIndex in seq_len(methodCount)) {
                   
                   processedDataMatrix <- methodList[[methodIndex]]
                   naFilterContrast <- getRowNAFilterContrast(processedDataMatrix,
@@ -278,12 +278,12 @@ setMethod("calculateSignificanceMeasures", "NormalyzerEvaluationResults",
                   lowlyVariableFeatures <- which(anovaFDRs[[1]] >= min(utils::head(rev(sort(anovaFDRs[[1]])), n=(5 * length(anovaFDRs[[1]]) / 100))))
                   
                   nonsiganfdrlistcv <- vector()
-                  for (mlist in 1:methodCount) {
+                  for (mlist in seq_len(methodCount)) {
                       tmpdata <- methodList[[mlist]][lowlyVariableFeatures, ]
                       nonsiganfdrlistcv[mlist] <- mean(apply(tmpdata, 1, function(sampleIndex) raster::cv(sampleIndex, na.rm=TRUE)), na.rm=TRUE)
                   }
                   
-                  nonsiganfdrlistcvpdiff <- sapply(1:length(nonsiganfdrlistcv), function(sampleIndex) (nonsiganfdrlistcv[sampleIndex] * 100) / nonsiganfdrlistcv[1])
+                  nonsiganfdrlistcvpdiff <- sapply(seq_len(length(nonsiganfdrlistcv)), function(sampleIndex) (nonsiganfdrlistcv[sampleIndex] * 100) / nonsiganfdrlistcv[1])
                   ner@nonsiganfdrlist <- nonsiganfdrlistcv
                   ner@nonsiganfdrlistcvpdiff <- nonsiganfdrlistcvpdiff
               }

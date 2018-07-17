@@ -1,4 +1,4 @@
-#' S4 class to represent dataset information
+#' Raw data representation
 #' 
 #' @slot jobName Name of the job represented by the dataset.
 #' @slot rawData Matrix with raw values.

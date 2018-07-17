@@ -1,5 +1,14 @@
-#' S4 class to represent dataset information
+#' Statistical dataset representation
 #' 
+#' @slot annotMat Matrix containing annotation information
+#' @slot dataMat Matrix containing (normalized) expression data
+#' @slot filteredDataMat Filtered matrix with low-count rows removed
+#' @slot designDf Data frame containing design conditions
+#' @slot filteringContrast Vector showing which entries are filtered (due to low count)
+#' @slot pairwiseCompsP List with P-values for pairwise comparisons
+#' @slot pairwiseCompsFdr List with FDR-values for pairwise comparisons
+#' @slot pairwiseCompsAve List with average expression values
+#' @slot pairwiseCompsFold List with log2 fold-change values for pairwise comparisons
 #' @export
 NormalyzerStatistics <- setClass("NormalyzerStatistics",
                                  representation(
@@ -7,7 +16,6 @@ NormalyzerStatistics <- setClass("NormalyzerStatistics",
                                      dataMat = "matrix",
                                      filteredDataMat = "matrix",
                                      designDf = "data.frame",
-                                     contrasts = "vector",
                                      filteringContrast = "vector",
                                      
                                      pairwiseCompsP = "list",
@@ -18,8 +26,7 @@ NormalyzerStatistics <- setClass("NormalyzerStatistics",
                                  prototype=prototype(
                                      annotMat=NULL,
                                      dataMat=NULL,
-                                     designDf=NULL,
-                                     contrasts=NULL
+                                     designDf=NULL
                                  ))
 
 #' Main method for contrast calculation
@@ -30,8 +37,9 @@ NormalyzerStatistics <- setClass("NormalyzerStatistics",
 #' @param batchCol Column name in design matrix containing batch information.
 #' @param splitter Character dividing contrast conditions.
 #' @param type Type of statistical test (Limma or ANOVA).
-#' @return None
+#' @return nst Statistics object with statistical measures calculated
 #' @rdname calculateContrasts
+#' @export
 setGeneric(name="calculateContrasts", 
            function(nst, comparisons, condCol, batchCol=NULL, splitter="-", type="limma") standardGeneric("calculateContrasts"))
 
@@ -218,7 +226,7 @@ setMethod(f="calculatePairwiseComparisonsLimma",
               }
               
               dataMat <- nst@dataMat
-              rownames(dataMat) <- 1:nrow(dataMat)
+              rownames(dataMat) <- seq_len(nrow(dataMat))
               naFilterContrast <- getRowNAFilterContrast(dataMat, sampleReplicateGroups)
               dataMatNAFiltered <- dataMat[naFilterContrast,]
               

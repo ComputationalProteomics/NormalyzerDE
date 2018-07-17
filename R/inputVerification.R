@@ -239,7 +239,7 @@ getReplicateSortedData <- function(rawDataOnly, groups) {
     factorLevels <- sort(as.numeric(unique(groups)))
     tempDf <- NULL
 
-    for (i in 1:length(factorLevels)) {
+    for (i in seq_len(length(factorLevels))) {
         tempDf <- cbind(tempDf, rawDataOnly[, which(groups == factorLevels[as.numeric(i)]), drop=FALSE])
     }
 
@@ -270,7 +270,7 @@ preprocessData <- function(dataMatrix) {
 #' @keywords internal
 getLowCountSampleFiltered <- function(dataMatrix, groups, threshold=15, stopIfTooFew=TRUE) {
     
-    sampleIndices <- 1:length(groups)
+    sampleIndices <- seq_len(length(groups))
     numberOfValues <- colSums(!is.na(dataMatrix))
     notPassingThreshold <- which(numberOfValues < threshold)
     

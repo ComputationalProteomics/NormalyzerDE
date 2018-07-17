@@ -76,7 +76,7 @@ getLowRepCountFilterContrast <- function(dataMatrix, replicateHeader, minCount=1
     replicatesHaveData <- rep(TRUE, nrow(dataMatrix))
     indexList <- getIndexList(replicateHeader)
     
-    for (sampleIndex in 1:length(names(indexList))) {
+    for (sampleIndex in seq_len(length(names(indexList)))) {
         
         repVal <- names(indexList)[sampleIndex]
         cols <- indexList[[repVal]]
@@ -180,7 +180,7 @@ setupTestData <- function(nSamples, nFeatures, rtMin=40, rtMax=80, mean=20, sd=4
 setupTestDesign <- function(nSamples) {
     
     df <- data.frame(sample=rep(NA, nSamples), condition=rep(NA, nSamples))
-    for (i in 1:nSamples) {
+    for (i in seq_len(nSamples)) {
         row <- c(sample=paste0("S", i), condition=as.character(as.factor(i %% 2)))
         df[i, ] <- row
     }

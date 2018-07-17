@@ -182,7 +182,7 @@ setMethod("getUsedMethodNames", "NormalyzerResults",
           function(nr) {
               
               usedMethodNames <- c()
-              for (i in 1:length(slotNamesMap)) {
+              for (i in seq_len(length(slotNamesMap))) {
                   name <- names(slotNamesMap)[i]
                   fieldValue <- methods::slot(nr, name)
                   
@@ -208,7 +208,7 @@ setMethod("getSlotNameList", "NormalyzerResults",
           function(nr) {
               methodDataList <- c()
               
-              for (i in 1:length(slotNamesMap)) {
+              for (i in seq_len(length(slotNamesMap))) {
                   slotName <- names(slotNamesMap)[i]
                   fieldValue <- methods::slot(nr, slotName)
                   
@@ -234,7 +234,7 @@ setMethod("getNormalizationMatrices", "NormalyzerResults",
               
               methodDataList <- list()
               listCounter <- 1
-              for (i in 1:length(slotNamesMap)) {
+              for (i in seq_len(length(slotNamesMap))) {
                   slotName <- names(slotNamesMap)[i]
                   fieldValue <- methods::slot(nr, slotName)
                   

@@ -1,31 +1,20 @@
 #' Small example dataset
 #' 
-#' @format A data frame containing expression data
+#' @format A data frame containing annotation and expression data
 "example_data"
+
+#' Small example dataset only containing raw numerical values
+#' 
+#' @format A data frame containing expression data
+"example_data_only_values"
 
 #' Small example design matrix
 #' 
 #' @format A data frame containing expression data
 "example_design"
 
+#' Small example normalized dataset
+#' 
+#' @format A normalized data frame ready for statistical processing
+"example_stat_data"
 
-# Small example design
-#
-# @docType data
-# @usage data(exampleDesign)
-# @format An object of class \code{"cross"}; see \code{\link[qtl]{read.cross}}.
-# @keywords datasets
-# @export
-# @examples
-# data(exampleDesign)
-# head(exampleDesign)
-
-
-# @docType data
-# @usage data(exampleData)
-# @format An object of class \code{"cross"}; see \code{\link[qtl]{read.cross}}.
-# @keywords datasets
-# @export
-# @examples
-# data(exampleData)
-# head(exampleData)

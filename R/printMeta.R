@@ -16,9 +16,14 @@ printMeta <- function(plotname, pageno, jobname, currentLayout) {
                      col="black", fontface="bold")
     gpfill <- grid::gpar(fill="gray90", lwd=0, lty=0)
     
-    for (pos in 1:(ncol-1)*(nrow-1)) {
-        if (pos <= ncol) row <- 1
-        else row <- nrow
+    for (pos in seq_len((ncol - 1) * (nrow - 1))) {
+        
+        if (pos <= ncol) {
+            row <- 1
+        }
+        else {
+            row <- nrow
+        }
         
         col <- (pos - 1) %% ncol + 1
         grid::grid.rect(vp=grid::viewport(layout.pos.row=row, 

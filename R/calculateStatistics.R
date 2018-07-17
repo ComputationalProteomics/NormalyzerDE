@@ -16,7 +16,6 @@ allReplicatesHaveValuesContrast <- function(row, groups, minCount) {
 #' 
 #' @param designDf Design matrix.
 #' @param fullDf Full data matrix containing expression data and annotation data.
-#' @param comparisons Vector containing contrasts to perform. Format: c("condA-condB", "condB-condC")
 #' @param sampleCol Name of column containing sample IDs.
 #' @param conditionCol Name of column containing condition levels.
 #' @param batchCol Optional name of column containing batch effect levels.
@@ -24,20 +23,19 @@ allReplicatesHaveValuesContrast <- function(row, groups, minCount) {
 #' @param leastRepCount Lowest number of replicate required.
 #' @return Prepared statistics object.
 #' @export
-#' @examples \dontrun{
+#' @examples 
 #' data(example_design)
-#' data(example_data)
-#' setupStatisticsObject(example_design, example_data, c("1-2", "2-3"))
-#' }
-setupStatisticsObject <- function(designDf, fullDf, comparisons, sampleCol="sample", 
+#' data(example_stat_data)
+#' setupStatisticsObject(example_design, example_stat_data)
+setupStatisticsObject <- function(designDf, fullDf, sampleCol="sample", 
                                   conditionCol="group", batchCol=NULL, logTrans=FALSE,
                                   leastRepCount=2) {
 
-    dataCols <- designDf[, sampleCol]
+    dataCols <- as.character(designDf[, sampleCol])
     annotMat <- as.matrix(fullDf[, which(!colnames(fullDf) %in% dataCols)])
     dataMat <- as.matrix(fullDf[, dataCols], )
     
-    rownames(dataMat) <- 1:nrow(dataMat)
+    rownames(dataMat) <- seq_len(nrow(dataMat))
     dataMatNAFiltered <- filterLowRep(dataMat, designDf[, conditionCol], leastRep=leastRepCount)
     naFilterContrast <- rownames(dataMat) %in% rownames(dataMatNAFiltered)
       
@@ -49,7 +47,6 @@ setupStatisticsObject <- function(designDf, fullDf, comparisons, sampleCol="samp
         annotMat=annotMat, 
         dataMat=dataMat, 
         designDf=designDf, 
-        contrasts=comparisons,
         filteredDataMat=dataMatNAFiltered,
         filteringContrast=naFilterContrast
     )
@@ -87,9 +84,10 @@ generateAnnotatedMatrix <- function(nst) {
 #' @return None
 #' @export
 #' @examples
-#' data(example_data)
+#' data(example_stat_data)
 #' data(example_design)
-#' statObj <- setupStatisticsObject(example_design, example_data, comparisons=c("1-2", "2-3"), logTrans=TRUE)
+#' statObj <- setupStatisticsObject(example_design, example_stat_data)
+#' statObj <- calculateContrasts(statObj, comparisons=c("1-2", "2-3"), condCol="group", type="limma")
 #' dir.create("outputDir", showWarnings=FALSE)
 #' generateStatsReport(statObj, "jobName", "outputDir")
 generateStatsReport <- function(nst, jobName, jobDir, plotRows=3, plotCols=4) {
@@ -123,7 +121,7 @@ plotContrastPHists <- function(nst, jobName, currentLayout, pageno) {
     contrastPLists <- nst@pairwiseCompsP
     histPlots <- list()
     
-    for (i in 1:length(contrastPLists)) {
+    for (i in seq_len(length(contrastPLists))) {
         contrast <- names(contrastPLists)[i]
         pVals <- contrastPLists[[contrast]]
         df <- data.frame(pVals=pVals)

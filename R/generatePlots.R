@@ -361,17 +361,13 @@ plotCVvsIntensity <- function(nr, currentLayout, pageno) {
                           ncol=length(methodlist), byrow=TRUE)
     maxtempcv <- 0
     
-    for (j in 1:length(methodlist)) {
+    for (j in seq_len(length(methodlist))) {
         
         datastore <- methodlist[[j]]
         datastore <- datastore[, sampleReplicateGroups == min(sampleReplicateGroups)]
 
-        # browser()
-        
-        for (i in 1:nrow(datastore)) {
+        for (i in seq_len(nrow(datastore))) {
             
-            # tempcv <- rcmdrNumSummary(datastore[i, ], statistics=c("cv"))
-            # tempavg <- rcmdrNumSummary(filterrawdata[i, ], statistics=c("mean"))
             tempcv <- RcmdrMisc::numSummary(datastore[i, ], statistics=c("cv"))
             tempavg <- RcmdrMisc::numSummary(filterrawdata[i, ], statistics=c("mean"))
             
@@ -388,7 +384,7 @@ plotCVvsIntensity <- function(nr, currentLayout, pageno) {
     graphics::layout(tout)
     graphics::par(mar=c(4, 4, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
     
-    for (i in 1:ncol(tempcvmat1)) {
+    for (i in seq_len(ncol(tempcvmat1))) {
         graphics::plot(tempavgmat1[, i], tempcvmat1[, i], main=methodnames[i], 
                        xlab="Raw intensity", ylab="CV", cex=0.3, 
                        ylim=c(0, maxtempcv))
@@ -416,7 +412,7 @@ plotMA <- function(nr, currentLayout, pageno) {
     filterrawdata <- nds@filterrawdata
     
     Malist <- list()
-    for (i in 1:length(methodlist)) {
+    for (i in seq_len(length(methodlist))) {
         
         datastore <- as.matrix(methodlist[[i]])
         tempcolname <- colnames(datastore)
@@ -459,7 +455,7 @@ plotScatter <- function(nr, currentLayout, pageno) {
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(3, 2, 3, 2), xpd=NA)
     
-    for (i in 1:length(methodlist)) {
+    for (i in seq_len(length(methodlist))) {
         datastore <- methodlist[[i]]
         fit <- stats::lm(datastore[, 1]~datastore[, 2])
         graphics::plot(datastore[, 1], datastore[, 2], xlab="", ylab="", main=methodnames[i], pch=19, cex=0.2)
@@ -487,7 +483,7 @@ plotQQ <- function(nr, currentLayout, pageno) {
     
     qqlist <- list()
     
-    for (i in 1:length(methodlist)) {  
+    for (i in seq_len(length(methodlist))) {  
         datastore <- methodlist[[i]]
         tempcolname <- colnames(datastore)
         qqlist[[i]] <- ggplot2::qplot(sample=datastore[, 1], na.rm=TRUE) + 
@@ -515,13 +511,13 @@ plotBoxPlot <- function(nr, currentLayout, pageno) {
     filterED <- nds@sampleReplicateGroups
     filterrawdata <- nds@filterrawdata
     
-    tout <- matrix(1:((currentLayout$nrow-2)*(currentLayout$ncol-2)), ncol=(currentLayout$ncol-2), byrow=TRUE)
+    tout <- matrix(seq_len((currentLayout$nrow - 2) * (currentLayout$ncol - 2)), ncol=(currentLayout$ncol - 2), byrow=TRUE)
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(3, 2, 3, 2), xpd=NA)
     mindata <- 1000
     maxdata <- 0
     
-    for (i in 1:length(methodlist)) { 
+    for (i in seq_len(length(methodlist))) { 
         tempmin <- min(methodlist[[i]], na.rm=TRUE)
         tempmax <- max(methodlist[[i]], na.rm=TRUE)
         if (tempmin < mindata) {
@@ -532,7 +528,7 @@ plotBoxPlot <- function(nr, currentLayout, pageno) {
         }
     }
     
-    for (i in 1:length(methodlist)) {   
+    for (i in seq_len(length(methodlist))) {   
         graphics::par(mar=c(5, 1, 1, 1))
         graphics::boxplot(methodlist[[i]], 
                           cex=0.1, 
@@ -568,7 +564,7 @@ plotRLE <- function(nr, currentLayout, pageno) {
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(3, 2, 3, 2), xpd=NA)
     
-    for (i in 1:length(methodlist)) {
+    for (i in seq_len(length(methodlist))) {
         deviations = methodlist[[i]] - Biobase::rowMedians(methodlist[[i]], na.rm=TRUE)
         graphics::boxplot(deviations, outcol="lightgray", cex=0.1, cex.axis=0.7, 
                           las=2, main=methodnames[i], col=(filterED), 
@@ -592,11 +588,11 @@ plotDensity <- function(nr, currentLayout, pageno) {
     methodlist <- getNormalizationMatrices(nr)
     currentjob <- nds@jobName
     
-    tout <- matrix(1:((currentLayout$nrow-2)*(currentLayout$ncol-2)), ncol=(currentLayout$ncol-2), byrow=TRUE)
+    tout <- matrix(seq_len((currentLayout$nrow-2)*(currentLayout$ncol-2)), ncol=(currentLayout$ncol-2), byrow=TRUE)
     graphics::layout(tout)
     graphics::par(mar=c(3, 2, 3, 1), oma=c(3, 2, 3, 2), xpd=NA)
     
-    for (i in 1:length(methodlist)) {
+    for (i in seq_len(length(methodlist))) {
         
         datastore <- methodlist[[i]]
         tempd <- stats::density(datastore[, 1], na.rm=TRUE)
@@ -631,11 +627,11 @@ plotMDS <- function(nr, currentLayout, pageno) {
     currentjob <- nds@jobName
     filterED <- nds@sampleReplicateGroups
     
-    tout <- matrix(1:((currentLayout$nrow-2)*(currentLayout$ncol-2)), ncol=(currentLayout$ncol-2), byrow=TRUE)
+    tout <- matrix(seq_len((currentLayout$nrow-2)*(currentLayout$ncol-2)), ncol=(currentLayout$ncol-2), byrow=TRUE)
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(3, 2, 3, 2), xpd=NA)
     
-    for (i in 1:length(methodlist)) {
+    for (i in seq_len(length(methodlist))) {
         
         datastore <- methodlist[[i]]
         d <- stats::dist(scale(t(stats::na.omit(datastore)), center=TRUE, scale=TRUE))
@@ -665,7 +661,7 @@ plotMeanSD <- function(nr, currentLayout, pageno) {
     
     sdPlots <- list()
     
-    for (i in 1:length(methodlist)) {
+    for (i in seq_len(length(methodlist))) {
         
         datastore <- methodlist[[i]]
         msd <- vsn::meanSdPlot(datastore, xlab="", ylab="", plot=FALSE, na.rm=TRUE)
@@ -742,7 +738,7 @@ plotDendrograms <- function(nr, currentLayout, pageno) {
     currentjob <- nds@jobName
     filterED <- nds@sampleReplicateGroups
     
-    tout <- matrix(1:((currentLayout$nrow-2)*(currentLayout$ncol-2)), ncol=(currentLayout$ncol-2), byrow=TRUE)
+    tout <- matrix(seq_len((currentLayout$nrow - 2) * (currentLayout$ncol - 2)), ncol=(currentLayout$ncol - 2), byrow=TRUE)
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
     
@@ -752,7 +748,7 @@ plotDendrograms <- function(nr, currentLayout, pageno) {
                     "darkgoldenrod4", "coral1")
     colt <- rep(colorVect, ceiling(length(filterED) / length(colorVect)))
     
-    for (j in 1:length(methodlist)) {
+    for (j in seq_len(length(methodlist))) {
         
         dataMatrix <- stats::na.omit(methodlist[[j]])
         colnames(dataMatrix) <- filterED
@@ -823,7 +819,7 @@ plotPHist <- function(nr, currentLayout, pageno) {
     anovaP <- ner@anovaP
     histPlots <- list()
     
-    for (i in 1:length(methodnames)) {
+    for (i in seq_len(length(methodnames))) {
         
         anovaPVals <- anovaP[, i]
         df <- data.frame(anovaPVals=anovaPVals)

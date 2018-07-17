@@ -44,8 +44,8 @@ generateNormalyzerResultsObject <- function(nds) {
 #' @return Normalized and log-transformed matrix
 #' @export
 #' @examples
-#' rawMatrix <- read.csv("data.tsv", sep="\t")
-#' normMatrix <- globalIntensityNormalization(rawMatrix)
+#' data(example_data_only_values)
+#' normMatrix <- globalIntensityNormalization(example_data_only_values)
 globalIntensityNormalization <- function(rawMatrix) {
     
     colSums <- colSums(rawMatrix, na.rm=TRUE)
@@ -54,8 +54,8 @@ globalIntensityNormalization <- function(rawMatrix) {
     
     normFunc <- function(colIndex) { (rawMatrix[rowIndex, colIndex] / colSums[colIndex]) * colSumsMedian }
     
-    for (rowIndex in 1:nrow(rawMatrix)) {
-        normMatrix[rowIndex, ] <- unlist(sapply(1:ncol(rawMatrix), normFunc))
+    for (rowIndex in seq_len(nrow(rawMatrix))) {
+        normMatrix[rowIndex, ] <- vapply(seq_len(ncol(rawMatrix)), normFunc, 0)
     }
     
     normLog2Matrix <- log2(normMatrix)
@@ -69,8 +69,8 @@ globalIntensityNormalization <- function(rawMatrix) {
 #' @return Normalized and log-transformed matrix
 #' @export
 #' @examples
-#' rawMatrix <- read.csv("data.tsv", sep="\t")
-#' normMatrix <- medianNormalization(rawMatrix)
+#' data(example_data_only_values)
+#' normMatrix <- medianNormalization(example_data_only_values)
 medianNormalization <- function(rawMatrix) {
     
     colMedians <- apply(rawMatrix, 2, FUN="median", na.rm=TRUE)
@@ -78,8 +78,8 @@ medianNormalization <- function(rawMatrix) {
     normMatrix <- matrix(nrow=nrow(rawMatrix), ncol=ncol(rawMatrix), byrow=TRUE)
     normFunc <- function(colIndex) { (rawMatrix[rowIndex, colIndex] / colMedians[colIndex]) * meanColMedian }
     
-    for (rowIndex in 1:nrow(rawMatrix)) {
-        normMatrix[rowIndex, ] <- unlist(sapply(1:ncol(rawMatrix), normFunc))
+    for (rowIndex in seq_len(nrow(rawMatrix))) {
+        normMatrix[rowIndex, ] <- unlist(sapply(seq_len(ncol(rawMatrix)), normFunc))
     }
     
     normLog2Matrix <- log2(normMatrix)
@@ -93,8 +93,8 @@ medianNormalization <- function(rawMatrix) {
 #' @return Normalized and log-transformed matrix
 #' @export
 #' @examples
-#' rawMatrix <- read.csv("data.tsv", sep="\t")
-#' normMatrix <- meanNormalization(rawMatrix)
+#' data(example_data_only_values)
+#' normMatrix <- meanNormalization(example_data_only_values)
 meanNormalization <- function(rawMatrix) {
     
     colMeans <- apply(rawMatrix, 2, FUN="mean", na.rm=TRUE)
@@ -103,8 +103,8 @@ meanNormalization <- function(rawMatrix) {
     
     normFunc <- function(colIndex) { (rawMatrix[rowIndex, colIndex] / colMeans[colIndex]) * avgColMean }
     
-    for (rowIndex in 1:nrow(rawMatrix)) {
-        normMatrix[rowIndex, ] <- unlist(sapply(1:ncol(rawMatrix), normFunc))
+    for (rowIndex in seq_len(nrow(rawMatrix))) {
+        normMatrix[rowIndex, ] <- unlist(sapply(seq_len(ncol(rawMatrix)), normFunc))
     }
     
     normLog2Matrix <- log2(normMatrix)
@@ -118,8 +118,8 @@ meanNormalization <- function(rawMatrix) {
 #' @return Normalized matrix
 #' @export
 #' @examples
-#' rawMatrix <- read.csv("data.tsv", sep="\t")
-#' normMatrix <- performVSNNormalization(rawMatrix)
+#' data(example_data_only_values)
+#' normMatrix <- performVSNNormalization(example_data_only_values)
 performVSNNormalization <- function(rawMatrix) {
     
     normMatrix <- suppressMessages(vsn::justvsn(rawMatrix))
@@ -135,8 +135,8 @@ performVSNNormalization <- function(rawMatrix) {
 #' @return Normalized matrix
 #' @export
 #' @examples
-#' rawMatrix <- read.csv("data.tsv", sep="\t")
-#' normMatrix <- performQuantileNormalization(rawMatrix)
+#' data(example_data_only_values)
+#' normMatrix <- performQuantileNormalization(example_data_only_values)
 performQuantileNormalization <- function(rawMatrix) {
     
     log2Matrix <- log2(rawMatrix)
@@ -154,8 +154,8 @@ performQuantileNormalization <- function(rawMatrix) {
 #' @return Normalized matrix
 #' @export
 #' @examples
-#' rawMatrix <- read.csv("data.tsv", sep="\t")
-#' normMatrix <- performSMADNormalization(rawMatrix)
+#' data(example_data_only_values)
+#' normMatrix <- performSMADNormalization(example_data_only_values)
 performSMADNormalization <- function(rawMatrix) {
     
     log2Matrix <- log2(rawMatrix)
@@ -176,8 +176,8 @@ performSMADNormalization <- function(rawMatrix) {
 #' @return Normalized matrix
 #' @export
 #' @examples
-#' rawMatrix <- read.csv("data.tsv", sep="\t")
-#' normMatrix <- performCyclicLoessNormalization(rawMatrix)
+#' data(example_data_only_values)
+#' normMatrix <- performCyclicLoessNormalization(example_data_only_values)
 performCyclicLoessNormalization <- function(rawMatrix) {
     
     log2Matrix <- log2(rawMatrix)
@@ -193,15 +193,15 @@ performCyclicLoessNormalization <- function(rawMatrix) {
 #' @return Normalized matrix
 #' @export
 #' @examples
-#' rawMatrix <- read.csv("data.tsv", sep="\t")
-#' normMatrix <- performGlobalRLRNormalization(rawMatrix)
+#' data(example_data_only_values)
+#' normMatrix <- performGlobalRLRNormalization(example_data_only_values)
 performGlobalRLRNormalization <- function(rawMatrix) {
     
     log2Matrix <- log2(rawMatrix)
     sampleLog2Median <- apply(log2Matrix, 1, "median", na.rm=TRUE)
     isFirstSample <- TRUE
     
-    for (colIndex in 1:ncol(log2Matrix)) {
+    for (colIndex in seq_len(ncol(log2Matrix))) {
         
         lrFit <- MASS::rlm(as.matrix(log2Matrix[, colIndex])~sampleLog2Median, na.action=stats::na.exclude)
         coeffs <- lrFit$coefficients
