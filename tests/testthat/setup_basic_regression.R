@@ -2,5 +2,5 @@ setup({
 
 })
 teardown({
-    # unlink("output/BasicRunWithDE", recursive = T)
+    unlink("output/BasicRunWithDE", recursive = T)
 })
