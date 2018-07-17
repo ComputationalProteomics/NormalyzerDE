@@ -50,7 +50,6 @@ getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSiz
         targetSliceIndices <- which(retentionTimes >= windowStart & retentionTimes < windowEnd)
         
         if (length(targetSliceIndices) == 0) {
-            # print(paste("No values found, skipping window from", windowStart, "to", windowEnd))
             next
         }
         else if (length(targetSliceIndices) < windowMinCount) {
@@ -60,7 +59,6 @@ getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSiz
             normalizationEndRT <- normalizationRange[2]
         }
         
-        # Likely issue: Retrieving wrong values (although the number seems OK)
         normalizationSliceIndices <- which(retentionTimes >= normalizationStartRT & retentionTimes <= normalizationEndRT)
         normalizationRows <- rawMatrix[normalizationSliceIndices,, drop=FALSE]
         processedNormalizationRows <- normMethod(normalizationRows)
@@ -70,8 +68,6 @@ getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSiz
         
         if (length(targetSliceIndices) < length(normalizationSliceIndices)) {
             
-            # THIS WILL ALWAYS RETURN LIST OF NUMBERS CORRESPONDING TO LENGTH OF targetSliceIndices !!!
-            # indicesOfInterest <- which(targetSliceIndices %in% normalizationSliceIndices)
             indicesOfInterest <- which(normalizationSliceIndices %in% targetSliceIndices)
             normalizedTargetRows <- processedNormalizationRows[indicesOfInterest,]
         }
@@ -94,6 +90,7 @@ getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSiz
 #' @param minimumDatapoints Required number of datapoints to fullfil
 #' @param retentionTimes Vector with all retention times
 #' @return Vector with start and end of new RT range
+#' @keywords internal
 getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes) {
     
     sortedRts <- sort(retentionTimes)

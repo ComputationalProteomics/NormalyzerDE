@@ -7,6 +7,7 @@
 #' @param jobname Name of ongoing job.
 #' @param currentLayout Custom viewport layout.
 #' @return None
+#' @keywords internal
 printMeta <- function(plotname, pageno, jobname, currentLayout) {
 
     ncol <- currentLayout$ncol

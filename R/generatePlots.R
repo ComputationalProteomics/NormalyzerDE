@@ -108,6 +108,7 @@ generatePlots <- function(nr, jobdir, plotRows=3, plotCols=4) {
 #' @param jobDir Path to output directory for run.
 #' @param suffix Text to add to output filename.
 #' @return None
+#' @keywords internal
 setupPlotting <- function(currentJob, jobDir, suffix) {
     
     grDevices::palette(c("red", "green", "blue", "orange", "darkgray", 
@@ -132,6 +133,7 @@ setupPlotting <- function(currentJob, jobDir, suffix) {
 #' @param currentjob Name of current run.
 #' @param currentFont Font used for output document.
 #' @return None
+#' @keywords internal
 plotFrontPage <- function(currentjob, currentFont) {
     
     graphics::par(mfrow=c(4, 1))
@@ -146,8 +148,6 @@ plotFrontPage <- function(currentjob, currentFont) {
       version <- "(version not found)"
     }
     
-    # TODO: Re-insert nice illustration (figure?)
-    # boxplot(data4pdftitle, axes=FALSE, col=c("green","green","red","red"))
     la1 <- grid::grid.layout(nrow=7, ncol=1, heights=c(0.2, 1, 0.1, 0.2, 0.1, 0.2, 0.2), default.units=c('null','null'))
     gpfill <- grid::gpar(fill="gray90", lwd=0, lty=0)
     grid::pushViewport(grid::viewport(layout=la1))
@@ -176,6 +176,7 @@ plotFrontPage <- function(currentjob, currentFont) {
 #' @param currentLayout Layout used for document.
 #' @param pageno Current page number.
 #' @return None
+#' @keywords internal
 plotSampleOutlierSummary <- function(nr, currentLayout, pageno) {
     
     nds <- nr@nds
@@ -213,6 +214,7 @@ plotSampleOutlierSummary <- function(nr, currentLayout, pageno) {
 #' @param currentLayout Layout used for document.
 #' @param pageno Current page number.
 #' @return None
+#' @keywords internal
 plotReplicateVariance <- function(nr, currentLayout, pageno) {
     
     nds <- nr@nds
@@ -263,6 +265,7 @@ plotReplicateVariance <- function(nr, currentLayout, pageno) {
 #' @param currentLayout Layout used for document.
 #' @param pageno Current page number.
 #' @return None
+#' @keywords internal
 plotReplicateVarAndStableVariables <- function(nr, currentLayout, pageno) {
     
     nds <- nr@nds
@@ -345,6 +348,7 @@ plotReplicateVarAndStableVariables <- function(nr, currentLayout, pageno) {
 #' @param currentLayout Layout used for document.
 #' @param pageno Current page number.
 #' @return None
+#' @keywords internal
 plotCVvsIntensity <- function(nr, currentLayout, pageno) {
     
     nds <- nr@nds
@@ -402,6 +406,7 @@ plotCVvsIntensity <- function(nr, currentLayout, pageno) {
 #' @param pageno Current page number.
 #'
 #' @return None
+#' @keywords internal
 plotMA <- function(nr, currentLayout, pageno) {
     
     nds <- nr@nds
@@ -414,12 +419,12 @@ plotMA <- function(nr, currentLayout, pageno) {
     Malist <- list()
     for (i in seq_len(length(methodlist))) {
         
-        datastore <- as.matrix(methodlist[[i]])
-        tempcolname <- colnames(datastore)
-        datastore <- datastore[, sampleReplicateGroups == min(sampleReplicateGroups)]
-        datastore1 <- datastore[!is.na(datastore[, 1]), ]
-        avg <- rowMeans(datastore1)
-        fc <- apply(cbind(datastore1[, 1], avg), 1, function(x) x[1] - x[2])
+        methodData <- as.matrix(methodlist[[i]])
+        tempcolname <- colnames(methodData)
+        methodData <- methodData[, sampleReplicateGroups == min(sampleReplicateGroups)]
+        nonNACol1 <- methodData[!is.na(methodData[, 1]), ]
+        avg <- rowMeans(nonNACol1)
+        fc <- apply(cbind(nonNACol1[, 1], avg), 1, function(x) x[1] - x[2])
         df <- as.data.frame(cbind(avg, fc))
         
         Malist[[i]] <- ggplot2::ggplot(df, ggplot2::aes(avg, fc)) + 
@@ -438,12 +443,12 @@ plotMA <- function(nr, currentLayout, pageno) {
 }
 
 #' Scatter plot comparing replicate expression between samples
-#' TODO: Investigate this further
 #' 
 #' @param nr Normalyzer results object.
 #' @param currentLayout Layout used for document.
 #' @param pageno Current page number.
 #' @return None
+#' @keywords internal
 plotScatter <- function(nr, currentLayout, pageno) {
     
     nds <- nr@nds
@@ -456,9 +461,9 @@ plotScatter <- function(nr, currentLayout, pageno) {
     graphics::par(mar=c(2, 2, 2, 1), oma=c(3, 2, 3, 2), xpd=NA)
     
     for (i in seq_len(length(methodlist))) {
-        datastore <- methodlist[[i]]
-        fit <- stats::lm(datastore[, 1]~datastore[, 2])
-        graphics::plot(datastore[, 1], datastore[, 2], xlab="", ylab="", main=methodnames[i], pch=19, cex=0.2)
+        methodData <- methodlist[[i]]
+        fit <- stats::lm(methodData[, 1]~methodData[, 2])
+        graphics::plot(methodData[, 1], methodData[, 2], xlab="", ylab="", main=methodnames[i], pch=19, cex=0.2)
         
         graphics::legend("topleft", bty="n", legend=paste("R2 ", format(summary(fit)$adj.r.squared, digits=2)), cex=0.7)
     }
@@ -468,12 +473,12 @@ plotScatter <- function(nr, currentLayout, pageno) {
 }
 
 #' QQ-plots for variable values
-#' TODO: Investigate this further - What is actually extracted here?
 #' 
 #' @param nr Normalyzer results object.
 #' @param currentLayout Layout used for document.
 #' @param pageno Current page number.
 #' @return None
+#' @keywords internal
 plotQQ <- function(nr, currentLayout, pageno) {
     
     nds <- nr@nds
@@ -484,9 +489,9 @@ plotQQ <- function(nr, currentLayout, pageno) {
     qqlist <- list()
     
     for (i in seq_len(length(methodlist))) {  
-        datastore <- methodlist[[i]]
-        tempcolname <- colnames(datastore)
-        qqlist[[i]] <- ggplot2::qplot(sample=datastore[, 1], na.rm=TRUE) + 
+        methodData <- methodlist[[i]]
+        tempcolname <- colnames(methodData)
+        qqlist[[i]] <- ggplot2::qplot(sample=methodData[, 1], na.rm=TRUE) + 
             ggplot2::labs(x="", y="", title=methodnames[i])
     }
     
@@ -496,12 +501,12 @@ plotQQ <- function(nr, currentLayout, pageno) {
 }
 
 #' Boxplots showing distribution of values after different normalizations
-#' TODO: Investigate this further - What is actually extracted here?
 #' 
 #' @param nr Normalyzer results object.
 #' @param currentLayout Layout used for document.
 #' @param pageno Current page number.
 #' @return None
+#' @keywords internal
 plotBoxPlot <- function(nr, currentLayout, pageno) {
     
     nds <- nr@nds
@@ -546,12 +551,12 @@ plotBoxPlot <- function(nr, currentLayout, pageno) {
 }
 
 #' Boxplots showing relative log expression after normalizations
-#' TODO: Investigate this further - What is actually extracted here?
 #' 
 #' @param nr Normalyzer results object.
 #' @param currentLayout Layout used for document.
 #' @param pageno Current page number.
 #' @return None
+#' @keywords internal
 plotRLE <- function(nr, currentLayout, pageno) {
     
     nds <- nr@nds
@@ -581,6 +586,7 @@ plotRLE <- function(nr, currentLayout, pageno) {
 #' @param currentLayout Layout used for document.
 #' @param pageno Current page number.
 #' @return None
+#' @keywords internal
 plotDensity <- function(nr, currentLayout, pageno) {
     
     nds <- nr@nds
@@ -594,15 +600,15 @@ plotDensity <- function(nr, currentLayout, pageno) {
     
     for (i in seq_len(length(methodlist))) {
         
-        datastore <- methodlist[[i]]
-        tempd <- stats::density(datastore[, 1], na.rm=TRUE)
-        graphics::plot(stats::density(datastore[, 1], na.rm=TRUE), xlab="", 
+        methodData <- methodlist[[i]]
+        tempd <- stats::density(methodData[, 1], na.rm=TRUE)
+        graphics::plot(stats::density(methodData[, 1], na.rm=TRUE), xlab="", 
                        ylab="", ylim=c(min(tempd$y), max(tempd$y) * 1.5), 
                        main=methodnames[i], lty=2, lwd=1, col="darkgray")
         
-        for (j in 2:ncol(datastore)) {
+        for (j in 2:ncol(methodData)) {
             
-            graphics::lines(stats::density(datastore[, j], na.rm=TRUE), 
+            graphics::lines(stats::density(methodData[, j], na.rm=TRUE), 
                             , lty=2, lwd=1, col="darkgray")
         }
     }
@@ -612,13 +618,12 @@ plotDensity <- function(nr, currentLayout, pageno) {
 }
 
 #' MDS plots showing grouping of samples after normalizations
-#' TODO: Investigate this further - What is actually extracted here?
-#' TODO: Do the d-value with number non-missing data vanish?
 #' 
 #' @param nr Normalyzer results object.
 #' @param currentLayout Layout used for document.
 #' @param pageno Current page number.
 #' @return None
+#' @keywords internal
 plotMDS <- function(nr, currentLayout, pageno) {
     
     nds <- nr@nds
@@ -652,6 +657,7 @@ plotMDS <- function(nr, currentLayout, pageno) {
 #' @param currentLayout Layout used for document.
 #' @param pageno Current page number.
 #' @return None
+#' @keywords internal
 plotMeanSD <- function(nr, currentLayout, pageno) {
     
     nds <- nr@nds
@@ -663,8 +669,8 @@ plotMeanSD <- function(nr, currentLayout, pageno) {
     
     for (i in seq_len(length(methodlist))) {
         
-        datastore <- methodlist[[i]]
-        msd <- vsn::meanSdPlot(datastore, xlab="", ylab="", plot=FALSE, na.rm=TRUE)
+        methodData <- methodlist[[i]]
+        msd <- vsn::meanSdPlot(methodData, xlab="", ylab="", plot=FALSE, na.rm=TRUE)
         
         sdPlots[[i]] <- msd$gg + ggplot2::ggtitle(methodnames[i]) +
             ggplot2::theme(legend.position="none", plot.margin=ggplot2::unit(c(1,0,0,0), "cm"))
@@ -676,12 +682,12 @@ plotMeanSD <- function(nr, currentLayout, pageno) {
 }
 
 #' Visualize correlations for plots
-#' TODO: What exactly is going on here?
 #' 
 #' @param nr Normalyzer results object.
 #' @param currentLayout Layout used for document.
 #' @param pageno Current page number.
 #' @return None
+#' @keywords internal
 plotCorrelation <- function(nr, currentLayout, pageno) {
     
     ner <- nr@ner
@@ -724,12 +730,12 @@ plotCorrelation <- function(nr, currentLayout, pageno) {
 }
 
 #' Visualize dendrogram grouping of samples
-#' TODO: Why is the Quantile one crazy? (Numbers instead of replicate names)
 #' 
 #' @param nr Normalyzer results object.
 #' @param currentLayout Layout used for document.
 #' @param pageno Current page number.
 #' @return None
+#' @keywords internal
 plotDendrograms <- function(nr, currentLayout, pageno) {
     
     nds <- nr@nds
@@ -772,6 +778,7 @@ plotDendrograms <- function(nr, currentLayout, pageno) {
 #' @param currentLayout Layout used for document.
 #' @param pageno Current page number.
 #' @return None
+#' @keywords internal
 plotDEPlots <- function(nr, currentLayout, pageno) {
     
     fdrThreshold <- 0.05
@@ -801,7 +808,8 @@ plotDEPlots <- function(nr, currentLayout, pageno) {
                              ))
     
     grid::pushViewport(grid::viewport(layout=currentLayout))
-    printMeta("Differential Expression", pageno, currentjob, currentLayout)
+    printMeta("Differential#' @keywords internal
+ Expression", pageno, currentjob, currentLayout)
 }
 
 #' Generate P-histograms for ANOVA calculated after each normalization
@@ -810,6 +818,7 @@ plotDEPlots <- function(nr, currentLayout, pageno) {
 #' @param currentLayout Layout used for document.
 #' @param pageno Current page number.
 #' @return None
+#' @keywords internal
 plotPHist <- function(nr, currentLayout, pageno) {
     
     nds <- nr@nds

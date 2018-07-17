@@ -2,5 +2,5 @@ setup({
 
 })
 teardown({
-    unlink("output/TrickyRTRun", recursive = T)
+    unlink("output/TrickyRTRun", recursive = TRUE)
 })

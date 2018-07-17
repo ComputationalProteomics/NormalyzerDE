@@ -32,6 +32,7 @@ analyzeNormalizations <- function(nr,
 #' @param nr Normalyzer results object with calculated results.
 #' @param ner Normalyzer evaluation object.
 #' @return Normalyzer evaluation object with attached evaluation results.
+#' @keywords internal
 calculateCorrelations <- function(nr, ner) {
     
     methodlist <- getNormalizationMatrices(nr)
@@ -79,6 +80,7 @@ calculateCorrelations <- function(nr, ner) {
 #' @param categoricalAnova If comparison should be made numerically or groupwise
 #' @param varFilterFrac Filtering high-variance samples
 #' @return Normalization evaluation object
+#' @keywords internal
 setupNormalizationEvaluationObject <- function(nr, 
                                                comparisons=NULL, 
                                                categoricalAnova=FALSE,

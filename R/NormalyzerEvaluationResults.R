@@ -56,6 +56,7 @@ NormalyzerEvaluationResults <- setClass("NormalyzerEvaluationResults",
 #' @param ner NormalyzerDE evaluation object.
 #' @return None
 #' @rdname calculateCV
+#' @keywords internal
 setGeneric(name="calculateCV", 
            function(ner, nr) standardGeneric("calculateCV"))
 
@@ -118,6 +119,7 @@ setMethod("calculateCV", "NormalyzerEvaluationResults",
 #' @param ner NormalyzerDE evaluation object.
 #' @return None
 #' @rdname calculateMAD
+#' @keywords internal
 setGeneric(name="calculateMAD", 
            function(ner, nr) standardGeneric("calculateMAD"))
 
@@ -170,6 +172,7 @@ setMethod("calculateMAD", "NormalyzerEvaluationResults",
 #' @param nr NormalyzerDE results object.
 #' @return None
 #' @rdname calculateAvgVar
+#' @keywords internal
 setGeneric(name="calculateAvgVar", 
            function(ner, nr) standardGeneric("calculateAvgVar"))
 
@@ -231,6 +234,7 @@ setMethod("calculateAvgVar", "NormalyzerEvaluationResults",
 #' @param varFilterFrac Variance filter high variance data
 #' @return None
 #' @rdname calculateSignificanceMeasures
+#' @keywords internal
 setGeneric(name="calculateSignificanceMeasures", 
            function(ner, nr, categoricalAnova, varFilterFrac) standardGeneric("calculateSignificanceMeasures"))
 

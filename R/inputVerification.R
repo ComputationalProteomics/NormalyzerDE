@@ -255,7 +255,6 @@ getReplicateSortedData <- function(rawDataOnly, groups) {
 preprocessData <- function(dataMatrix) {
 
     dataMatrix[which(dataMatrix == 0)] <- NA
-
     dataMatrix
 }
 

@@ -202,6 +202,7 @@ calculateLimmaContrast <- function(compLists, dataMatNAFiltered, naFilterContras
 #' @param splitter String splitting the comparisons into condition levels
 #' @return None
 #' @rdname calculatePairwiseComparisonsLimma
+#' @keywords internal
 setGeneric(name="calculatePairwiseComparisonsLimma", 
            function(nst, comparisons, condCol, splitter="-") standardGeneric("calculatePairwiseComparisonsLimma"))
 

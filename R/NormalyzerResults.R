@@ -65,6 +65,7 @@ NormalyzerResults <- setClass("NormalyzerResults",
 #' @param nr Normalyzer results object.
 #' @return None
 #' @rdname initializeResultsObject
+#' @keywords internal
 setGeneric(name="initializeResultsObject",
            function(nr) standardGeneric("initializeResultsObject"))
 
@@ -126,6 +127,7 @@ setMethod("performNormalizations", "NormalyzerResults",
 #' @param nr Normalyzer results object.
 #' @return None
 #' @rdname basicMetricNormalizations
+#' @keywords internal
 setGeneric(name="basicMetricNormalizations",
            function(nr) standardGeneric("basicMetricNormalizations"))
 
@@ -148,6 +150,7 @@ setMethod("basicMetricNormalizations", "NormalyzerResults",
 #' @param overlapWindows Number of overlapping normalization windows.
 #' @return None
 #' @rdname performRTNormalizations
+#' @keywords internal
 setGeneric(name="performRTNormalizations",
            function(nr, stepSizeMinutes, overlapWindows) standardGeneric("performRTNormalizations"))
 
@@ -174,6 +177,7 @@ setMethod("performRTNormalizations", "NormalyzerResults",
 #' @param nr Normalyzer results object.
 #' @return None
 #' @rdname getUsedMethodNames
+#' @keywords internal
 setGeneric(name="getUsedMethodNames",
            function(nr) standardGeneric("getUsedMethodNames"))
 
@@ -200,6 +204,7 @@ setMethod("getUsedMethodNames", "NormalyzerResults",
 #' @param nr Normalyzer results object.
 #' @return None
 #' @rdname getSlotNameList
+#' @keywords internal
 setGeneric(name="getSlotNameList",
            function(nr) standardGeneric("getSlotNameList"))
 
@@ -225,6 +230,7 @@ setMethod("getSlotNameList", "NormalyzerResults",
 #' @param nr Normalyzer results object.
 #' @return None
 #' @rdname getNormalizationMatrices
+#' @keywords internal
 setGeneric(name="getNormalizationMatrices",
            function(nr) standardGeneric("getNormalizationMatrices"))
 

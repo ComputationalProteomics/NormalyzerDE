@@ -30,12 +30,12 @@ normalizations <- c(
 
 # Read prepared MD5-sums into map
 normalizationsMd5Fp <- "data/basic_regression/md5sums/normalizations.md5"
-normalizationsMd5Df <- read.csv(normalizationsMd5Fp, sep="", col.names=c("md5", "name"), header=F)
+normalizationsMd5Df <- read.csv(normalizationsMd5Fp, sep="", col.names=c("md5", "name"), header=FALSE)
 normalizationsMd5Map <- as.vector(normalizationsMd5Df[["md5"]])
 names(normalizationsMd5Map) <- normalizationsMd5Df[["name"]]
 
 statisticsMd5Fp <- "data/basic_regression/md5sums/statistics.md5"
-statisticsMd5Df <- read.csv(statisticsMd5Fp, sep="", col.names=c("md5", "name"), header=F)
+statisticsMd5Df <- read.csv(statisticsMd5Fp, sep="", col.names=c("md5", "name"), header=FALSE)
 statisticsMd5Map <- as.vector(statisticsMd5Df[["md5"]])
 names(statisticsMd5Map) <- statisticsMd5Df[["name"]]
 

@@ -23,6 +23,7 @@ setupJobDir <- function(jobName, outputDir) {
 #' 
 #' @param targetPath Path where to attempt to create directory
 #' @return None
+#' @keywords internal
 createDirectory <- function(targetPath) {
     
     if (file.exists(targetPath)) {
@@ -43,6 +44,7 @@ createDirectory <- function(targetPath) {
 #' @param start Start-time object
 #' @param end End-time object
 #' @return None
+#' @keywords internal
 elapsedSecondsBetweenSystimes <- function(start, end) {
     
     startSecond <- strtoi(format(start, "%s"))
@@ -71,6 +73,7 @@ getIndexList <- function(targetVector) {
 #' @param replicateHeader Header showing how samples in matrix are replicated.
 #' @param minCount Minimum number of non-NA required for sample.
 #' @return Contrast vector
+#' @keywords internal
 getLowRepCountFilterContrast <- function(dataMatrix, replicateHeader, minCount=1) {
     
     replicatesHaveData <- rep(TRUE, nrow(dataMatrix))
@@ -98,6 +101,7 @@ getLowRepCountFilterContrast <- function(dataMatrix, replicateHeader, minCount=1
 #'  samples.
 #' @param replicateHeader Header showing how samples in matrix are replicated.
 #' @return Contrast vector
+#' @keywords internal
 getLowNALinesContrast <- function(dataMatrix, replicateHeader) {
     
     nbsNAperLine <- rowSums(is.na(dataMatrix))
@@ -116,6 +120,7 @@ getLowNALinesContrast <- function(dataMatrix, replicateHeader) {
 #' @param varFilterFrac Variance filtering fraction.
 #' @param minCount Minimum number of required values present in samples.
 #' @return Contrast vector
+#' @keywords internal
 getRowNAFilterContrast <- function(dataMatrix, 
                                    replicateHeader, 
                                    varFilterFrac=NULL,
@@ -154,6 +159,7 @@ getVarFilteredContrast <- function(logMatrix, varFilterFrac) {
 #' @examples
 #' df <- setupTestData(6, 20)
 #' df <- setupTestData(6, 20, mean=15, sd=1)
+#' @keywords internal
 setupTestData <- function(nSamples, nFeatures, rtMin=40, rtMax=80, mean=20, sd=4) {
 
     featureNames <- paste0("feature_", seq(1, nFeatures))
@@ -176,6 +182,7 @@ setupTestData <- function(nSamples, nFeatures, rtMin=40, rtMax=80, mean=20, sd=4
 #' @export
 #' @examples
 #' df <- setupTestDesign(6)
+#' @keywords internal
 setupTestDesign <- function(nSamples) {
     
     df <- data.frame(sample=rep(NA, nSamples), condition=rep(NA, nSamples))

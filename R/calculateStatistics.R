@@ -116,6 +116,7 @@ generateStatsReport <- function(nst, jobName, jobDir, plotRows=3, plotCols=4) {
 #' @param currentLayout Layout used for document.
 #' @param pageno Current page number.
 #' @return None
+#' @keywords internal
 plotContrastPHists <- function(nst, jobName, currentLayout, pageno) {
 
     contrastPLists <- nst@pairwiseCompsP
