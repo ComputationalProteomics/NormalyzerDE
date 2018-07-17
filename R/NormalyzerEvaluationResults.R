@@ -98,8 +98,11 @@ setMethod("calculateCV", "NormalyzerEvaluationResults",
               }
               
               # Requires log normalized data to be at first index
-              cvPercentVarFromLog <- sapply(seq_len(ncol(avgCVPerNormAndReplicates)), 
-                                            function (sampleIndex) (mean(avgCVPerNormAndReplicates[, sampleIndex]) * 100) / mean(avgCVPerNormAndReplicates[, 1]))
+              cvPercentVarFromLog <- vapply(
+                  seq_len(ncol(avgCVPerNormAndReplicates)), 
+                      function (sampleIndex) (mean(avgCVPerNormAndReplicates[, sampleIndex]) * 100) / mean(avgCVPerNormAndReplicates[, 1]),
+                  0
+              )
               
               ner@avgcvmem <- avgCVPerNormAndReplicates
               ner@avgcvmempdiff <- cvPercentVarFromLog
@@ -151,7 +154,9 @@ setMethod("calculateMAD", "NormalyzerEvaluationResults",
                   avgmadmem[, methodIndex] <- temmadmatsum
               }
               
-              avgmadmempdiff <- sapply(seq_len(ncol(avgmadmem)), function (sampleIndex) (mean(avgmadmem[, sampleIndex]) * 100) / mean(avgmadmem[, 1]))
+              avgmadmempdiff <- vapply(seq_len(ncol(avgmadmem)), 
+                                       function (sampleIndex) (mean(avgmadmem[, sampleIndex]) * 100) / mean(avgmadmem[, 1]),
+                                       0)
               ner@avgmadmem <- avgmadmem
               ner@avgmadmempdiff <- avgmadmempdiff
               
@@ -203,7 +208,12 @@ setMethod("calculateAvgVar", "NormalyzerEvaluationResults",
                   
               }
               
-              avgvarmempdiff <- sapply(seq_len(ncol(avgvarmem)), function (sampleIndex) (mean(avgvarmem[, sampleIndex]) * 100) / mean(avgvarmem[, 1]))
+              avgvarmempdiff <- vapply(
+                  seq_len(ncol(avgvarmem)), 
+                  function (sampleIndex) (mean(avgvarmem[, sampleIndex]) * 100) / mean(avgvarmem[, 1]),
+                  0
+              )
+              
               ner@avgvarmem <- avgvarmem
               ner@avgvarmempdiff <- avgvarmempdiff
               
@@ -283,7 +293,11 @@ setMethod("calculateSignificanceMeasures", "NormalyzerEvaluationResults",
                       nonsiganfdrlistcv[mlist] <- mean(apply(tmpdata, 1, function(sampleIndex) raster::cv(sampleIndex, na.rm=TRUE)), na.rm=TRUE)
                   }
                   
-                  nonsiganfdrlistcvpdiff <- sapply(seq_len(length(nonsiganfdrlistcv)), function(sampleIndex) (nonsiganfdrlistcv[sampleIndex] * 100) / nonsiganfdrlistcv[1])
+                  nonsiganfdrlistcvpdiff <- vapply(
+                      seq_len(length(nonsiganfdrlistcv)), 
+                      function(sampleIndex) (nonsiganfdrlistcv[sampleIndex] * 100) / nonsiganfdrlistcv[1],
+                      0
+                  )
                   ner@nonsiganfdrlist <- nonsiganfdrlistcv
                   ner@nonsiganfdrlistcvpdiff <- nonsiganfdrlistcvpdiff
               }

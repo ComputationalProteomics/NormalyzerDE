@@ -79,7 +79,7 @@ medianNormalization <- function(rawMatrix) {
     normFunc <- function(colIndex) { (rawMatrix[rowIndex, colIndex] / colMedians[colIndex]) * meanColMedian }
     
     for (rowIndex in seq_len(nrow(rawMatrix))) {
-        normMatrix[rowIndex, ] <- unlist(sapply(seq_len(ncol(rawMatrix)), normFunc))
+        normMatrix[rowIndex, ] <- vapply(seq_len(ncol(rawMatrix)), normFunc, 0)
     }
     
     normLog2Matrix <- log2(normMatrix)
@@ -104,7 +104,7 @@ meanNormalization <- function(rawMatrix) {
     normFunc <- function(colIndex) { (rawMatrix[rowIndex, colIndex] / colMeans[colIndex]) * avgColMean }
     
     for (rowIndex in seq_len(nrow(rawMatrix))) {
-        normMatrix[rowIndex, ] <- unlist(sapply(seq_len(ncol(rawMatrix)), normFunc))
+        normMatrix[rowIndex, ] <- vapply(seq_len(ncol(rawMatrix)), normFunc, 0)
     }
     
     normLog2Matrix <- log2(normMatrix)

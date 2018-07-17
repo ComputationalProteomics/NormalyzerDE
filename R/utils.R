@@ -157,7 +157,6 @@ getVarFilteredContrast <- function(logMatrix, varFilterFrac) {
 setupTestData <- function(nSamples, nFeatures, rtMin=40, rtMax=80, mean=20, sd=4) {
 
     featureNames <- paste0("feature_", seq(1, nFeatures))
-    set.seed(37)
     sampleData <- matrix(stats::rnorm(nSamples * nFeatures, mean, sd), nFeatures, nSamples)
     rtData <- stats::runif(nFeatures, rtMin, rtMax)
 

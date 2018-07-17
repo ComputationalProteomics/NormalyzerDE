@@ -1,21 +1,4 @@
 
-legacyNormalyzerToDesign <- function(legacyMatrixFp, sep="\t") {
-
-    fullRawData <- as.matrix(
-           utils::read.table(legacyMatrixFp, header=FALSE, sep="\t",
-                             stringsAsFactors=FALSE, quote="", comment.char=""))
-
-    allAnnotGroups <- as.numeric(fullRawData[1,])
-    parsedDf <- fullRawData[-1:-2,]
-    colnames(parsedDf) <- fullRawData[2,]
-    
-    sampleColumns <- fullRawData[2, allAnnotGroups > 0]
-    
-    designDf <- data.frame(sample=sampleColumns, group=allAnnotGroups[allAnnotGroups > 0], stringsAsFactors=FALSE)
-    designDf
-}
-
-
 proteiosToNormalyzer <- function(proteiosFp, sep="\t") {
     valuesDf <- as.matrix(
         utils::read.table(proteiosFp, 

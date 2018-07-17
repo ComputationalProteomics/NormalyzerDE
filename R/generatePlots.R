@@ -380,7 +380,7 @@ plotCVvsIntensity <- function(nr, currentLayout, pageno) {
         }
     }
     
-    tout <- matrix(1:((currentLayout$nrow-2)*(currentLayout$ncol-2)), ncol=(currentLayout$ncol-2), byrow=TRUE)
+    tout <- matrix(seq_len((currentLayout$nrow - 2) * (currentLayout$ncol - 2)), ncol=(currentLayout$ncol - 2), byrow=TRUE)
     graphics::layout(tout)
     graphics::par(mar=c(4, 4, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
     
@@ -451,7 +451,7 @@ plotScatter <- function(nr, currentLayout, pageno) {
     methodlist <- getNormalizationMatrices(nr)
     currentjob <- nds@jobName
     
-    tout <- matrix(1:((currentLayout$nrow-2)*(currentLayout$ncol-2)), ncol=(currentLayout$ncol-2), byrow=TRUE)
+    tout <- matrix(seq_len((currentLayout$nrow - 2) * (currentLayout$ncol - 2)), ncol=(currentLayout$ncol - 2), byrow=TRUE)
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(3, 2, 3, 2), xpd=NA)
     
@@ -560,7 +560,7 @@ plotRLE <- function(nr, currentLayout, pageno) {
     currentjob <- nds@jobName
     filterED <- nds@sampleReplicateGroups
     
-    tout <- matrix(1:((currentLayout$nrow-2)*(currentLayout$ncol-2)), ncol=(currentLayout$ncol-2), byrow=TRUE)
+    tout <- matrix(seq_len((currentLayout$nrow - 2) * (currentLayout$ncol - 2)), ncol=(currentLayout$ncol - 2), byrow=TRUE)
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(3, 2, 3, 2), xpd=NA)
     
@@ -789,12 +789,12 @@ plotDEPlots <- function(nr, currentLayout, pageno) {
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
     
-    graphics::barplot(sapply(anfdr, function(col) { length(col[col < fdrThreshold]) }), 
+    graphics::barplot(vapply(anfdr, function(col) { length(col[col < fdrThreshold]) }, 0), 
                       main="ANOVA", names=c(methodnames), 
                       border="red", density=20, cex=0.5, cex.axis=0.9, las=2,
                       ylab=paste("No. of Variables with FDR <", fdrThreshold))
     
-    graphics::barplot(sapply(kwfdr, function(col) { length(col[col < fdrThreshold]) }), 
+    graphics::barplot(vapply(kwfdr, function(col) { length(col[col < fdrThreshold]) }, 0), 
                       main="Kruskal Wallis", names=c(methodnames), 
                       border="red", density=20, cex=0.5, cex.axis=0.9, las=2, 
                       ylab=paste("No. of Variables with FDR <", fdrThreshold

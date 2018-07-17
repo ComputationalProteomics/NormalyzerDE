@@ -211,7 +211,7 @@ getCombinedMatrix <- function(mList, combFunc) {
     combinedMatrix <- matrix(0, nrow=rows, ncol=cols)
     
     for (i in seq_len(mLength)) {
-        elemVals <- sapply(mList, function(mat) {mat[[i]]})
+        elemVals <- vapply(mList, function(mat) {mat[[i]]}, 0)
         targetVal <- combFunc(elemVals)
         combinedMatrix[i] <- targetVal
     }

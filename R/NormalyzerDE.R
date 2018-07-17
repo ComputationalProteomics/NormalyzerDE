@@ -12,7 +12,8 @@
 #'  Will otherwise stop with error message if such sample is encountered.
 #' @param sampleAbundThres Threshold for omitting low-abundant
 #'  samples. Is by default set to 15.
-#' @param requireReplicates Require multiple samples per condition to pass input validation.
+#' @param requireReplicates Require multiple samples per condition to pass input 
+#'  validation.
 #' @param normalizeRetentionTime Perform normalizations over retention time.
 #' @param retentionTimeWindow Retention time normalization window size.
 #' @param plotRows Number of plot-rows in output documentation.
@@ -28,9 +29,24 @@
 #' @import MASS limma preprocessCore methods RcmdrMisc
 #' @importFrom raster cv
 #' @examples \dontrun{
-#' normalyzer("data.tsv", "my_jobname", designMatrix="design.tsv", outputDir="path/to/output")
-#' normalyzer("data.tsv", "my_jobname", designMatrix="design.tsv", outputDir="path/to/output", normalizeRetentionTime=TRUE, retentionTimeWindow=2)
-#' normalyzer("data.tsv", "my_jobname", designMatrix="design.tsv", outputDir="path/to/output", inputFormat="maxquantprot")
+#' normalyzer(
+#'     "data.tsv", 
+#'     "my_jobname", 
+#'     designMatrix="design.tsv", 
+#'     outputDir="path/to/output")
+#' normalyzer(
+#'     "data.tsv", 
+#'     "my_jobname", 
+#'     designMatrix="design.tsv", 
+#'     outputDir="path/to/output", 
+#'     normalizeRetentionTime=TRUE, 
+#'     retentionTimeWindow=2)
+#' normalyzer(
+#'     "data.tsv", 
+#'     "my_jobname", 
+#'     designMatrix="design.tsv", 
+#'     outputDir="path/to/output", 
+#'     inputFormat="maxquantprot")
 #' }
 normalyzer <- function(
         jobName,
@@ -70,7 +86,9 @@ normalyzer <- function(
         groupCol=groupColName,
         quiet=quiet)
     jobDir <- setupJobDir(jobName, outputDir)
-    if (!quiet) print(paste("[Step 1/5] Input verified, job directory prepared at:", jobDir))
+    if (!quiet) print(
+        paste("[Step 1/5] Input verified, job directory prepared at:", jobDir)
+    )
     
     if (!quiet) print("[Step 2/5] Performing normalizations")
     normalyzerResultsObject <- normMethods(
@@ -87,26 +105,30 @@ normalyzer <- function(
         if (!quiet) print("[Step 3/5] Done!")
     }
     else {
-        if (!quiet) print("[Step 3/5] skipAnalysis flag set so no analysis performed")
+        if (!quiet) print("[Step 3/5] skipAnalysis flag set so no analysis 
+                          performed")
     }
     
     if (!quiet) print("[Step 4/5] Writing matrices to file")
-    writeNormalizedDatasets(normalyzerResultsObject, 
-                            jobDir)
+    writeNormalizedDatasets(normalyzerResultsObject, jobDir)
     if (!quiet) print("[Step 4/5] Matrices successfully written")
     
     if (!skipAnalysis) {
         if (!quiet) print("[Step 5/5] Generating plots...")
-        generatePlots(normalyzerResultsObject, jobDir, plotRows=plotRows, plotCols=plotCols)
+        generatePlots(normalyzerResultsObject, jobDir, plotRows=plotRows, 
+                      plotCols=plotCols)
         if (!quiet) print("[Step 5/5] Plots successfully generated")
     }
     else {
-        if (!quiet) print("[Step 5/5] skipAnalysis flag set so no plots generated")
+        if (!quiet) print("[Step 5/5] skipAnalysis flag set so no plots 
+                          generated")
     }
     
     endTime <- Sys.time()
     totTime <- difftime(endTime, startTime, units="mins")
-    if (!quiet) print(paste0("All done! Results are stored in: ", jobDir, ", processing time was ", round(totTime, 1), " minutes"))
+    if (!quiet) print(paste0("All done! Results are stored in: ", jobDir, 
+                             ", processing time was ", round(totTime, 1), 
+                             " minutes"))
 }
 
 #' Normalyzer differential expression
@@ -114,21 +136,27 @@ normalyzer <- function(
 #' @param jobName Name of job
 #' @param designPath File path to design matrix
 #' @param dataPath File path to normalized matrix
-#' @param comparisons Character vector containing target contrasts. If comparing condA with condB, then the
-#' vector would be c("condA-condB")
+#' @param comparisons Character vector containing target contrasts. 
+#'   If comparing condA with condB, then the vector would be c("condA-condB")
 #' @param outputDir Path to output directory
-#' @param logTrans Log transform the input (needed if providing non-logged input)
+#' @param logTrans Log transform the input (needed if providing non-logged 
+#'   input)
 #' @param type Type of statistical comparison, "limma" or "welch"
 #' @param sampleCol Design matrix column header for column containing sample IDs
-#' @param condCol Design matrix column header for column containing sample conditions
-#' @param batchCol Provide an optional column for inclusion of possible batch variance in the model
-#' @param techRepCol Design matrix column header for column containing technical replicates
+#' @param condCol Design matrix column header for column containing sample 
+#'   conditions
+#' @param batchCol Provide an optional column for inclusion of possible batch 
+#'   variance in the model
+#' @param techRepCol Design matrix column header for column containing technical 
+#'   replicates
 #' @param leastRepCount Minimum required replicate count
 #' @param quiet Omit status messages printed during run
 #' @return None
 #' @export
 #' @examples \dontrun{
-#' normalyzerDE("results/normalized.tsv", "design.tsv", "my_jobname", c("1-2", "1-4"),  outputDir="path/to/output")
+#' normalyzerDE(
+#'   "results/normalized.tsv", "design.tsv", "my_jobname", 
+#'   c("1-2", "1-4"),  outputDir="path/to/output")
 #' }
 #' @export
 normalyzerDE <- function(jobName, designPath, dataPath, comparisons, outputDir=".", logTrans=FALSE, 
