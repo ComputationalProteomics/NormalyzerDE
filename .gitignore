@@ -7,7 +7,6 @@ R/Rplots.pdf
 .RData
 
 # Folders
-NAMESPACE
 man/
 inst/doc
 tests/testthat/output/
