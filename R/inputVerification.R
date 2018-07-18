@@ -34,6 +34,8 @@ loadData <- function(dataPath, inputFormat="default", zeroToNA=FALSE) {
 #' Load raw design into dataframe
 #' 
 #' @param designPath File path to design matrix.
+#' @param sampleCol Column name for column containing sample names.
+#' @param groupCol Column name for column containing condition levels.
 #' @return designMatrix Design data loaded into data frame
 #' @examples \dontrun{
 #' df <- loadDesign("design.tsv")

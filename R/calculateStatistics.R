@@ -54,6 +54,17 @@ setupStatisticsObject <- function(designDf, fullDf, sampleCol="sample",
     nst
 }
 
+#' Generate annotated dataframe from statistics object
+#' 
+#' @param nst NormalyzerDE statistics object.
+#' @return outDf Annotated statistics matrix
+#' @export
+#' @examples
+#' data(example_stat_data)
+#' data(example_design)
+#' statObj <- setupStatisticsObject(example_design, example_stat_data)
+#' statObj <- calculateContrasts(statObj, comparisons=c("1-2", "2-3"), condCol="group", type="limma")
+#' annotDf <- generateAnnotatedMatrix(statObj)
 generateAnnotatedMatrix <- function(nst) {
     
     pairwiseHead <- paste(names(nst@pairwiseCompsP), "PValue", sep="_")

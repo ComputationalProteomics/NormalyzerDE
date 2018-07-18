@@ -33,7 +33,7 @@ BiocManager::install("NormalyzerDE")
 
 ## Citing
 
-Mention how to cite.
+Willforss, J., Chawade, A., Levander, F. Submitted article.
 
 ## Input format
 
@@ -85,11 +85,12 @@ compare separated by a dash ("-").
 
 ```{r}
 statOutDir <- tempdir()
+normMatrixPath <- paste(outDir, "vignette_run/Loess-G-normalized.txt", sep="/")
 normalyzerDE("vignette_run", 
              "design.tsv", 
-             "testout/vignette_run/Loess-G-normalized.txt", 
+             normMatrixPath,
              outputDir=statOutDir, 
-             comparisons=c("1-2", "1-3", "1-4"))
+             comparisons=c("1-2", "1-3"))
 ```
 
 # Retention time normalization
@@ -186,7 +187,7 @@ dim(layeredRtNormMat)
 head(layeredRtNormMat, 1)
 ```
 
-# Stepwise processing
+# Stepwise processing (normalization part)
 
 NormalyzerDE consists of a set of steps. The workflow can be run as a whole, or step by step.
 
@@ -236,15 +237,42 @@ generatePlots(normResultsWithEval, jobDir)
 
 After this evaluation of normalizations and progression to statistics follows as described previously in this report.
 
+# Stepwise processing (differential expression analysis part)
 
+## Step 1: Setup folders and data matrices
 
+For continued processing you select the matrix containing the normalized data
+from the best performing normalization. The design matrix is the same as for
+the normalization step.
 
+```{r}
+bestNormMatPath <- paste(jobDir, "RT-Loess-normalized.txt", sep="/")
+fullDf <- utils::read.csv(bestNormMatPath, sep="\t")
+designDf <- utils::read.csv("design.tsv", sep="\t")
+nst <- setupStatisticsObject(designDf, fullDf)
+```
 
+## Step 2: Calculate statistics
 
+Now we are ready to perform the contrasts. Contrasts are provided as a vector
+in the format `c("condA-condB", "condB-condC")`, where `condX` is the group levels.
 
+```{r}
+comparisons <- c("1-2", "2-3")
+nst <- calculateContrasts(nst, comparisons, condCol="group")
+```
 
+## Step 3: Generate final matrix and output
 
+Finally we generate a table containing the statistics results for each feature
+and write it to file together with an evaluation report containing P-value histograms
+for each comparison.
 
+```{r}
+annotDf <- generateAnnotatedMatrix(nst)
+utils::write.table(annotDf, file=paste(jobDir, "stat_table.tsv", sep="/"))
+generateStatsReport(nst, "Vignette stats", jobDir)
+```
 
 
 
