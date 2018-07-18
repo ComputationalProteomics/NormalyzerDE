@@ -3,7 +3,8 @@ title: "Evaluation and statistics of expression data using NormalyzerDE"
 author: "Jakob Willforss, Aakash Chawade and Fredrik Levander"
 date: "`r format(Sys.Date(), '%m/%d/%Y')`"
 abstract: >
-    When working with omics data you will encounter technical biases. These can often in part be remedied by using appropriate normalization approach. Normalyzer helps this process by both performing a number of popular normalizations as well as a newly implemented approach to counter retention-time dependent bias. Furthermore, NormalyzerDE provides means to easily perform differential expression statistics using either the empirical Bayes Limma approach or ANOVA. Evaluation visualizations are available for both normalization performance measures and as P-value histograms for the subsequent differential expression analysis comparisons. 
+    Technical biases reduces the ability to see the desired biological changes when performing omics experiments. There are numerous normalization techniques available to counter the biases, but to find the optimal normalization is often a non-trivial task. Furthermore there are limited tools available to counter biases such as retention-time based biases caused by fluctuating electrospray intensities. NormalyzerDE helps this process by performing a wide range of normalization techniques including a general and openly available approach to countering retention-time based biases. More importantly it calculates and visualizes a number of performance measures to guide the users selection of normalization technique. 
+    Furthermore, NormalyzerDE provides means to easily perform differential expression statistics using either the empirical Bayes Limma approach or ANOVA. Evaluation visualizations are available for both normalization performance measures and as P-value histograms for the subsequent differential expression analysis comparisons. 
     NormalyzerDE package version: `r packageVersion("NormalyzerDE")`
 output: 
   BiocStyle::pdf_document
@@ -21,7 +22,7 @@ vignette: >
 
 # Installation
 
-Installation should preferably be performed using BiocManager:
+Installation is preferably performed using BiocManager (requires R version 3.5):
 
 ```
 install.packages("BiocManager")
@@ -67,8 +68,9 @@ a path to a design matrix and finally a path to an output directory.
 
 ```{r}
 library(NormalyzerDE)
+outDir <- tempdir()
 normalyzer(jobName="vignette_run", designPath="design.tsv", dataPath="data.tsv", 
-           outputDir="testout")
+           outputDir=outDir)
 ```
 
 ## Running NormalyzerDE statistical comparisons
@@ -82,10 +84,11 @@ for which you want to calculate contrasts. They are provided as a character vect
 compare separated by a dash ("-").
 
 ```{r}
+statOutDir <- tempdir()
 normalyzerDE("vignette_run", 
              "design.tsv", 
              "testout/vignette_run/Loess-G-normalized.txt", 
-             outputDir="testoutstat", 
+             outputDir=statOutDir, 
              comparisons=c("1-2", "1-3", "1-4"))
 ```
 
@@ -134,7 +137,7 @@ print("Number of retention times")
 length(retentionTimes)
 ```
 
-The normalization function is expected to take a raw intensity matrix (?) and return log transformed values. We borrow the function for Loess normalization from NormalyzerDE. As long as it follow the same input/output format it could be replaced with a custom function.
+The normalization function is expected to take a raw intensity matrix and return log transformed values. We borrow the wrapper function for Loess normalization from NormalyzerDE. It can be replaced with any custom function as long as the wrapper has the same input/output format.
 
 ```{r}
 performCyclicLoessNormalization <- function(rawMatrix) {
@@ -183,12 +186,9 @@ dim(layeredRtNormMat)
 head(layeredRtNormMat, 1)
 ```
 
-## Defining a wrapper
-
 # Stepwise processing
 
-NormalyzerDE consists of a set of steps. You can influence the order of this processing using options (X and X), but they can also be called directly from R.
-#' data(example_design)
+NormalyzerDE consists of a set of steps. The workflow can be run as a whole, or step by step.
 
 ## Step 1: Loading data
 
@@ -222,7 +222,7 @@ normResultsWithEval <- analyzeNormalizations(normResults)
 Generated normalization matrices are written to the provided folder.
 
 ```{r}
-jobDir <- setupJobDir("vignette_run", ".")
+jobDir <- setupJobDir("vignette_run", tempdir())
 writeNormalizedDatasets(normResultsWithEval, jobDir)
 ```
 

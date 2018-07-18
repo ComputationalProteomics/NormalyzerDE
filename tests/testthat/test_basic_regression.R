@@ -2,9 +2,11 @@ context("Basic run including DE evaluation")
 
 library(NormalyzerDE)
 
+tempDir <- tempdir()
+
 evalName <- "RegressionTest"
 deName <- "RegressionTestDE"
-outBase <- "output/BasicRunWithDE"
+outBase <- paste0(tempDir, "/output/BasicRunWithDE")
 outEvalBase <- outBase
 outDEBase <- paste(outBase, deName, sep="/")
 

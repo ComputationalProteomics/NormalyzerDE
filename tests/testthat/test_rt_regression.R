@@ -2,10 +2,12 @@ context("RT run evaluation")
 
 library(NormalyzerDE)
 
+tempDir <- tempdir()
+
 runName <- "TrickyRTRun"
 runNameDE <- "TrickyRTRunDE"
 
-outBase <- "output/TrickyRTRun"
+outBase <- paste0(tempDir, "/output/TrickyRTRun")
 
 designPath <- "data/rt_regression/tricky_data_design.tsv"
 dataPath <- "data/rt_regression/tricky_data_data_200.tsv"
