@@ -7,7 +7,7 @@ R/Rplots.pdf
 .RData
 
 # Folders
-man/
+tests/
 inst/doc
 tests/testthat/output/
 
