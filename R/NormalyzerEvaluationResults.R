@@ -307,4 +307,31 @@ setMethod("calculateSignificanceMeasures", "NormalyzerEvaluationResults",
           }
 )
 
+#' Pearson and Spearman correlation calculations for methods and samples
+#' Calculates internal correlation per condition
+#' 
+#' @param nr Normalyzer results object with calculated results.
+#' @param ner Normalyzer evaluation object.
+#' @return ner Normalyzer evaluation object with attached evaluation results.
+#' @keywords internal
+
+setGeneric(name="calculateCorrelations", 
+           function(ner, nr) standardGeneric("calculateCorrelations"))
+
+#' @rdname calculateAvgVar
+setMethod("calculateCorrelations", "NormalyzerEvaluationResults",
+          function(ner, nr) {
+
+            methodlist <- getNormalizationMatrices(nr)
+            allReplicateGroups <- nr@nds@sampleReplicateGroups
+            sampleGroupsWithReplicates <- nr@nds@samplesGroupsWithReplicates
+            
+            ner@avgpercorsum <- calculateSummarizedCorrelationVector(
+                methodlist, allReplicateGroups, sampleGroupsWithReplicates, "pearson")
+            ner@avgspecorsum <- calculateSummarizedCorrelationVector(
+                methodlist, allReplicateGroups, sampleGroupsWithReplicates, "spearman")
+            ner
+          }
+)
+
 

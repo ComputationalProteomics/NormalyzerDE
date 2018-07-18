@@ -27,50 +27,63 @@ analyzeNormalizations <- function(nr, comparisons=NULL, categoricalAnova=FALSE) 
 #' 
 #' @param nr Normalyzer results object with calculated results.
 #' @param ner Normalyzer evaluation object.
-#' @return Normalyzer evaluation object with attached evaluation results.
+#' @return ner Normalyzer evaluation object with attached evaluation results.
 #' @keywords internal
 calculateCorrelations <- function(nr, ner) {
     
     methodlist <- getNormalizationMatrices(nr)
     allReplicateGroups <- nr@nds@sampleReplicateGroups
+    sampleGroupsWithReplicates <- nr@nds@samplesGroupsWithReplicates
 
-    avgpercorsum <- list()
-    avgspecorsum <- list()
+    ner@avgpercorsum <- calculateSummarizedCorrelationVector(
+        methodlist, allReplicateGroups, sampleGroupsWithReplicates, "pearson")
+    ner@avgspecorsum <- calculateSummarizedCorrelationVector(
+        methodlist, allReplicateGroups, sampleGroupsWithReplicates, "spearman")
+    ner
+}
 
+calculateSummarizedCorrelationVector <- function(
+    methodlist, allReplicateGroups, sampleGroupsWithReplicates, corrType) {
+    
+    validCorrTypes <- c("pearson", "spearman")
+    if (!corrType %in% validCorrTypes) {
+        stop(paste(
+            "Unknown correlation type:", 
+            corrType, 
+            "valid are:", 
+            paste(validCorrTypes, collapse=", ")))
+    }
+    
+    avgCorSum <- list()
+    
     for (i in seq_len(length(methodlist))) {
         
-        pearCorSum <- vector()
-        spearCorSum <- vector()
+        corSum <- vector()
         methodData <- as.matrix(methodlist[[i]])
-        sampleGroupsWithReplicates <- nr@nds@samplesGroupsWithReplicates
-
+        
         for (groupNbr in seq_len(length(sampleGroupsWithReplicates))) {
             
             specificReplicateVals <- as.matrix(
                 methodData[, which(allReplicateGroups == sampleGroupsWithReplicates[groupNbr])])
             class(specificReplicateVals) <- "numeric"
-            pearCor <- stats::cor(
+            corVals <- stats::cor(
                 specificReplicateVals , 
                 use="pairwise.complete.obs", 
-                method="pearson")
-            spearCor <- stats::cor(
-                specificReplicateVals , 
-                use="pairwise.complete.obs", 
-                method="spearman")
+                method=corrType)
+            # spearCor <- stats::cor(
+            #     specificReplicateVals , 
+            #     use="pairwise.complete.obs", 
+            #     method="spearman")
             
             for (index in seq_len(ncol(specificReplicateVals) - 1)) {
-                pearCorSum <- c(pearCorSum, pearCor[index, -(seq_len(index))])
-                spearCorSum <- c(spearCorSum, spearCor[index, -(seq_len(index))])
+                corSum <- c(corSum, corVals[index, -(seq_len(index))])
             }
         }
         
-        avgpercorsum[[i]] <- pearCorSum
-        avgspecorsum[[i]] <- spearCorSum
+        avgCorSum[[i]] <- corSum
     }
     
-    ner@avgpercorsum <- avgpercorsum
-    ner@avgspecorsum <- avgspecorsum
-    ner
+    avgCorSum
 }
 
 
