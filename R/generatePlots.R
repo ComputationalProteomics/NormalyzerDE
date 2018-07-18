@@ -221,37 +221,38 @@ plotReplicateVariance <- function(nr, currentLayout, pageno) {
     currentjob <- nds@jobName
     
     ner <- nr@ner
-    avgcvmem <- ner@avgcvmem
-    avgmadmem <- ner@avgmadmem
-    avgvarmem <- ner@avgvarmem
+    avgCVMem <- ner@avgcvmem
+    avgMADMem <- ner@avgmadmem
+    avgVarMem <- ner@avgvarmem
     
     tout <- rbind(c(1, 2, 3), c(4))
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
     
-    graphics::boxplot(avgcvmem, main="PCV - Intragroup", names=c(methodnames), 
-                      border="red", density=20, cex=0.3, cex.axis=0.9, las=2, 
-                      frame.plot=FALSE)
+    graphics::boxplot(
+        avgCVMem, main="PCV - Intragroup", names=c(methodnames), border="red", 
+        density=20, cex=0.3, cex.axis=0.9, las=2, frame.plot=FALSE)
     
-    graphics::stripchart(as.data.frame(avgcvmem), 
-                         vertical=TRUE, cex=0.4, las=2, 
-                         pch=20, add=TRUE, col="darkgray")
+    graphics::stripchart(
+        as.data.frame(avgCVMem), vertical=TRUE, cex=0.4, las=2, 
+        pch=20, add=TRUE, col="darkgray")
     
-    graphics::boxplot(avgmadmem, main="PMAD - Intragroup", names=c(methodnames), 
-                      border="red", density=20, cex=0.3, cex.axis=0.9, las=2, 
-                      frame.plot=FALSE)
+    graphics::boxplot(
+        avgMADMem , main="PMAD - Intragroup", names=c(methodnames), 
+        border="red", density=20, cex=0.3, cex.axis=0.9, las=2, 
+        frame.plot=FALSE)
     
-    graphics::stripchart(as.data.frame(avgmadmem), 
-                         vertical=TRUE, cex=0.4, las=2, 
-                         pch=20, add=TRUE, col="darkgray")
+    graphics::stripchart(
+        as.data.frame(avgMADMem ), vertical=TRUE, cex=0.4, las=2, pch=20, 
+        add=TRUE, col="darkgray")
     
-    graphics::boxplot(avgvarmem, main="PEV - Intragroup", names=c(methodnames), 
-                      border="red", density=20, cex=0.3, cex.axis=0.9, las=2, 
-                      frame.plot=FALSE)
+    graphics::boxplot(
+        avgVarMem, main="PEV - Intragroup", names=c(methodnames), border="red", 
+        density=20, cex=0.3, cex.axis=0.9, las=2, frame.plot=FALSE)
     
-    graphics::stripchart(as.data.frame(avgvarmem), 
-                         vertical=TRUE, cex=0.4, las=2, 
-                         pch=20, add=TRUE, col="darkgray")
+    graphics::stripchart(
+        as.data.frame(avgVarMem), vertical=TRUE, cex=0.4, las=2, pch=20, 
+        add=TRUE, col="darkgray")
     
     grid::pushViewport(grid::viewport(layout=currentLayout))
     printMeta("Replicate variation", pageno, currentjob, currentLayout)

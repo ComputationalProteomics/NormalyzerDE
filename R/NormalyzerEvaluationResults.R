@@ -314,7 +314,6 @@ setMethod("calculateSignificanceMeasures", "NormalyzerEvaluationResults",
 #' @param ner Normalyzer evaluation object.
 #' @return ner Normalyzer evaluation object with attached evaluation results.
 #' @keywords internal
-
 setGeneric(name="calculateCorrelations", 
            function(ner, nr) standardGeneric("calculateCorrelations"))
 
