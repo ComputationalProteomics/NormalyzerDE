@@ -95,7 +95,6 @@ generatePlots <- function(nr, jobdir, plotRows=3, plotCols=4) {
     if (!isLimitedRun) {
         # DE plots
         pageno <- pageno + 1
-        # plotDEPlots(nr, currentLayout, pageno)
         plotPHist(nr, currentLayout, pageno)
     }
     
@@ -769,46 +768,6 @@ plotDendrograms <- function(nr, currentLayout, pageno) {
     printMeta(paste("Dendrograms - Built from", ncol(scaledTransposedMatrix), 
                     "variables containing non-missing data", sep=" "), 
               pageno, currentjob, currentLayout)
-}
-
-#' Visualize number of DE variables for ANOVA and Kruskal Wallis
-#' 
-#' @param nr Normalyzer results object.
-#' @param currentLayout Layout used for document.
-#' @param pageno Current page number.
-#' @return None
-#' @keywords internal
-plotDEPlots <- function(nr, currentLayout, pageno) {
-    
-    fdrThreshold <- 0.05
-    
-    nds <- nr@nds
-    methodnames <- getUsedMethodNames(nr)
-    methodlist <- getNormalizationMatrices(nr)
-    currentjob <- nds@jobName
-    
-    ner <- nr@ner
-    anfdr <- ner@anfdr
-    kwfdr <- ner@kwfdr
-    
-    tout <- rbind(c(1, 2, 3), c(4))
-    graphics::layout(tout)
-    graphics::par(mar=c(2, 2, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
-    
-    graphics::barplot(vapply(anfdr, function(col) { length(col[col < fdrThreshold]) }, 0), 
-                      main="ANOVA", names=c(methodnames), 
-                      border="red", density=20, cex=0.5, cex.axis=0.9, las=2,
-                      ylab=paste("No. of Variables with FDR <", fdrThreshold))
-    
-    graphics::barplot(vapply(kwfdr, function(col) { length(col[col < fdrThreshold]) }, 0), 
-                      main="Kruskal Wallis", names=c(methodnames), 
-                      border="red", density=20, cex=0.5, cex.axis=0.9, las=2, 
-                      ylab=paste("No. of Variables with FDR <", fdrThreshold
-                             ))
-    
-    grid::pushViewport(grid::viewport(layout=currentLayout))
-    printMeta("Differential#' @keywords internal
- Expression", pageno, currentjob, currentLayout)
 }
 
 #' Generate P-histograms for ANOVA calculated after each normalization

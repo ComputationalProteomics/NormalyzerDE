@@ -15,9 +15,7 @@
 #' @slot nonsiganfdrlistcvpdiff Coefficient of variance for least variable
 #'  entries
 #' @slot anfdr ANOVA FDR values
-#' @slot kwfdr Kruskal-Wallis FDR values
 #' @slot anovaFDRWithNA ANOVA FDR with NA when not applicable
-#' @slot krusWalFDRWithNA KruskalWallis FDR with NA when not applicable
 #' @slot anovaP ANOVA calculated p-values
 #' @slot avgpercorsum Within group Pearson correlations
 #' @slot avgspecorsum Within group Spearman correlations
@@ -38,9 +36,7 @@ NormalyzerEvaluationResults <- setClass("NormalyzerEvaluationResults",
                                                nonsiganfdrlistcvpdiff = "numeric",
                                                
                                                anfdr = "list",
-                                               kwfdr = "list",
                                                anovaFDRWithNA = "matrix",
-                                               krusWalFDRWithNA = "matrix",
                                                anovaP = "matrix",
                                                
                                                avgpercorsum = "list",
@@ -231,18 +227,15 @@ setMethod("calculateAvgVar", "NormalyzerEvaluationResults",
 #' @param ner NormalyzerDE evaluation object.
 #' @param nr Normalyzer results object.
 #' @param categoricalAnova Categorical groupwise comparison instead of numeric
-#' @param varFilterFrac Variance filter high variance data
 #' @return None
 #' @rdname calculateSignificanceMeasures
 #' @keywords internal
 setGeneric(name="calculateSignificanceMeasures", 
-           function(ner, nr, categoricalAnova, varFilterFrac) standardGeneric("calculateSignificanceMeasures"))
+           function(ner, nr, categoricalAnova) standardGeneric("calculateSignificanceMeasures"))
 
 #' @rdname calculateSignificanceMeasures
 setMethod("calculateSignificanceMeasures", "NormalyzerEvaluationResults",
-          function(ner, nr, 
-                   categoricalAnova=FALSE, 
-                   varFilterFrac=NULL) {
+          function(ner, nr, categoricalAnova=FALSE) {
               
               sampleReplicateGroups <- nr@nds@sampleReplicateGroups
               methodCount <- length(getUsedMethodNames(nr))
@@ -251,15 +244,14 @@ setMethod("calculateSignificanceMeasures", "NormalyzerEvaluationResults",
               anovaPValsWithNA <- matrix(NA, ncol=methodCount, nrow=nrow(methodList[[1]]))
               anovaFDRs <- list()
               anovaFDRsWithNA <- matrix(NA, ncol=methodCount, nrow=nrow(methodList[[1]]))
-              krusValFDRs <- list()
-              krusWalFDRsWithNA <- matrix(NA, ncol=methodCount, nrow=nrow(methodList[[1]]))
-              
+
               for (methodIndex in seq_len(methodCount)) {
                   
                   processedDataMatrix <- methodList[[methodIndex]]
-                  naFilterContrast <- getRowNAFilterContrast(processedDataMatrix,
-                                                             sampleReplicateGroups,
-                                                             varFilterFrac=varFilterFrac)
+                  naFilterContrast <- getRowNAFilterContrast(
+                      processedDataMatrix,
+                      sampleReplicateGroups,
+                      2)
                   
                   dataStoreReplicateNAFiltered <- processedDataMatrix[naFilterContrast,]
 
@@ -270,19 +262,16 @@ setMethod("calculateSignificanceMeasures", "NormalyzerEvaluationResults",
                       testLevels <- sampleReplicateGroups
                   }
                   
-                  anovaPValCol <- apply(dataStoreReplicateNAFiltered, 1, 
-                                        function(sampleIndex) summary(stats::aov(unlist(sampleIndex)~testLevels))[[1]][[5]][1])
-                  krusWalPValCol <- apply(dataStoreReplicateNAFiltered, 1, 
-                                          function(sampleIndex) stats::kruskal.test(unlist(sampleIndex)~testLevels, na.action="na.exclude")[[3]][1])
+                  anovaPValCol <- apply(
+                      dataStoreReplicateNAFiltered, 
+                      1, 
+                      function(sampleIndex) 
+                          summary(stats::aov(unlist(sampleIndex)~testLevels))[[1]][[5]][1])
                   
                   anovaPValsWithNA[naFilterContrast, methodIndex] <- anovaPValCol
                   anovaFDRCol <- stats::p.adjust(anovaPValCol, method="BH")
                   anovaFDRs[[methodIndex]] <- anovaFDRCol
                   anovaFDRsWithNA[naFilterContrast, methodIndex] <- anovaFDRCol
-                  
-                  krusWalFDRCol <- stats::p.adjust(krusWalPValCol, method="BH")
-                  krusValFDRs[[methodIndex]] <- krusWalFDRCol
-                  krusWalFDRsWithNA[naFilterContrast, methodIndex] <- krusWalFDRCol
               }
               
               # Finds to 5% of least DE variables in log2 data based on ANOVA
@@ -312,9 +301,7 @@ setMethod("calculateSignificanceMeasures", "NormalyzerEvaluationResults",
               ner@anovaP <- anovaPValsWithNA
               
               ner@anfdr <- anovaFDRs
-              ner@kwfdr <- krusValFDRs
               ner@anovaFDRWithNA = anovaFDRsWithNA
-              ner@krusWalFDRWithNA = krusWalFDRsWithNA
 
               ner
           }

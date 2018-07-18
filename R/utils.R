@@ -54,6 +54,12 @@ elapsedSecondsBetweenSystimes <- function(start, end) {
 }
 
 
+#' Return list containing vector positions of values in string
+#' 
+#' @param targetVector 
+#' @return indexList List where key is condition level and values are indices
+#'   for the condition
+#' @keywords internal
 getIndexList <- function(targetVector) {
     
     indexList <- list()
@@ -117,33 +123,19 @@ getLowNALinesContrast <- function(dataMatrix, replicateHeader) {
 #' @param dataMatrix Matrix with expression values for entities in replicate 
 #'  samples.
 #' @param replicateHeader Header showing how samples in matrix are replicated.
-#' @param varFilterFrac Variance filtering fraction.
 #' @param minCount Minimum number of required values present in samples.
 #' @return Contrast vector
 #' @keywords internal
 getRowNAFilterContrast <- function(dataMatrix, 
                                    replicateHeader, 
-                                   varFilterFrac=NULL,
                                    minCount=1) {
     
-    lowNALinesContrast <- getLowNALinesContrast(dataMatrix, replicateHeader)
+    #lowNALinesContrast <- getLowNALinesContrast(dataMatrix, replicateHeader)
     samplesHaveValuesContrast <- getLowRepCountFilterContrast(dataMatrix, replicateHeader, minCount=minCount)
-    
-    if (!is.null(varFilterFrac)) {
-        samplesPassVarThres <- getVarFilteredContrast(dataMatrix, varFilterFrac)
-    }
-    else {
-        samplesPassVarThres <- rep(TRUE, nrow(dataMatrix))
-    }
-    
-    return (lowNALinesContrast & samplesHaveValuesContrast & samplesPassVarThres)
-}
+    samplesPassVarThres <- rep(TRUE, nrow(dataMatrix))
 
-getVarFilteredContrast <- function(logMatrix, varFilterFrac) {
-  
-    featureVars <- apply(logMatrix, 1, function(x) {stats::var(x, na.rm=TRUE)})
-    fracThres <- sort(featureVars)[(length(featureVars) - 1)  * varFilterFrac + 1]
-    featureVars > fracThres
+    return (samplesHaveValuesContrast & samplesPassVarThres)
+    #return (lowNALinesContrast & samplesHaveValuesContrast & samplesPassVarThres)
 }
 
 #' Generate a random test dataset with features, sample values and retention times
