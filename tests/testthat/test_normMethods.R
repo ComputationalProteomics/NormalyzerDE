@@ -239,7 +239,7 @@ test_that("performGlobalRLRNormalization", {
             expect_colsum == out_colsum
         ),
         is_true()
-    )
+   )
 })
 
 test_that("performNoNormalization", {

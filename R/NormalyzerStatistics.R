@@ -4,11 +4,13 @@
 #' @slot dataMat Matrix containing (normalized) expression data
 #' @slot filteredDataMat Filtered matrix with low-count rows removed
 #' @slot designDf Data frame containing design conditions
-#' @slot filteringContrast Vector showing which entries are filtered (due to low count)
+#' @slot filteringContrast Vector showing which entries are filtered 
+#'   (due to low count)
 #' @slot pairwiseCompsP List with P-values for pairwise comparisons
 #' @slot pairwiseCompsFdr List with FDR-values for pairwise comparisons
 #' @slot pairwiseCompsAve List with average expression values
-#' @slot pairwiseCompsFold List with log2 fold-change values for pairwise comparisons
+#' @slot pairwiseCompsFold List with log2 fold-change values for pairwise 
+#'   comparisons
 #' @export
 NormalyzerStatistics <- setClass("NormalyzerStatistics",
                                  representation(
@@ -41,12 +43,14 @@ NormalyzerStatistics <- setClass("NormalyzerStatistics",
 #' @rdname calculateContrasts
 #' @export
 setGeneric(name="calculateContrasts", 
-           function(nst, comparisons, condCol, batchCol=NULL, splitter="-", type="limma") standardGeneric("calculateContrasts"))
+           function(nst, comparisons, condCol, batchCol=NULL, splitter="-", 
+                    type="limma") standardGeneric("calculateContrasts"))
 
 #' @rdname calculateContrasts
 setMethod(f="calculateContrasts", 
           signature=c("NormalyzerStatistics"),
-          function(nst, comparisons, condCol, batchCol=NULL, splitter="-", type="limma") {
+          function(nst, comparisons, condCol, batchCol=NULL, splitter="-", 
+                   type="limma") {
               
               sampleReplicateGroups <- nst@designDf[, condCol]
               sampleReplicateGroupsStrings <- as.character(nst@designDf[, condCol])
@@ -62,7 +66,10 @@ setMethod(f="calculateContrasts",
               }
               else {
                   if (type != "limma") {
-                      stop(paste("Batch compensation only compatible with Limma, got:", type))
+                      stop(paste(
+                          "Batch compensation only compatible with Limma, got:", 
+                          type
+                          ))
                   }
                   Variable <- as.factor(nst@designDf[, condCol])
                   Batch <- as.factor(nst@designDf[, batchCol])
@@ -78,28 +85,51 @@ setMethod(f="calculateContrasts",
                   compSplit <- unlist(strsplit(comp, splitter))
                   
                   if (length(compSplit) != 2) {
-                      stop(paste("Comparison should be in format cond1-cond2, here the split product was:", paste(compSplit, collapse=" ")))
+                      stop(paste("Comparison should be in format cond1-cond2, 
+                                 here the split product was:", 
+                                 paste(compSplit, collapse=" ")))
                   }
                   
                   level1 <- compSplit[1]
                   level2 <- compSplit[2]
                   
                   if (length(sampleReplicateGroupsStrings %in% level1) == 0) {
-                      stop(paste("No samples matching condition", level1, "found in conditions:", paste(sampleReplicateGroupsStrings, collapse=" ")))
+                      stop(paste(
+                           "No samples matching condition", 
+                           level1, 
+                           "found in conditions:", 
+                           paste(sampleReplicateGroupsStrings, collapse=" ")))
                   }
                   
                   if (length(sampleReplicateGroupsStrings %in% level2) == 0) {
-                      stop(paste("No samples matching condition", level2, "found in conditions:", paste(sampleReplicateGroupsStrings, collapse=" ")))
+                      stop(paste(
+                          "No samples matching condition", 
+                          level2, "found in conditions:", 
+                          paste(sampleReplicateGroupsStrings, collapse=" ")))
                   }
                   
                   s1cols <- which(sampleReplicateGroupsStrings %in% level1)
                   s2cols <- which(sampleReplicateGroupsStrings %in% level2)
                   
                   if (type == "welch") {
-                      compLists <- calculateWelch(compLists, dataMatNAFiltered, naFilterContrast, s1cols, s2cols, comp)
+                      compLists <- calculateWelch(
+                          compLists, 
+                          dataMatNAFiltered, 
+                          naFilterContrast, 
+                          s1cols, 
+                          s2cols, 
+                          comp)
                   }
                   else if (type == "limma") {
-                      compLists <- calculateLimmaContrast(compLists, dataMatNAFiltered, naFilterContrast, limmaDesign, limmaFit, level1, level2, comp)
+                      compLists <- calculateLimmaContrast(
+                          compLists, 
+                          dataMatNAFiltered, 
+                          naFilterContrast, 
+                          limmaDesign, 
+                          limmaFit, 
+                          level1, 
+                          level2, 
+                          comp)
                   }
                   else {
                       stop(paste("Unknown statistics type:", type))
@@ -128,7 +158,8 @@ setupStatMeasureLists <- function(measures, comparisons) {
     compLists
 }
 
-calculateWelch <- function(compLists, dataMat, naFilterContrast, s1cols, s2cols, comp) {
+calculateWelch <- function(compLists, dataMat, naFilterContrast, s1cols, 
+                           s2cols, comp) {
     
     doTTest <- function(c1Vals, c2Vals, default=NA) {
         if (length(stats::na.omit(c1Vals)) > 1 && length(stats::na.omit(c2Vals)) > 1) {
@@ -139,21 +170,22 @@ calculateWelch <- function(compLists, dataMat, naFilterContrast, s1cols, s2cols,
         }
     }
     
-    welchPValCol <- apply(dataMat, 1, 
-                          function(row) doTTest(row[s1cols], row[s2cols], default=NA))
+    welchPValCol <- apply(
+        dataMat, 1, 
+        function(row) doTTest(row[s1cols], row[s2cols], default=NA))
     welchFDRCol <- stats::p.adjust(welchPValCol, method="BH")
 
     compLists[["P"]][[comp]][naFilterContrast] <- welchPValCol
     compLists[["FDR"]][[comp]][naFilterContrast] <- welchFDRCol
     compLists[["Ave"]][[comp]][naFilterContrast] <- apply(dataMat, 1, mean)
-    compLists[["Fold"]][[comp]][naFilterContrast] <- apply(dataMat, 1,
-                                                         function(row) {
-                                                             mean(row[s1cols]) - mean(row[s2cols])
-                                                         })
+    compLists[["Fold"]][[comp]][naFilterContrast] <- apply(
+        dataMat, 1,
+        function(row) { mean(row[s1cols]) - mean(row[s2cols]) })
     compLists
 }
 
-calculateANOVAContrast <- function(compLists, dataMat, naFilterContrast, s1cols, s2cols, comp) {
+calculateANOVAContrast <- function(compLists, dataMat, naFilterContrast, 
+                                   s1cols, s2cols, comp) {
     
     doTTest <- function(c1Vals, c2Vals, default=NA) {
         if (length(stats::na.omit(c1Vals)) > 1 && length(stats::na.omit(c2Vals)) > 1) {
@@ -164,24 +196,32 @@ calculateANOVAContrast <- function(compLists, dataMat, naFilterContrast, s1cols,
         }
     }
     
-    welchPValCol <- apply(dataMat, 1, 
-                          function(row) doTTest(row[s1cols], row[s2cols], default=NA))
+    welchPValCol <- apply(
+        dataMat, 
+        1, 
+        function(row) doTTest(row[s1cols], row[s2cols], default=NA))
     welchFDRCol <- stats::p.adjust(welchPValCol, method="BH")
     
     compLists[["P"]][[comp]][naFilterContrast] <- welchPValCol
     compLists[["FDR"]][[comp]][naFilterContrast] <- welchFDRCol
     compLists[["Ave"]][[comp]][naFilterContrast] <- apply(dataMat, 1, mean)
-    compLists[["Fold"]][[comp]][naFilterContrast] <- apply(dataMat, 1,
-                                                           function(row) {
-                                                               mean(row[s1cols]) - mean(row[s2cols])
-                                                           })
+    compLists[["Fold"]][[comp]][naFilterContrast] <- apply(
+        dataMat, 
+        1,
+        function(row) {
+        mean(row[s1cols]) - mean(row[s2cols])
+    })
     compLists
 }
 
-calculateLimmaContrast <- function(compLists, dataMatNAFiltered, naFilterContrast, limmaDesign, limmaFit, level1, level2, comp) {
+calculateLimmaContrast <- function(compLists, dataMatNAFiltered, 
+                                   naFilterContrast, limmaDesign, 
+                                   limmaFit, level1, level2, comp) {
 
     myContrast <- paste0("Variable", level1, "-", "Variable", level2)
-    contrastMatrix <- limma::makeContrasts(contrasts=c(myContrast), levels=limmaDesign)
+    contrastMatrix <- limma::makeContrasts(
+        contrasts=c(myContrast), 
+        levels=limmaDesign)
     fitContrasts <- limma::contrasts.fit(limmaFit, contrastMatrix)
     fitBayes <- limma::eBayes(fitContrasts)
     limmaTable <- limma::topTable(fitBayes, coef=1, number=Inf)
@@ -242,23 +282,40 @@ setMethod(f="calculatePairwiseComparisonsLimma",
                   compSplit <- unlist(strsplit(comp, splitter))
                   
                   if (length(compSplit) != 2) {
-                      stop(paste("Comparison should be in format cond1-cond2, here the split product was:", paste(compSplit, collapse=" ")))
+                      stop(paste(
+                          "Comparison should be in format cond1-cond2, here the 
+                          split product was:", 
+                          paste(compSplit, collapse=" ")))
                   }
                   
                   level1 <- compSplit[1]
                   level2 <- compSplit[2]
                   
                   if (length(sampleReplicateGroupsStrings %in% level1) == 0) {
-                      stop(paste("No samples matching condition", level1, "found in conditions:", paste(sampleReplicateGroupsStrings, collapse=" ")))
+                      stop(paste(
+                          "No samples matching condition", 
+                          level1, 
+                          "found in conditions:", 
+                          paste(sampleReplicateGroupsStrings, collapse=" ")))
                   }
                   
                   if (length(sampleReplicateGroupsStrings %in% level2) == 0) {
-                      stop(paste("No samples matching condition", level2, "found in conditions:", paste(sampleReplicateGroupsStrings, collapse=" ")))
+                      stop(paste(
+                          "No samples matching condition", 
+                          level2, "found in conditions:", 
+                          paste(sampleReplicateGroupsStrings, collapse=" ")))
                   }
 
                   # Limma contrast
-                  myContrast <- paste0("Variable", level1, "-", "Variable", level2)
-                  contrastMatrix <- limma::makeContrasts(contrasts=c(myContrast), levels=limmaDesign)
+                  myContrast <- paste0(
+                      "Variable", 
+                      level1, 
+                      "-", 
+                      "Variable", 
+                      level2)
+                  contrastMatrix <- limma::makeContrasts(
+                      contrasts=c(myContrast), 
+                      levels=limmaDesign)
                   fitContrasts <- limma::contrasts.fit(limmaFit, contrastMatrix)
                   fitBayes <- limma::eBayes(fitContrasts)
                   limmaTable <- limma::topTable(fitBayes, coef=1, number=Inf)

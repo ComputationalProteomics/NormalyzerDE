@@ -199,6 +199,12 @@ getSmoothedRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod,
     combinedMatrices
 }
 
+#' Merge multiple dataframes using provided function
+#' 
+#' @param mList List containing dataframes of same shape
+#' @param combFunc Function performing elementwise merge of matrices
+#' @return combinedMatrix A single dataframe with combined data
+#' @keywords internal
 getCombinedMatrix <- function(mList, combFunc) {
     
     matrixCount <- length(mList)
@@ -207,18 +213,16 @@ getCombinedMatrix <- function(mList, combFunc) {
     mLength <- rows * cols
     combinedMatrix <- matrix(0, nrow=rows, ncol=cols)
     
+    # Iterate over each element position
     for (i in seq_len(mLength)) {
         elemVals <- vapply(mList, function(mat) {mat[[i]]}, 0)
         targetVal <- combFunc(elemVals)
         combinedMatrix[i] <- targetVal
     }
     
+    colnames(combinedMatrix) <- colnames(mList[[1]])
     combinedMatrix
 }
-
-
-
-
 
 
 
