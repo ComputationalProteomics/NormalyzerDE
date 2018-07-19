@@ -84,17 +84,34 @@ getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSiz
 }
 
 #' Pick datapoints before and after window until a minimum number is reached
+#' Expects the start and end retention times to match actual retention times
+#' present in the data
 #' 
 #' @param rtStart Original retention time start point
 #' @param rtEnd Original retention time end point
-#' @param minimumDatapoints Required number of datapoints to fullfil
+#' @param minimumDatapoints Required number of datapoints to fulfill
 #' @param retentionTimes Vector with all retention times
 #' @return Vector with start and end of new RT range
 #' @keywords internal
-getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes) {
+getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes,
+                              allowTooWideData=FALSE) {
     
     sortedRts <- sort(retentionTimes)
     currentRTSlice <- sortedRts[sortedRts >= rtStart & sortedRts < rtEnd] 
+    
+    if (length(currentRTSlice) == 0) {
+        stop("Selected retention time slice doesn't contain any data")
+    }
+    
+    if (length(currentRTSlice) > minimumDatapoints) {
+        if (allowTooWideData) {
+            return(c(rtStart, rtEnd))
+        }
+        else {
+            stop(paste("Number of datapoints exceed minimum, add option",
+                       " 'allowTooWideData' to process anyway"))
+        }
+    }
     
     # Get single element if multiple with exactly same RT
     startIndex <- utils::tail(which(sortedRts == min(currentRTSlice)), 1)
@@ -129,6 +146,17 @@ getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes)
     
     newStartRtIndex <- startIndex - pickBefore
     newEndRtIndex <- endIndex + pickAfter
+    
+    # browser()
+    
+    if (newEndRtIndex - newStartRtIndex + 1 > length(sortedRts)) {
+        stop(paste0(
+            "Requested minimum window size (", 
+            newEndRtIndex - newStartRtIndex + 1, 
+            ") exceeds total number of datapoints (", 
+            length(sortedRts),
+            ")"))
+    }
     
     widenedSlice <- sortedRts[newStartRtIndex:newEndRtIndex]
 
