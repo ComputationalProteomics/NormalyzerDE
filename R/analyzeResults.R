@@ -36,10 +36,13 @@ analyzeNormalizations <- function(nr, comparisons=NULL, categoricalAnova=FALSE) 
 #' Calculates correlation values between replicates for each condition matrix.
 #' Finally returns a list containing the results for all matrices.
 #' 
-#' @param methodlist
-#' @param allReplicateGroups
-#' @param sampleGroupsWithReplicates
-#' @param corrType
+#' @param methodlist List containing normalized matrices for each normalization
+#'   method
+#' @param allReplicateGroups Vector with condition groups matching the columns
+#'   found in the normalization methods
+#' @param sampleGroupsWithReplicates Unique vector with condition groups
+#'   present in two or more samples
+#' @param corrType Type of correlation (Pearson or Spearman)
 #' @return avgCorSum
 #' @export
 #' @examples
@@ -84,7 +87,6 @@ calculateSummarizedCorrelationVector <- function(
 calculateCorrSum <- function(methodData, allReplicateGroups, 
                              sampleGroupsWithReplicates, corrType) {
     
-    # browser()
     corSums <- vector()
     for (groupNbr in seq_len(length(sampleGroupsWithReplicates))) {
         

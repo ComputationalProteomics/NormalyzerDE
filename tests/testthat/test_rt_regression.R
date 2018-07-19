@@ -18,7 +18,11 @@ normalyzer(jobName=runName,
            designPath=designPath,
            dataPath=dataPath,
            outputDir=outBase,
-           quiet=TRUE)
+           quiet=TRUE,
+           rtStepSizeMinutes=1,
+           rtWindowMinCount=100,
+           rtWindowShifts=1,
+           rtWindowMergeMethod="mean")
 
 normalizations <- c(
     "RT-Loess"   = "RT-Loess-normalized.txt", 
@@ -69,9 +73,7 @@ for (normNameRaw in names(normalizations)) {
         currBase <- paste0(outBase, "/", runNameDE, "_", normName)
         baselineMd5 <- statisticsMd5Map[[paste0(normNameRaw, "_stats.tsv")]]
         currentMd5 <- tools::md5sum(paste0(currBase, "/", runNameDE, "_", normName, "_stats.tsv"))
-        # print(paste0(currBase,  "/", runNameDE, "_", normName))
-        # print(paste("MD5s", baselineMd5, currentMd5))
-        
+
         expect_true(baselineMd5 == currentMd5, info = paste("Testing for normalization:", normName))
     })
 }

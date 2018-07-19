@@ -15,7 +15,6 @@
 #' @param requireReplicates Require multiple samples per condition to pass input 
 #'  validation.
 #' @param normalizeRetentionTime Perform normalizations over retention time.
-#' @param retentionTimeWindow Retention time normalization window size.
 #' @param plotRows Number of plot-rows in output documentation.
 #' @param plotCols Number of plot-columns in output documentation.
 #' @param zeroToNA Convert zero values to NA.
@@ -24,6 +23,13 @@
 #' @param inputFormat Type of input format.
 #' @param skipAnalysis Only perform normalization steps.
 #' @param quiet Omit status messages printed during run
+#' 
+#' @param rtStepSizeMinutes Retention time normalization window size.
+#' @param rtWindowMinCount Minimum number of datapoints in each retention-time
+#'   segment.
+#' @param rtWindowShifts Number of layered retention time normalized windows.
+#' @param rtWindowMergeMethod Merge approach for layered retention time windows.
+#' 
 #' @return None
 #' @export
 #' @import MASS limma preprocessCore methods RcmdrMisc
@@ -58,7 +64,6 @@ normalyzer <- function(
         sampleAbundThres=15,
         requireReplicates=TRUE,
         normalizeRetentionTime=TRUE,
-        retentionTimeWindow=1,
         plotRows=3,
         plotCols=4,
         zeroToNA=FALSE,
@@ -66,7 +71,12 @@ normalyzer <- function(
         groupColName="group",
         inputFormat="default",
         skipAnalysis=FALSE,
-        quiet=FALSE
+        quiet=FALSE,
+        
+        rtStepSizeMinutes=1,
+        rtWindowMinCount=100,
+        rtWindowShifts=1,
+        rtWindowMergeMethod="mean"
     ) {
 
     startTime <- Sys.time()
@@ -95,7 +105,7 @@ normalyzer <- function(
         normObj,
         forceAll=forceAllMethods,
         normalizeRetentionTime=normalizeRetentionTime,
-        retentionTimeWindow=retentionTimeWindow,
+        rtStepSizeMinutes=rtStepSizeMinutes,
         quiet=quiet)
     if (!quiet) print("[Step 2/5] Done!")
     

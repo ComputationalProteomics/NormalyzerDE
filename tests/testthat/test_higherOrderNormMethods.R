@@ -9,9 +9,156 @@ test_design <- example_design[which(example_design$group %in% c("1", "2", "3")),
 test_data <- example_data_only_values[, as.character(test_design$sample)]
 
 # Remove rows with only NA-values
-test_data <- test_data[rowSums(is.na(test_data)) != ncol(test_data), ]
+non_na_rows <- which(rowSums(is.na(test_data)) != ncol(test_data))
+test_data <- test_data[non_na_rows, ]
+real_rt_vals <- round(example_stat_data$Average.RT, 5)[non_na_rows]
 
-test_that("getRTNormalizedMatrix", {})
+
+test_that("getRTNormalizedMatrix_global_intensity", {
+    
+    expect_dim <- c(98, 9)
+    expect_colsum <- c(
+        2482.77553, 2420.75378, 2497.33571, 
+        2464.09042, 2424.41947, 2472.58042, 
+        2515.43627, 2419.77311, 2393.76557
+    )
+    
+    out <- getRTNormalizedMatrix(
+        rawMatrix=as.matrix(test_data), 
+        retentionTimes=real_rt_vals, 
+        normMethod=globalIntensityNormalization, 
+        stepSizeMinutes=1, 
+        windowMinCount=10)
+    
+    out_dim <- dim(out)
+    out_colsum <- round(colSums(out, na.rm=T), 5)
+    
+    expect_that(
+        all.equal(
+            expect_dim,
+            out_dim
+        ),
+        is_true()
+    )
+    
+    expect_that(
+        all(
+            expect_colsum == out_colsum
+        ),
+        is_true()
+    )
+})
+
+test_that("getRTNormalizedMatrix_loess", {
+    
+    expect_dim <- c(98, 9)
+    expect_colsum <- c(
+        2472.8547, 2412.4723, 2496.2553, 
+        2458.90508, 2419.86546, 2471.89521, 
+        2515.73799, 2413.87385, 2392.8269
+    )
+    
+    out <- getRTNormalizedMatrix(
+        rawMatrix=as.matrix(test_data), 
+        retentionTimes=real_rt_vals, 
+        normMethod=performCyclicLoessNormalization, 
+        stepSizeMinutes=1, 
+        windowMinCount=10)
+    
+    out_dim <- dim(out)
+    out_colsum <- round(colSums(out, na.rm=T), 5)
+    
+    expect_that(
+        all.equal(
+            expect_dim,
+            out_dim
+        ),
+        is_true()
+    )
+    
+    expect_that(
+        all(
+            expect_colsum == out_colsum
+        ),
+        is_true()
+    )
+})
+
+test_that("getSmoothedRTNormalizedMatrix_global_intensity", {
+    
+    expect_dim <- c(98, 9)
+    expect_colsum <- c(
+        2483.01579, 2420.61195, 2497.10932, 
+        2463.82244, 2424.36461, 2472.49291, 
+        2515.79797, 2421.82197, 2393.95915
+    )
+    
+    out <- getSmoothedRTNormalizedMatrix(
+        rawMatrix=as.matrix(test_data), 
+        retentionTimes=real_rt_vals, 
+        normMethod=globalIntensityNormalization, 
+        stepSizeMinutes=1, 
+        windowMinCount=10,
+        mergeMethod="median",
+        windowShifts=4
+        )
+    
+    out_dim <- dim(out)
+    out_colsum <- round(colSums(out, na.rm=T), 5)
+    
+    expect_that(
+        all.equal(
+            expect_dim,
+            out_dim
+        ),
+        is_true()
+    )
+    
+    expect_that(
+        all(
+            expect_colsum == out_colsum
+        ),
+        is_true()
+    )
+})
+
+test_that("getSmoothedRTNormalizedMatrix_loess", {
+    
+    expect_dim <- c(98, 9)
+    expect_colsum <- c(
+        2473.03148, 2412.86092, 2496.37835, 
+        2458.6256, 2419.13168, 2471.7457, 
+        2514.70862, 2413.37041, 2392.00512
+    )
+    
+    out <- getSmoothedRTNormalizedMatrix(
+        rawMatrix=as.matrix(test_data), 
+        retentionTimes=real_rt_vals, 
+        normMethod=performCyclicLoessNormalization, 
+        stepSizeMinutes=1, 
+        windowMinCount=10,
+        mergeMethod="mean",
+        windowShifts=3
+        )
+    
+    out_dim <- dim(out)
+    out_colsum <- round(colSums(out, na.rm=T), 5)
+    
+    expect_that(
+        all.equal(
+            expect_dim,
+            out_dim
+        ),
+        is_true()
+    )
+    
+    expect_that(
+        all(
+            expect_colsum == out_colsum
+        ),
+        is_true()
+    )
+})
 
 test_that("getWidenedRTRange_natural_numbers", {
     
@@ -77,12 +224,10 @@ test_that("getWidenedRTRange_float_numbers", {
 
 test_that("getWidenedRTRange_real_numbers", {
     
-    real_rt_vals <- round(example_stat_data$Average.RT, 5)
-    
     expect_that(
         all.equal(
             getWidenedRTRange(34.49672, 45.08198, 20, real_rt_vals),
-            c(32.61380, 45.33467)
+            c(30.93696, 45.33467)
         ),
         is_true()
     )
@@ -90,21 +235,21 @@ test_that("getWidenedRTRange_real_numbers", {
     expect_that(
         all.equal(
             getWidenedRTRange(34.49672, 45.08198, 30, real_rt_vals),
-            c(28.60213, 48.11109)
+            c(28.21106, 48.11109)
         ),
         is_true()
     )
     
     expect_that(
         all.equal(
-            getWidenedRTRange(34.49672, 45.08198, 100, real_rt_vals),
+            getWidenedRTRange(34.49672, 45.08198, 98, real_rt_vals),
             c(9.02435, 128.70183)
         ),
         is_true()
     )
     
     expect_error(
-        getWidenedRTRange(34.49672, 45.08198, 101, real_rt_vals)
+        getWidenedRTRange(34.49672, 45.08198, 100, real_rt_vals)
     )
     
     expect_error(
@@ -120,8 +265,6 @@ test_that("getWidenedRTRange_real_numbers", {
         is_true()
     )
 })
-
-test_that("getSmoothedRTNormalizedMatrix", {})
 
 test_that("getCombinedMatrix_minimal_symmetric", {
     

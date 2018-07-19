@@ -28,7 +28,13 @@
 #'     normMatrix
 #' }
 #' rtNormMat <- getRTNormalizedMatrix(dataMat, retentionTimes, performCyclicLoessNormalization, stepSizeMinutes=1, windowMinCount=100)
-getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSizeMinutes=1, windowMinCount=100, offset=0) {
+getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, 
+                                  stepSizeMinutes=1, windowMinCount=100, 
+                                  offset=0) {
+    
+    if (class(rawMatrix) != "matrix") {
+        stop(paste("Type of rawMatrix is expected to be matrix, received:", class(rawMatrix)))
+    }
     
     sortedRT <- sort(retentionTimes)
     
@@ -70,6 +76,7 @@ getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSiz
             
             indicesOfInterest <- which(normalizationSliceIndices %in% targetSliceIndices)
             normalizedTargetRows <- processedNormalizationRows[indicesOfInterest,]
+            # normalizedTargetRows <- processedNormalizationRows[indicesOfInterest,, drop=FALSE]
         }
         else {
             normalizedTargetRows <- processedNormalizationRows
@@ -147,8 +154,6 @@ getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes,
     newStartRtIndex <- startIndex - pickBefore
     newEndRtIndex <- endIndex + pickAfter
     
-    # browser()
-    
     if (newEndRtIndex - newStartRtIndex + 1 > length(sortedRts)) {
         stop(paste0(
             "Requested minimum window size (", 
@@ -202,15 +207,20 @@ getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes,
 #'     performCyclicLoessNormalization, stepSizeMinutes=1, windowMinCount=100, 
 #'     frameShifts=3, mergeMethod="median")
 getSmoothedRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSizeMinutes, 
-                                          frameShifts=2, windowMinCount=100, mergeMethod="mean") {
+                                          windowShifts=2, windowMinCount=100, mergeMethod="mean") {
     
     matrices <- list()
 
-    for (i in seq_len(frameShifts)) {
+    for (i in seq_len(windowShifts)) {
         
-        fracShift <- (i - 1) * 1 / frameShifts
-        matrices[[i]] <- getRTNormalizedMatrix(rawMatrix, retentionTimes, normMethod, 
-                                               stepSizeMinutes, windowMinCount=windowMinCount, offset=fracShift)
+        fracShift <- (i - 1) * 1 / windowShifts
+        matrices[[i]] <- getRTNormalizedMatrix(
+            rawMatrix, 
+            retentionTimes, 
+            normMethod,
+            stepSizeMinutes=stepSizeMinutes, 
+            windowMinCount=windowMinCount, 
+            offset=fracShift)
     }
 
     if (mergeMethod == "mean") {

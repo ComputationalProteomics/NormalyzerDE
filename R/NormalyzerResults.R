@@ -87,16 +87,25 @@ setMethod("initializeResultsObject", "NormalyzerResults",
 #' @param forceAll Ignore dataset size limits and run all normalizations
 #'  (only meant for testing purposes)
 #' @param rtNorm Perform retention time based normalizations
-#' @param rtWindow Retention time window size.
-#' @return None
+#' 
+#' @param rtStepSizeMinutes Retention time normalization window size.
+#' @param rtWindowMinCount Minimum number of datapoints in each retention-time
+#'   segment.
+#' @param rtWindowShifts Number of layered retention time normalized windows.
+#' @param rtWindowMergeMethod Merge approach for layered retention time windows.
+#' 
+#' @return nr NormalyzerDE results object
 #' @rdname performNormalizations
 #' @keywords internal
 setGeneric(name="performNormalizations",
-           function(nr, forceAll, rtNorm, rtWindow, quiet) standardGeneric("performNormalizations"))
-
+           function(nr, forceAll, rtNorm, rtStepSizeMinutes, rtWindowMinCount, 
+                    rtWindowShifts, rtWindowMergeMethod, quiet) 
+               standardGeneric("performNormalizations"))
 #' @rdname performNormalizations
 setMethod("performNormalizations", "NormalyzerResults",
-          function(nr, forceAll=FALSE, rtNorm=FALSE, rtWindow=0.1, quiet=FALSE) {
+          function(nr, forceAll=FALSE, rtNorm=FALSE, rtStepSizeMinutes=1, 
+                   rtWindowMinCount=100, rtWindowShifts=1, 
+                   rtWindowMergeMethod="median", quiet=FALSE) {
               
               nds <- nr@nds
               nr <- basicMetricNormalizations(nr)
@@ -110,7 +119,12 @@ setMethod("performNormalizations", "NormalyzerResults",
               
               if (rtNorm) {
                   if (rtColPresent) {
-                      nr <- performRTNormalizations(nr, rtWindow)
+                      nr <- performRTNormalizations(
+                          nr, 
+                          stepSizeMinutes=rtStepSizeMinutes,
+                          minWindowSize=rtWindowMinCount,
+                          windowShifts=rtWindowShifts,
+                          mergeMethod=rtWindowMergeMethod)
                   }
                   else {
                       if (!quiet) print("No RT column specified (column named 'RT'). Skipping RT normalization.")
@@ -147,23 +161,60 @@ setMethod("basicMetricNormalizations", "NormalyzerResults",
 #'
 #' @param nr Results object.
 #' @param stepSizeMinutes Size of normalization windows in minutes retention time.
-#' @param overlapWindows Number of overlapping normalization windows.
-#' @return None
+#' @param minWindowSize Minimum number of datapoints within each retention time window.
+#' @param windowShifts Number of overlapping retention-time segmented normalizations.
+#' @param mergeMethod Type of merge approach for overlapping windows.
+#' @return nr NormalyzerDE results object
 #' @rdname performRTNormalizations
 #' @keywords internal
 setGeneric(name="performRTNormalizations",
-           function(nr, stepSizeMinutes, overlapWindows) standardGeneric("performRTNormalizations"))
+           function(nr, stepSizeMinutes, minWindowSize, windowShifts, mergeMethod) standardGeneric("performRTNormalizations"))
 
 #' @rdname performRTNormalizations
 setMethod("performRTNormalizations", "NormalyzerResults",
-          function(nr, stepSizeMinutes, overlapWindows=FALSE) {
+          function(nr, stepSizeMinutes, minWindowSize, windowShifts, mergeMethod) {
               
               nds <- nr@nds
               
-              smoothedRTMed <- getSmoothedRTNormalizedMatrix(nds@filterrawdata, nds@retentionTimes, medianNormalization, stepSizeMinutes)
-              smoothedRTMean <- getSmoothedRTNormalizedMatrix(nds@filterrawdata, nds@retentionTimes, meanNormalization, stepSizeMinutes)
-              smoothedRTLoess <- getSmoothedRTNormalizedMatrix(nds@filterrawdata, nds@retentionTimes, performCyclicLoessNormalization, stepSizeMinutes)
-              smoothedRTVSN <- getSmoothedRTNormalizedMatrix(nds@filterrawdata, nds@retentionTimes, performVSNNormalization, stepSizeMinutes)
+              smoothedRTMed <- getSmoothedRTNormalizedMatrix(
+                  rawMatrix=nds@filterrawdata, 
+                  retentionTimes=nds@retentionTimes, 
+                  normMethod=medianNormalization, 
+                  stepSizeMinutes=stepSizeMinutes,
+                  windowMinCount=minWindowSize,
+                  mergeMethod=mergeMethod,
+                  windowShifts=windowShifts
+              )
+              
+              smoothedRTMean <- getSmoothedRTNormalizedMatrix(
+                  rawMatrix=nds@filterrawdata, 
+                  retentionTimes=nds@retentionTimes, 
+                  normMethod=meanNormalization, 
+                  stepSizeMinutes=stepSizeMinutes,
+                  windowMinCount=minWindowSize,
+                  mergeMethod=mergeMethod,
+                  windowShifts=windowShifts
+              )
+              
+              smoothedRTLoess <- getSmoothedRTNormalizedMatrix(
+                  rawMatrix=nds@filterrawdata, 
+                  retentionTimes=nds@retentionTimes, 
+                  normMethod=performCyclicLoessNormalization, 
+                  stepSizeMinutes=stepSizeMinutes,
+                  windowMinCount=minWindowSize,
+                  mergeMethod=mergeMethod,
+                  windowShifts=windowShifts
+              )
+              
+              smoothedRTVSN <- getSmoothedRTNormalizedMatrix(
+                  rawMatrix=nds@filterrawdata, 
+                  retentionTimes=nds@retentionTimes, 
+                  normMethod=performVSNNormalization, 
+                  stepSizeMinutes=stepSizeMinutes,
+                  windowMinCount=minWindowSize,
+                  mergeMethod=mergeMethod,
+                  windowShifts=windowShifts
+              )
               
               nr@data2rtMed <- smoothedRTMed
               nr@data2rtMean <- smoothedRTMean
