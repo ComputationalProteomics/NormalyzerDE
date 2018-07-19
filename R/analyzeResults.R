@@ -84,6 +84,7 @@ calculateSummarizedCorrelationVector <- function(
 calculateCorrSum <- function(methodData, allReplicateGroups, 
                              sampleGroupsWithReplicates, corrType) {
     
+    # browser()
     corSums <- vector()
     for (groupNbr in seq_len(length(sampleGroupsWithReplicates))) {
         
@@ -95,11 +96,13 @@ calculateCorrSum <- function(methodData, allReplicateGroups,
             use="pairwise.complete.obs", 
             method=corrType)
         
-        print("Investigate output from this part")
         for (index in seq_len(ncol(specificReplicateVals) - 1)) {
-            corSums <- c(corSums, corVals[index, -(seq_len(index))])
+            corSums <- c(corSums, corVals[index, -(seq_len(index)), drop="FALSE"])
         }
     }
+    
+    # browser()
+    
     corSums
 }
 

@@ -1,4 +1,4 @@
-context("Evaluating util functions")
+context("utils.R")
 
 test_that("getIndexList", {
     
@@ -11,7 +11,7 @@ test_that("getIndexList", {
 
 test_that("getRowNAFilterContrast", {
 
-    data("example_data_only_values")
+    data("example_stat_data")
     data("example_design")
     levels <- example_design$group
     out <- getRowNAFilterContrast(head(example_stat_data), levels, minCount=3)
