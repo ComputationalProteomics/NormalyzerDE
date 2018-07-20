@@ -88,8 +88,65 @@ calculateFeatureCV <- function(methodList) {
     methodFeatureCVMatrix
 }
 
+#' Calculate average MAD (Median Absolute Deviation) for each feature in
+#' each condition and then calculates the average for each replicate group
+#' 
+#' @param methodList List containing normalized matrices.
+#' @param sampleReplicateGroups Condition header.
+#' @return condAvgMadMat Matrix with average MAD for each biological condition.
+calculateAvgMadMem <- function(methodList, sampleReplicateGroups) {
+    
+    methodCount <- length(methodList)
+    conditionLevels <- length(levels(as.factor(unlist(sampleReplicateGroups))))
+    condAvgMadMat <- matrix(nrow=conditionLevels, ncol=methodCount, byrow=TRUE)
+    indexList <- getIndexList(sampleReplicateGroups)
+    
+    for (methodIndex in seq_len(methodCount)) {
+        
+        processedDataMatrix <- methodList[[methodIndex]]
+        
+        featureMedianAbsDevMat <- matrix(
+            nrow=nrow(processedDataMatrix), 
+            ncol=length(levels(as.factor(unlist(sampleReplicateGroups)))), 
+            byrow=TRUE)
+        
+        for (sampleIndex in seq_len(length(names(indexList)))) {
+            repVal <- names(indexList)[sampleIndex]
+            cols <- indexList[[repVal]]
+            featureMedianAbsDevMat[, sampleIndex] <- apply(
+                processedDataMatrix[, cols], 
+                1, 
+                function(x) { stats::mad(x, na.rm=TRUE) })
+        }
+        
+        condAvgMadMat[, methodIndex] <- apply(
+            featureMedianAbsDevMat, 
+            2, 
+            mean, 
+            na.rm=TRUE)
+    }
+    condAvgMadMat
+}
+
+calculatePercentageAvgDiffInMat <- function(targetMat) {
+
+    calculatePercDiff <- function (sampleIndex, mat) {
+        mean(mat[, sampleIndex]) * 100 / mean(mat[, 1])
+    }
+    
+    percDiffVector <- vapply(
+        seq_len(ncol(targetMat)), 
+        calculatePercDiff,
+        0,
+        mat=targetMat)
+    
+    percDiffVector
+}
 
 
+# calculateAvgMadMemPdiff <- function() {
+#     
+# }
 
 
 

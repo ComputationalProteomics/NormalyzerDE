@@ -185,18 +185,14 @@ normalyzerDE <- function(jobName, designPath, dataPath, comparisons, outputDir="
         sep="\t", 
         stringsAsFactors=FALSE, 
         quote="", 
-        comment.char="",
-        check.names=FALSE)
+        comment.char="")
     designDf <- utils::read.csv(
         designPath, 
         sep="\t",
         stringsAsFactors=FALSE,
         quote="",
-        comment.char="",
-        check.names=FALSE)
+        comment.char="")
     designDf[, sampleCol] <- as.character(designDf[, sampleCol])
-    
-    browser()
     
     nst <- setupStatisticsObject(designDf, fullDf, logTrans=logTrans, leastRepCount=leastRepCount)
     

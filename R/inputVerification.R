@@ -7,8 +7,8 @@
 #' @return rawData Raw data loaded into data frame
 #' @examples \dontrun{
 #' df <- loadData("data.tsv")
-#' }
 #' @export
+#' }
 loadData <- function(dataPath, inputFormat="default", zeroToNA=FALSE) {
     
     if (inputFormat == "default") {

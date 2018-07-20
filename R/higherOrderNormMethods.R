@@ -210,7 +210,7 @@ getSmoothedRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod,
                                           windowShifts=2, windowMinCount=100, mergeMethod="mean") {
     
     matrices <- list()
-
+    
     for (i in seq_len(windowShifts)) {
         
         fracShift <- (i - 1) * 1 / windowShifts

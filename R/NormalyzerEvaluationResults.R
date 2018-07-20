@@ -68,7 +68,8 @@ setMethod("calculateCV", "NormalyzerEvaluationResults",
               ner@featureCVPerMethod <- calculateFeatureCV(methodList)
 
               calculateCVPercentVarFromLog <- function (sampleIndex) {
-                  mean(avgCVPerNormAndReplicates[, sampleIndex] * 100) / mean(avgCVPerNormAndReplicates[, 1])
+                  mean(avgCVPerNormAndReplicates[, sampleIndex]) * 100 / 
+                      mean(avgCVPerNormAndReplicates[, 1])
               }
               
               # Requires log normalized data to be at first index
@@ -98,40 +99,42 @@ setGeneric(name="calculateMAD",
 setMethod("calculateMAD", "NormalyzerEvaluationResults",
           function(ner, nr) {
               
-              # Setup
               sampleReplicateGroups <- nr@nds@sampleReplicateGroups
-              methodCount <- length(getUsedMethodNames(nr))
               methodList <- getNormalizationMatrices(nr)
-              rowCount <- length(levels(as.factor(unlist(sampleReplicateGroups))))
-              
-              # Start
-              avgmadmem <- matrix(nrow=rowCount, ncol=methodCount, byrow=TRUE)
-              indexList <- getIndexList(sampleReplicateGroups)
-              
-              for (methodIndex in seq_len(methodCount)) {
-                  
-                  processedDataMatrix <- methodList[[methodIndex]]
+              avgmadmem <- calculateAvgMadMem(methodList, sampleReplicateGroups)
 
-                  medianAbsDevMem <- matrix(nrow=nrow(processedDataMatrix), 
-                                            ncol=length(levels(as.factor(unlist(sampleReplicateGroups)))), 
-                                            byrow=TRUE)
-                  
-                  for (sampleIndex in seq_len(length(names(indexList)))) {
-                      repVal <- names(indexList)[sampleIndex]
-                      cols <- indexList[[repVal]]
-                      medianAbsDevMem[, sampleIndex] <- apply(processedDataMatrix[, cols], 1, function(x) { stats::mad(x, na.rm=TRUE) })
-                      rowNonNACount <- apply(processedDataMatrix[, cols], 1, function(x) { sum(!is.na(x)) }) - 1
-                  }
-                  
-                  temmadmatsum <- apply(medianAbsDevMem, 2, mean, na.rm=TRUE)
-                  avgmadmem[, methodIndex] <- temmadmatsum
-              }
+              # for (methodIndex in seq_len(methodCount)) {
+              #     
+              #     processedDataMatrix <- methodList[[methodIndex]]
+              # 
+              #     medianAbsDevMem <- matrix(nrow=nrow(processedDataMatrix), 
+              #                               ncol=length(levels(as.factor(unlist(sampleReplicateGroups)))), 
+              #                               byrow=TRUE)
+              #     
+              #     for (sampleIndex in seq_len(length(names(indexList)))) {
+              #         repVal <- names(indexList)[sampleIndex]
+              #         cols <- indexList[[repVal]]
+              #         medianAbsDevMem[, sampleIndex] <- apply(processedDataMatrix[, cols], 1, function(x) { stats::mad(x, na.rm=TRUE) })
+              #         rowNonNACount <- apply(processedDataMatrix[, cols], 1, function(x) { sum(!is.na(x)) }) - 1
+              #     }
+              #     
+              #     temmadmatsum <- apply(medianAbsDevMem, 2, mean, na.rm=TRUE)
+              #     avgmadmem[, methodIndex] <- temmadmatsum
+              # }
               
-              avgmadmempdiff <- vapply(seq_len(ncol(avgmadmem)), 
-                                       function (sampleIndex) (mean(avgmadmem[, sampleIndex]) * 100) / mean(avgmadmem[, 1]),
-                                       0)
+              # calculateAvgMadMemPdiff <- function (sampleIndex) {
+              #     mean(avgmadmem[, sampleIndex]) * 100 / mean(avgmadmem[, 1])
+              # }
+              # 
+              # avgmadmempdiff <- vapply(
+              #     seq_len(ncol(avgmadmem)),
+              #     calculateAvgMadMemPdiff,
+              #     0)
+              
+              avgMadPdiff<- calculatePercentageAvgDiffInMat(avgmadmem)
+
               ner@avgmadmem <- avgmadmem
-              ner@avgmadmempdiff <- avgmadmempdiff
+              ner@avgmadmempdiff <- avgMadPdiff
               
               ner
           }
