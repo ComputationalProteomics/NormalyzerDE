@@ -95,6 +95,22 @@ test_that("calculateAvgMadMem", {
     )
 })
 
+test_that("calculateAvgReplicateVariation", {
+    
+    expected_out <- regression_test_ner@avgvarmem
+    normMatrices <- getNormalizationMatrices(regression_test_nr)
+    sampleReplicateGroups <- regression_test_nr@nds@sampleReplicateGroups
+    out <- calculateAvgReplicateVariation(normMatrices, sampleReplicateGroups)
+    
+    expect_that(
+        all.equal(
+            expected_out,
+            out
+        ),
+        is_true()
+    )
+})
+
 test_that("calculatePercentageAvgDiffInMat_small_test", {
     
     test_mat <- data.frame(c(1,3), c(1,5), c(1,7))
@@ -110,7 +126,7 @@ test_that("calculatePercentageAvgDiffInMat_small_test", {
     )
 })
 
-test_that("calculatePercentageAvgDiffInMat_real_data", {
+test_that("calculatePercentageAvgDiffInMat_MAD", {
     
     expected_out <- regression_test_ner@avgmadmempdiff
     
@@ -119,6 +135,25 @@ test_that("calculatePercentageAvgDiffInMat_real_data", {
     
     avgMadMemMat <- calculateAvgMadMem(normMatrices, sampleReplicateGroups)
     out <- calculatePercentageAvgDiffInMat(avgMadMemMat)
+    
+    expect_that(
+        all.equal(
+            expected_out,
+            out
+        ),
+        is_true()
+    )
+})
+
+test_that("calculatePercentageAvgDiffInMat_CV", {
+    
+    expected_out <- regression_test_ner@avgcvmempdiff
+    
+    normMatrices <- getNormalizationMatrices(regression_test_nr)
+    sampleReplicateGroups <- regression_test_nr@nds@sampleReplicateGroups
+    
+    avgCVMat <- calculateReplicateCV(normMatrices, sampleReplicateGroups)
+    out <- calculatePercentageAvgDiffInMat(avgCVMat)
     
     expect_that(
         all.equal(

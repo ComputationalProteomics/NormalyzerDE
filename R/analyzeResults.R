@@ -144,9 +144,46 @@ calculatePercentageAvgDiffInMat <- function(targetMat) {
 }
 
 
-# calculateAvgMadMemPdiff <- function() {
-#     
-# }
+calculateAvgReplicateVariation <- function(methodList, sampleReplicateGroups) {
+
+    methodCount <- length(methodList)
+    indexList <- getIndexList(sampleReplicateGroups)
+    conditionLevelCount <- length(unique(sampleReplicateGroups))
+    avgVarianceMat <- matrix(nrow=conditionLevelCount, ncol=methodCount, byrow=TRUE)
+
+    browser()
+    
+    for (methodIndex in seq_len(methodCount)) {
+        
+        replicateGroupVariance <- vector()
+        rowVariances <- vector()
+        processedDataMatrix <- methodList[[methodIndex]]
+        
+        for (sampleIndex in seq_len(length(names(indexList)))) {
+            
+            repVal <- names(indexList)[sampleIndex]
+            cols <- indexList[[repVal]]
+            
+            rowNonNACount <- apply(
+                processedDataMatrix[, cols], 
+                1, 
+                function(x) { sum(!is.na(x)) }) - 1
+            
+            rowVariances <- rowNonNACount * apply(
+                processedDataMatrix[, cols], 
+                1, 
+                function(x) { stats::var(x, na.rm=TRUE) })
+            
+            replicateGroupVariance <- c(
+                replicateGroupVariance, 
+                sum(rowVariances, na.rm=TRUE) / sum(rowNonNACount, na.rm=TRUE))
+        }
+        
+        avgVarianceMat[, methodIndex] <- replicateGroupVariance
+    }
+    
+    avgVarianceMat
+}
 
 
 

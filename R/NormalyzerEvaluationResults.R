@@ -66,20 +66,7 @@ setMethod("calculateCV", "NormalyzerEvaluationResults",
               avgCVPerNormAndReplicates <- calculateReplicateCV(methodList, sampleReplicateGroups)
               ner@avgcvmem <- avgCVPerNormAndReplicates
               ner@featureCVPerMethod <- calculateFeatureCV(methodList)
-
-              calculateCVPercentVarFromLog <- function (sampleIndex) {
-                  mean(avgCVPerNormAndReplicates[, sampleIndex]) * 100 / 
-                      mean(avgCVPerNormAndReplicates[, 1])
-              }
-              
-              # Requires log normalized data to be at first index
-              cvPercentVarFromLog <- vapply(
-                  seq_len(ncol(avgCVPerNormAndReplicates)), 
-                  calculateCVPercentVarFromLog,
-                  0
-              )
-              
-              ner@avgcvmempdiff <- cvPercentVarFromLog
+              ner@avgcvmempdiff <- calculatePercentageAvgDiffInMat(avgCVPerNormAndReplicates)
               
               ner
           }
@@ -103,34 +90,6 @@ setMethod("calculateMAD", "NormalyzerEvaluationResults",
               methodList <- getNormalizationMatrices(nr)
               avgmadmem <- calculateAvgMadMem(methodList, sampleReplicateGroups)
 
-              # for (methodIndex in seq_len(methodCount)) {
-              #     
-              #     processedDataMatrix <- methodList[[methodIndex]]
-              # 
-              #     medianAbsDevMem <- matrix(nrow=nrow(processedDataMatrix), 
-              #                               ncol=length(levels(as.factor(unlist(sampleReplicateGroups)))), 
-              #                               byrow=TRUE)
-              #     
-              #     for (sampleIndex in seq_len(length(names(indexList)))) {
-              #         repVal <- names(indexList)[sampleIndex]
-              #         cols <- indexList[[repVal]]
-              #         medianAbsDevMem[, sampleIndex] <- apply(processedDataMatrix[, cols], 1, function(x) { stats::mad(x, na.rm=TRUE) })
-              #         rowNonNACount <- apply(processedDataMatrix[, cols], 1, function(x) { sum(!is.na(x)) }) - 1
-              #     }
-              #     
-              #     temmadmatsum <- apply(medianAbsDevMem, 2, mean, na.rm=TRUE)
-              #     avgmadmem[, methodIndex] <- temmadmatsum
-              # }
-              
-              # calculateAvgMadMemPdiff <- function (sampleIndex) {
-              #     mean(avgmadmem[, sampleIndex]) * 100 / mean(avgmadmem[, 1])
-              # }
-              # 
-              # avgmadmempdiff <- vapply(
-              #     seq_len(ncol(avgmadmem)),
-              #     calculateAvgMadMemPdiff,
-              #     0)
-              
               avgMadPdiff<- calculatePercentageAvgDiffInMat(avgmadmem)
 
               ner@avgmadmem <- avgmadmem
@@ -154,45 +113,12 @@ setGeneric(name="calculateAvgVar",
 setMethod("calculateAvgVar", "NormalyzerEvaluationResults",
           function(ner, nr) {
               
-              # Setup
               sampleReplicateGroups <- nr@nds@sampleReplicateGroups
-              methodCount <- length(getUsedMethodNames(nr))
               methodList <- getNormalizationMatrices(nr)
-              rowCount <- length(levels(as.factor(unlist(sampleReplicateGroups))))
-              
-              # Start
-              avgvarmem <- matrix(nrow=rowCount, ncol=methodCount, byrow=TRUE)
-              indexList <- getIndexList(sampleReplicateGroups)
-              
-              for (methodIndex in seq_len(methodCount)) {
-                  
-                  replicateGroupVariance <- vector()
-                  rowVariances <- vector()
-                  
-                  processedDataMatrix <- methodList[[methodIndex]]
-                  
-                  for (sampleIndex in seq_len(length(names(indexList)))) {
-                      
-                      repVal <- names(indexList)[sampleIndex]
-                      cols <- indexList[[repVal]]
-                      
-                      rowNonNACount <- apply(processedDataMatrix[, cols], 1, function(x) { sum(!is.na(x)) }) - 1
-                      rowVariances <- rowNonNACount * apply(processedDataMatrix[, cols], 1, function(x) { stats::var(x, na.rm=TRUE) })
-                      replicateGroupVariance <- c(replicateGroupVariance, sum(rowVariances, na.rm=TRUE) / sum(rowNonNACount, na.rm=TRUE))
-                  }
-                  
-                  avgvarmem[, methodIndex] <- replicateGroupVariance
-                  
-              }
-              
-              avgvarmempdiff <- vapply(
-                  seq_len(ncol(avgvarmem)), 
-                  function (sampleIndex) (mean(avgvarmem[, sampleIndex]) * 100) / mean(avgvarmem[, 1]),
-                  0
-              )
-              
-              ner@avgvarmem <- avgvarmem
-              ner@avgvarmempdiff <- avgvarmempdiff
+
+              avgVarianceMat <- calculateAvgReplicateVariation(methodList, sampleReplicateGroups)
+              ner@avgvarmem <- avgVarianceMat
+              ner@avgvarmempdiff <- calculatePercentageAvgDiffInMat(avgVarianceMat)
               
               ner
           }
