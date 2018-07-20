@@ -151,8 +151,6 @@ calculateAvgReplicateVariation <- function(methodList, sampleReplicateGroups) {
     conditionLevelCount <- length(unique(sampleReplicateGroups))
     avgVarianceMat <- matrix(nrow=conditionLevelCount, ncol=methodCount, byrow=TRUE)
 
-    browser()
-    
     for (methodIndex in seq_len(methodCount)) {
         
         replicateGroupVariance <- vector()
@@ -184,9 +182,6 @@ calculateAvgReplicateVariation <- function(methodList, sampleReplicateGroups) {
     
     avgVarianceMat
 }
-
-
-
 
 #' Calculates correlation values between replicates for each condition matrix.
 #' Finally returns a list containing the results for all matrices.

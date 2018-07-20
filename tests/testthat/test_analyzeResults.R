@@ -8,7 +8,8 @@ group_header <- test_design$group
 unique_groups <- unique(group_header)
 
 data("regression_test_nr")
-data("regression_test_ner")
+regression_test_ner <- regression_test_nr@ner
+# data("regression_test_ner")
 
 test_that("calculateCorrSum gives same Pearson output", {
 
