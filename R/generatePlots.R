@@ -273,7 +273,7 @@ plotReplicateVarAndStableVariables <- function(nr, currentLayout, pageno) {
     currentjob <- nds@jobName
     
     ner <- nr@ner
-    nonsiganfdrlistcvpdiff <- ner@nonsiganfdrlistcvpdiff
+    lowVarFeaturesCVsPercDiff <- ner@lowVarFeaturesCVsPercDiff
     avgcvmempdiff <- ner@avgcvmempdiff
     avgmadmempdiff <- ner@avgmadmempdiff
     avgvarmempdiff <- ner@avgvarmempdiff
@@ -312,26 +312,26 @@ plotReplicateVarAndStableVariables <- function(nr, currentLayout, pageno) {
     graphics::axis(1, at=abc, labels=FALSE, lwd=0, lwd.ticks=1)
     graphics::text(abc, avgvarmempdiff, labels=round(avgvarmempdiff, digits=0), pos=3, las=2)
     
-    if (!all(is.na(nonsiganfdrlistcvpdiff))) {
+    if (!all(is.na(lowVarFeaturesCVsPercDiff))) {
         
         if (min(avgcvmempdiff) < 0 || max(avgcvmempdiff) > 100 || 
-            min(nonsiganfdrlistcvpdiff) < 0 || max(nonsiganfdrlistcvpdiff) > 100) {
+            min(lowVarFeaturesCVsPercDiff) < 0 || max(lowVarFeaturesCVsPercDiff) > 100) {
             
-            graphics::plot(avgcvmempdiff, nonsiganfdrlistcvpdiff, pch=18, 
+            graphics::plot(avgcvmempdiff, lowVarFeaturesCVsPercDiff, pch=18, 
                            xlim=c(0, 100), ylim=c(0, 100), 
                            main="Stable variables plot", 
                            xlab="PCV (intragroup) compared to Log2", 
                            ylab="% Global CV of stable variables compared to Log2")
-            car::showLabels(avgcvmempdiff, nonsiganfdrlistcvpdiff, 
+            car::showLabels(avgcvmempdiff, lowVarFeaturesCVsPercDiff, 
                             labels=methodnames, id.method="mahal", 
                             id.cex=0.7, id.col="black")
         }
         else {
-            graphics::plot(avgcvmempdiff, nonsiganfdrlistcvpdiff, pch=18, 
+            graphics::plot(avgcvmempdiff, lowVarFeaturesCVsPercDiff, pch=18, 
                            main="Stable variables plot", 
                            xlab="PCV (Intragroup) compared to Log2", 
                            ylab="% Global CV of stable variables compared to Log2")
-            car::showLabels(avgcvmempdiff, nonsiganfdrlistcvpdiff, 
+            car::showLabels(avgcvmempdiff, lowVarFeaturesCVsPercDiff, 
                             labels=methodnames, id.method="mahal", 
                             id.cex=0.7, id.col="black")
         }

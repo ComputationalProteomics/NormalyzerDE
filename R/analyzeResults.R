@@ -33,7 +33,13 @@ analyzeNormalizations <- function(nr, comparisons=NULL, categoricalAnova=FALSE) 
     nr
 }
 
-
+#' Calculate CV per replicate group and normalization technique
+#' 
+#' @param methodList List containing normalized matrices.
+#' @param sampleReplicateGroups Condition header.
+#' @return avgCVPerNormAndReplicates Matrix with group CVs as rows and
+#'   normalization technique as columns
+#' @keywords internal
 calculateReplicateCV <- function(methodList, sampleReplicateGroups) {
     
     methodCount <- length(methodList)
@@ -66,6 +72,13 @@ calculateReplicateCV <- function(methodList, sampleReplicateGroups) {
     avgCVPerNormAndReplicates
 }
 
+#' Calculate CV values for each feature
+#' 
+#' @param methodList List containing normalized matrices.
+#' @param sampleReplicateGroups Condition header.
+#' @return methodFeatureCVMatrix Matrix with feature as rows and normalization
+#'   method as columns
+#' @keywords internal
 calculateFeatureCV <- function(methodList) {
     
     methodCount <- length(methodList)
@@ -94,6 +107,7 @@ calculateFeatureCV <- function(methodList) {
 #' @param methodList List containing normalized matrices.
 #' @param sampleReplicateGroups Condition header.
 #' @return condAvgMadMat Matrix with average MAD for each biological condition.
+#' @keywords internal
 calculateAvgMadMem <- function(methodList, sampleReplicateGroups) {
     
     methodCount <- length(methodList)
@@ -128,6 +142,13 @@ calculateAvgMadMem <- function(methodList, sampleReplicateGroups) {
     condAvgMadMat
 }
 
+#' General function for calculating percentage difference of average column
+#' means in matrix
+#' 
+#' @param targetMat Matrix for which column means should be compared
+#' @return percDiffVector Vector with percentage difference, where first element
+#'   always will be 100
+#' @keywords internal
 calculatePercentageAvgDiffInMat <- function(targetMat) {
 
     calculatePercDiff <- function (sampleIndex, mat) {
@@ -149,7 +170,10 @@ calculateAvgReplicateVariation <- function(methodList, sampleReplicateGroups) {
     methodCount <- length(methodList)
     indexList <- getIndexList(sampleReplicateGroups)
     conditionLevelCount <- length(unique(sampleReplicateGroups))
-    avgVarianceMat <- matrix(nrow=conditionLevelCount, ncol=methodCount, byrow=TRUE)
+    avgVarianceMat <- matrix(
+        nrow=conditionLevelCount, 
+        ncol=methodCount, 
+        byrow=TRUE)
 
     for (methodIndex in seq_len(methodCount)) {
         
@@ -234,8 +258,8 @@ calculateSummarizedCorrelationVector <- function(
 #' @return corSums
 #' @export
 #' @examples
-calculateCorrSum <- function(methodData, allReplicateGroups, 
-                             sampleGroupsWithReplicates, corrType) {
+calculateCorrSum <- function(
+    methodData, allReplicateGroups, sampleGroupsWithReplicates, corrType) {
     
     corSums <- vector()
     for (groupNbr in seq_len(length(sampleGroupsWithReplicates))) {
@@ -256,19 +280,68 @@ calculateCorrSum <- function(methodData, allReplicateGroups,
     corSums
 }
 
+calculateANOVAPValues <- function(methodList, sampleReplicateGroups, categoricalANOVA) {
+    
+    anovaPVals <- list()
+    methodCount <- length(methodList)
+    
+    anovaPValsWithNA <- matrix(NA, ncol=methodCount, nrow=nrow(methodList[[1]]))
+  
+    
+    for (methodIndex in seq_len(methodCount)) {
+        
+        processedDataMatrix <- methodList[[methodIndex]]
+        naFilterContrast <- getRowNAFilterContrast(
+            processedDataMatrix,
+            sampleReplicateGroups,
+            2)
+        
+        naFilteredData <- processedDataMatrix[naFilterContrast,]
+        
+        if (categoricalANOVA) {
+            testLevels <- factor(sampleReplicateGroups)
+        }
+        else {
+            testLevels <- sampleReplicateGroups
+        }
+        
+        anovaPValCol <- apply(
+            naFilteredData, 
+            1, 
+            function(sampleIndex) 
+                summary(stats::aov(unlist(sampleIndex)~testLevels))[[1]][[5]][1])
+        
+        anovaPValsWithNA[naFilterContrast, methodIndex] <- anovaPValCol
+    }
+    
+    anovaPValsWithNA
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+findLowlyVariableFeatures <- function(log2AnovaFDR, methodList) {
+    
+    fivePercCount <- 5 * length(log2AnovaFDR) / 100
+    pThresLowVal <- min(utils::head(rev(sort(log2AnovaFDR)), n=fivePercCount))
+    nbrAbovePThres <- sum(log2AnovaFDR >= pThresLowVal)
+    
+    if (is.infinite(pThresLowVal) || nbrAbovePThres == 0) {
+        warning(paste("Too few successful ANOVA calculations to generate lowly",
+                      "variable features, skipping"))
+        return(NULL)
+    }
+        
+    lowlyVariableFeatures <- which(log2AnovaFDR >= pThresLowVal)
+    lowVarFeaturesAverageCVs <- vector()
+    methodCount <- length(methodList)
+    
+    for (mlist in seq_len(methodCount)) {
+        lowVarFeatures <- methodList[[mlist]][lowlyVariableFeatures, ]
+        lowVarFeaturesAverageCVs[mlist] <- mean(
+            apply(
+                lowVarFeatures, 
+                1, 
+                function(sampleIndex) raster::cv(sampleIndex, na.rm=TRUE)), 
+            na.rm=TRUE)
+    }
+    
+    lowVarFeaturesAverageCVs
+}

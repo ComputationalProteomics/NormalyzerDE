@@ -10,9 +10,9 @@
 #' @slot avgvarmem Average variance per method
 #' @slot avgvarmempdiff Percentage difference of mean variance compared
 #'  to log2-transformed data
-#' @slot nonsiganfdrlist List of 5% least variable entries based on ANOVA
+#' @slot lowVarFeaturesCVs List of 5% least variable entries based on ANOVA
 #'  for log2-transformed data
-#' @slot nonsiganfdrlistcvpdiff Coefficient of variance for least variable
+#' @slot lowVarFeaturesCVsPercDiff Coefficient of variance for least variable
 #'  entries
 #' @slot anfdr ANOVA FDR values
 #' @slot anovaFDRWithNA ANOVA FDR with NA when not applicable
@@ -32,8 +32,8 @@ NormalyzerEvaluationResults <- setClass("NormalyzerEvaluationResults",
                                                avgvarmem = "matrix",
                                                avgvarmempdiff = "numeric",
                                                
-                                               nonsiganfdrlist = "numeric",
-                                               nonsiganfdrlistcvpdiff = "numeric",
+                                               lowVarFeaturesCVs = "numeric",
+                                               lowVarFeaturesCVsPercDiff = "numeric",
                                                
                                                anfdr = "list",
                                                anovaFDRWithNA = "matrix",
@@ -139,74 +139,27 @@ setGeneric(name="calculateSignificanceMeasures",
 
 #' @rdname calculateSignificanceMeasures
 setMethod("calculateSignificanceMeasures", "NormalyzerEvaluationResults",
-          function(ner, nr, categoricalAnova=FALSE) {
+          function(ner, nr, categoricalAnova=TRUE) {
               
               sampleReplicateGroups <- nr@nds@sampleReplicateGroups
-              methodCount <- length(getUsedMethodNames(nr))
               methodList <- getNormalizationMatrices(nr)
 
-              anovaPValsWithNA <- matrix(NA, ncol=methodCount, nrow=nrow(methodList[[1]]))
-              anovaFDRs <- list()
-              anovaFDRsWithNA <- matrix(NA, ncol=methodCount, nrow=nrow(methodList[[1]]))
-
-              for (methodIndex in seq_len(methodCount)) {
-                  
-                  processedDataMatrix <- methodList[[methodIndex]]
-                  naFilterContrast <- getRowNAFilterContrast(
-                      processedDataMatrix,
-                      sampleReplicateGroups,
-                      2)
-                  
-                  dataStoreReplicateNAFiltered <- processedDataMatrix[naFilterContrast,]
-
-                  if (categoricalAnova) {
-                      testLevels <- factor(sampleReplicateGroups)
-                  }
-                  else {
-                      testLevels <- sampleReplicateGroups
-                  }
-                  
-                  anovaPValCol <- apply(
-                      dataStoreReplicateNAFiltered, 
-                      1, 
-                      function(sampleIndex) 
-                          summary(stats::aov(unlist(sampleIndex)~testLevels))[[1]][[5]][1])
-                  
-                  anovaPValsWithNA[naFilterContrast, methodIndex] <- anovaPValCol
-                  anovaFDRCol <- stats::p.adjust(anovaPValCol, method="BH")
-                  anovaFDRs[[methodIndex]] <- anovaFDRCol
-                  anovaFDRsWithNA[naFilterContrast, methodIndex] <- anovaFDRCol
-              }
+              anovaPValsWithNA <- calculateANOVAPValues(methodList, sampleReplicateGroups, categoricalAnova)
+              log2AnovaFDR <- p.adjust(anovaPValsWithNA[, 1][!is.na(anovaPValsWithNA[, 1])], method="BH")
               
-              # Finds to 5% of least DE variables in log2 data based on ANOVA
-              minVal <- min(utils::head(rev(sort(anovaFDRs[[1]])), n=(5 * length(anovaFDRs[[1]]) / 100)))
-              nbrAboveThres <- sum(anovaFDRs[[1]] >= minVal)
-              if (!is.infinite(minVal) && nbrAboveThres > 0) {
-                  lowlyVariableFeatures <- which(anovaFDRs[[1]] >= min(utils::head(rev(sort(anovaFDRs[[1]])), n=(5 * length(anovaFDRs[[1]]) / 100))))
-                  
-                  nonsiganfdrlistcv <- vector()
-                  for (mlist in seq_len(methodCount)) {
-                      tmpdata <- methodList[[mlist]][lowlyVariableFeatures, ]
-                      nonsiganfdrlistcv[mlist] <- mean(apply(tmpdata, 1, function(sampleIndex) raster::cv(sampleIndex, na.rm=TRUE)), na.rm=TRUE)
-                  }
-                  
-                  nonsiganfdrlistcvpdiff <- vapply(
-                      seq_len(length(nonsiganfdrlistcv)), 
-                      function(sampleIndex) (nonsiganfdrlistcv[sampleIndex] * 100) / nonsiganfdrlistcv[1],
+              lowVarFeaturesCVs <- findLowlyVariableFeatures(log2AnovaFDR, methodList)
+              lowVarFeaturesCVsPercDiff <- vapply(
+                      seq_len(length(lowVarFeaturesCVs)),
+                      function(sampleIndex) {
+                          (lowVarFeaturesCVs[sampleIndex] * 100) / lowVarFeaturesCVs[1]
+                      },
                       0
                   )
-                  ner@nonsiganfdrlist <- nonsiganfdrlistcv
-                  ner@nonsiganfdrlistcvpdiff <- nonsiganfdrlistcvpdiff
-              }
-              else {
-                  warning("Too few successful ANOVA calculations to generate lowly variable features")
-              }
               
               ner@anovaP <- anovaPValsWithNA
+              ner@lowVarFeaturesCVs <- lowVarFeaturesCVs
+              ner@lowVarFeaturesCVsPercDiff <- lowVarFeaturesCVsPercDiff
               
-              ner@anfdr <- anovaFDRs
-              ner@anovaFDRWithNA = anovaFDRsWithNA
-
               ner
           }
 )

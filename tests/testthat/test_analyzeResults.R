@@ -11,6 +11,13 @@ data("regression_test_nr")
 regression_test_ner <- regression_test_nr@ner
 # data("regression_test_ner")
 
+sampleReplicateGroups <- regression_test_nr@nds@sampleReplicateGroups
+normMatrices <- getNormalizationMatrices(regression_test_nr)
+anova_pvalues <- calculateANOVAPValues(
+    normMatrices, 
+    sampleReplicateGroups, 
+    categoricalANOVA=FALSE)
+
 test_that("calculateCorrSum gives same Pearson output", {
 
     expected_group_pearson <- c(
@@ -52,8 +59,6 @@ test_that("calculateCorrSum gives same Spearman output", {
 test_that("calculateReplicateCV", {
     
     expected_out <- regression_test_ner@avgcvmem
-    normMatrices <- getNormalizationMatrices(regression_test_nr)
-    sampleReplicateGroups <- regression_test_nr@nds@sampleReplicateGroups
     out <- calculateReplicateCV(normMatrices, sampleReplicateGroups)
     
     expect_that(
@@ -68,7 +73,6 @@ test_that("calculateReplicateCV", {
 test_that("calculateFeatureCV", {
     
     expected_out <- regression_test_ner@featureCVPerMethod
-    normMatrices <- getNormalizationMatrices(regression_test_nr)
     out <- calculateFeatureCV(normMatrices)
     
     expect_that(
@@ -83,8 +87,6 @@ test_that("calculateFeatureCV", {
 test_that("calculateAvgMadMem", {
     
     expected_out <- regression_test_ner@avgmadmem
-    normMatrices <- getNormalizationMatrices(regression_test_nr)
-    sampleReplicateGroups <- regression_test_nr@nds@sampleReplicateGroups
     out <- calculateAvgMadMem(normMatrices, sampleReplicateGroups)
     
     expect_that(
@@ -99,9 +101,38 @@ test_that("calculateAvgMadMem", {
 test_that("calculateAvgReplicateVariation", {
     
     expected_out <- regression_test_ner@avgvarmem
-    normMatrices <- getNormalizationMatrices(regression_test_nr)
-    sampleReplicateGroups <- regression_test_nr@nds@sampleReplicateGroups
     out <- calculateAvgReplicateVariation(normMatrices, sampleReplicateGroups)
+    
+    expect_that(
+        all.equal(
+            expected_out,
+            out
+        ),
+        is_true()
+    )
+})
+
+
+test_that("calculateANOVAPValues", {
+    
+    expected_out <- regression_test_ner@anovaP
+    sampleReplicateGroups <- regression_test_nr@nds@sampleReplicateGroups
+    
+    expect_that(
+        all.equal(
+            expected_out,
+            anova_pvalues
+        ),
+        is_true()
+    )
+}) 
+
+test_that("findLowlyVariableFeatures", {
+    
+    expected_out <- regression_test_ner@nonsiganfdrlist
+    log2AnovaFDR <- p.adjust(
+        anova_pvalues[, 1][!is.na(anova_pvalues[, 1])], method="BH")
+    out <- findLowlyVariableFeatures(log2AnovaFDR, normMatrices)
     
     expect_that(
         all.equal(
@@ -130,10 +161,6 @@ test_that("calculatePercentageAvgDiffInMat_small_test", {
 test_that("calculatePercentageAvgDiffInMat_MAD", {
     
     expected_out <- regression_test_ner@avgmadmempdiff
-    
-    normMatrices <- getNormalizationMatrices(regression_test_nr)
-    sampleReplicateGroups <- regression_test_nr@nds@sampleReplicateGroups
-    
     avgMadMemMat <- calculateAvgMadMem(normMatrices, sampleReplicateGroups)
     out <- calculatePercentageAvgDiffInMat(avgMadMemMat)
     
@@ -149,10 +176,6 @@ test_that("calculatePercentageAvgDiffInMat_MAD", {
 test_that("calculatePercentageAvgDiffInMat_CV", {
     
     expected_out <- regression_test_ner@avgcvmempdiff
-    
-    normMatrices <- getNormalizationMatrices(regression_test_nr)
-    sampleReplicateGroups <- regression_test_nr@nds@sampleReplicateGroups
-    
     avgCVMat <- calculateReplicateCV(normMatrices, sampleReplicateGroups)
     out <- calculatePercentageAvgDiffInMat(avgCVMat)
     
@@ -164,3 +187,6 @@ test_that("calculatePercentageAvgDiffInMat_CV", {
         is_true()
     )
 })
+
+
+
