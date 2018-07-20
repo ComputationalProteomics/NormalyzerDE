@@ -17,8 +17,8 @@
 #' @slot anfdr ANOVA FDR values
 #' @slot anovaFDRWithNA ANOVA FDR with NA when not applicable
 #' @slot anovaP ANOVA calculated p-values
-#' @slot avgpercorsum Within group Pearson correlations
-#' @slot avgspecorsum Within group Spearman correlations
+#' @slot repCorPear Within group Pearson correlations
+#' @slot repCorSpear Within group Spearman correlations
 #' @export
 NormalyzerEvaluationResults <- setClass("NormalyzerEvaluationResults",
                                            representation(
@@ -39,8 +39,8 @@ NormalyzerEvaluationResults <- setClass("NormalyzerEvaluationResults",
                                                anovaFDRWithNA = "matrix",
                                                anovaP = "matrix",
                                                
-                                               avgpercorsum = "list",
-                                               avgspecorsum = "list"
+                                               repCorPear = "list",
+                                               repCorSpear = "list"
                                            ),
                                            prototype=prototype())
 
@@ -61,49 +61,24 @@ setMethod("calculateCV", "NormalyzerEvaluationResults",
           function(ner, nr) {
               
               sampleReplicateGroups <- nr@nds@sampleReplicateGroups
-              methodCount <- length(getUsedMethodNames(nr))
               methodList <- getNormalizationMatrices(nr)
-              numberFeatures <- nrow(methodList[[1]])
-              rowCount <- length(levels(as.factor(unlist(sampleReplicateGroups))))
-              
-              matrixCvs <- matrix(nrow=numberFeatures, ncol=methodCount)
-              avgCVPerNormAndReplicates <- matrix(nrow=rowCount, ncol=methodCount, byrow=TRUE)
-              
-              for (methodIndex in seq_len(methodCount)) {
-                  
-                  processedDataMatrix <- methodList[[methodIndex]]
-                  tempCVMatrix <- matrix(nrow=nrow(processedDataMatrix), ncol=length(levels(as.factor(unlist(sampleReplicateGroups)))), byrow=TRUE)
-                  
-                  for (i in seq_len(nrow(processedDataMatrix))) {
-                      
-                      tempCV <- RcmdrMisc::numSummary(processedDataMatrix[i, ], statistics=c("cv"), groups=unlist(sampleReplicateGroups))
-                      tempCVMatrix[i, ] <- tempCV$table
-                  }
-                  
-                  tempCVMatrixSum <- apply(tempCVMatrix, 2, mean, na.rm=TRUE)
-                  avgCVPerNormAndReplicates[, methodIndex] <- tempCVMatrixSum * 100
-                  
-                  
-                  # Calculate sample-wise CV
-                  cv <- function(row) {
-                      stDev <- stats::sd(row, na.rm=TRUE)
-                      meanVal <- mean(unlist(row), na.rm=TRUE)
-                      stDev / mean(meanVal) * 100
-                  }
-                  methodCvs <- apply(processedDataMatrix, 1, cv)
-                  matrixCvs[, methodIndex] <- methodCvs
+
+              avgCVPerNormAndReplicates <- calculateReplicateCV(methodList, sampleReplicateGroups)
+              ner@avgcvmem <- avgCVPerNormAndReplicates
+              ner@featureCVPerMethod <- calculateFeatureCV(methodList)
+
+              calculateCVPercentVarFromLog <- function (sampleIndex) {
+                  mean(avgCVPerNormAndReplicates[, sampleIndex] * 100) / mean(avgCVPerNormAndReplicates[, 1])
               }
               
               # Requires log normalized data to be at first index
               cvPercentVarFromLog <- vapply(
                   seq_len(ncol(avgCVPerNormAndReplicates)), 
-                      function (sampleIndex) (mean(avgCVPerNormAndReplicates[, sampleIndex]) * 100) / mean(avgCVPerNormAndReplicates[, 1]),
+                  calculateCVPercentVarFromLog,
                   0
               )
               
-              ner@avgcvmem <- avgCVPerNormAndReplicates
               ner@avgcvmempdiff <- cvPercentVarFromLog
-              ner@featureCVPerMethod <- matrixCvs
               
               ner
           }
@@ -317,7 +292,7 @@ setMethod("calculateSignificanceMeasures", "NormalyzerEvaluationResults",
 setGeneric(name="calculateCorrelations", 
            function(ner, nr) standardGeneric("calculateCorrelations"))
 
-#' @rdname calculateAvgVar
+#' @rdname calculateCorrelations
 setMethod("calculateCorrelations", "NormalyzerEvaluationResults",
           function(ner, nr) {
 
@@ -325,9 +300,9 @@ setMethod("calculateCorrelations", "NormalyzerEvaluationResults",
             allReplicateGroups <- nr@nds@sampleReplicateGroups
             sampleGroupsWithReplicates <- nr@nds@samplesGroupsWithReplicates
             
-            ner@avgpercorsum <- calculateSummarizedCorrelationVector(
+            ner@repCorPear <- calculateSummarizedCorrelationVector(
                 methodlist, allReplicateGroups, sampleGroupsWithReplicates, "pearson")
-            ner@avgspecorsum <- calculateSummarizedCorrelationVector(
+            ner@repCorSpear <- calculateSummarizedCorrelationVector(
                 methodlist, allReplicateGroups, sampleGroupsWithReplicates, "spearman")
             ner
           }

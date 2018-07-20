@@ -33,6 +33,67 @@ analyzeNormalizations <- function(nr, comparisons=NULL, categoricalAnova=FALSE) 
     nr
 }
 
+
+calculateReplicateCV <- function(methodList, sampleReplicateGroups) {
+    
+    methodCount <- length(methodList)
+    numberFeatures <- nrow(methodList[[1]])
+    conditionLevels <- length(levels(as.factor(unlist(sampleReplicateGroups))))
+    avgCVPerNormAndReplicates <- matrix(nrow=conditionLevels, ncol=methodCount, byrow=TRUE)
+    
+    for (methodIndex in seq_len(methodCount)) {
+        
+        processedDataMatrix <- methodList[[methodIndex]]
+        featureCondCVs <- matrix(
+            nrow=nrow(processedDataMatrix), 
+            ncol=length(levels(as.factor(unlist(sampleReplicateGroups)))), 
+            byrow=TRUE)
+        
+        for (i in seq_len(nrow(processedDataMatrix))) {
+            
+            featureCVs <- RcmdrMisc::numSummary(
+                processedDataMatrix[i, ], 
+                statistics=c("cv"), 
+                groups=unlist(sampleReplicateGroups))
+            featureCondCVs[i, ] <- featureCVs$table
+        }
+        
+        # Sum up CV for all features for each condition
+        summedCondCVs <- apply(featureCondCVs, 2, mean, na.rm=TRUE)
+        avgCVPerNormAndReplicates[, methodIndex] <- summedCondCVs * 100
+    }
+    
+    avgCVPerNormAndReplicates
+}
+
+calculateFeatureCV <- function(methodList) {
+    
+    methodCount <- length(methodList)
+    numberFeatures <- nrow(methodList[[1]])
+    methodFeatureCVMatrix <- matrix(nrow=numberFeatures, ncol=methodCount)
+
+    for (methodIndex in seq_len(methodCount)) {
+        
+        processedDataMatrix <- methodList[[methodIndex]]
+        # Calculate sample-wise CV
+        cv <- function(row) {
+            stDev <- stats::sd(row, na.rm=TRUE)
+            meanVal <- mean(unlist(row), na.rm=TRUE)
+            stDev / mean(meanVal) * 100
+        }
+        featureCVs <- apply(processedDataMatrix, 1, cv)
+        methodFeatureCVMatrix[, methodIndex] <- featureCVs
+    }
+    
+    methodFeatureCVMatrix
+}
+
+
+
+
+
+
+
 #' Calculates correlation values between replicates for each condition matrix.
 #' Finally returns a list containing the results for all matrices.
 #' 
@@ -103,9 +164,22 @@ calculateCorrSum <- function(methodData, allReplicateGroups,
         }
     }
     
-    # browser()
-    
     corSums
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

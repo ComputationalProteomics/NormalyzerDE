@@ -680,7 +680,7 @@ plotMeanSD <- function(nr, currentLayout, pageno) {
     printPlots(sdPlots, "MeanSDplots", pageno, currentjob, currentLayout)  
 }
 
-#' Visualize correlations for plots
+#' Visualize within-replicates correlations
 #' 
 #' @param nr Normalyzer results object.
 #' @param currentLayout Layout used for document.
@@ -690,8 +690,8 @@ plotMeanSD <- function(nr, currentLayout, pageno) {
 plotCorrelation <- function(nr, currentLayout, pageno) {
     
     ner <- nr@ner
-    avgpercorsum <- ner@avgpercorsum
-    avgspecorsum <- ner@avgspecorsum
+    repCorPear <- ner@repCorPear
+    repCorSpear <- ner@repCorSpear
     
     nds <- nr@nds
     methodnames <- getUsedMethodNames(nr)
@@ -704,8 +704,8 @@ plotCorrelation <- function(nr, currentLayout, pageno) {
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
     
-    perdf <- data.frame(matrix(unlist(avgpercorsum), 
-                               nrow=as.numeric(max(summary(avgpercorsum)[1])), 
+    perdf <- data.frame(matrix(unlist(repCorPear), 
+                               nrow=as.numeric(max(summary(repCorPear)[1])), 
                                byrow=TRUE))
     
     abc <- graphics::boxplot(perdf, main="Pearson correlation - Intragroup", 
@@ -714,8 +714,8 @@ plotCorrelation <- function(nr, currentLayout, pageno) {
     
     graphics::stripchart(as.data.frame(perdf), vertical=TRUE, cex=0.4, las=2, pch=20, add=TRUE, col="darkgreen")
     
-    spedf <- data.frame(matrix(unlist(avgspecorsum), 
-                               nrow=as.numeric(max(summary(avgspecorsum)[1])), 
+    spedf <- data.frame(matrix(unlist(repCorSpear), 
+                               nrow=as.numeric(max(summary(repCorSpear)[1])), 
                                byrow=TRUE))
     
     abc <- graphics::boxplot(spedf, main="Spearman correlation - Intragroup", 
