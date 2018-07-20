@@ -180,9 +180,24 @@ normalyzerDE <- function(jobName, designPath, dataPath, comparisons, outputDir="
     jobDir <- setupJobDir(jobName, outputDir)
 
     if (!quiet) print("Setting up statistics object")
-    fullDf <- utils::read.csv(dataPath, sep="\t")
-    designDf <- utils::read.csv(designPath, sep="\t")
+    fullDf <- utils::read.csv(
+        dataPath, 
+        sep="\t", 
+        stringsAsFactors=FALSE, 
+        quote="", 
+        comment.char="",
+        check.names=FALSE)
+    designDf <- utils::read.csv(
+        designPath, 
+        sep="\t",
+        stringsAsFactors=FALSE,
+        quote="",
+        comment.char="",
+        check.names=FALSE)
     designDf[, sampleCol] <- as.character(designDf[, sampleCol])
+    
+    browser()
+    
     nst <- setupStatisticsObject(designDf, fullDf, logTrans=logTrans, leastRepCount=leastRepCount)
     
     if (!is.null(techRepCol)) {
