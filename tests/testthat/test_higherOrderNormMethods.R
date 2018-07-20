@@ -3,6 +3,7 @@ context("higherOrderNormMethods.R")
 data("example_design")
 data("example_data_only_values")
 data("example_data")
+data("example_stat_data")
 
 # Subset the data to only look at first three conditions
 test_design <- example_design[which(example_design$group %in% c("1", "2", "3")), ]
