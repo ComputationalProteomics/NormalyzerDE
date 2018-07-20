@@ -21,7 +21,7 @@ normalyzer(jobName=runName,
            quiet=TRUE,
            rtStepSizeMinutes=1,
            rtWindowMinCount=100,
-           rtWindowShifts=1,
+           rtWindowShifts=2,
            rtWindowMergeMethod="mean")
 
 normalizations <- c(

@@ -24,7 +24,6 @@ normMethods <- function(nds, forceAll=FALSE, normalizeRetentionTime=TRUE,
                         quiet=FALSE, rtStepSizeMinutes=1, rtWindowMinCount=100, 
                         rtWindowShifts=1, rtWindowMergeMethod="mean") {
     
-    # nr <- generateNormalyzerResultsObject(nds)
     nr <- NormalyzerResults(nds=nds)
     nr <- initializeResultsObject(nr)
     nr <- performNormalizations(
@@ -39,23 +38,6 @@ normMethods <- function(nds, forceAll=FALSE, normalizeRetentionTime=TRUE,
     
     return(nr)
 }
-
-#' #' Create empty Normalyzer results object from Normalyzer data object
-#' #' 
-#' #' @param nds Normalyzer dataset object.
-#' #' @return Empty Normalyzer results object.
-#' #' @keywords internal
-#' #' @export
-#' #' @examples
-#' #' data(example_data)
-#' #' data(example_design)
-#' #' normObj <- getVerifiedNormalyzerObject("job_name", example_design, example_data)
-#' #' normResObj <- generateNormalyzerResultsObject(normObj)
-#' generateNormalyzerResultsObject <- function(nds) {
-#'     nr <- NormalyzerResults(nds=nds)
-#'     nr <- initializeResultsObject(nr)
-#'     nr
-#' }
 
 #' Normalization adjusting based on total sample intensity
 #' 

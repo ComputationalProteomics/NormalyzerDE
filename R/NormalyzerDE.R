@@ -106,6 +106,9 @@ normalyzer <- function(
         forceAll=forceAllMethods,
         normalizeRetentionTime=normalizeRetentionTime,
         rtStepSizeMinutes=rtStepSizeMinutes,
+        rtWindowMinCount=rtWindowMinCount,
+        rtWindowShifts=rtWindowShifts,
+        rtWindowMergeMethod=rtWindowMergeMethod,
         quiet=quiet)
     if (!quiet) print("[Step 2/5] Done!")
     
