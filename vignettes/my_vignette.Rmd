@@ -84,12 +84,12 @@ for which you want to calculate contrasts. They are provided as a character vect
 compare separated by a dash ("-").
 
 ```{r}
-statOutDir <- tempdir()
+outDir <- tempdir()
 normMatrixPath <- paste(outDir, "vignette_run/Loess-G-normalized.txt", sep="/")
 normalyzerDE("vignette_run", 
              "design.tsv", 
              normMatrixPath,
-             outputDir=statOutDir, 
+             outputDir=outDir, 
              comparisons=c("1-2", "1-3"))
 ```
 

@@ -1,9 +1,10 @@
 
 #' Filter rows with lower than given number of replicates for any condition
 #' 
-#' @param df 
-#' @param groups
-#' @param leastRep
+#' @param df Dataframe with expression data to filter
+#' @param groups Condition groups header
+#' @param leastRep Minimum number of replicates in each group
+#'   to retain
 #' @return collDesignDf Reduced design matrix
 #' @keywords internal
 filterLowRep <- function(df, groups, leastRep = 2) {

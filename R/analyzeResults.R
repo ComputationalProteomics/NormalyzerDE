@@ -219,7 +219,7 @@ calculateAvgReplicateVariation <- function(methodList, sampleReplicateGroups) {
 #' @param corrType Type of correlation (Pearson or Spearman)
 #' @return avgCorSum
 #' @export
-#' @examples
+#' @keywords internal
 calculateSummarizedCorrelationVector <- function(
     methodlist, allReplicateGroups, sampleGroupsWithReplicates, corrType) {
     
@@ -249,7 +249,7 @@ calculateSummarizedCorrelationVector <- function(
 #' samples and returns a vector with correlation values corresponding to each
 #' condition
 #' 
-#' @param methodData
+#' @param methodData Expression data matrix
 #' @param allReplicateGroups Full condition header corresponding to data tables
 #'   columns
 #' @param sampleGroupsWithReplicates Unique conditions where number of
@@ -257,7 +257,7 @@ calculateSummarizedCorrelationVector <- function(
 #' @param corrType Type of correlation (Pearson or Spearman)
 #' @return corSums
 #' @export
-#' @examples
+#' @keywords internal
 calculateCorrSum <- function(
     methodData, allReplicateGroups, sampleGroupsWithReplicates, corrType) {
     

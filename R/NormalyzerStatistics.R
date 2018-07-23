@@ -114,24 +114,18 @@ setMethod(f="calculateContrasts",
                           paste(sampleReplicateGroupsStrings, collapse=" ")))
                   }
                   
-                  s1cols <- which(sampleReplicateGroupsStrings %in% level1)
-                  s2cols <- which(sampleReplicateGroupsStrings %in% level2)
-                  
-                  # browser()
-                  
                   if (type == "welch") {
                       statResults <- calculateWelch(
                           dataMatNAFiltered, 
-                          s1cols, 
-                          s2cols)
+                          sampleReplicateGroupsStrings, 
+                          c(level1, level2))
                   }
                   else if (type == "limma") {
                       statResults <- calculateLimmaContrast(
                           dataMatNAFiltered, 
                           limmaDesign, 
                           limmaFit, 
-                          level1, 
-                          level2)
+                          c(level1, level2))
                   }
                   else {
                       stop(paste("Unknown statistics type:", type))
@@ -150,22 +144,10 @@ setMethod(f="calculateContrasts",
               nst
           })
 
-# setupStatMeasureLists <- function(measures, comparisons) {
-#     
-#     compLists <- list()
-#     for (measure in measures) {
-#         compLists[[measure]] <- list()
-#     }
-#     
-#     for (measure in measures) {
-#         for (comp in comparisons) {
-#             compLists[[measure]][[comp]] <- c()
-#         }
-#     }
-#     compLists
-# }
-
-calculateWelch <- function(dataMat, s1cols, s2cols) {
+calculateWelch <- function(dataMat, groupHeader, levels) {
+    
+    s1cols <- which(groupHeader %in% levels[1])
+    s2cols <- which(groupHeader %in% levels[2])
     
     doTTest <- function(c1Vals, c2Vals, default=NA) {
         if (length(stats::na.omit(c1Vals)) > 1 && 
@@ -184,8 +166,6 @@ calculateWelch <- function(dataMat, s1cols, s2cols) {
 
     statResults <- list()
 
-    # browser()
-    
     statResults[["P"]] <- welchPValCol
     statResults[["FDR"]] <- welchFDRCol
     statResults[["Ave"]] <- apply(dataMat, 1, mean, na.rm=T)
@@ -197,22 +177,15 @@ calculateWelch <- function(dataMat, s1cols, s2cols) {
     statResults
 }
 
-calculateLimmaContrast <- function(dataMat, limmaDesign, limmaFit, 
-                                   level1, level2) {
+calculateLimmaContrast <- function(dataMat, limmaDesign, limmaFit, levels) {
 
-    # calculateLimmaContrast <- function(compLists, dataMatNAFiltered, 
-    #                                    naFilterContrast, limmaDesign, 
-    #                                    limmaFit, level1, level2, comp) {
-    
-    
-    myContrast <- paste0("Variable", level1, "-", "Variable", level2)
+    myContrast <- paste0("Variable", levels[1], "-", "Variable", levels[2])
     contrastMatrix <- limma::makeContrasts(
         contrasts=c(myContrast), 
         levels=limmaDesign)
     fitContrasts <- limma::contrasts.fit(limmaFit, contrastMatrix)
     fitBayes <- limma::eBayes(fitContrasts)
-    limmaTable <- limma::topTable(fitBayes, coef=1, number=Inf)
-    limmaTable <- limmaTable[rownames(dataMat), ]
+    limmaTable <- limma::topTable(fitBayes, coef=1, number=Inf, sort.by="none")
 
     statResults <- list()
     statResults[["P"]] <- limmaTable$P.Value
@@ -220,11 +193,5 @@ calculateLimmaContrast <- function(dataMat, limmaDesign, limmaFit,
     statResults[["Ave"]] <- limmaTable$AveExpr
     statResults[["Fold"]] <- limmaTable$logFC
     statResults
-    
-    # compLists[["P"]][[comp]][naFilterContrast] <- limmaTable$P.Value
-    # compLists[["FDR"]][[comp]][naFilterContrast] <- limmaTable$adj.P.Val
-    # compLists[["Ave"]][[comp]][naFilterContrast] <- limmaTable$AveExpr
-    # compLists[["Fold"]][[comp]][naFilterContrast] <- limmaTable$logFC
-    # compLists
 }
 

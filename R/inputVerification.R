@@ -5,9 +5,9 @@
 #'   or in MaxQuant protein or peptide format
 #' @param zeroToNA Automatically convert zeroes to NA values
 #' @return rawData Raw data loaded into data frame
+#' @export
 #' @examples \dontrun{
 #' df <- loadData("data.tsv")
-#' @export
 #' }
 loadData <- function(dataPath, inputFormat="default", zeroToNA=FALSE) {
     
@@ -37,10 +37,10 @@ loadData <- function(dataPath, inputFormat="default", zeroToNA=FALSE) {
 #' @param sampleCol Column name for column containing sample names.
 #' @param groupCol Column name for column containing condition levels.
 #' @return designMatrix Design data loaded into data frame
+#' @export
 #' @examples \dontrun{
 #' df <- loadDesign("design.tsv")
 #' }
-#' @export
 loadDesign <- function(designPath, sampleCol="sample", groupCol="group") {
     designMatrix <- utils::read.table(designPath, sep="\t", stringsAsFactors=FALSE, header=TRUE, comment.char="")
     designMatrix[, sampleCol] <- as.character(designMatrix[, sampleCol])
