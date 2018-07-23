@@ -1,6 +1,6 @@
 Package: NormalyzerDE
 Title: Evaluation of normalization methods and calculation of differential expression analysis statistics
-Version: 0.99.3
+Version: 0.99.4
 Authors@R: c(
     person("Jakob", "Willforss", email="jakob.willforss@immun.lth.se", role=c("aut", "cre")),
     person("Aakash", "Chawade", role="aut"),

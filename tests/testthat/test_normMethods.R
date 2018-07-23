@@ -21,7 +21,7 @@ test_that("globalIntensityNormalization", {
     
     out <- globalIntensityNormalization(test_data)
     out_dim <- dim(out)
-    out_colsum <- round(colSums(out, na.rm=T), 5)
+    out_colsum <- round(colSums(out, na.rm=TRUE), 5)
     
     expect_that(
         all.equal(
@@ -50,7 +50,7 @@ test_that("medianNormalization", {
     
     out <- medianNormalization(test_data)
     out_dim <- dim(out)
-    out_colsum <- round(colSums(out, na.rm=T), 5)
+    out_colsum <- round(colSums(out, na.rm=TRUE), 5)
     
     expect_that(
         all.equal(
@@ -79,7 +79,7 @@ test_that("meanNormalization", {
     
     out <- meanNormalization(test_data)
     out_dim <- dim(out)
-    out_colsum <- round(colSums(out, na.rm=T), 5)
+    out_colsum <- round(colSums(out, na.rm=TRUE), 5)
     
     expect_that(
         all.equal(
@@ -108,7 +108,7 @@ test_that("performVSNNormalization", {
     
     out <- performVSNNormalization(test_data)
     out_dim <- dim(out)
-    out_colsum <- round(colSums(out, na.rm=T), 5)
+    out_colsum <- round(colSums(out, na.rm=TRUE), 5)
     
     expect_that(
         all.equal(
@@ -137,7 +137,7 @@ test_that("performQuantileNormalization", {
     
     out <- performQuantileNormalization(test_data)
     out_dim <- dim(out)
-    out_colsum <- round(colSums(out, na.rm=T), 5)
+    out_colsum <- round(colSums(out, na.rm=TRUE), 5)
     
     expect_that(
         all.equal(
@@ -166,7 +166,7 @@ test_that("performSMADNormalization", {
     
     out <- performSMADNormalization(test_data)
     out_dim <- dim(out)
-    out_colsum <- round(colSums(out, na.rm=T), 5)
+    out_colsum <- round(colSums(out, na.rm=TRUE), 5)
     
     expect_that(
         all.equal(
@@ -195,7 +195,7 @@ test_that("performCyclicLoessNormalization", {
     
     out <- performCyclicLoessNormalization(test_data)
     out_dim <- dim(out)
-    out_colsum <- round(colSums(out, na.rm=T), 5)
+    out_colsum <- round(colSums(out, na.rm=TRUE), 5)
     
     expect_that(
         all.equal(
@@ -224,7 +224,7 @@ test_that("performGlobalRLRNormalization", {
     
     out <- performGlobalRLRNormalization(test_data)
     out_dim <- dim(out)
-    out_colsum <- round(colSums(out, na.rm=T), 5)
+    out_colsum <- round(colSums(out, na.rm=TRUE), 5)
     
     expect_that(
         all.equal(
@@ -253,7 +253,7 @@ test_that("performNoNormalization", {
     
     out <- performNoNormalization(test_data)
     out_dim <- dim(out)
-    out_colsum <- round(colSums(out, na.rm=T), 5)
+    out_colsum <- round(colSums(out, na.rm=TRUE), 5)
     
     expect_that(
         all.equal(

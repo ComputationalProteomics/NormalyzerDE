@@ -33,7 +33,7 @@ getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod,
                                   stepSizeMinutes=1, windowMinCount=100, 
                                   offset=0) {
     
-    if (class(rawMatrix) != "matrix") {
+    if (!is(rawMatrix, "matrix")) {
         stop(paste("Type of rawMatrix is expected to be matrix, received:", class(rawMatrix)))
     }
     

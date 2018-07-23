@@ -32,7 +32,7 @@ test_that("getRTNormalizedMatrix_global_intensity", {
         windowMinCount=10)
     
     out_dim <- dim(out)
-    out_colsum <- round(colSums(out, na.rm=T), 5)
+    out_colsum <- round(colSums(out, na.rm=TRUE), 5)
     
     expect_that(
         all.equal(
@@ -67,7 +67,7 @@ test_that("getRTNormalizedMatrix_loess", {
         windowMinCount=10)
     
     out_dim <- dim(out)
-    out_colsum <- round(colSums(out, na.rm=T), 5)
+    out_colsum <- round(colSums(out, na.rm=TRUE), 5)
     
     expect_that(
         all.equal(
@@ -105,7 +105,7 @@ test_that("getSmoothedRTNormalizedMatrix_global_intensity", {
         )
     
     out_dim <- dim(out)
-    out_colsum <- round(colSums(out, na.rm=T), 5)
+    out_colsum <- round(colSums(out, na.rm=TRUE), 5)
     
     expect_that(
         all.equal(
@@ -143,7 +143,7 @@ test_that("getSmoothedRTNormalizedMatrix_loess", {
         )
     
     out_dim <- dim(out)
-    out_colsum <- round(colSums(out, na.rm=T), 5)
+    out_colsum <- round(colSums(out, na.rm=TRUE), 5)
     
     expect_that(
         all.equal(
