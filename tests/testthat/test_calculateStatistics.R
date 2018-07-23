@@ -1,5 +1,7 @@
 context("calculateStatistics")
 
+data("example_data_only_values")
+
 # Transfer to utils
 test_that("filterLowRep", {
 
@@ -89,18 +91,58 @@ test_that("reduceDesignTechRep", {
 })
 
 # Statistics
-test_that("calculateWelch", {
+test_that("calculateWelch_data_test", {
     
-    # expected_out <- regression_test_ner@avgvarmem
-    # out <- calculateAvgReplicateVariation(normMatrices, sampleReplicateGroups)
+    small_df <- log2(head(example_data_only_values))
     
-    # expect_that(
-    #     all.equal(
-    #         expected_out,
-    #         out
-    #     ),
-    #     is_true()
-    # )
+    # small_df content
+    # 
+    # s_500amol_1 s_500amol_2 s_500amol_3 s_2500amol_1 s_2500amol_2 s_2500amol_3
+    # [1,]    26.54878    26.52997    26.63352     26.89629     26.79226     26.74493
+    # [2,]    26.62507    26.39669    26.75476     26.56381     26.36598     26.17868
+    # [3,]    28.42273    28.45091    28.58193           NA     28.56563     28.66707
+    # [4,]    25.53961    25.90364    25.38250     23.43634     24.55913     24.19715
+    # [5,]    27.36890    27.29489    27.37707     26.60043     26.34719     26.22433
+    # [6,]    28.90688    28.83352    28.85170     28.12027     28.31122     28.08823
+
+    expected_p <- c(0.01484, 0.21877, 0.17375, 0.0271, 0.01001, 0.00592)
+    expected_fdr <- c(0.02968, 0.21877, 0.20851, 0.04065, 0.02968, 0.02968)
+    expected_fold <- c(-0.2404, 0.22268, -0.13116, 1.54437, 0.95631, 0.69079)
+    expected_ave <- c(26.70042, 26.5699, 28.52404, 24.94016, 26.82584, 28.36693)
+    
+    out <- calculateWelch(small_df, c(10, 11, 12), c(13, 14, 15))
+    
+    expect_that(
+        all.equal(
+            expected_p,
+            round(out[["P"]], 5)
+        ),
+        is_true()
+    )
+    
+    expect_that(
+        all.equal(
+            expected_fdr,
+            round(out[["FDR"]], 5)
+        ),
+        is_true()
+    )
+    
+    expect_that(
+        all.equal(
+            expected_fold,
+            round(out[["Fold"]], 5)
+        ),
+        is_true()
+    )
+    
+    expect_that(
+        all.equal(
+            expected_ave,
+            round(out[["Ave"]], 5)
+        ),
+        is_true()
+    )
 })
 
 test_that("calculateLimmaContrast", {

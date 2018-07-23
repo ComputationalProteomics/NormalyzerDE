@@ -184,20 +184,16 @@ calculateWelch <- function(dataMat, s1cols, s2cols) {
 
     statResults <- list()
 
+    # browser()
+    
     statResults[["P"]] <- welchPValCol
     statResults[["FDR"]] <- welchFDRCol
-    statResults[["Ave"]] <- apply(dataMat, 1, mean)
+    statResults[["Ave"]] <- apply(dataMat, 1, mean, na.rm=T)
     statResults[["Fold"]] <- apply(
         dataMat, 
         1,
-        function(row) { mean(row[s1cols]) - mean(row[s2cols]) })
-        
-    # compLists[["P"]][[comp]][naFilterContrast] <- welchPValCol
-    # compLists[["FDR"]][[comp]][naFilterContrast] <- welchFDRCol
-    # compLists[["Ave"]][[comp]][naFilterContrast] <- apply(dataMat, 1, mean)
-    # compLists[["Fold"]][[comp]][naFilterContrast] <- apply(
-    #     dataMat, 1,
-    #     function(row) { mean(row[s1cols]) - mean(row[s2cols]) })
+        function(row) { mean(row[s1cols], na.rm=T) - mean(row[s2cols], na.rm=T) })
+
     statResults
 }
 
