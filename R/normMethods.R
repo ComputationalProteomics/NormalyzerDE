@@ -3,7 +3,6 @@
 #' @param nds Normalyzer dataset object.
 #' @param forceAll Force all methods to run despite not qualifying for thresholds.
 #' @param normalizeRetentionTime Perform retention time based normalization methods.
-#' @param retentionTimeWindow Default window size for retention times.
 #' @param quiet Prevent diagnostic output
 #' 
 #' @param rtStepSizeMinutes Retention time normalization window size.

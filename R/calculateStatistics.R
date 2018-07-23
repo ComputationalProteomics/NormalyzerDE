@@ -35,8 +35,8 @@ filterLowRep <- function(df, groups, leastRep = 2) {
 #' @return collDataMat Reduced data matrix
 #' @export
 #' @examples
-#' tech_rep <- c("a", "a", "b", "b", "c", "c", "d", "d")
-#' test_data <- data.frame(
+#' techRep <- c("a", "a", "b", "b", "c", "c", "d", "d")
+#' testData <- data.frame(
 #'     c(1,1,1), 
 #'     c(1,2,1), 
 #'     c(3,3,3), 
@@ -45,8 +45,8 @@ filterLowRep <- function(df, groups, leastRep = 2) {
 #'     c(5,5,5), 
 #'     c(7,7,7), 
 #'     c(7,9,7))
-#' colnames(test_data) <- c("a1", "a2", "b1", "b2", "c1", "c2", "d1", "d2")
-#' statObj <- reduceTechnicalReplicates(designDf, designDf$techrep)
+#' colnames(testData) <- c("a1", "a2", "b1", "b2", "c1", "c2", "d1", "d2")
+#' statObj <- reduceTechnicalReplicates(testData, techRep)
 reduceTechnicalReplicates <- function(dataMat, techRepGroups) {
     
     uniqueGroups <- unique(techRepGroups)

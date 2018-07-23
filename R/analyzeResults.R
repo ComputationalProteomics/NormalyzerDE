@@ -218,7 +218,6 @@ calculateAvgReplicateVariation <- function(methodList, sampleReplicateGroups) {
 #'   present in two or more samples
 #' @param corrType Type of correlation (Pearson or Spearman)
 #' @return avgCorSum
-#' @export
 #' @keywords internal
 calculateSummarizedCorrelationVector <- function(
     methodlist, allReplicateGroups, sampleGroupsWithReplicates, corrType) {
@@ -257,7 +256,14 @@ calculateSummarizedCorrelationVector <- function(
 #' @param corrType Type of correlation (Pearson or Spearman)
 #' @return corSums
 #' @export
-#' @keywords internal
+#' @examples
+#' data("example_data_only_values")
+#' data("example_design")
+#' testDesign <- example_design[which(example_design$group %in% c("1", "2", "3")), ]
+#' testData <- example_data_only_values[, as.character(testDesign$sample)]
+#' groupHeader <- testDesign$group
+#' uniqueGroups <- unique(groupHeader)
+#' calculateCorrSum(testData, groupHeader, uniqueGroups, "pearson")
 calculateCorrSum <- function(
     methodData, allReplicateGroups, sampleGroupsWithReplicates, corrType) {
     

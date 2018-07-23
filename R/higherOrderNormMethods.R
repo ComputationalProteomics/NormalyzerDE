@@ -27,7 +27,8 @@
 #'     colnames(normMatrix) <- colnames(rawMatrix)
 #'     normMatrix
 #' }
-#' rtNormMat <- getRTNormalizedMatrix(dataMat, retentionTimes, performCyclicLoessNormalization, stepSizeMinutes=1, windowMinCount=100)
+#' rtNormMat <- getRTNormalizedMatrix(dataMat, retentionTimes, 
+#'   performCyclicLoessNormalization, stepSizeMinutes=1, windowMinCount=100)
 getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, 
                                   stepSizeMinutes=1, windowMinCount=100, 
                                   offset=0) {
@@ -185,7 +186,7 @@ getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes,
 #' @param retentionTimes Vector of retention times corresponding to rawMatrix
 #' @param normMethod The normalization method to apply to the time windows
 #' @param stepSizeMinutes Size of windows to be normalized
-#' @param frameShifts Number of frame shifts.
+#' @param windowShifts Number of frame shifts.
 #' @param windowMinCount Minimum number of features within window.
 #' @param mergeMethod Layer merging approach. Mean or median.
 #' @return Normalized matrix
@@ -205,7 +206,7 @@ getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes,
 #' }
 #' rtNormMat <- getSmoothedRTNormalizedMatrix(dataMat, retentionTimes, 
 #'     performCyclicLoessNormalization, stepSizeMinutes=1, windowMinCount=100, 
-#'     frameShifts=3, mergeMethod="median")
+#'     windowShifts=3, mergeMethod="median")
 getSmoothedRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSizeMinutes, 
                                           windowShifts=2, windowMinCount=100, mergeMethod="mean") {
     

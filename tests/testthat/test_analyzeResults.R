@@ -130,7 +130,7 @@ test_that("calculateANOVAPValues", {
 test_that("findLowlyVariableFeatures", {
     
     expected_out <- regression_test_ner@nonsiganfdrlist
-    log2AnovaFDR <- p.adjust(
+    log2AnovaFDR <- stats::p.adjust(
         anova_pvalues[, 1][!is.na(anova_pvalues[, 1])], method="BH")
     out <- findLowlyVariableFeatures(log2AnovaFDR, normMatrices)
     

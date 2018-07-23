@@ -42,6 +42,12 @@ NormalyzerStatistics <- setClass("NormalyzerStatistics",
 #' @return nst Statistics object with statistical measures calculated
 #' @rdname calculateContrasts
 #' @export
+#' @examples
+#' data("example_stat_data")
+#' data("example_design")
+#' nst <- setupStatisticsObject(example_design, example_stat_data)
+#' results <- calculateContrasts(nst, c("1-2", "2-3"), "group")
+#' resultsBatch <- calculateContrasts(nst, c("1-2", "2-3"), "group", "batch")
 setGeneric(name="calculateContrasts", 
            function(nst, comparisons, condCol, batchCol=NULL, splitter="-", 
                     type="limma") standardGeneric("calculateContrasts"))
@@ -55,8 +61,7 @@ setMethod(f="calculateContrasts",
               sampleReplicateGroups <- nst@designDf[, condCol]
               sampleReplicateGroupsStrings <- as.character(nst@designDf[, condCol])
               statMeasures <- c("P", "FDR", "Ave", "Fold")
-              compLists <- setupStatMeasureLists(statMeasures, comparisons)
-              
+
               naFilterContrast <- nst@filteringContrast
               dataMatNAFiltered <- nst@filteredDataMat
               
@@ -168,11 +173,11 @@ calculateWelch <- function(dataMat, groupHeader, levels) {
 
     statResults[["P"]] <- welchPValCol
     statResults[["FDR"]] <- welchFDRCol
-    statResults[["Ave"]] <- apply(dataMat, 1, mean, na.rm=T)
+    statResults[["Ave"]] <- apply(dataMat, 1, mean, na.rm=TRUE)
     statResults[["Fold"]] <- apply(
         dataMat, 
         1,
-        function(row) { mean(row[s1cols], na.rm=T) - mean(row[s2cols], na.rm=T) })
+        function(row) { mean(row[s1cols], na.rm=TRUE) - mean(row[s2cols], na.rm=TRUE) })
 
     statResults
 }

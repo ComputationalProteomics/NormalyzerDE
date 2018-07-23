@@ -180,7 +180,7 @@ layeredRtNormMat <- getSmoothedRTNormalizedMatrix(
     performCyclicLoessNormalization, 
     stepSizeMinutes=1, 
     windowMinCount=100, 
-    frameShifts=3, 
+    windowShifts=3, 
     mergeMethod="mean")
 
 dim(layeredRtNormMat)
