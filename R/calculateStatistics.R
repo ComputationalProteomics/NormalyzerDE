@@ -1,16 +1,84 @@
+
+#' Filter rows with lower than given number of replicates for any condition
+#' 
+#' @param df 
+#' @param groups
+#' @param leastRep
+#' @return collDesignDf Reduced design matrix
+#' @keywords internal
 filterLowRep <- function(df, groups, leastRep = 2) {
+    
+    allReplicatesHaveValuesContrast <- function(row, groups, minCount) {
+        names(row) <- groups
+        repCounts <- table(names(stats::na.omit(row)))
+        length(repCounts) == length(unique(groups)) && min(repCounts) >= minCount
+    }
+    
     rowMeetThresContrast <- apply(df, 1, allReplicatesHaveValuesContrast, 
                                      groups = groups, minCount = leastRep)
     filteredDf <- df[rowMeetThresContrast, ]
     filteredDf
 }
 
-allReplicatesHaveValuesContrast <- function(row, groups, minCount) {
-    names(row) <- groups
-    repCounts <- table(names(stats::na.omit(row)))
-    length(repCounts) == length(unique(groups)) && min(repCounts) >= minCount
+
+#' Remove technical replicates from data matrix while collapsing
+#' sample values into average values
+#' 
+#' @param dataMat NormalyzerDE data matrix
+#' @param techRepGroups Technical replicates vector
+#' @return collDataMat Reduced data matrix
+#' @export
+#' @examples
+#' tech_rep <- c("a", "a", "b", "b", "c", "c", "d", "d")
+#' test_data <- data.frame(
+#'     c(1,1,1), 
+#'     c(1,2,1), 
+#'     c(3,3,3), 
+#'     c(5,3,3), 
+#'     c(5,5,4), 
+#'     c(5,5,5), 
+#'     c(7,7,7), 
+#'     c(7,9,7))
+#' colnames(test_data) <- c("a1", "a2", "b1", "b2", "c1", "c2", "d1", "d2")
+#' statObj <- reduceTechnicalReplicates(designDf, designDf$techrep)
+reduceTechnicalReplicates <- function(dataMat, techRepGroups) {
+    
+    uniqueGroups <- unique(techRepGroups)
+    indices <- lapply(uniqueGroups, function(i) { which(techRepGroups %in% i) })
+    
+    collDataMat <- as.matrix(data.frame(lapply(
+        indices, 
+        function(inds) {rowMeans(dataMat[, inds], na.rm = TRUE)})))
+    colnames(collDataMat) <- uniqueGroups
+    collDataMat
 }
 
+#' Remove technical replicates from design matrix.
+#' Technical replicates are specified as duplicate strings.
+#' The first sample name corresponding for each technical replicate group
+#' is retained.
+#' 
+#' @param designMat NormalyzerDE design matrix
+#' @param techRepGroups Technical replicates vector
+#' @return collDesignDf Reduced design matrix
+#' @export
+#' @examples
+#' designDf <- data.frame(
+#'   sample=c("a1", "a2", "b1", "b2", "c1", "c2", "d1", "d2"),
+#'   group=c(rep("A", 4), rep("B", 4)),
+#'   techrep=c("a", "a", "b", "b", "c", "c", "d", "d")
+#' )
+#' statObj <- reduceDesignTechRep(designDf, designDf$techrep)
+reduceDesignTechRep <- function(designMat, techRepGroups) {
+    
+    uniqueGroups <- unique(techRepGroups)
+    indices <- lapply(uniqueGroups, function(i) { which(techRepGroups %in% i) })
+    collDesignMatList <- lapply(indices, function(inds) { designMat[inds[1],] })
+    collDesignDf <- do.call(rbind.data.frame, collDesignMatList)
+    collDesignDf <- droplevels(collDesignDf)
+    rownames(collDesignDf) <- seq_len(nrow(collDesignDf))
+    collDesignDf
+}
 
 #' Setup NormalyzerDE statistics object
 #' 
@@ -36,6 +104,7 @@ setupStatisticsObject <- function(designDf, fullDf, sampleCol="sample",
     dataMat <- as.matrix(fullDf[, dataCols], )
     
     rownames(dataMat) <- seq_len(nrow(dataMat))
+    
     dataMatNAFiltered <- filterLowRep(dataMat, designDf[, conditionCol], leastRep=leastRepCount)
     naFilterContrast <- rownames(dataMat) %in% rownames(dataMatNAFiltered)
       
@@ -147,24 +216,4 @@ plotContrastPHists <- function(nst, jobName, currentLayout, pageno) {
     printPlots(histPlots, "HistPlots", pageno, jobName, currentLayout)  
 }
 
-
-reduceTechnicalReplicates <- function(dataMat, techRepGroups) {
-    
-    uniqueGroups <- unique(techRepGroups)
-    indices <- lapply(uniqueGroups, function(i) { which(techRepGroups %in% i) })
-    
-    collDataMat <- as.matrix(data.frame(lapply(indices, function(inds) {rowMeans(dataMat[, inds], na.rm = TRUE)})))
-    colnames(collDataMat) <- uniqueGroups
-    collDataMat
-}
-
-
-reduceDesign <- function(designMat, techRepGroups) {
-    
-    uniqueGroups <- unique(techRepGroups)
-    indices <- lapply(uniqueGroups, function(i) { which(techRepGroups %in% i) })
-    collDesignMatList <- lapply(indices, function(inds) { designMat[inds[1],] })
-    collDesignMat <- do.call(rbind.data.frame, collDesignMatList)
-    collDesignMat
-}
 
