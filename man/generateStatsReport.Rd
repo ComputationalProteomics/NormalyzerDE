@@ -27,7 +27,8 @@ Generate full output report plot document
 data(example_stat_data)
 data(example_design)
 statObj <- setupStatisticsObject(example_design, example_stat_data)
-statObj <- calculateContrasts(statObj, comparisons=c("1-2", "2-3"), condCol="group", type="limma")
+statObj <- calculateContrasts(statObj, comparisons=c("1-2", "2-3"), 
+  condCol="group", type="limma")
 outputDir <- tempdir()
 generateStatsReport(statObj, "jobName", outputDir)
 }

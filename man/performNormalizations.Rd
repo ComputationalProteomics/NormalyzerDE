@@ -6,10 +6,12 @@
 \alias{performNormalizations,NormalyzerResults-method}
 \title{Main function for executing normalizations}
 \usage{
-performNormalizations(nr, forceAll, rtNorm, rtWindow, quiet)
+performNormalizations(nr, forceAll, rtNorm, rtStepSizeMinutes, rtWindowMinCount,
+  rtWindowShifts, rtWindowMergeMethod, quiet)
 
 \S4method{performNormalizations}{NormalyzerResults}(nr, forceAll = FALSE,
-  rtNorm = FALSE, rtWindow = 0.1, quiet = FALSE)
+  rtNorm = FALSE, rtStepSizeMinutes = 1, rtWindowMinCount = 100,
+  rtWindowShifts = 1, rtWindowMergeMethod = "median", quiet = FALSE)
 }
 \arguments{
 \item{nr}{Normalyzer results object.}
@@ -19,10 +21,17 @@ performNormalizations(nr, forceAll, rtNorm, rtWindow, quiet)
 
 \item{rtNorm}{Perform retention time based normalizations}
 
-\item{rtWindow}{Retention time window size.}
+\item{rtStepSizeMinutes}{Retention time normalization window size.}
+
+\item{rtWindowMinCount}{Minimum number of datapoints in each retention-time
+segment.}
+
+\item{rtWindowShifts}{Number of layered retention time normalized windows.}
+
+\item{rtWindowMergeMethod}{Merge approach for layered retention time windows.}
 }
 \value{
-None
+nr NormalyzerDE results object
 }
 \description{
 Main function for executing normalizations

@@ -28,24 +28,20 @@ compared to log2-transformed data}
 \item{\code{avgvarmempdiff}}{Percentage difference of mean variance compared
 to log2-transformed data}
 
-\item{\code{nonsiganfdrlist}}{List of 5% least variable entries based on ANOVA
+\item{\code{lowVarFeaturesCVs}}{List of 5% least variable entries based on ANOVA
 for log2-transformed data}
 
-\item{\code{nonsiganfdrlistcvpdiff}}{Coefficient of variance for least variable
+\item{\code{lowVarFeaturesCVsPercDiff}}{Coefficient of variance for least variable
 entries}
 
 \item{\code{anfdr}}{ANOVA FDR values}
 
-\item{\code{kwfdr}}{Kruskal-Wallis FDR values}
-
 \item{\code{anovaFDRWithNA}}{ANOVA FDR with NA when not applicable}
-
-\item{\code{krusWalFDRWithNA}}{KruskalWallis FDR with NA when not applicable}
 
 \item{\code{anovaP}}{ANOVA calculated p-values}
 
-\item{\code{avgpercorsum}}{Within group Pearson correlations}
+\item{\code{repCorPear}}{Within group Pearson correlations}
 
-\item{\code{avgspecorsum}}{Within group Spearman correlations}
+\item{\code{repCorSpear}}{Within group Spearman correlations}
 }}
 

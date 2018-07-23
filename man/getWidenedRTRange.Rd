@@ -2,16 +2,19 @@
 % Please edit documentation in R/higherOrderNormMethods.R
 \name{getWidenedRTRange}
 \alias{getWidenedRTRange}
-\title{Pick datapoints before and after window until a minimum number is reached}
+\title{Pick datapoints before and after window until a minimum number is reached
+Expects the start and end retention times to match actual retention times
+present in the data}
 \usage{
-getWidenedRTRange(rtStart, rtEnd, minimumDatapoints, retentionTimes)
+getWidenedRTRange(rtStart, rtEnd, minimumDatapoints, retentionTimes,
+  allowTooWideData = FALSE)
 }
 \arguments{
 \item{rtStart}{Original retention time start point}
 
 \item{rtEnd}{Original retention time end point}
 
-\item{minimumDatapoints}{Required number of datapoints to fullfil}
+\item{minimumDatapoints}{Required number of datapoints to fulfill}
 
 \item{retentionTimes}{Vector with all retention times}
 }
@@ -20,5 +23,7 @@ Vector with start and end of new RT range
 }
 \description{
 Pick datapoints before and after window until a minimum number is reached
+Expects the start and end retention times to match actual retention times
+present in the data
 }
 \keyword{internal}

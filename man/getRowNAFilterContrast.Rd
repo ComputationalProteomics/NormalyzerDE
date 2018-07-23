@@ -5,16 +5,13 @@
 \title{Get contrast vector (TRUE/FALSE-values) indicating whether both at least
 half values are present, and each sample has at least one non-NA value}
 \usage{
-getRowNAFilterContrast(dataMatrix, replicateHeader, varFilterFrac = NULL,
-  minCount = 1)
+getRowNAFilterContrast(dataMatrix, replicateHeader, minCount = 1)
 }
 \arguments{
 \item{dataMatrix}{Matrix with expression values for entities in replicate 
 samples.}
 
 \item{replicateHeader}{Header showing how samples in matrix are replicated.}
-
-\item{varFilterFrac}{Variance filtering fraction.}
 
 \item{minCount}{Minimum number of required values present in samples.}
 }

@@ -43,5 +43,6 @@ performCyclicLoessNormalization <- function(rawMatrix) {
     colnames(normMatrix) <- colnames(rawMatrix)
     normMatrix
 }
-rtNormMat <- getRTNormalizedMatrix(dataMat, retentionTimes, performCyclicLoessNormalization, stepSizeMinutes=1, windowMinCount=100)
+rtNormMat <- getRTNormalizedMatrix(dataMat, retentionTimes, 
+  performCyclicLoessNormalization, stepSizeMinutes=1, windowMinCount=100)
 }

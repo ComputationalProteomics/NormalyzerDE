@@ -5,7 +5,8 @@
 \title{Perform normalizations on Normalyzer dataset}
 \usage{
 normMethods(nds, forceAll = FALSE, normalizeRetentionTime = TRUE,
-  retentionTimeWindow = 1, quiet = FALSE)
+  quiet = FALSE, rtStepSizeMinutes = 1, rtWindowMinCount = 100,
+  rtWindowShifts = 1, rtWindowMergeMethod = "mean")
 }
 \arguments{
 \item{nds}{Normalyzer dataset object.}
@@ -14,9 +15,16 @@ normMethods(nds, forceAll = FALSE, normalizeRetentionTime = TRUE,
 
 \item{normalizeRetentionTime}{Perform retention time based normalization methods.}
 
-\item{retentionTimeWindow}{Default window size for retention times.}
-
 \item{quiet}{Prevent diagnostic output}
+
+\item{rtStepSizeMinutes}{Retention time normalization window size.}
+
+\item{rtWindowMinCount}{Minimum number of datapoints in each retention-time
+segment.}
+
+\item{rtWindowShifts}{Number of layered retention time normalized windows.}
+
+\item{rtWindowMergeMethod}{Merge approach for layered retention time windows.}
 }
 \value{
 Returns Normalyzer results object with performed analyzes assigned

@@ -19,7 +19,8 @@ Statistical dataset representation
 
 \item{\code{designDf}}{Data frame containing design conditions}
 
-\item{\code{filteringContrast}}{Vector showing which entries are filtered (due to low count)}
+\item{\code{filteringContrast}}{Vector showing which entries are filtered 
+(due to low count)}
 
 \item{\code{pairwiseCompsP}}{List with P-values for pairwise comparisons}
 
@@ -27,6 +28,7 @@ Statistical dataset representation
 
 \item{\code{pairwiseCompsAve}}{List with average expression values}
 
-\item{\code{pairwiseCompsFold}}{List with log2 fold-change values for pairwise comparisons}
+\item{\code{pairwiseCompsFold}}{List with log2 fold-change values for pairwise 
+comparisons}
 }}
 

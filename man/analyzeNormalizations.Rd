@@ -4,8 +4,7 @@
 \alias{analyzeNormalizations}
 \title{Calculate measures for normalization results}
 \usage{
-analyzeNormalizations(nr, comparisons = NULL, categoricalAnova = FALSE,
-  varFilterFrac = NULL)
+analyzeNormalizations(nr, comparisons = NULL, categoricalAnova = FALSE)
 }
 \arguments{
 \item{nr}{Normalyzer results object with calculated results.}
@@ -13,8 +12,6 @@ analyzeNormalizations(nr, comparisons = NULL, categoricalAnova = FALSE,
 \item{comparisons}{Target sample contrasts to run.}
 
 \item{categoricalAnova}{ANOVA can be categorical or numerical.}
-
-\item{varFilterFrac}{Perform variance filtering before tests.}
 }
 \value{
 Normalyzer results with attached evaluation results object.

@@ -6,7 +6,7 @@
 Then return the mean of these matrices.}
 \usage{
 getSmoothedRTNormalizedMatrix(rawMatrix, retentionTimes, normMethod,
-  stepSizeMinutes, frameShifts = 2, windowMinCount = 100,
+  stepSizeMinutes, windowShifts = 2, windowMinCount = 100,
   mergeMethod = "mean")
 }
 \arguments{
@@ -18,7 +18,7 @@ getSmoothedRTNormalizedMatrix(rawMatrix, retentionTimes, normMethod,
 
 \item{stepSizeMinutes}{Size of windows to be normalized}
 
-\item{frameShifts}{Number of frame shifts.}
+\item{windowShifts}{Number of frame shifts.}
 
 \item{windowMinCount}{Minimum number of features within window.}
 
@@ -46,5 +46,5 @@ performCyclicLoessNormalization <- function(rawMatrix) {
 }
 rtNormMat <- getSmoothedRTNormalizedMatrix(dataMat, retentionTimes, 
     performCyclicLoessNormalization, stepSizeMinutes=1, windowMinCount=100, 
-    frameShifts=3, mergeMethod="median")
+    windowShifts=3, mergeMethod="median")
 }

@@ -6,20 +6,25 @@
 \alias{performRTNormalizations,NormalyzerResults-method}
 \title{Perform retention time normalizations}
 \usage{
-performRTNormalizations(nr, stepSizeMinutes, overlapWindows)
+performRTNormalizations(nr, stepSizeMinutes, minWindowSize, windowShifts,
+  mergeMethod)
 
 \S4method{performRTNormalizations}{NormalyzerResults}(nr, stepSizeMinutes,
-  overlapWindows = FALSE)
+  minWindowSize, windowShifts, mergeMethod)
 }
 \arguments{
 \item{nr}{Results object.}
 
 \item{stepSizeMinutes}{Size of normalization windows in minutes retention time.}
 
-\item{overlapWindows}{Number of overlapping normalization windows.}
+\item{minWindowSize}{Minimum number of datapoints within each retention time window.}
+
+\item{windowShifts}{Number of overlapping retention-time segmented normalizations.}
+
+\item{mergeMethod}{Type of merge approach for overlapping windows.}
 }
 \value{
-None
+nr NormalyzerDE results object
 }
 \description{
 Perform retention time normalizations

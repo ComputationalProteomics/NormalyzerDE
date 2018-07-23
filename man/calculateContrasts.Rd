@@ -31,3 +31,10 @@ nst Statistics object with statistical measures calculated
 \description{
 Main method for contrast calculation
 }
+\examples{
+data("example_stat_data")
+data("example_design")
+nst <- setupStatisticsObject(example_design, example_stat_data)
+results <- calculateContrasts(nst, c("1-2", "2-3"), "group")
+resultsBatch <- calculateContrasts(nst, c("1-2", "2-3"), "group", "batch")
+}

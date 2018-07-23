@@ -7,10 +7,10 @@
 \title{Calculate significance measures (p-value and FDR-value) for ANOVA and
 Kruskal-Wallis}
 \usage{
-calculateSignificanceMeasures(ner, nr, categoricalAnova, varFilterFrac)
+calculateSignificanceMeasures(ner, nr, categoricalAnova)
 
 \S4method{calculateSignificanceMeasures}{NormalyzerEvaluationResults}(ner, nr,
-  categoricalAnova = FALSE, varFilterFrac = NULL)
+  categoricalAnova = TRUE)
 }
 \arguments{
 \item{ner}{NormalyzerDE evaluation object.}
@@ -18,8 +18,6 @@ calculateSignificanceMeasures(ner, nr, categoricalAnova, varFilterFrac)
 \item{nr}{Normalyzer results object.}
 
 \item{categoricalAnova}{Categorical groupwise comparison instead of numeric}
-
-\item{varFilterFrac}{Variance filter high variance data}
 }
 \value{
 None

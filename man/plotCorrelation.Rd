@@ -2,7 +2,7 @@
 % Please edit documentation in R/generatePlots.R
 \name{plotCorrelation}
 \alias{plotCorrelation}
-\title{Visualize correlations for plots}
+\title{Visualize within-replicates correlations}
 \usage{
 plotCorrelation(nr, currentLayout, pageno)
 }
@@ -17,6 +17,6 @@ plotCorrelation(nr, currentLayout, pageno)
 None
 }
 \description{
-Visualize correlations for plots
+Visualize within-replicates correlations
 }
 \keyword{internal}

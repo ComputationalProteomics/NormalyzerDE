@@ -7,10 +7,11 @@
 normalyzer(jobName, designPath, dataPath, outputDir = ".",
   forceAllMethods = FALSE, omitLowAbundSamples = FALSE,
   sampleAbundThres = 15, requireReplicates = TRUE,
-  normalizeRetentionTime = TRUE, retentionTimeWindow = 1, plotRows = 3,
-  plotCols = 4, zeroToNA = FALSE, sampleColName = "sample",
-  groupColName = "group", inputFormat = "default", skipAnalysis = FALSE,
-  quiet = FALSE)
+  normalizeRetentionTime = TRUE, plotRows = 3, plotCols = 4,
+  zeroToNA = FALSE, sampleColName = "sample", groupColName = "group",
+  inputFormat = "default", skipAnalysis = FALSE, quiet = FALSE,
+  rtStepSizeMinutes = 1, rtWindowMinCount = 100, rtWindowShifts = 1,
+  rtWindowMergeMethod = "mean")
 }
 \arguments{
 \item{jobName}{Give the current run a name.}
@@ -37,8 +38,6 @@ validation.}
 
 \item{normalizeRetentionTime}{Perform normalizations over retention time.}
 
-\item{retentionTimeWindow}{Retention time normalization window size.}
-
 \item{plotRows}{Number of plot-rows in output documentation.}
 
 \item{plotCols}{Number of plot-columns in output documentation.}
@@ -54,6 +53,15 @@ validation.}
 \item{skipAnalysis}{Only perform normalization steps.}
 
 \item{quiet}{Omit status messages printed during run}
+
+\item{rtStepSizeMinutes}{Retention time normalization window size.}
+
+\item{rtWindowMinCount}{Minimum number of datapoints in each retention-time
+segment.}
+
+\item{rtWindowShifts}{Number of layered retention time normalized windows.}
+
+\item{rtWindowMergeMethod}{Merge approach for layered retention time windows.}
 }
 \value{
 None
