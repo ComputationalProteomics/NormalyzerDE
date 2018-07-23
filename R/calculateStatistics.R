@@ -14,8 +14,13 @@ filterLowRep <- function(df, groups, leastRep = 2) {
         length(repCounts) == length(unique(groups)) && min(repCounts) >= minCount
     }
     
-    rowMeetThresContrast <- apply(df, 1, allReplicatesHaveValuesContrast, 
-                                     groups = groups, minCount = leastRep)
+    rowMeetThresContrast <- apply(
+        df, 
+        1,
+        allReplicatesHaveValuesContrast, 
+        groups = groups, 
+        minCount = leastRep)
+    
     filteredDf <- df[rowMeetThresContrast, ]
     filteredDf
 }
@@ -104,7 +109,6 @@ setupStatisticsObject <- function(designDf, fullDf, sampleCol="sample",
     dataMat <- as.matrix(fullDf[, dataCols], )
     
     rownames(dataMat) <- seq_len(nrow(dataMat))
-    
     dataMatNAFiltered <- filterLowRep(dataMat, designDf[, conditionCol], leastRep=leastRepCount)
     naFilterContrast <- rownames(dataMat) %in% rownames(dataMatNAFiltered)
       
@@ -136,21 +140,30 @@ setupStatisticsObject <- function(designDf, fullDf, sampleCol="sample",
 #' annotDf <- generateAnnotatedMatrix(statObj)
 generateAnnotatedMatrix <- function(nst) {
     
-    pairwiseHead <- paste(names(nst@pairwiseCompsP), "PValue", sep="_")
+    pairwiseHead <- paste(
+        names(nst@pairwiseCompsP), 
+        "PValue", 
+        sep="_")
     pMat <- data.frame(nst@pairwiseCompsP)
     colnames(pMat) <- pairwiseHead
     
-    pairwiseHeadFdr <- paste(names(nst@pairwiseCompsFdr), "AdjPVal", sep="_")
+    pairwiseHeadFdr <- paste(
+        names(nst@pairwiseCompsFdr), 
+        "AdjPVal", 
+        sep="_")
     fdrMat <- data.frame(nst@pairwiseCompsFdr)
     colnames(fdrMat) <- pairwiseHeadFdr
     
-    pairwiseHeadFold <- paste(names(nst@pairwiseCompsFold), "log2FoldChange", sep="_")
+    pairwiseHeadFold <- paste(
+        names(nst@pairwiseCompsFold), 
+        "log2FoldChange", 
+        sep="_")
     foldMat <- data.frame(nst@pairwiseCompsFold)
     colnames(foldMat) <- pairwiseHeadFold
     
     aveMat <- data.frame(nst@pairwiseCompsAve)
-    
-    outDf <- cbind(nst@annotMat, pMat, fdrMat, foldMat, featureAvg=aveMat[, 1], nst@dataMat)
+    outDf <- cbind(nst@annotMat, pMat, fdrMat, foldMat, 
+                   featureAvg=aveMat[, 1], nst@dataMat)
     outDf
 }
 
@@ -167,7 +180,8 @@ generateAnnotatedMatrix <- function(nst) {
 #' data(example_stat_data)
 #' data(example_design)
 #' statObj <- setupStatisticsObject(example_design, example_stat_data)
-#' statObj <- calculateContrasts(statObj, comparisons=c("1-2", "2-3"), condCol="group", type="limma")
+#' statObj <- calculateContrasts(statObj, comparisons=c("1-2", "2-3"), 
+#'   condCol="group", type="limma")
 #' outputDir <- tempdir()
 #' generateStatsReport(statObj, "jobName", outputDir)
 generateStatsReport <- function(nst, jobName, jobDir, plotRows=3, plotCols=4) {
@@ -175,10 +189,11 @@ generateStatsReport <- function(nst, jobName, jobDir, plotRows=3, plotCols=4) {
     nrows <- plotRows + 2
     ncols <- plotCols + 2
     
-    currentLayout <- grid::grid.layout(nrow=nrows, ncol=ncols,
-                                       heights=c(0.1, rep(3 / (nrows-2), (nrows - 2)), 0.1), 
-                                       widths=c(0.1, rep(4 / (ncols-2), (ncols - 2)), 0.1), 
-                                       default.units=c("null", "null"))
+    currentLayout <- grid::grid.layout(
+        nrow=nrows, ncol=ncols,
+        heights=c(0.1, rep(3 / (nrows-2), (nrows - 2)), 0.1), 
+        widths=c(0.1, rep(4 / (ncols-2), (ncols - 2)), 0.1), 
+        default.units=c("null", "null"))
     
     currentFont <- "Helvetica"
     setupPlotting(jobName, jobDir, "Norm-stats-report")
@@ -207,7 +222,8 @@ plotContrastPHists <- function(nst, jobName, currentLayout, pageno) {
         pVals <- contrastPLists[[contrast]]
         df <- data.frame(pVals=pVals)
         histPlots[[i]] <- ggplot2::ggplot(df) + 
-            ggplot2::geom_histogram(ggplot2::aes(pVals), na.rm=TRUE, binwidth=0.01) +
+            ggplot2::geom_histogram(
+                ggplot2::aes(pVals), na.rm=TRUE, binwidth=0.01) +
             ggplot2::ggtitle(paste("Contrast:", contrast))
     }
     

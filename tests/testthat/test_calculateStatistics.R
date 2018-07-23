@@ -89,48 +89,6 @@ test_that("reduceDesignTechRep", {
 })
 
 # Statistics
-test_that("setupStatisticsObject", {
-    
-    # expected_out <- regression_test_ner@avgvarmem
-    # out <- calculateAvgReplicateVariation(normMatrices, sampleReplicateGroups)
-    
-    # expect_that(
-    #     all.equal(
-    #         expected_out,
-    #         out
-    #     ),
-    #     is_true()
-    # )
-})
-
-test_that("generateAnnotatedMatrix", {
-    
-    # expected_out <- regression_test_ner@avgvarmem
-    # out <- calculateAvgReplicateVariation(normMatrices, sampleReplicateGroups)
-    
-    # expect_that(
-    #     all.equal(
-    #         expected_out,
-    #         out
-    #     ),
-    #     is_true()
-    # )
-})
-
-test_that("generateStatsReport", {
-    
-    # expected_out <- regression_test_ner@avgvarmem
-    # out <- calculateAvgReplicateVariation(normMatrices, sampleReplicateGroups)
-    
-    # expect_that(
-    #     all.equal(
-    #         expected_out,
-    #         out
-    #     ),
-    #     is_true()
-    # )
-})
-
 test_that("calculateWelch", {
     
     # expected_out <- regression_test_ner@avgvarmem

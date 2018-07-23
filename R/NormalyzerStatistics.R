@@ -81,7 +81,13 @@ setMethod(f="calculateContrasts",
                   limmaFit <- limma::lmFit(dataMatNAFiltered, limmaDesign)
               }
               
+              compLists <- list()
+              for (statMeasure in statMeasures) {
+                  compLists[[statMeasure]] <- list()
+              }
+
               for (comp in comparisons) {
+                  
                   compSplit <- unlist(strsplit(comp, splitter))
                   
                   if (length(compSplit) != 2) {
@@ -111,28 +117,29 @@ setMethod(f="calculateContrasts",
                   s1cols <- which(sampleReplicateGroupsStrings %in% level1)
                   s2cols <- which(sampleReplicateGroupsStrings %in% level2)
                   
+                  # browser()
+                  
                   if (type == "welch") {
-                      compLists <- calculateWelch(
-                          compLists, 
+                      statResults <- calculateWelch(
                           dataMatNAFiltered, 
-                          naFilterContrast, 
                           s1cols, 
-                          s2cols, 
-                          comp)
+                          s2cols)
                   }
                   else if (type == "limma") {
-                      compLists <- calculateLimmaContrast(
-                          compLists, 
+                      statResults <- calculateLimmaContrast(
                           dataMatNAFiltered, 
-                          naFilterContrast, 
                           limmaDesign, 
                           limmaFit, 
                           level1, 
-                          level2, 
-                          comp)
+                          level2)
                   }
                   else {
                       stop(paste("Unknown statistics type:", type))
+                  }
+                  
+                  for (statMeasure in statMeasures) {
+                      compLists[[statMeasure]][[comp]] <- c()
+                      compLists[[statMeasure]][[comp]][naFilterContrast] <- statResults[[statMeasure]]
                   }
               }
               
@@ -143,26 +150,26 @@ setMethod(f="calculateContrasts",
               nst
           })
 
-setupStatMeasureLists <- function(measures, comparisons) {
-    
-    compLists <- list()
-    for (measure in measures) {
-        compLists[[measure]] <- list()
-    }
-    
-    for (measure in measures) {
-        for (comp in comparisons) {
-            compLists[[measure]][[comp]] <- c()
-        }
-    }
-    compLists
-}
+# setupStatMeasureLists <- function(measures, comparisons) {
+#     
+#     compLists <- list()
+#     for (measure in measures) {
+#         compLists[[measure]] <- list()
+#     }
+#     
+#     for (measure in measures) {
+#         for (comp in comparisons) {
+#             compLists[[measure]][[comp]] <- c()
+#         }
+#     }
+#     compLists
+# }
 
-calculateWelch <- function(compLists, dataMat, naFilterContrast, s1cols, 
-                           s2cols, comp) {
+calculateWelch <- function(dataMat, s1cols, s2cols) {
     
     doTTest <- function(c1Vals, c2Vals, default=NA) {
-        if (length(stats::na.omit(c1Vals)) > 1 && length(stats::na.omit(c2Vals)) > 1) {
+        if (length(stats::na.omit(c1Vals)) > 1 && 
+            length(stats::na.omit(c2Vals)) > 1) {
             tryCatch(stats::t.test(c1Vals, c2Vals)[[3]], error=function(x) NA)
         }
         else {
@@ -175,19 +182,33 @@ calculateWelch <- function(compLists, dataMat, naFilterContrast, s1cols,
         function(row) doTTest(row[s1cols], row[s2cols], default=NA))
     welchFDRCol <- stats::p.adjust(welchPValCol, method="BH")
 
-    compLists[["P"]][[comp]][naFilterContrast] <- welchPValCol
-    compLists[["FDR"]][[comp]][naFilterContrast] <- welchFDRCol
-    compLists[["Ave"]][[comp]][naFilterContrast] <- apply(dataMat, 1, mean)
-    compLists[["Fold"]][[comp]][naFilterContrast] <- apply(
-        dataMat, 1,
+    statResults <- list()
+
+    statResults[["P"]] <- welchPValCol
+    statResults[["FDR"]] <- welchFDRCol
+    statResults[["Ave"]] <- apply(dataMat, 1, mean)
+    statResults[["Fold"]] <- apply(
+        dataMat, 
+        1,
         function(row) { mean(row[s1cols]) - mean(row[s2cols]) })
-    compLists
+        
+    # compLists[["P"]][[comp]][naFilterContrast] <- welchPValCol
+    # compLists[["FDR"]][[comp]][naFilterContrast] <- welchFDRCol
+    # compLists[["Ave"]][[comp]][naFilterContrast] <- apply(dataMat, 1, mean)
+    # compLists[["Fold"]][[comp]][naFilterContrast] <- apply(
+    #     dataMat, 1,
+    #     function(row) { mean(row[s1cols]) - mean(row[s2cols]) })
+    statResults
 }
 
-calculateLimmaContrast <- function(compLists, dataMatNAFiltered, 
-                                   naFilterContrast, limmaDesign, 
-                                   limmaFit, level1, level2, comp) {
+calculateLimmaContrast <- function(dataMat, limmaDesign, limmaFit, 
+                                   level1, level2) {
 
+    # calculateLimmaContrast <- function(compLists, dataMatNAFiltered, 
+    #                                    naFilterContrast, limmaDesign, 
+    #                                    limmaFit, level1, level2, comp) {
+    
+    
     myContrast <- paste0("Variable", level1, "-", "Variable", level2)
     contrastMatrix <- limma::makeContrasts(
         contrasts=c(myContrast), 
@@ -195,12 +216,19 @@ calculateLimmaContrast <- function(compLists, dataMatNAFiltered,
     fitContrasts <- limma::contrasts.fit(limmaFit, contrastMatrix)
     fitBayes <- limma::eBayes(fitContrasts)
     limmaTable <- limma::topTable(fitBayes, coef=1, number=Inf)
-    limmaTable <- limmaTable[rownames(dataMatNAFiltered), ]
+    limmaTable <- limmaTable[rownames(dataMat), ]
+
+    statResults <- list()
+    statResults[["P"]] <- limmaTable$P.Value
+    statResults[["FDR"]] <- limmaTable$adj.P.Val
+    statResults[["Ave"]] <- limmaTable$AveExpr
+    statResults[["Fold"]] <- limmaTable$logFC
+    statResults
     
-    compLists[["P"]][[comp]][naFilterContrast] <- limmaTable$P.Value
-    compLists[["FDR"]][[comp]][naFilterContrast] <- limmaTable$adj.P.Val
-    compLists[["Ave"]][[comp]][naFilterContrast] <- limmaTable$AveExpr
-    compLists[["Fold"]][[comp]][naFilterContrast] <- limmaTable$logFC
-    compLists
+    # compLists[["P"]][[comp]][naFilterContrast] <- limmaTable$P.Value
+    # compLists[["FDR"]][[comp]][naFilterContrast] <- limmaTable$adj.P.Val
+    # compLists[["Ave"]][[comp]][naFilterContrast] <- limmaTable$AveExpr
+    # compLists[["Fold"]][[comp]][naFilterContrast] <- limmaTable$logFC
+    # compLists
 }
 
