@@ -27,8 +27,15 @@
 #'     colnames(normMatrix) <- colnames(rawMatrix)
 #'     normMatrix
 #' }
-#' rtNormMat <- getRTNormalizedMatrix(dataMat, retentionTimes, performCyclicLoessNormalization, stepSizeMinutes=1, windowMinCount=100)
-getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSizeMinutes=1, windowMinCount=100, offset=0) {
+#' rtNormMat <- getRTNormalizedMatrix(dataMat, retentionTimes, 
+#'   performCyclicLoessNormalization, stepSizeMinutes=1, windowMinCount=100)
+getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, 
+                                  stepSizeMinutes=1, windowMinCount=100, 
+                                  offset=0) {
+    
+    if (class(rawMatrix) != "matrix") {
+        stop(paste("Type of rawMatrix is expected to be matrix, received:", class(rawMatrix)))
+    }
     
     sortedRT <- sort(retentionTimes)
     
@@ -70,6 +77,7 @@ getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSiz
             
             indicesOfInterest <- which(normalizationSliceIndices %in% targetSliceIndices)
             normalizedTargetRows <- processedNormalizationRows[indicesOfInterest,]
+            # normalizedTargetRows <- processedNormalizationRows[indicesOfInterest,, drop=FALSE]
         }
         else {
             normalizedTargetRows <- processedNormalizationRows
@@ -84,17 +92,34 @@ getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSiz
 }
 
 #' Pick datapoints before and after window until a minimum number is reached
+#' Expects the start and end retention times to match actual retention times
+#' present in the data
 #' 
 #' @param rtStart Original retention time start point
 #' @param rtEnd Original retention time end point
-#' @param minimumDatapoints Required number of datapoints to fullfil
+#' @param minimumDatapoints Required number of datapoints to fulfill
 #' @param retentionTimes Vector with all retention times
 #' @return Vector with start and end of new RT range
 #' @keywords internal
-getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes) {
+getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes,
+                              allowTooWideData=FALSE) {
     
     sortedRts <- sort(retentionTimes)
     currentRTSlice <- sortedRts[sortedRts >= rtStart & sortedRts < rtEnd] 
+    
+    if (length(currentRTSlice) == 0) {
+        stop("Selected retention time slice doesn't contain any data")
+    }
+    
+    if (length(currentRTSlice) > minimumDatapoints) {
+        if (allowTooWideData) {
+            return(c(rtStart, rtEnd))
+        }
+        else {
+            stop(paste("Number of datapoints exceed minimum, add option",
+                       " 'allowTooWideData' to process anyway"))
+        }
+    }
     
     # Get single element if multiple with exactly same RT
     startIndex <- utils::tail(which(sortedRts == min(currentRTSlice)), 1)
@@ -130,6 +155,15 @@ getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes)
     newStartRtIndex <- startIndex - pickBefore
     newEndRtIndex <- endIndex + pickAfter
     
+    if (newEndRtIndex - newStartRtIndex + 1 > length(sortedRts)) {
+        stop(paste0(
+            "Requested minimum window size (", 
+            newEndRtIndex - newStartRtIndex + 1, 
+            ") exceeds total number of datapoints (", 
+            length(sortedRts),
+            ")"))
+    }
+    
     widenedSlice <- sortedRts[newStartRtIndex:newEndRtIndex]
 
     if (length(widenedSlice) != minimumDatapoints) {
@@ -152,7 +186,7 @@ getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes)
 #' @param retentionTimes Vector of retention times corresponding to rawMatrix
 #' @param normMethod The normalization method to apply to the time windows
 #' @param stepSizeMinutes Size of windows to be normalized
-#' @param frameShifts Number of frame shifts.
+#' @param windowShifts Number of frame shifts.
 #' @param windowMinCount Minimum number of features within window.
 #' @param mergeMethod Layer merging approach. Mean or median.
 #' @return Normalized matrix
@@ -172,17 +206,22 @@ getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes)
 #' }
 #' rtNormMat <- getSmoothedRTNormalizedMatrix(dataMat, retentionTimes, 
 #'     performCyclicLoessNormalization, stepSizeMinutes=1, windowMinCount=100, 
-#'     frameShifts=3, mergeMethod="median")
+#'     windowShifts=3, mergeMethod="median")
 getSmoothedRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSizeMinutes, 
-                                          frameShifts=2, windowMinCount=100, mergeMethod="mean") {
+                                          windowShifts=2, windowMinCount=100, mergeMethod="mean") {
     
     matrices <- list()
-
-    for (i in seq_len(frameShifts)) {
+    
+    for (i in seq_len(windowShifts)) {
         
-        fracShift <- (i - 1) * 1 / frameShifts
-        matrices[[i]] <- getRTNormalizedMatrix(rawMatrix, retentionTimes, normMethod, 
-                                               stepSizeMinutes, windowMinCount=windowMinCount, offset=fracShift)
+        fracShift <- (i - 1) * 1 / windowShifts
+        matrices[[i]] <- getRTNormalizedMatrix(
+            rawMatrix, 
+            retentionTimes, 
+            normMethod,
+            stepSizeMinutes=stepSizeMinutes, 
+            windowMinCount=windowMinCount, 
+            offset=fracShift)
     }
 
     if (mergeMethod == "mean") {
@@ -199,6 +238,12 @@ getSmoothedRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod,
     combinedMatrices
 }
 
+#' Merge multiple dataframes using provided function
+#' 
+#' @param mList List containing dataframes of same shape
+#' @param combFunc Function performing elementwise merge of matrices
+#' @return combinedMatrix A single dataframe with combined data
+#' @keywords internal
 getCombinedMatrix <- function(mList, combFunc) {
     
     matrixCount <- length(mList)
@@ -207,18 +252,16 @@ getCombinedMatrix <- function(mList, combFunc) {
     mLength <- rows * cols
     combinedMatrix <- matrix(0, nrow=rows, ncol=cols)
     
+    # Iterate over each element position
     for (i in seq_len(mLength)) {
         elemVals <- vapply(mList, function(mat) {mat[[i]]}, 0)
         targetVal <- combFunc(elemVals)
         combinedMatrix[i] <- targetVal
     }
     
+    colnames(combinedMatrix) <- colnames(mList[[1]])
     combinedMatrix
 }
-
-
-
-
 
 
 

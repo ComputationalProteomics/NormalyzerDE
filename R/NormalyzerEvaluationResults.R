@@ -10,17 +10,15 @@
 #' @slot avgvarmem Average variance per method
 #' @slot avgvarmempdiff Percentage difference of mean variance compared
 #'  to log2-transformed data
-#' @slot nonsiganfdrlist List of 5% least variable entries based on ANOVA
+#' @slot lowVarFeaturesCVs List of 5% least variable entries based on ANOVA
 #'  for log2-transformed data
-#' @slot nonsiganfdrlistcvpdiff Coefficient of variance for least variable
+#' @slot lowVarFeaturesCVsPercDiff Coefficient of variance for least variable
 #'  entries
 #' @slot anfdr ANOVA FDR values
-#' @slot kwfdr Kruskal-Wallis FDR values
 #' @slot anovaFDRWithNA ANOVA FDR with NA when not applicable
-#' @slot krusWalFDRWithNA KruskalWallis FDR with NA when not applicable
 #' @slot anovaP ANOVA calculated p-values
-#' @slot avgpercorsum Within group Pearson correlations
-#' @slot avgspecorsum Within group Spearman correlations
+#' @slot repCorPear Within group Pearson correlations
+#' @slot repCorSpear Within group Spearman correlations
 #' @export
 NormalyzerEvaluationResults <- setClass("NormalyzerEvaluationResults",
                                            representation(
@@ -34,17 +32,15 @@ NormalyzerEvaluationResults <- setClass("NormalyzerEvaluationResults",
                                                avgvarmem = "matrix",
                                                avgvarmempdiff = "numeric",
                                                
-                                               nonsiganfdrlist = "numeric",
-                                               nonsiganfdrlistcvpdiff = "numeric",
+                                               lowVarFeaturesCVs = "numeric",
+                                               lowVarFeaturesCVsPercDiff = "numeric",
                                                
                                                anfdr = "list",
-                                               kwfdr = "list",
                                                anovaFDRWithNA = "matrix",
-                                               krusWalFDRWithNA = "matrix",
                                                anovaP = "matrix",
                                                
-                                               avgpercorsum = "list",
-                                               avgspecorsum = "list"
+                                               repCorPear = "list",
+                                               repCorSpear = "list"
                                            ),
                                            prototype=prototype())
 
@@ -65,49 +61,12 @@ setMethod("calculateCV", "NormalyzerEvaluationResults",
           function(ner, nr) {
               
               sampleReplicateGroups <- nr@nds@sampleReplicateGroups
-              methodCount <- length(getUsedMethodNames(nr))
               methodList <- getNormalizationMatrices(nr)
-              numberFeatures <- nrow(methodList[[1]])
-              rowCount <- length(levels(as.factor(unlist(sampleReplicateGroups))))
-              
-              matrixCvs <- matrix(nrow=numberFeatures, ncol=methodCount)
-              avgCVPerNormAndReplicates <- matrix(nrow=rowCount, ncol=methodCount, byrow=TRUE)
-              
-              for (methodIndex in seq_len(methodCount)) {
-                  
-                  processedDataMatrix <- methodList[[methodIndex]]
-                  tempCVMatrix <- matrix(nrow=nrow(processedDataMatrix), ncol=length(levels(as.factor(unlist(sampleReplicateGroups)))), byrow=TRUE)
-                  
-                  for (i in seq_len(nrow(processedDataMatrix))) {
-                      
-                      tempCV <- RcmdrMisc::numSummary(processedDataMatrix[i, ], statistics=c("cv"), groups=unlist(sampleReplicateGroups))
-                      tempCVMatrix[i, ] <- tempCV$table
-                  }
-                  
-                  tempCVMatrixSum <- apply(tempCVMatrix, 2, mean, na.rm=TRUE)
-                  avgCVPerNormAndReplicates[, methodIndex] <- tempCVMatrixSum * 100
-                  
-                  
-                  # Calculate sample-wise CV
-                  cv <- function(row) {
-                      stDev <- stats::sd(row, na.rm=TRUE)
-                      meanVal <- mean(unlist(row), na.rm=TRUE)
-                      stDev / mean(meanVal) * 100
-                  }
-                  methodCvs <- apply(processedDataMatrix, 1, cv)
-                  matrixCvs[, methodIndex] <- methodCvs
-              }
-              
-              # Requires log normalized data to be at first index
-              cvPercentVarFromLog <- vapply(
-                  seq_len(ncol(avgCVPerNormAndReplicates)), 
-                      function (sampleIndex) (mean(avgCVPerNormAndReplicates[, sampleIndex]) * 100) / mean(avgCVPerNormAndReplicates[, 1]),
-                  0
-              )
-              
+
+              avgCVPerNormAndReplicates <- calculateReplicateCV(methodList, sampleReplicateGroups)
               ner@avgcvmem <- avgCVPerNormAndReplicates
-              ner@avgcvmempdiff <- cvPercentVarFromLog
-              ner@featureCVPerMethod <- matrixCvs
+              ner@featureCVPerMethod <- calculateFeatureCV(methodList)
+              ner@avgcvmempdiff <- calculatePercentageAvgDiffInMat(avgCVPerNormAndReplicates)
               
               ner
           }
@@ -127,40 +86,14 @@ setGeneric(name="calculateMAD",
 setMethod("calculateMAD", "NormalyzerEvaluationResults",
           function(ner, nr) {
               
-              # Setup
               sampleReplicateGroups <- nr@nds@sampleReplicateGroups
-              methodCount <- length(getUsedMethodNames(nr))
               methodList <- getNormalizationMatrices(nr)
-              rowCount <- length(levels(as.factor(unlist(sampleReplicateGroups))))
-              
-              # Start
-              avgmadmem <- matrix(nrow=rowCount, ncol=methodCount, byrow=TRUE)
-              indexList <- getIndexList(sampleReplicateGroups)
-              
-              for (methodIndex in seq_len(methodCount)) {
-                  
-                  processedDataMatrix <- methodList[[methodIndex]]
+              avgmadmem <- calculateAvgMadMem(methodList, sampleReplicateGroups)
 
-                  medianAbsDevMem <- matrix(nrow=nrow(processedDataMatrix), 
-                                            ncol=length(levels(as.factor(unlist(sampleReplicateGroups)))), 
-                                            byrow=TRUE)
-                  
-                  for (sampleIndex in seq_len(length(names(indexList)))) {
-                      repVal <- names(indexList)[sampleIndex]
-                      cols <- indexList[[repVal]]
-                      medianAbsDevMem[, sampleIndex] <- apply(processedDataMatrix[, cols], 1, function(x) { stats::mad(x, na.rm=TRUE) })
-                      rowNonNACount <- apply(processedDataMatrix[, cols], 1, function(x) { sum(!is.na(x)) }) - 1
-                  }
-                  
-                  temmadmatsum <- apply(medianAbsDevMem, 2, mean, na.rm=TRUE)
-                  avgmadmem[, methodIndex] <- temmadmatsum
-              }
-              
-              avgmadmempdiff <- vapply(seq_len(ncol(avgmadmem)), 
-                                       function (sampleIndex) (mean(avgmadmem[, sampleIndex]) * 100) / mean(avgmadmem[, 1]),
-                                       0)
+              avgMadPdiff<- calculatePercentageAvgDiffInMat(avgmadmem)
+
               ner@avgmadmem <- avgmadmem
-              ner@avgmadmempdiff <- avgmadmempdiff
+              ner@avgmadmempdiff <- avgMadPdiff
               
               ner
           }
@@ -180,45 +113,12 @@ setGeneric(name="calculateAvgVar",
 setMethod("calculateAvgVar", "NormalyzerEvaluationResults",
           function(ner, nr) {
               
-              # Setup
               sampleReplicateGroups <- nr@nds@sampleReplicateGroups
-              methodCount <- length(getUsedMethodNames(nr))
               methodList <- getNormalizationMatrices(nr)
-              rowCount <- length(levels(as.factor(unlist(sampleReplicateGroups))))
-              
-              # Start
-              avgvarmem <- matrix(nrow=rowCount, ncol=methodCount, byrow=TRUE)
-              indexList <- getIndexList(sampleReplicateGroups)
-              
-              for (methodIndex in seq_len(methodCount)) {
-                  
-                  replicateGroupVariance <- vector()
-                  rowVariances <- vector()
-                  
-                  processedDataMatrix <- methodList[[methodIndex]]
-                  
-                  for (sampleIndex in seq_len(length(names(indexList)))) {
-                      
-                      repVal <- names(indexList)[sampleIndex]
-                      cols <- indexList[[repVal]]
-                      
-                      rowNonNACount <- apply(processedDataMatrix[, cols], 1, function(x) { sum(!is.na(x)) }) - 1
-                      rowVariances <- rowNonNACount * apply(processedDataMatrix[, cols], 1, function(x) { stats::var(x, na.rm=TRUE) })
-                      replicateGroupVariance <- c(replicateGroupVariance, sum(rowVariances, na.rm=TRUE) / sum(rowNonNACount, na.rm=TRUE))
-                  }
-                  
-                  avgvarmem[, methodIndex] <- replicateGroupVariance
-                  
-              }
-              
-              avgvarmempdiff <- vapply(
-                  seq_len(ncol(avgvarmem)), 
-                  function (sampleIndex) (mean(avgvarmem[, sampleIndex]) * 100) / mean(avgvarmem[, 1]),
-                  0
-              )
-              
-              ner@avgvarmem <- avgvarmem
-              ner@avgvarmempdiff <- avgvarmempdiff
+
+              avgVarianceMat <- calculateAvgReplicateVariation(methodList, sampleReplicateGroups)
+              ner@avgvarmem <- avgVarianceMat
+              ner@avgvarmempdiff <- calculatePercentageAvgDiffInMat(avgVarianceMat)
               
               ner
           }
@@ -231,92 +131,62 @@ setMethod("calculateAvgVar", "NormalyzerEvaluationResults",
 #' @param ner NormalyzerDE evaluation object.
 #' @param nr Normalyzer results object.
 #' @param categoricalAnova Categorical groupwise comparison instead of numeric
-#' @param varFilterFrac Variance filter high variance data
 #' @return None
 #' @rdname calculateSignificanceMeasures
 #' @keywords internal
 setGeneric(name="calculateSignificanceMeasures", 
-           function(ner, nr, categoricalAnova, varFilterFrac) standardGeneric("calculateSignificanceMeasures"))
+           function(ner, nr, categoricalAnova) standardGeneric("calculateSignificanceMeasures"))
 
 #' @rdname calculateSignificanceMeasures
 setMethod("calculateSignificanceMeasures", "NormalyzerEvaluationResults",
-          function(ner, nr, 
-                   categoricalAnova=FALSE, 
-                   varFilterFrac=NULL) {
+          function(ner, nr, categoricalAnova=TRUE) {
               
               sampleReplicateGroups <- nr@nds@sampleReplicateGroups
-              methodCount <- length(getUsedMethodNames(nr))
               methodList <- getNormalizationMatrices(nr)
 
-              anovaPValsWithNA <- matrix(NA, ncol=methodCount, nrow=nrow(methodList[[1]]))
-              anovaFDRs <- list()
-              anovaFDRsWithNA <- matrix(NA, ncol=methodCount, nrow=nrow(methodList[[1]]))
-              krusValFDRs <- list()
-              krusWalFDRsWithNA <- matrix(NA, ncol=methodCount, nrow=nrow(methodList[[1]]))
+              anovaPValsWithNA <- calculateANOVAPValues(methodList, sampleReplicateGroups, categoricalAnova)
+              log2AnovaFDR <- stats::p.adjust(anovaPValsWithNA[, 1][!is.na(anovaPValsWithNA[, 1])], method="BH")
               
-              for (methodIndex in seq_len(methodCount)) {
-                  
-                  processedDataMatrix <- methodList[[methodIndex]]
-                  naFilterContrast <- getRowNAFilterContrast(processedDataMatrix,
-                                                             sampleReplicateGroups,
-                                                             varFilterFrac=varFilterFrac)
-                  
-                  dataStoreReplicateNAFiltered <- processedDataMatrix[naFilterContrast,]
-
-                  if (categoricalAnova) {
-                      testLevels <- factor(sampleReplicateGroups)
-                  }
-                  else {
-                      testLevels <- sampleReplicateGroups
-                  }
-                  
-                  anovaPValCol <- apply(dataStoreReplicateNAFiltered, 1, 
-                                        function(sampleIndex) summary(stats::aov(unlist(sampleIndex)~testLevels))[[1]][[5]][1])
-                  krusWalPValCol <- apply(dataStoreReplicateNAFiltered, 1, 
-                                          function(sampleIndex) stats::kruskal.test(unlist(sampleIndex)~testLevels, na.action="na.exclude")[[3]][1])
-                  
-                  anovaPValsWithNA[naFilterContrast, methodIndex] <- anovaPValCol
-                  anovaFDRCol <- stats::p.adjust(anovaPValCol, method="BH")
-                  anovaFDRs[[methodIndex]] <- anovaFDRCol
-                  anovaFDRsWithNA[naFilterContrast, methodIndex] <- anovaFDRCol
-                  
-                  krusWalFDRCol <- stats::p.adjust(krusWalPValCol, method="BH")
-                  krusValFDRs[[methodIndex]] <- krusWalFDRCol
-                  krusWalFDRsWithNA[naFilterContrast, methodIndex] <- krusWalFDRCol
-              }
-              
-              # Finds to 5% of least DE variables in log2 data based on ANOVA
-              minVal <- min(utils::head(rev(sort(anovaFDRs[[1]])), n=(5 * length(anovaFDRs[[1]]) / 100)))
-              nbrAboveThres <- sum(anovaFDRs[[1]] >= minVal)
-              if (!is.infinite(minVal) && nbrAboveThres > 0) {
-                  lowlyVariableFeatures <- which(anovaFDRs[[1]] >= min(utils::head(rev(sort(anovaFDRs[[1]])), n=(5 * length(anovaFDRs[[1]]) / 100))))
-                  
-                  nonsiganfdrlistcv <- vector()
-                  for (mlist in seq_len(methodCount)) {
-                      tmpdata <- methodList[[mlist]][lowlyVariableFeatures, ]
-                      nonsiganfdrlistcv[mlist] <- mean(apply(tmpdata, 1, function(sampleIndex) raster::cv(sampleIndex, na.rm=TRUE)), na.rm=TRUE)
-                  }
-                  
-                  nonsiganfdrlistcvpdiff <- vapply(
-                      seq_len(length(nonsiganfdrlistcv)), 
-                      function(sampleIndex) (nonsiganfdrlistcv[sampleIndex] * 100) / nonsiganfdrlistcv[1],
+              lowVarFeaturesCVs <- findLowlyVariableFeatures(log2AnovaFDR, methodList)
+              lowVarFeaturesCVsPercDiff <- vapply(
+                      seq_len(length(lowVarFeaturesCVs)),
+                      function(sampleIndex) {
+                          (lowVarFeaturesCVs[sampleIndex] * 100) / lowVarFeaturesCVs[1]
+                      },
                       0
                   )
-                  ner@nonsiganfdrlist <- nonsiganfdrlistcv
-                  ner@nonsiganfdrlistcvpdiff <- nonsiganfdrlistcvpdiff
-              }
-              else {
-                  warning("Too few successful ANOVA calculations to generate lowly variable features")
-              }
               
               ner@anovaP <- anovaPValsWithNA
+              ner@lowVarFeaturesCVs <- lowVarFeaturesCVs
+              ner@lowVarFeaturesCVsPercDiff <- lowVarFeaturesCVsPercDiff
               
-              ner@anfdr <- anovaFDRs
-              ner@kwfdr <- krusValFDRs
-              ner@anovaFDRWithNA = anovaFDRsWithNA
-              ner@krusWalFDRWithNA = krusWalFDRsWithNA
-
               ner
+          }
+)
+
+#' Pearson and Spearman correlation calculations for methods and samples
+#' Calculates internal correlation per condition
+#' 
+#' @param nr Normalyzer results object with calculated results.
+#' @param ner Normalyzer evaluation object.
+#' @return ner Normalyzer evaluation object with attached evaluation results.
+#' @keywords internal
+setGeneric(name="calculateCorrelations", 
+           function(ner, nr) standardGeneric("calculateCorrelations"))
+
+#' @rdname calculateCorrelations
+setMethod("calculateCorrelations", "NormalyzerEvaluationResults",
+          function(ner, nr) {
+
+            methodlist <- getNormalizationMatrices(nr)
+            allReplicateGroups <- nr@nds@sampleReplicateGroups
+            sampleGroupsWithReplicates <- nr@nds@samplesGroupsWithReplicates
+            
+            ner@repCorPear <- calculateSummarizedCorrelationVector(
+                methodlist, allReplicateGroups, sampleGroupsWithReplicates, "pearson")
+            ner@repCorSpear <- calculateSummarizedCorrelationVector(
+                methodlist, allReplicateGroups, sampleGroupsWithReplicates, "spearman")
+            ner
           }
 )
 

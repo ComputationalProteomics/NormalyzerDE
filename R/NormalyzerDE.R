@@ -15,7 +15,6 @@
 #' @param requireReplicates Require multiple samples per condition to pass input 
 #'  validation.
 #' @param normalizeRetentionTime Perform normalizations over retention time.
-#' @param retentionTimeWindow Retention time normalization window size.
 #' @param plotRows Number of plot-rows in output documentation.
 #' @param plotCols Number of plot-columns in output documentation.
 #' @param zeroToNA Convert zero values to NA.
@@ -24,6 +23,13 @@
 #' @param inputFormat Type of input format.
 #' @param skipAnalysis Only perform normalization steps.
 #' @param quiet Omit status messages printed during run
+#' 
+#' @param rtStepSizeMinutes Retention time normalization window size.
+#' @param rtWindowMinCount Minimum number of datapoints in each retention-time
+#'   segment.
+#' @param rtWindowShifts Number of layered retention time normalized windows.
+#' @param rtWindowMergeMethod Merge approach for layered retention time windows.
+#' 
 #' @return None
 #' @export
 #' @import MASS limma preprocessCore methods RcmdrMisc
@@ -58,7 +64,6 @@ normalyzer <- function(
         sampleAbundThres=15,
         requireReplicates=TRUE,
         normalizeRetentionTime=TRUE,
-        retentionTimeWindow=1,
         plotRows=3,
         plotCols=4,
         zeroToNA=FALSE,
@@ -66,7 +71,12 @@ normalyzer <- function(
         groupColName="group",
         inputFormat="default",
         skipAnalysis=FALSE,
-        quiet=FALSE
+        quiet=FALSE,
+        
+        rtStepSizeMinutes=1,
+        rtWindowMinCount=100,
+        rtWindowShifts=1,
+        rtWindowMergeMethod="mean"
     ) {
 
     startTime <- Sys.time()
@@ -95,7 +105,10 @@ normalyzer <- function(
         normObj,
         forceAll=forceAllMethods,
         normalizeRetentionTime=normalizeRetentionTime,
-        retentionTimeWindow=retentionTimeWindow,
+        rtStepSizeMinutes=rtStepSizeMinutes,
+        rtWindowMinCount=rtWindowMinCount,
+        rtWindowShifts=rtWindowShifts,
+        rtWindowMergeMethod=rtWindowMergeMethod,
         quiet=quiet)
     if (!quiet) print("[Step 2/5] Done!")
     
@@ -167,15 +180,26 @@ normalyzerDE <- function(jobName, designPath, dataPath, comparisons, outputDir="
     jobDir <- setupJobDir(jobName, outputDir)
 
     if (!quiet) print("Setting up statistics object")
-    fullDf <- utils::read.csv(dataPath, sep="\t")
-    designDf <- utils::read.csv(designPath, sep="\t")
+    fullDf <- utils::read.csv(
+        dataPath, 
+        sep="\t", 
+        stringsAsFactors=FALSE, 
+        quote="", 
+        comment.char="")
+    designDf <- utils::read.csv(
+        designPath, 
+        sep="\t",
+        stringsAsFactors=FALSE,
+        quote="",
+        comment.char="")
     designDf[, sampleCol] <- as.character(designDf[, sampleCol])
+    
     nst <- setupStatisticsObject(designDf, fullDf, logTrans=logTrans, leastRepCount=leastRepCount)
     
     if (!is.null(techRepCol)) {
         if (!quiet) print("Reducing technical replicates")
         nst@dataMat <- reduceTechnicalReplicates(nst@dataMat, nst@designDf[, techRepCol])
-        nst@designDf <- reduceDesign(nst@designDf, nst@designDf[, techRepCol])
+        nst@designDf <- reduceDesignTechRep(nst@designDf, nst@designDf[, techRepCol])
     }
     
     if (!quiet) print("Calculating statistical contrasts...")

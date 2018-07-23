@@ -53,7 +53,12 @@ elapsedSecondsBetweenSystimes <- function(start, end) {
     elapsed
 }
 
-
+#' Return list containing vector positions of values in string
+#' 
+#' @param targetVector 
+#' @return indexList List where key is condition level and values are indices
+#'   for the condition
+#' @keywords internal
 getIndexList <- function(targetVector) {
     
     indexList <- list()
@@ -64,17 +69,18 @@ getIndexList <- function(targetVector) {
     indexList
 }
 
-
-#' Get contrast vector (TRUE/FALSE-values) indicating whether all samples
-#' specified in replicateHeader have at least one non-NA value
+#' Get contrast vector (TRUE/FALSE-values) indicating whether both at least
+#' half values are present, and each sample has at least one non-NA value
 #' 
 #' @param dataMatrix Matrix with expression values for entities in replicate 
 #'  samples.
 #' @param replicateHeader Header showing how samples in matrix are replicated.
-#' @param minCount Minimum number of non-NA required for sample.
+#' @param minCount Minimum number of required values present in samples.
 #' @return Contrast vector
 #' @keywords internal
-getLowRepCountFilterContrast <- function(dataMatrix, replicateHeader, minCount=1) {
+getRowNAFilterContrast <- function(dataMatrix, 
+                                   replicateHeader, 
+                                   minCount=1) {
     
     replicatesHaveData <- rep(TRUE, nrow(dataMatrix))
     indexList <- getIndexList(replicateHeader)
@@ -91,59 +97,6 @@ getLowRepCountFilterContrast <- function(dataMatrix, replicateHeader, minCount=1
     }
     
     replicatesHaveData
-}
-
-
-#' Get contrast vector (TRUE/FALSE-values) indicating whether at least half
-#' of values in row have non-NA values
-#' 
-#' @param dataMatrix Matrix with expression values for entities in replicate 
-#'  samples.
-#' @param replicateHeader Header showing how samples in matrix are replicated.
-#' @return Contrast vector
-#' @keywords internal
-getLowNALinesContrast <- function(dataMatrix, replicateHeader) {
-    
-    nbsNAperLine <- rowSums(is.na(dataMatrix))
-    enoughNAContrast <- (nbsNAperLine < ncol(dataMatrix) / 2)
-    
-    enoughNAContrast
-}
-
-
-#' Get contrast vector (TRUE/FALSE-values) indicating whether both at least
-#' half values are present, and each sample has at least one non-NA value
-#' 
-#' @param dataMatrix Matrix with expression values for entities in replicate 
-#'  samples.
-#' @param replicateHeader Header showing how samples in matrix are replicated.
-#' @param varFilterFrac Variance filtering fraction.
-#' @param minCount Minimum number of required values present in samples.
-#' @return Contrast vector
-#' @keywords internal
-getRowNAFilterContrast <- function(dataMatrix, 
-                                   replicateHeader, 
-                                   varFilterFrac=NULL,
-                                   minCount=1) {
-    
-    lowNALinesContrast <- getLowNALinesContrast(dataMatrix, replicateHeader)
-    samplesHaveValuesContrast <- getLowRepCountFilterContrast(dataMatrix, replicateHeader, minCount=minCount)
-    
-    if (!is.null(varFilterFrac)) {
-        samplesPassVarThres <- getVarFilteredContrast(dataMatrix, varFilterFrac)
-    }
-    else {
-        samplesPassVarThres <- rep(TRUE, nrow(dataMatrix))
-    }
-    
-    return (lowNALinesContrast & samplesHaveValuesContrast & samplesPassVarThres)
-}
-
-getVarFilteredContrast <- function(logMatrix, varFilterFrac) {
-  
-    featureVars <- apply(logMatrix, 1, function(x) {stats::var(x, na.rm=TRUE)})
-    fracThres <- sort(featureVars)[(length(featureVars) - 1)  * varFilterFrac + 1]
-    featureVars > fracThres
 }
 
 #' Generate a random test dataset with features, sample values and retention times

@@ -3,8 +3,14 @@
 #' @param nds Normalyzer dataset object.
 #' @param forceAll Force all methods to run despite not qualifying for thresholds.
 #' @param normalizeRetentionTime Perform retention time based normalization methods.
-#' @param retentionTimeWindow Default window size for retention times.
 #' @param quiet Prevent diagnostic output
+#' 
+#' @param rtStepSizeMinutes Retention time normalization window size.
+#' @param rtWindowMinCount Minimum number of datapoints in each retention-time
+#'   segment.
+#' @param rtWindowShifts Number of layered retention time normalized windows.
+#' @param rtWindowMergeMethod Merge approach for layered retention time windows.
+#' 
 #' @return Returns Normalyzer results object with performed analyzes assigned
 #'  as attributes
 #' @export
@@ -13,29 +19,23 @@
 #' data(example_design)
 #' normObj <- getVerifiedNormalyzerObject("job_name", example_design, example_data)
 #' normResults <- normMethods(normObj)
-normMethods <- function(nds, forceAll=FALSE, normalizeRetentionTime=TRUE, retentionTimeWindow=1, quiet=FALSE) {
+normMethods <- function(nds, forceAll=FALSE, normalizeRetentionTime=TRUE, 
+                        quiet=FALSE, rtStepSizeMinutes=1, rtWindowMinCount=100, 
+                        rtWindowShifts=1, rtWindowMergeMethod="mean") {
     
-    nr <- generateNormalyzerResultsObject(nds)
-    nr <- performNormalizations(nr, forceAll=forceAll, rtNorm=normalizeRetentionTime, rtWindow=retentionTimeWindow, quiet=quiet)
-    
-    return(nr)
-}
-
-#' Create empty Normalyzer results object from Normalyzer data object
-#' 
-#' @param nds Normalyzer dataset object.
-#' @return Empty Normalyzer results object.
-#' @keywords internal
-#' @export
-#' @examples
-#' data(example_data)
-#' data(example_design)
-#' normObj <- getVerifiedNormalyzerObject("job_name", example_design, example_data)
-#' normResObj <- generateNormalyzerResultsObject(normObj)
-generateNormalyzerResultsObject <- function(nds) {
     nr <- NormalyzerResults(nds=nds)
     nr <- initializeResultsObject(nr)
-    nr
+    nr <- performNormalizations(
+        nr, 
+        forceAll=forceAll, 
+        rtNorm=normalizeRetentionTime, 
+        rtStepSizeMinutes=rtStepSizeMinutes, 
+        rtWindowMinCount=rtWindowMinCount, 
+        rtWindowShifts=rtWindowShifts, 
+        rtWindowMergeMethod=rtWindowMergeMethod, 
+        quiet=quiet)
+    
+    return(nr)
 }
 
 #' Normalization adjusting based on total sample intensity

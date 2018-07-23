@@ -18,3 +18,8 @@
 #' @format A normalized data frame ready for statistical processing
 "example_stat_data"
 
+#' NormalyzerDE results object used internally for testing
+#' 
+#' @format An instance of the class NormalyzerResults
+"regression_test_nr"
+

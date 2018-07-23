@@ -84,12 +84,12 @@ for which you want to calculate contrasts. They are provided as a character vect
 compare separated by a dash ("-").
 
 ```{r}
-statOutDir <- tempdir()
+outDir <- tempdir()
 normMatrixPath <- paste(outDir, "vignette_run/Loess-G-normalized.txt", sep="/")
 normalyzerDE("vignette_run", 
              "design.tsv", 
              normMatrixPath,
-             outputDir=statOutDir, 
+             outputDir=outDir, 
              comparisons=c("1-2", "1-3"))
 ```
 
@@ -180,7 +180,7 @@ layeredRtNormMat <- getSmoothedRTNormalizedMatrix(
     performCyclicLoessNormalization, 
     stepSizeMinutes=1, 
     windowMinCount=100, 
-    frameShifts=3, 
+    windowShifts=3, 
     mergeMethod="mean")
 
 dim(layeredRtNormMat)

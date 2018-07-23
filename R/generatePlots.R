@@ -95,7 +95,6 @@ generatePlots <- function(nr, jobdir, plotRows=3, plotCols=4) {
     if (!isLimitedRun) {
         # DE plots
         pageno <- pageno + 1
-        # plotDEPlots(nr, currentLayout, pageno)
         plotPHist(nr, currentLayout, pageno)
     }
     
@@ -222,37 +221,38 @@ plotReplicateVariance <- function(nr, currentLayout, pageno) {
     currentjob <- nds@jobName
     
     ner <- nr@ner
-    avgcvmem <- ner@avgcvmem
-    avgmadmem <- ner@avgmadmem
-    avgvarmem <- ner@avgvarmem
+    avgCVMem <- ner@avgcvmem
+    avgMADMem <- ner@avgmadmem
+    avgVarMem <- ner@avgvarmem
     
     tout <- rbind(c(1, 2, 3), c(4))
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
     
-    graphics::boxplot(avgcvmem, main="PCV - Intragroup", names=c(methodnames), 
-                      border="red", density=20, cex=0.3, cex.axis=0.9, las=2, 
-                      frame.plot=FALSE)
+    graphics::boxplot(
+        avgCVMem, main="PCV - Intragroup", names=c(methodnames), border="red", 
+        density=20, cex=0.3, cex.axis=0.9, las=2, frame.plot=FALSE)
     
-    graphics::stripchart(as.data.frame(avgcvmem), 
-                         vertical=TRUE, cex=0.4, las=2, 
-                         pch=20, add=TRUE, col="darkgray")
+    graphics::stripchart(
+        as.data.frame(avgCVMem), vertical=TRUE, cex=0.4, las=2, 
+        pch=20, add=TRUE, col="darkgray")
     
-    graphics::boxplot(avgmadmem, main="PMAD - Intragroup", names=c(methodnames), 
-                      border="red", density=20, cex=0.3, cex.axis=0.9, las=2, 
-                      frame.plot=FALSE)
+    graphics::boxplot(
+        avgMADMem , main="PMAD - Intragroup", names=c(methodnames), 
+        border="red", density=20, cex=0.3, cex.axis=0.9, las=2, 
+        frame.plot=FALSE)
     
-    graphics::stripchart(as.data.frame(avgmadmem), 
-                         vertical=TRUE, cex=0.4, las=2, 
-                         pch=20, add=TRUE, col="darkgray")
+    graphics::stripchart(
+        as.data.frame(avgMADMem ), vertical=TRUE, cex=0.4, las=2, pch=20, 
+        add=TRUE, col="darkgray")
     
-    graphics::boxplot(avgvarmem, main="PEV - Intragroup", names=c(methodnames), 
-                      border="red", density=20, cex=0.3, cex.axis=0.9, las=2, 
-                      frame.plot=FALSE)
+    graphics::boxplot(
+        avgVarMem, main="PEV - Intragroup", names=c(methodnames), border="red", 
+        density=20, cex=0.3, cex.axis=0.9, las=2, frame.plot=FALSE)
     
-    graphics::stripchart(as.data.frame(avgvarmem), 
-                         vertical=TRUE, cex=0.4, las=2, 
-                         pch=20, add=TRUE, col="darkgray")
+    graphics::stripchart(
+        as.data.frame(avgVarMem), vertical=TRUE, cex=0.4, las=2, pch=20, 
+        add=TRUE, col="darkgray")
     
     grid::pushViewport(grid::viewport(layout=currentLayout))
     printMeta("Replicate variation", pageno, currentjob, currentLayout)
@@ -273,7 +273,7 @@ plotReplicateVarAndStableVariables <- function(nr, currentLayout, pageno) {
     currentjob <- nds@jobName
     
     ner <- nr@ner
-    nonsiganfdrlistcvpdiff <- ner@nonsiganfdrlistcvpdiff
+    lowVarFeaturesCVsPercDiff <- ner@lowVarFeaturesCVsPercDiff
     avgcvmempdiff <- ner@avgcvmempdiff
     avgmadmempdiff <- ner@avgmadmempdiff
     avgvarmempdiff <- ner@avgvarmempdiff
@@ -312,26 +312,26 @@ plotReplicateVarAndStableVariables <- function(nr, currentLayout, pageno) {
     graphics::axis(1, at=abc, labels=FALSE, lwd=0, lwd.ticks=1)
     graphics::text(abc, avgvarmempdiff, labels=round(avgvarmempdiff, digits=0), pos=3, las=2)
     
-    if (!all(is.na(nonsiganfdrlistcvpdiff))) {
+    if (!all(is.na(lowVarFeaturesCVsPercDiff))) {
         
         if (min(avgcvmempdiff) < 0 || max(avgcvmempdiff) > 100 || 
-            min(nonsiganfdrlistcvpdiff) < 0 || max(nonsiganfdrlistcvpdiff) > 100) {
+            min(lowVarFeaturesCVsPercDiff) < 0 || max(lowVarFeaturesCVsPercDiff) > 100) {
             
-            graphics::plot(avgcvmempdiff, nonsiganfdrlistcvpdiff, pch=18, 
+            graphics::plot(avgcvmempdiff, lowVarFeaturesCVsPercDiff, pch=18, 
                            xlim=c(0, 100), ylim=c(0, 100), 
                            main="Stable variables plot", 
                            xlab="PCV (intragroup) compared to Log2", 
                            ylab="% Global CV of stable variables compared to Log2")
-            car::showLabels(avgcvmempdiff, nonsiganfdrlistcvpdiff, 
+            car::showLabels(avgcvmempdiff, lowVarFeaturesCVsPercDiff, 
                             labels=methodnames, id.method="mahal", 
                             id.cex=0.7, id.col="black")
         }
         else {
-            graphics::plot(avgcvmempdiff, nonsiganfdrlistcvpdiff, pch=18, 
+            graphics::plot(avgcvmempdiff, lowVarFeaturesCVsPercDiff, pch=18, 
                            main="Stable variables plot", 
                            xlab="PCV (Intragroup) compared to Log2", 
                            ylab="% Global CV of stable variables compared to Log2")
-            car::showLabels(avgcvmempdiff, nonsiganfdrlistcvpdiff, 
+            car::showLabels(avgcvmempdiff, lowVarFeaturesCVsPercDiff, 
                             labels=methodnames, id.method="mahal", 
                             id.cex=0.7, id.col="black")
         }
@@ -680,7 +680,7 @@ plotMeanSD <- function(nr, currentLayout, pageno) {
     printPlots(sdPlots, "MeanSDplots", pageno, currentjob, currentLayout)  
 }
 
-#' Visualize correlations for plots
+#' Visualize within-replicates correlations
 #' 
 #' @param nr Normalyzer results object.
 #' @param currentLayout Layout used for document.
@@ -690,8 +690,8 @@ plotMeanSD <- function(nr, currentLayout, pageno) {
 plotCorrelation <- function(nr, currentLayout, pageno) {
     
     ner <- nr@ner
-    avgpercorsum <- ner@avgpercorsum
-    avgspecorsum <- ner@avgspecorsum
+    repCorPear <- ner@repCorPear
+    repCorSpear <- ner@repCorSpear
     
     nds <- nr@nds
     methodnames <- getUsedMethodNames(nr)
@@ -704,8 +704,8 @@ plotCorrelation <- function(nr, currentLayout, pageno) {
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
     
-    perdf <- data.frame(matrix(unlist(avgpercorsum), 
-                               nrow=as.numeric(max(summary(avgpercorsum)[1])), 
+    perdf <- data.frame(matrix(unlist(repCorPear), 
+                               nrow=as.numeric(max(summary(repCorPear)[1])), 
                                byrow=TRUE))
     
     abc <- graphics::boxplot(perdf, main="Pearson correlation - Intragroup", 
@@ -714,8 +714,8 @@ plotCorrelation <- function(nr, currentLayout, pageno) {
     
     graphics::stripchart(as.data.frame(perdf), vertical=TRUE, cex=0.4, las=2, pch=20, add=TRUE, col="darkgreen")
     
-    spedf <- data.frame(matrix(unlist(avgspecorsum), 
-                               nrow=as.numeric(max(summary(avgspecorsum)[1])), 
+    spedf <- data.frame(matrix(unlist(repCorSpear), 
+                               nrow=as.numeric(max(summary(repCorSpear)[1])), 
                                byrow=TRUE))
     
     abc <- graphics::boxplot(spedf, main="Spearman correlation - Intragroup", 
@@ -769,46 +769,6 @@ plotDendrograms <- function(nr, currentLayout, pageno) {
     printMeta(paste("Dendrograms - Built from", ncol(scaledTransposedMatrix), 
                     "variables containing non-missing data", sep=" "), 
               pageno, currentjob, currentLayout)
-}
-
-#' Visualize number of DE variables for ANOVA and Kruskal Wallis
-#' 
-#' @param nr Normalyzer results object.
-#' @param currentLayout Layout used for document.
-#' @param pageno Current page number.
-#' @return None
-#' @keywords internal
-plotDEPlots <- function(nr, currentLayout, pageno) {
-    
-    fdrThreshold <- 0.05
-    
-    nds <- nr@nds
-    methodnames <- getUsedMethodNames(nr)
-    methodlist <- getNormalizationMatrices(nr)
-    currentjob <- nds@jobName
-    
-    ner <- nr@ner
-    anfdr <- ner@anfdr
-    kwfdr <- ner@kwfdr
-    
-    tout <- rbind(c(1, 2, 3), c(4))
-    graphics::layout(tout)
-    graphics::par(mar=c(2, 2, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
-    
-    graphics::barplot(vapply(anfdr, function(col) { length(col[col < fdrThreshold]) }, 0), 
-                      main="ANOVA", names=c(methodnames), 
-                      border="red", density=20, cex=0.5, cex.axis=0.9, las=2,
-                      ylab=paste("No. of Variables with FDR <", fdrThreshold))
-    
-    graphics::barplot(vapply(kwfdr, function(col) { length(col[col < fdrThreshold]) }, 0), 
-                      main="Kruskal Wallis", names=c(methodnames), 
-                      border="red", density=20, cex=0.5, cex.axis=0.9, las=2, 
-                      ylab=paste("No. of Variables with FDR <", fdrThreshold
-                             ))
-    
-    grid::pushViewport(grid::viewport(layout=currentLayout))
-    printMeta("Differential#' @keywords internal
- Expression", pageno, currentjob, currentLayout)
 }
 
 #' Generate P-histograms for ANOVA calculated after each normalization
