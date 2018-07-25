@@ -1,3 +1,5 @@
+[![https://www.singularity-hub.org/static/img/hosted-singularity--hub-%23e32929.svg](https://www.singularity-hub.org/static/img/hosted-singularity--hub-%23e32929.svg)](https://singularity-hub.org/collections/820)
+
 # About
 
 http://quantitativeproteomics.org/normalyzerde
@@ -5,6 +7,15 @@ http://quantitativeproteomics.org/normalyzerde
 NormalyzerDE is a software designed to ease the process of selecting an optimal normalization approach for your dataset and to perform subsequent differential expression analysis.
 
 NormalyzerDE includes several normalization approaches, a empirical Bayes-based statistical approach implemented as part of Limma and a newly implemented retention-time segmented normalization approach inspired by previously outlined approaches. The emprical-based based statistics has been shown to increase sensitivity over ANOVA when detecting differentially expressed features.
+
+# Installation
+
+Currently, the easiest way is to install directly from GitHub.
+
+```
+install.packages("devtools")
+devtools::install_github("ComputationalProteomics/NormalyzerDE")
+```
 
 # Publication
 
