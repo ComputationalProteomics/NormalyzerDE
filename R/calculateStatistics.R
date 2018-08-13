@@ -1,32 +1,3 @@
-
-#' Filter rows with lower than given number of replicates for any condition
-#' 
-#' @param df Dataframe with expression data to filter
-#' @param groups Condition groups header
-#' @param leastRep Minimum number of replicates in each group
-#'   to retain
-#' @return collDesignDf Reduced design matrix
-#' @keywords internal
-filterLowRep <- function(df, groups, leastRep = 2) {
-    
-    allReplicatesHaveValuesContrast <- function(row, groups, minCount) {
-        names(row) <- groups
-        repCounts <- table(names(stats::na.omit(row)))
-        length(repCounts) == length(unique(groups)) && min(repCounts) >= minCount
-    }
-    
-    rowMeetThresContrast <- apply(
-        df, 
-        1,
-        allReplicatesHaveValuesContrast, 
-        groups = groups, 
-        minCount = leastRep)
-    
-    filteredDf <- df[rowMeetThresContrast, ]
-    filteredDf
-}
-
-
 #' Remove technical replicates from data matrix while collapsing
 #' sample values into average values
 #' 
@@ -86,7 +57,12 @@ reduceDesignTechRep <- function(designMat, techRepGroups) {
     collDesignDf
 }
 
-#' Setup NormalyzerDE statistics object
+#' Setup NormalyzerDE statistics object. It loads the raw data matrix and
+#' the design matrix, and uses these to separate the raw data into an annotation
+#' matrix and a data matrix. Next, it calculates a contrast showing which
+#' features have at least a set number of values in each of the conditions.
+#' Finally, this information is used to create and return an instance of the 
+#' NormalyzerStatistics class.
 #' 
 #' @param designDf Design matrix.
 #' @param fullDf Full data matrix containing expression data and annotation data.
@@ -128,7 +104,11 @@ setupStatisticsObject <- function(designDf, fullDf, sampleCol="sample",
     nst
 }
 
-#' Generate annotated dataframe from statistics object
+#' Generate an annotated data frame from statistics object
+#' 
+#' Extracts key values (p-value, adjusted p-value, log2-fold change and
+#' average expression values) from an NormalyzerStatistics instance
+#' and appends these to the annotation- and data-matrices
 #' 
 #' @param nst NormalyzerDE statistics object.
 #' @return outDf Annotated statistics matrix
@@ -142,23 +122,20 @@ setupStatisticsObject <- function(designDf, fullDf, sampleCol="sample",
 generateAnnotatedMatrix <- function(nst) {
     
     pairwiseHead <- paste(
-        names(nst@pairwiseCompsP), 
-        "PValue", 
-        sep="_")
+        names(nst@pairwiseCompsP), "PValue", sep="_"
+    )
     pMat <- data.frame(nst@pairwiseCompsP)
     colnames(pMat) <- pairwiseHead
     
     pairwiseHeadFdr <- paste(
-        names(nst@pairwiseCompsFdr), 
-        "AdjPVal", 
-        sep="_")
+        names(nst@pairwiseCompsFdr), "AdjPVal", sep="_"
+    )
     fdrMat <- data.frame(nst@pairwiseCompsFdr)
     colnames(fdrMat) <- pairwiseHeadFdr
     
     pairwiseHeadFold <- paste(
-        names(nst@pairwiseCompsFold), 
-        "log2FoldChange", 
-        sep="_")
+        names(nst@pairwiseCompsFold), "log2FoldChange", sep="_"
+    )
     foldMat <- data.frame(nst@pairwiseCompsFold)
     colnames(foldMat) <- pairwiseHeadFold
     
@@ -168,7 +145,9 @@ generateAnnotatedMatrix <- function(nst) {
     outDf
 }
 
-#' Generate full output report plot document
+#' Generate full output report plot document. Plots p-value histograms
+#' for each contrast in the NormalyzerStatistics instance and writes these
+#' to a PDF report.
 #' 
 #' @param nst NormalyzerDE statistics object.
 #' @param jobName Name of processing run.
@@ -191,9 +170,10 @@ generateStatsReport <- function(nst, jobName, jobDir, plotRows=3, plotCols=4) {
     ncols <- plotCols + 2
     
     currentLayout <- grid::grid.layout(
-        nrow=nrows, ncol=ncols,
-        heights=c(0.1, rep(3 / (nrows-2), (nrows - 2)), 0.1), 
-        widths=c(0.1, rep(4 / (ncols-2), (ncols - 2)), 0.1), 
+        nrow=nrows, 
+        ncol=ncols,
+        heights=c(0.1, rep(3 / (nrows - 2), (nrows - 2)), 0.1), 
+        widths=c(0.1, rep(4 / (ncols - 2), (ncols - 2)), 0.1), 
         default.units=c("null", "null"))
     
     currentFont <- "Helvetica"
@@ -205,7 +185,8 @@ generateStatsReport <- function(nst, jobName, jobDir, plotRows=3, plotCols=4) {
     grDevices::dev.off()
 }
 
-#' Generate P-histograms for each contrast
+#' Takes an NormalyzerStatistics instance and generates and prints a p-value
+#' histogram for each onto the viewport
 #' 
 #' @param nst NormalyzerDE statistics object.
 #' @param jobName Name of processing run.

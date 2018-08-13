@@ -1,5 +1,10 @@
 #' Calculate measures for normalization results
 #' 
+#' This function prepares an NormalyzerEvaluationResults object containing
+#' the evaluation measures CV (coefficient of variance), MAD (median absolute
+#' deviation), average variance, significance measures (ANOVA between
+#' condition groups) and correlation between replicates.
+#' 
 #' @param nr Normalyzer results object with calculated results.
 #' @param comparisons Target sample contrasts to run.
 #' @param categoricalAnova ANOVA can be categorical or numerical.
@@ -35,6 +40,9 @@ analyzeNormalizations <- function(nr, comparisons=NULL, categoricalAnova=FALSE) 
 
 #' Calculate CV per replicate group and normalization technique
 #' 
+#' Iterates through each normalization method and calculate average CV values
+#' per replicate group.
+#' 
 #' @param methodList List containing normalized matrices.
 #' @param sampleReplicateGroups Condition header.
 #' @return avgCVPerNormAndReplicates Matrix with group CVs as rows and
@@ -45,7 +53,11 @@ calculateReplicateCV <- function(methodList, sampleReplicateGroups) {
     methodCount <- length(methodList)
     numberFeatures <- nrow(methodList[[1]])
     conditionLevels <- length(levels(as.factor(unlist(sampleReplicateGroups))))
-    avgCVPerNormAndReplicates <- matrix(nrow=conditionLevels, ncol=methodCount, byrow=TRUE)
+    avgCVPerNormAndReplicates <- matrix(
+        nrow=conditionLevels, 
+        ncol=methodCount, 
+        byrow=TRUE
+    )
     
     for (methodIndex in seq_len(methodCount)) {
         
@@ -72,7 +84,9 @@ calculateReplicateCV <- function(methodList, sampleReplicateGroups) {
     avgCVPerNormAndReplicates
 }
 
-#' Calculate CV values for each feature
+#' Calculate CV values for each feature. Iterates through each normalization 
+#' method and calculates a matrix of CV values where each column correspond to 
+#' a method and each row corresponds to a feature.
 #' 
 #' @param methodList List containing normalized matrices.
 #' @param sampleReplicateGroups Condition header.
@@ -142,29 +156,14 @@ calculateAvgMadMem <- function(methodList, sampleReplicateGroups) {
     condAvgMadMat
 }
 
-#' General function for calculating percentage difference of average column
-#' means in matrix
+#' Calculate average variance for each feature in each condition and then
+#' calculate the average for each replicate group
 #' 
-#' @param targetMat Matrix for which column means should be compared
-#' @return percDiffVector Vector with percentage difference, where first element
-#'   always will be 100
+#' @param methodList List containing normalized matrices.
+#' @param sampleReplicateGroups Condition header.
+#' @return avgVarianceMat Matrix with average variance for each biological
+#' condition
 #' @keywords internal
-calculatePercentageAvgDiffInMat <- function(targetMat) {
-
-    calculatePercDiff <- function (sampleIndex, mat) {
-        mean(mat[, sampleIndex]) * 100 / mean(mat[, 1])
-    }
-    
-    percDiffVector <- vapply(
-        seq_len(ncol(targetMat)), 
-        calculatePercDiff,
-        0,
-        mat=targetMat)
-    
-    percDiffVector
-}
-
-
 calculateAvgReplicateVariation <- function(methodList, sampleReplicateGroups) {
 
     methodCount <- length(methodList)
@@ -279,21 +278,35 @@ calculateCorrSum <- function(
             method=corrType)
         
         for (index in seq_len(ncol(specificReplicateVals) - 1)) {
-            corSums <- c(corSums, corVals[index, -(seq_len(index)), drop="FALSE"])
+            corSums <- c(
+                corSums, 
+                corVals[index, -(seq_len(index)), drop="FALSE"]
+            )
         }
     }
     
     corSums
 }
 
-calculateANOVAPValues <- function(methodList, sampleReplicateGroups, categoricalANOVA) {
+#' Calculates ANOVA p-values comparing the different condition groups
+#' returning a vector of resulting p-values with NA-values where too few
+#' values were present in at least one of the groups.
+#' 
+#' @param methodList List containing normalized matrices
+#' @param sampleReplicateGroups Condition header
+#' @param categoricalANOVA Whether the ANOVA should be calculated using ordered
+#' or categorical groups
+#' @return avgVarianceMat Matrix with average variance for each biological
+#' condition
+#' @keywords internal
+calculateANOVAPValues <- function(methodList, 
+                                  sampleReplicateGroups, 
+                                  categoricalANOVA) {
     
     anovaPVals <- list()
     methodCount <- length(methodList)
-    
     anovaPValsWithNA <- matrix(NA, ncol=methodCount, nrow=nrow(methodList[[1]]))
   
-    
     for (methodIndex in seq_len(methodCount)) {
         
         processedDataMatrix <- methodList[[methodIndex]]
@@ -323,11 +336,20 @@ calculateANOVAPValues <- function(methodList, sampleReplicateGroups, categorical
     anovaPValsWithNA
 }
 
-findLowlyVariableFeatures <- function(log2AnovaFDR, methodList) {
+#' Uses a list of FDR-values to extract features with low variance in the
+#' log2-transformed dataset. This is then used to calculate the average CV
+#' for these 'lowly variable' features in each normalization approach
+#' 
+#' @param referenceFDR List of FDR values used as non-normalized reference
+#' @param methodList List containing normalized matrices
+#' @return lowVarFeaturesAverageCVs Average CV values for lowly variable
+#' features in each normalization approach
+#' @keywords internal
+findLowlyVariableFeatures <- function(referenceFDR, methodList) {
     
-    fivePercCount <- 5 * length(log2AnovaFDR) / 100
-    pThresLowVal <- min(utils::head(rev(sort(log2AnovaFDR)), n=fivePercCount))
-    nbrAbovePThres <- sum(log2AnovaFDR >= pThresLowVal)
+    fivePercCount <- 5 * length(referenceFDR) / 100
+    pThresLowVal <- min(utils::head(rev(sort(referenceFDR)), n=fivePercCount))
+    nbrAbovePThres <- sum(referenceFDR >= pThresLowVal)
     
     if (is.infinite(pThresLowVal) || nbrAbovePThres == 0) {
         warning(paste("Too few successful ANOVA calculations to generate lowly",
@@ -335,7 +357,7 @@ findLowlyVariableFeatures <- function(log2AnovaFDR, methodList) {
         return(NULL)
     }
         
-    lowlyVariableFeatures <- which(log2AnovaFDR >= pThresLowVal)
+    lowlyVariableFeatures <- which(referenceFDR >= pThresLowVal)
     lowVarFeaturesAverageCVs <- vector()
     methodCount <- length(methodList)
     

@@ -1,19 +1,22 @@
-#' Small example dataset
+#' Small example dataset used to demonstrate code consistency in testing and
+#' as dummy data in the vignette.
 #' 
 #' @format A data frame containing annotation and expression data
 "example_data"
 
-#' Small example dataset only containing raw numerical values
-#' 
+#' Same data as in "example_data", but omitting the annotation meaning that it
+#' only contains the expression data.
+#'  
 #' @format A data frame containing expression data
 "example_data_only_values"
 
-#' Small example design matrix
+#' Design matrix corresponding to the small example datasets.
 #' 
-#' @format A data frame containing expression data
+#' @format A design matrix corresponding to the dataset "example_data"
 "example_design"
 
-#' Small example normalized dataset
+#' Same data as in "example_data", but normalized and ready for statistical
+#' processing.
 #' 
 #' @format A normalized data frame ready for statistical processing
 "example_stat_data"
@@ -22,4 +25,3 @@
 #' 
 #' @format An instance of the class NormalyzerResults
 "regression_test_nr"
-

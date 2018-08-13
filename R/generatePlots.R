@@ -1,4 +1,94 @@
-#' Generate full output report plot document
+#' Generates a number of visualizations for the performance measures calculated
+#' for the normalized matrices. These contain both general measures and
+#' direct comparisons for different normalization approaches.
+#' 
+#' They include:
+#' 
+#' "Total intensity" 
+#' Barplot showing the summed intensity in each sample for thelog2-transformed 
+#' data
+#' 
+#' "Total missing" 
+#' Barplot showing the number of missing values found in each sample for the 
+#' log2-tranformed data
+#' 
+#' Log2-MDS plot: MDS plot where data is reduced to two dimensions allowing 
+#' inspection of the main global changes in the data
+#' 
+#' PCV - Intragroup: Mean of intragroup CV of all replicate groups
+#' 
+#' PMAD - Intragroup: Mean of intragroup median absolute deviation across 
+#' replicate groups
+#' 
+#' PEV - Intragroup: Mean of intragroup median absolute deviation across the 
+#' replicate groups
+#' 
+#' Relative PCV, PMAD and PEV compared to log2: The results from PCV, PMAD
+#' and PEV from all normalized data compared to the log2 data
+#' 
+#' Stable variables plot:
+#' 5% of least differentially expressed variables are identified by ANOVA
+#' analysis of log2 transformed data. Thereafter, global CV of these variables
+#' is estimated from different normalized datasets. A plot of global CV of the
+#' stable variables from all datsets on the y-axis and PCV-compared to log2 on
+#' the x-axis is generated.
+#' 
+#' CV vs Raw Intensity plots:
+#' For the first replicate group in each of the normalized dataset, a plot of
+#' PCV of each variable compared to the average intensity of the variable in
+#' the replicate group is plotted.
+#' 
+#' MA plots:
+#' Plotted using the plotMA function of the limma package. The first sample in
+#' each dataset is plotted against the average of the replicate group that
+#' sample belong to.
+#' 
+#' Scatterplots:
+#' The first two samples from each dataset are plotted.
+#' 
+#' Q-Q plots:
+#' QQ-plots are plotted for the first sample in each normalized dataset.
+#' 
+#' Boxplots:
+#' Boxplots for all samples are plotted and colored according to the replicate
+#' grouping.
+#' 
+#' Relative Log Expression (RLE) plots:
+#' Relative log expression value plots. Ratio between the expression of the
+#' variable and the median expression of this variable across all samples.
+#' The samples should be aligned around zero. Any deviation would indicate
+#' discrepancies in the data.
+#' 
+#' Density plots:
+#' Density distributions for each sample using the density function. Can 
+#' capture outliers (if single densities lies far from the others) and see
+#' if there is batch effects in the dataset (if for instance there is two
+#' clear collections of lines in the data).
+#' 
+#' MDS plots
+#' Multidimensional scaling plot using the cmdscale() function from the stats
+#' package. Is often able to show whether replicates group together, and
+#' whether there are any clear outliers in the data.
+#' 
+#' MeanSDplots
+#' Displays the standard deviation values against values ordered according
+#' to mean. If no dependency on mean is present (as is desired) a flat red
+#' line is shown.
+#' 
+#' Pearson and Spearman correlation
+#' Mean of intragroup Pearson and Spearman correlation values for each method.
+#' 
+#' Dendograms
+#' Generated using the hclust function. Data is centered and scaled prior to
+#' analysis. Coloring of replicates is done using as.phylo from the ape package.
+#' 
+#' P-value histograms
+#' Histogram plots of p-values after calculating an ANOVA between different
+#' condition groups. If no effect is present in the data a flat distribution
+#' is expected. If an effect is present a flat distribution is still expected,
+#' but with a sharp peak close to zero. If other effects are present it might
+#' indicate that the data doesn't support the assumptions of ANOVA, for
+#' instance if there are batch effects present in the data.
 #' 
 #' @param nr Normalyzer results object.
 #' @param jobdir Path to output directory for run.
@@ -21,10 +111,13 @@ generatePlots <- function(nr, jobdir, plotRows=3, plotCols=4) {
     nrows <- plotRows + 2
     ncols <- plotCols + 2
     
-    currentLayout <- grid::grid.layout(nrow=nrows, ncol=ncols,
-                                       heights=c(0.1, rep(3/(nrows-2), (nrows-2)), 0.1), 
-                                       widths=c(0.1, rep(4/(ncols-2), (ncols-2)), 0.1), 
-                                       default.units=c('null', 'null'))
+    currentLayout <- grid::grid.layout(
+        nrow=nrows, 
+        ncol=ncols,
+        heights=c(0.1, rep(3 / (nrows - 2), (nrows-  2)), 0.1), 
+        widths=c(0.1, rep(4 / (ncols - 2), (ncols - 2)), 0.1), 
+        default.units=c('null', 'null')
+    )
         
     currentFont <- "Helvetica"
     setupPlotting(currentjob, jobdir, "Norm-report")
@@ -110,20 +203,26 @@ generatePlots <- function(nr, jobdir, plotRows=3, plotCols=4) {
 #' @keywords internal
 setupPlotting <- function(currentJob, jobDir, suffix) {
     
-    grDevices::palette(c("red", "green", "blue", "orange", "darkgray", 
-                         "blueviolet", "darkslateblue", "darkviolet", "gray", 
-                         "bisque4", "brown", "cadetblue4", "darkgreen", 
-                         "darkcyan", "darkmagenta", "darkgoldenrod4", "coral1"))
+    grDevices::palette(c(
+        "red", "green", "blue", "orange", "darkgray", "blueviolet", 
+        "darkslateblue", "darkviolet", "gray", "bisque4", "brown", 
+        "cadetblue4", "darkgreen", "darkcyan", "darkmagenta", "darkgoldenrod4", 
+        "coral1"
+    ))
 
-    grDevices::pdf(file=paste(jobDir, "/", suffix, "-", currentJob, ".pdf", sep=""), 
-                   paper="a4r", width=0, height=0)    
+    grDevices::pdf(
+        file=paste(jobDir, "/", suffix, "-", currentJob, ".pdf", sep=""), 
+        paper="a4r", width=0, height=0
+    )
 
     themeNorm <- ggplot2::theme_set(ggplot2::theme_bw())
-    themeNorm <- ggplot2::theme_update(panel.grid.minor=ggplot2::element_blank(), 
-                                        axis.text=ggplot2::element_text(size=7), 
-                                        axis.title=ggplot2::element_text(size=8), 
-                                        plot.title=ggplot2::element_text(size=8), 
-                                        plot.margin=ggplot2::unit(c(1, 1, 1, 1), "mm"))
+    themeNorm <- ggplot2::theme_update(
+        panel.grid.minor=ggplot2::element_blank(), 
+        axis.text=ggplot2::element_text(size=7), 
+        axis.title=ggplot2::element_text(size=8), 
+        plot.title=ggplot2::element_text(size=8), 
+        plot.margin=ggplot2::unit(c(1, 1, 1, 1), "mm")
+    )
     def.par <- graphics::par(no.readonly=TRUE)
 }
 
@@ -153,20 +252,41 @@ plotFrontPage <- function(currentjob, currentFont) {
     grid::grid.rect(vp=grid::viewport(layout.pos.row=1), gp=gpfill)
     grid::grid.rect(vp=grid::viewport(layout.pos.row=7), gp=gpfill)
     
-    grid::grid.text(paste("Project Name: ", currentjob, sep=""), vp=grid::viewport(layout.pos.row=3), just=c("center","center"), 
-                    gp=grid::gpar(fontsize=12, fontfamily=currentFont, col="black"))
-    grid::grid.text(paste0("Normalyzer (ver ", version, " )"), vp=grid::viewport(layout.pos.row=4), just=c("center", "center"), 
-                    gp=grid::gpar(fontface="bold", fontsize=32, fontfamily=currentFont, col="darkblue"))
+    grid::grid.text(
+        paste("Project Name: ", currentjob, sep=""), 
+        vp=grid::viewport(layout.pos.row=3), 
+        just=c("center","center"), 
+        gp=grid::gpar(fontsize=12, fontfamily=currentFont, col="black"))
     
-    grid::grid.text(paste("Report created on: ", Sys.Date(), sep=""), vp=grid::viewport(layout.pos.row=5), just=c("center","center"),
-                    gp=grid::gpar(fontsize=12, fontfamily=currentFont, col="black"))
+    grid::grid.text(
+        paste0("Normalyzer (ver ", version, " )"), 
+        vp=grid::viewport(layout.pos.row=4), 
+        just=c("center", "center"), 
+        gp=grid::gpar(fontface="bold", fontsize=32, fontfamily=currentFont, col="darkblue"))
     
-    citationText <- "Citation: Chawade, A., Alexandersson, E., Levander, F. (2014). Normalyzer: a tool for rapid evaluation of normalization methods for omics data sets. J Proteome Res.,13 (6)"
+    grid::grid.text(
+        paste("Report created on: ", Sys.Date(), sep=""), 
+        vp=grid::viewport(layout.pos.row=5), 
+        just=c("center","center"),
+        gp=grid::gpar(fontsize=12, fontfamily=currentFont, col="black"))
     
-    grid::grid.text(citationText, vp=grid::viewport(layout.pos.row=6), just=c("center","center"), gp=grid::gpar(fontsize=10, fontfamily=currentFont, col="black"))
+    citationText <- paste(
+        "Citation: Willforss, J., Chawade, A. and Levander, F.",
+        "Submitted"
+    )
     
-    grid::grid.text("Documentation for analyzing this report can be found at http://quantitativeproteomics.org/normalyzer/help.php",
-                    vp=grid::viewport(layout.pos.row=7), just=c("center", "center"), gp=grid::gpar(fontsize=10, fontfamily=currentFont, col="black"))
+    grid::grid.text(
+        citationText, 
+        vp=grid::viewport(layout.pos.row=6), 
+        just=c("center","center"), 
+        gp=grid::gpar(fontsize=10, fontfamily=currentFont, col="black"))
+    
+    grid::grid.text(
+        paste("Documentation for analyzing this report can be found at",
+              "http://quantitativeproteomics.org/normalyzer/help.php"),
+        vp=grid::viewport(layout.pos.row=7), 
+        just=c("center", "center"), 
+        gp=grid::gpar(fontsize=10, fontfamily=currentFont, col="black"))
 }
 
 #' Generate sample summary of intensities, missing values and MDS plot
@@ -190,21 +310,42 @@ plotSampleOutlierSummary <- function(nr, currentLayout, pageno) {
     
     datacoltotal <- apply(filterrawdata, 2, function(x) { sum(x, na.rm=TRUE) })
     
-    graphics::barplot(datacoltotal, las=2, main="Total intensity", cex.names=0.5, names.arg=substr(names(datacoltotal), 1, 10))
+    graphics::barplot(
+        datacoltotal, 
+        las=2, 
+        main="Total intensity", 
+        cex.names=0.5, 
+        names.arg=substr(names(datacoltotal), 1, 10)
+    )
     datamissingcol <- apply(filterrawdata, 2, function(x) { sum(is.na(x)) })
-    graphics::barplot(datamissingcol, las=2, main="Total missing", cex.names=0.5, names.arg=substr(names(datamissingcol), 1, 10))
+    graphics::barplot(
+        datamissingcol, 
+        las=2, 
+        main="Total missing", 
+        cex.names=0.5, 
+        names.arg=substr(names(datamissingcol), 1, 10)
+    )
     datastore <- methodlist[[1]]
     
-    d <- stats::dist(scale(t(stats::na.omit(datastore)), center=TRUE, scale=TRUE))
+    d <- stats::dist(
+        scale(t(stats::na.omit(datastore)), center=TRUE, scale=TRUE)
+    )
     fit <- stats::cmdscale(d, eig=TRUE, k=2)
     x <- fit$points[, 1]
     y <- fit$points[, 2]
     
     graphics::plot(x, y, type="n", main="Log2-MDS plot", xlab="", ylab="")
-    graphics::text(fit$points[, 1], fit$points[, 2], col=filterED, labels=filterED)
+    graphics::text(
+        fit$points[, 1], fit$points[, 2], col=filterED, labels=filterED
+    )
     grid::pushViewport(grid::viewport(layout=currentLayout))
     
-    printMeta("Data Summary - Outlier detection", pageno, currentjob, currentLayout)
+    printMeta(
+        "Data Summary - Outlier detection", 
+        pageno, 
+        currentjob, 
+        currentLayout
+    )
 }
 
 #' Generate normalization replicate variance summary
@@ -230,29 +371,70 @@ plotReplicateVariance <- function(nr, currentLayout, pageno) {
     graphics::par(mar=c(2, 2, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
     
     graphics::boxplot(
-        avgCVMem, main="PCV - Intragroup", names=c(methodnames), border="red", 
-        density=20, cex=0.3, cex.axis=0.9, las=2, frame.plot=FALSE)
+        avgCVMem, 
+        main="PCV - Intragroup", 
+        names=c(methodnames), 
+        border="red", 
+        density=20, 
+        cex=0.3, 
+        cex.axis=0.9, 
+        las=2, 
+        frame.plot=FALSE
+    )
     
     graphics::stripchart(
-        as.data.frame(avgCVMem), vertical=TRUE, cex=0.4, las=2, 
-        pch=20, add=TRUE, col="darkgray")
+        as.data.frame(avgCVMem), 
+        vertical=TRUE, 
+        cex=0.4, 
+        las=2, 
+        pch=20, 
+        add=TRUE, 
+        col="darkgray"
+    )
     
     graphics::boxplot(
-        avgMADMem , main="PMAD - Intragroup", names=c(methodnames), 
-        border="red", density=20, cex=0.3, cex.axis=0.9, las=2, 
-        frame.plot=FALSE)
+        avgMADMem, 
+        main="PMAD - Intragroup", 
+        names=c(methodnames), 
+        border="red", 
+        density=20, 
+        cex=0.3, 
+        cex.axis=0.9, 
+        las=2, 
+        frame.plot=FALSE
+    )
     
     graphics::stripchart(
-        as.data.frame(avgMADMem ), vertical=TRUE, cex=0.4, las=2, pch=20, 
-        add=TRUE, col="darkgray")
+        as.data.frame(avgMADMem), 
+        vertical=TRUE, 
+        cex=0.4, 
+        las=2, 
+        pch=20, 
+        add=TRUE, 
+        col="darkgray"
+    )
     
     graphics::boxplot(
-        avgVarMem, main="PEV - Intragroup", names=c(methodnames), border="red", 
-        density=20, cex=0.3, cex.axis=0.9, las=2, frame.plot=FALSE)
+        avgVarMem, 
+        main="PEV - Intragroup", 
+        names=c(methodnames), 
+        border="red", 
+        density=20, 
+        cex=0.3, 
+        cex.axis=0.9, 
+        las=2, 
+        frame.plot=FALSE
+    )
     
     graphics::stripchart(
-        as.data.frame(avgVarMem), vertical=TRUE, cex=0.4, las=2, pch=20, 
-        add=TRUE, col="darkgray")
+        as.data.frame(avgVarMem), 
+        vertical=TRUE, 
+        cex=0.4, 
+        las=2, 
+        pch=20, 
+        add=TRUE, 
+        col="darkgray"
+    )
     
     grid::pushViewport(grid::viewport(layout=currentLayout))
     printMeta("Replicate variation", pageno, currentjob, currentLayout)

@@ -148,5 +148,55 @@ setupTestDesign <- function(nSamples) {
 
 
 
+#' General function for calculating percentage difference of average column
+#' means in matrix
+#' 
+#' @param targetMat Matrix for which column means should be compared
+#' @return percDiffVector Vector with percentage difference, where first element
+#'   always will be 100
+#' @keywords internal
+calculatePercentageAvgDiffInMat <- function(targetMat) {
+    
+    calculatePercDiff <- function (sampleIndex, mat) {
+        mean(mat[, sampleIndex]) * 100 / mean(mat[, 1])
+    }
+    
+    percDiffVector <- vapply(
+        seq_len(ncol(targetMat)), 
+        calculatePercDiff,
+        0,
+        mat=targetMat)
+    
+    percDiffVector
+}
+
+
+#' Filter rows with lower than given number of replicates for any condition
+#' 
+#' @param df Dataframe with expression data to filter
+#' @param groups Condition groups header
+#' @param leastRep Minimum number of replicates in each group
+#'   to retain
+#' @return collDesignDf Reduced design matrix
+#' @keywords internal
+filterLowRep <- function(df, groups, leastRep = 2) {
+    
+    allReplicatesHaveValuesContrast <- function(row, groups, minCount) {
+        names(row) <- groups
+        repCounts <- table(names(stats::na.omit(row)))
+        length(repCounts) == length(unique(groups)) && min(repCounts) >= minCount
+    }
+    
+    rowMeetThresContrast <- apply(
+        df, 
+        1,
+        allReplicatesHaveValuesContrast, 
+        groups = groups, 
+        minCount = leastRep)
+    
+    filteredDf <- df[rowMeetThresContrast, ]
+    filteredDf
+}
+
 
 

@@ -1,4 +1,23 @@
-#' Normalyzer pipeline entry point
+#' NormalyzerDE pipeline entry point
+#' 
+#' This function is the main execution point for the normalization part of
+#' the NormalyzerDE analysis pipeline. When executed it performs the following
+#' steps:
+#' 
+#' 1: Loads the data matrix containing expression values and optional
+#' annotations, as well as the design matrix containing the experimental setup
+#' 2: Performs input data verification to validate that the data is in correct
+#' format. This step captures many common formatting errors. It returns an
+#' instance of the NormalyzerDataset class representing the unprocessed data.
+#' 3: Calculate a range of normalizations for the dataset. The result is
+#' provided as a NormalyzerResults object containing the resulting data matrices
+#' from each normalization.
+#' 4: Analyze the normalizations and generate performance measures for each
+#' of the normalized datasets. This result is provided as a 
+#' NormalyzerEvaluationResults object.
+#' 5: Output the matrices containing the normalized datasets to files.
+#' 6: Generate visualizations overviewing the performance measures and
+#' write them to a PDF report.
 #' 
 #' @param jobName Give the current run a name.
 #' @param designPath Path to file containing design matrix.
@@ -144,7 +163,26 @@ normalyzer <- function(
                              " minutes"))
 }
 
-#' Normalyzer differential expression
+#' NormalyzerDE differential expression
+#' 
+#' Performs differential expression analysis on a normalization matrix.
+#' This command executes a pipeline processing the data and generates an
+#' annotated normalization matrix and a report containing p-value histograms
+#' for each of the performed comparisons.
+#' 
+#' When executed, it performs the following steps:
+#' 
+#' 1: Read the data and the design matrices into dataframes.
+#' 2: Generate an instance of the NormalyzerStatistics class representing the
+#' data and their statistical comparisons.
+#' 3: Optionally reduce technical replicates in both the data matrix and the 
+#' design matrix
+#' 4: Calculate statistical contrats between supplied groups
+#' 5: Generate an annotated version of the original dataframe where columns
+#' containing statistical key measures have been added
+#' 6: Write the table to file
+#' 7: Generate a PDF report displaying p-value histograms for each calculated
+#' contrast
 #' 
 #' @param jobName Name of job
 #' @param designPath File path to design matrix
