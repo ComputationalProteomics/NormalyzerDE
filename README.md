@@ -48,6 +48,8 @@ NormalyzerDE consists of a number of scripts and classes. They are focused aroun
 two separate workflows. One is for normalizing and evaluating the normalizations. The
 second is for performing differential expression analysis. Classes are contained in scripts with the same name.
 
+![NormalyzerDE schematics](vignettes/180813_normalyzerde_schematics.png)
+
 The standard workflow for the normalization is the following:
 
 * The `normalyzer` function in the `NormalyzerDE.R` script is called, starting the process.
@@ -64,7 +66,5 @@ When a normalized matrix is selected the analysis proceeds to the statistical an
 * An instance of `NormalyzerStatistics` is prepared containing the input data.
 * Code in the `calculateStatistics.R` script is used to calculate the statistical contrasts. The results are attached to the `NormalyzerStatistics` object.
 * The resulting statistics are used to generate a report and an annotated output matrix where key statistical measures are attached to the original matrix.
-
-![NormalyzerDE schematics](vignettes/180813_normalyzerde_schematics.png)
 
 
