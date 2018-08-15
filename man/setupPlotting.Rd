@@ -2,7 +2,8 @@
 % Please edit documentation in R/generatePlots.R
 \name{setupPlotting}
 \alias{setupPlotting}
-\title{Setup PDF report settings}
+\title{Setup PDF report settings by initializing the color palette, format
+for the PDF report and the graphical device}
 \usage{
 setupPlotting(currentJob, jobDir, suffix)
 }
@@ -17,6 +18,7 @@ setupPlotting(currentJob, jobDir, suffix)
 None
 }
 \description{
-Setup PDF report settings
+Setup PDF report settings by initializing the color palette, format
+for the PDF report and the graphical device
 }
 \keyword{internal}

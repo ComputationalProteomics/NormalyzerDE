@@ -4,9 +4,12 @@
 \name{NormalyzerResults-class}
 \alias{NormalyzerResults-class}
 \alias{NormalyzerResults}
-\title{S4 class to represent dataset information}
+\title{Representation of the results from performing normalization over a dataset}
 \description{
-S4 class to represent dataset information
+It is linked to a NormalyzerDataset instance representing the raw data
+which has been processed. After performing evaluation it also links to
+an instance of NormalyzerEvaluationResults representing the results
+from the evaluation.
 }
 \section{Slots}{
 
@@ -17,7 +20,8 @@ S4 class to represent dataset information
 
 \item{\code{methodnames}}{Short names for included normalization methods}
 
-\item{\code{furtherNormalizationMinThreshold}}{Min threshold for running extended normalizations}
+\item{\code{furtherNormalizationMinThreshold}}{Min threshold for running extended 
+normalizations}
 
 \item{\code{data2log2}}{Log2 of filtered raw data}
 

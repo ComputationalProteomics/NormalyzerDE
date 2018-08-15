@@ -9,8 +9,8 @@ loadData(dataPath, inputFormat = "default", zeroToNA = FALSE)
 \arguments{
 \item{dataPath}{File path to design matrix.}
 
-\item{inputFormat}{If input is given in standard NormalyzerDE format, Proteios format
-or in MaxQuant protein or peptide format}
+\item{inputFormat}{If input is given in standard NormalyzerDE format, 
+Proteios format or in MaxQuant protein or peptide format}
 
 \item{zeroToNA}{Automatically convert zeroes to NA values}
 }
@@ -18,7 +18,9 @@ or in MaxQuant protein or peptide format}
 rawData Raw data loaded into data frame
 }
 \description{
-Load raw data into dataframe
+General function which allows specifying different types of input data
+including "proteios", "maxquantpep" (peptide output from MaxQuant) and 
+"maxquantprot" (protein output from MaxQuant) formats.
 }
 \examples{
 \dontrun{

@@ -1,4 +1,8 @@
-#' Raw data representation
+#' Represents raw input data together with basic annotation information
+#' 
+#' Takes a job name, a data matrix, a design matrix as well as specification
+#' of the group and sample columns in the design matrix. Provides the
+#' basic representation of a dataset in the NormalyzerDE normalization part.
 #' 
 #' @slot jobName Name of the job represented by the dataset.
 #' @slot rawData Matrix with raw values.
@@ -61,7 +65,8 @@ setMethod("setupValues", "NormalyzerDataset",
           function(nds, quiet=FALSE) {
               
               nds@sampleReplicateGroups <- as.numeric(as.factor(nds@designMatrix[, nds@groupNameCol]))
-              nds@samplesGroupsWithReplicates <- as.numeric(names(table(nds@sampleReplicateGroups)[which(table(nds@sampleReplicateGroups) > 1)]))
+              nds@samplesGroupsWithReplicates <- as.numeric(
+                  names(table(nds@sampleReplicateGroups)[which(table(nds@sampleReplicateGroups) > 1)]))
               nds@sampleNames <- as.character(nds@designMatrix[, nds@sampleNameCol])
 
               singleReplicateRun <- detectSingleReplicate(nds)

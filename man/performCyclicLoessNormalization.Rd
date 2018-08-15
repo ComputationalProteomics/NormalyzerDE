@@ -2,8 +2,7 @@
 % Please edit documentation in R/normMethods.R
 \name{performCyclicLoessNormalization}
 \alias{performCyclicLoessNormalization}
-\title{Cyclic Loess normalization
-Local regression based on k-nearest-neighbor model}
+\title{Cyclic Loess normalization}
 \usage{
 performCyclicLoessNormalization(rawMatrix)
 }
@@ -14,8 +13,9 @@ performCyclicLoessNormalization(rawMatrix)
 Normalized matrix
 }
 \description{
-Cyclic Loess normalization
-Local regression based on k-nearest-neighbor model
+Log2 transformed data is normalized by Loess method using the function
+"normalizeCyclicLoess". Further information is available for the function
+"normalizeCyclicLoess" in the Limma package.
 }
 \examples{
 data(example_data_only_values)

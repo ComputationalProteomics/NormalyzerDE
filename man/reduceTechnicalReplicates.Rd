@@ -2,8 +2,7 @@
 % Please edit documentation in R/calculateStatistics.R
 \name{reduceTechnicalReplicates}
 \alias{reduceTechnicalReplicates}
-\title{Remove technical replicates from data matrix while collapsing
-sample values into average values}
+\title{Remove technical replicates from data matrix}
 \usage{
 reduceTechnicalReplicates(dataMat, techRepGroups)
 }
@@ -16,8 +15,8 @@ reduceTechnicalReplicates(dataMat, techRepGroups)
 collDataMat Reduced data matrix
 }
 \description{
-Remove technical replicates from data matrix while collapsing
-sample values into average values
+Collapses sample values into their average. If only one value is present
+due to NA-values in other technical replicates, then that value is used.
 }
 \examples{
 techRep <- c("a", "a", "b", "b", "c", "c", "d", "d")

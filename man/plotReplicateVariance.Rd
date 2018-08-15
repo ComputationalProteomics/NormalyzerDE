@@ -2,7 +2,9 @@
 % Please edit documentation in R/generatePlots.R
 \name{plotReplicateVariance}
 \alias{plotReplicateVariance}
-\title{Generate normalization replicate variance summary}
+\title{Generate normalization replicate variance summary by displaying
+CV (coefficient of variance), MAD (mean of intragroup median absolute
+deviation) and PEV (Pooled Estimate of Variance) as mean of intragroups}
 \usage{
 plotReplicateVariance(nr, currentLayout, pageno)
 }
@@ -17,6 +19,8 @@ plotReplicateVariance(nr, currentLayout, pageno)
 None
 }
 \description{
-Generate normalization replicate variance summary
+Generate normalization replicate variance summary by displaying
+CV (coefficient of variance), MAD (mean of intragroup median absolute
+deviation) and PEV (Pooled Estimate of Variance) as mean of intragroups
 }
 \keyword{internal}

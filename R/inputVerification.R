@@ -1,8 +1,12 @@
 #' Load raw data into dataframe
 #' 
+#' General function which allows specifying different types of input data
+#' including "proteios", "maxquantpep" (peptide output from MaxQuant) and 
+#' "maxquantprot" (protein output from MaxQuant) formats.
+#' 
 #' @param dataPath File path to design matrix.
-#' @param inputFormat If input is given in standard NormalyzerDE format, Proteios format
-#'   or in MaxQuant protein or peptide format
+#' @param inputFormat If input is given in standard NormalyzerDE format, 
+#' Proteios format or in MaxQuant protein or peptide format
 #' @param zeroToNA Automatically convert zeroes to NA values
 #' @return rawData Raw data loaded into data frame
 #' @export
@@ -21,7 +25,12 @@ loadData <- function(dataPath, inputFormat="default", zeroToNA=FALSE) {
         rawData <- maxQuantToNormalyzer(dataPath, protLevel=TRUE)
     } else {
         valids <- c("default", "proteios", "maxquantpep", "maxquantprot")
-        stop(paste("Unknown inputFormat:", inputFormat, "valids are:", paste(valids, collapse=", ")))
+        stop(paste(
+            "Unknown inputFormat:", 
+            inputFormat, 
+            "valids are:", 
+            paste(valids, collapse=", "))
+        )
     }
     
     if (zeroToNA) {
@@ -33,6 +42,9 @@ loadData <- function(dataPath, inputFormat="default", zeroToNA=FALSE) {
 
 #' Load raw design into dataframe
 #' 
+#' Takes a design path, loads the matrix and ensures that the sample column
+#' is in character format and that the group column is in factor format.
+#' 
 #' @param designPath File path to design matrix.
 #' @param sampleCol Column name for column containing sample names.
 #' @param groupCol Column name for column containing condition levels.
@@ -42,14 +54,26 @@ loadData <- function(dataPath, inputFormat="default", zeroToNA=FALSE) {
 #' df <- loadDesign("design.tsv")
 #' }
 loadDesign <- function(designPath, sampleCol="sample", groupCol="group") {
-    designMatrix <- utils::read.table(designPath, sep="\t", stringsAsFactors=FALSE, header=TRUE, comment.char="")
+    designMatrix <- utils::read.table(
+        designPath, 
+        sep="\t", 
+        stringsAsFactors=FALSE, 
+        header=TRUE, 
+        comment.char=""
+    )
     designMatrix[, sampleCol] <- as.character(designMatrix[, sampleCol])
     designMatrix[, groupCol] <- as.factor(as.character(designMatrix[, groupCol]))
     designMatrix
 }
 
 #' Verify that input data is in correct format, and if so, return a generated
-#'  Normalyzer data object from that input data
+#'  NormalyzerDE data object from that input data
+#' 
+#' This function performs a number of checks on the input data and provides
+#' informative error messages if the data isn't fulfilling the required format.
+#' Checks include verifying that the design matrix matches to the data matrix,
+#' that the data matrix contains valid numbers and that samples have enough
+#' values for analysis
 #' 
 #' @param jobName Name of ongoing run.
 #' @param designMatrix Data frame containing design data.
@@ -98,18 +122,38 @@ getVerifiedNormalyzerObject <- function(
     repSortedRawData <- getReplicateSortedData(dataMatrix, groups)
     processedRawData <- preprocessData(repSortedRawData)
     
-    lowCountSampleFiltered <- getLowCountSampleFiltered(processedRawData, 
-                                                        groups,
-                                                        threshold=threshold, 
-                                                        stopIfTooFew=!omitSamples)
+    lowCountSampleFiltered <- getLowCountSampleFiltered(
+        processedRawData, 
+        groups,
+        threshold=threshold, 
+        stopIfTooFew=!omitSamples
+    )
     
     designMatrix <- designMatrix[which(designMatrix$sample %in% colnames(lowCountSampleFiltered)), ]
     
     # If no samples left after omitting, stop
-    verifyMultipleSamplesPresent(lowCountSampleFiltered, groups, requireReplicates=requireReplicates, quiet=quiet)
-    validateSampleReplication(lowCountSampleFiltered, groups, requireReplicates=requireReplicates, quiet=quiet)
+    verifyMultipleSamplesPresent(
+        lowCountSampleFiltered, 
+        groups, 
+        requireReplicates=requireReplicates, 
+        quiet=quiet
+    )
     
-    nds <- generateNormalyzerDataset(jobName, designMatrix, cbind(annotationMatrix, lowCountSampleFiltered), sampleCol, groupCol, quiet=quiet)
+    validateSampleReplication(
+        lowCountSampleFiltered, 
+        groups, 
+        requireReplicates=requireReplicates, 
+        quiet=quiet
+    )
+    
+    nds <- generateNormalyzerDataset(
+        jobName, 
+        designMatrix, 
+        cbind(annotationMatrix, lowCountSampleFiltered), 
+        sampleCol, 
+        groupCol, 
+        quiet=quiet
+    )
     nds
 }
 

@@ -28,12 +28,4 @@ Calculates internal correlations for each condition having at least two
 samples and returns a vector with correlation values corresponding to each
 condition
 }
-\examples{
-data("example_data_only_values")
-data("example_design")
-testDesign <- example_design[which(example_design$group \%in\% c("1", "2", "3")), ]
-testData <- example_data_only_values[, as.character(testDesign$sample)]
-groupHeader <- testDesign$group
-uniqueGroups <- unique(groupHeader)
-calculateCorrSum(testData, groupHeader, uniqueGroups, "pearson")
-}
+\keyword{internal}

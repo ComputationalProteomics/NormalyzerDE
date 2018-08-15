@@ -2,7 +2,7 @@
 % Please edit documentation in R/NormalyzerDE.R
 \name{normalyzer}
 \alias{normalyzer}
-\title{Normalyzer pipeline entry point}
+\title{NormalyzerDE pipeline entry point}
 \usage{
 normalyzer(jobName, designPath, dataPath, outputDir = ".",
   forceAllMethods = FALSE, omitLowAbundSamples = FALSE,
@@ -67,7 +67,25 @@ segment.}
 None
 }
 \description{
-Normalyzer pipeline entry point
+This function is the main execution point for the normalization part of
+the NormalyzerDE analysis pipeline. When executed it performs the following
+steps:
+}
+\details{
+1: Loads the data matrix containing expression values and optional
+annotations, as well as the design matrix containing the experimental setup
+2: Performs input data verification to validate that the data is in correct
+format. This step captures many common formatting errors. It returns an
+instance of the NormalyzerDataset class representing the unprocessed data.
+3: Calculate a range of normalizations for the dataset. The result is
+provided as a NormalyzerResults object containing the resulting data matrices
+from each normalization.
+4: Analyze the normalizations and generate performance measures for each
+of the normalized datasets. This result is provided as a 
+NormalyzerEvaluationResults object.
+5: Output the matrices containing the normalized datasets to files.
+6: Generate visualizations overviewing the performance measures and
+write them to a PDF report.
 }
 \examples{
 \dontrun{

@@ -1,5 +1,7 @@
-#' Remove technical replicates from data matrix while collapsing
-#' sample values into average values
+#' Remove technical replicates from data matrix 
+#' 
+#' Collapses sample values into their average. If only one value is present
+#' due to NA-values in other technical replicates, then that value is used.
 #' 
 #' @param dataMat NormalyzerDE data matrix
 #' @param techRepGroups Technical replicates vector
@@ -31,6 +33,7 @@ reduceTechnicalReplicates <- function(dataMat, techRepGroups) {
 }
 
 #' Remove technical replicates from design matrix.
+#' 
 #' Technical replicates are specified as duplicate strings.
 #' The first sample name corresponding for each technical replicate group
 #' is retained.
@@ -57,7 +60,9 @@ reduceDesignTechRep <- function(designMat, techRepGroups) {
     collDesignDf
 }
 
-#' Setup NormalyzerDE statistics object. It loads the raw data matrix and
+#' Setup NormalyzerDE statistics object
+#' 
+#' It loads the raw data matrix and
 #' the design matrix, and uses these to separate the raw data into an annotation
 #' matrix and a data matrix. Next, it calculates a contrast showing which
 #' features have at least a set number of values in each of the conditions.
@@ -78,15 +83,19 @@ reduceDesignTechRep <- function(designMat, techRepGroups) {
 #' data(example_stat_data)
 #' setupStatisticsObject(example_design, example_stat_data)
 setupStatisticsObject <- function(designDf, fullDf, sampleCol="sample", 
-                                  conditionCol="group", batchCol=NULL, logTrans=FALSE,
-                                  leastRepCount=2) {
+                                  conditionCol="group", batchCol=NULL, 
+                                  logTrans=FALSE, leastRepCount=2) {
 
     dataCols <- as.character(designDf[, sampleCol])
     annotMat <- as.matrix(fullDf[, which(!colnames(fullDf) %in% dataCols)])
     dataMat <- as.matrix(fullDf[, dataCols], )
     
     rownames(dataMat) <- seq_len(nrow(dataMat))
-    dataMatNAFiltered <- filterLowRep(dataMat, designDf[, conditionCol], leastRep=leastRepCount)
+    dataMatNAFiltered <- filterLowRep(
+        dataMat, 
+        designDf[, conditionCol], 
+        leastRep=leastRepCount
+    )
     naFilterContrast <- rownames(dataMat) %in% rownames(dataMatNAFiltered)
       
     if (logTrans) {

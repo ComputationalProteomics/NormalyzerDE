@@ -20,7 +20,7 @@
 #' PMAD - Intragroup: Mean of intragroup median absolute deviation across 
 #' replicate groups
 #' 
-#' PEV - Intragroup: Mean of intragroup median absolute deviation across the 
+#' PEV - Intragroup: Mean of intragroup pooled estimate of variance across the 
 #' replicate groups
 #' 
 #' Relative PCV, PMAD and PEV compared to log2: The results from PCV, PMAD
@@ -194,7 +194,8 @@ generatePlots <- function(nr, jobdir, plotRows=3, plotCols=4) {
     grDevices::dev.off()
 }
 
-#' Setup PDF report settings
+#' Setup PDF report settings by initializing the color palette, format
+#' for the PDF report and the graphical device
 #' 
 #' @param currentJob Name of current run.
 #' @param jobDir Path to output directory for run.
@@ -226,7 +227,7 @@ setupPlotting <- function(currentJob, jobDir, suffix) {
     def.par <- graphics::par(no.readonly=TRUE)
 }
 
-#' Generate first page in output report
+#' Generate first page in output report and write to viewport
 #' 
 #' @param currentjob Name of current run.
 #' @param currentFont Font used for output document.
@@ -246,7 +247,12 @@ plotFrontPage <- function(currentjob, currentFont) {
       version <- "(version not found)"
     }
     
-    la1 <- grid::grid.layout(nrow=7, ncol=1, heights=c(0.2, 1, 0.1, 0.2, 0.1, 0.2, 0.2), default.units=c('null','null'))
+    la1 <- grid::grid.layout(
+        nrow=7, 
+        ncol=1, 
+        heights=c(0.2, 1, 0.1, 0.2, 0.1, 0.2, 0.2), 
+        default.units=c('null','null')
+    )
     gpfill <- grid::gpar(fill="gray90", lwd=0, lty=0)
     grid::pushViewport(grid::viewport(layout=la1))
     grid::grid.rect(vp=grid::viewport(layout.pos.row=1), gp=gpfill)
@@ -262,7 +268,12 @@ plotFrontPage <- function(currentjob, currentFont) {
         paste0("Normalyzer (ver ", version, " )"), 
         vp=grid::viewport(layout.pos.row=4), 
         just=c("center", "center"), 
-        gp=grid::gpar(fontface="bold", fontsize=32, fontfamily=currentFont, col="darkblue"))
+        gp=grid::gpar(
+            fontface="bold", 
+            fontsize=32, 
+            fontfamily=currentFont, 
+            col="darkblue")
+        )
     
     grid::grid.text(
         paste("Report created on: ", Sys.Date(), sep=""), 
@@ -279,17 +290,20 @@ plotFrontPage <- function(currentjob, currentFont) {
         citationText, 
         vp=grid::viewport(layout.pos.row=6), 
         just=c("center","center"), 
-        gp=grid::gpar(fontsize=10, fontfamily=currentFont, col="black"))
+        gp=grid::gpar(fontsize=10, fontfamily=currentFont, col="black")
+    )
     
     grid::grid.text(
         paste("Documentation for analyzing this report can be found at",
               "http://quantitativeproteomics.org/normalyzer/help.php"),
         vp=grid::viewport(layout.pos.row=7), 
         just=c("center", "center"), 
-        gp=grid::gpar(fontsize=10, fontfamily=currentFont, col="black"))
+        gp=grid::gpar(fontsize=10, fontfamily=currentFont, col="black")
+    )
 }
 
-#' Generate sample summary of intensities, missing values and MDS plot
+#' Write page containing sample summary of intensities, missing values and 
+#' MDS plot to the viewport
 #' 
 #' @param nr Normalyzer results object.
 #' @param currentLayout Layout used for document.
@@ -348,7 +362,9 @@ plotSampleOutlierSummary <- function(nr, currentLayout, pageno) {
     )
 }
 
-#' Generate normalization replicate variance summary
+#' Generate normalization replicate variance summary by displaying
+#' CV (coefficient of variance), MAD (mean of intragroup median absolute
+#' deviation) and PEV (Pooled Estimate of Variance) as mean of intragroups
 #' 
 #' @param nr Normalyzer results object.
 #' @param currentLayout Layout used for document.
@@ -440,9 +456,13 @@ plotReplicateVariance <- function(nr, currentLayout, pageno) {
     printMeta("Replicate variation", pageno, currentjob, currentLayout)
 }
 
-#' Generate replicate variance overview for normalization methods and CV
-#' plot for stable variables
-#' 
+#' Write figures displaying pooled coefficient of variance, median absolute 
+#' deviation and pooled estimate of variance percentage compared to 
+#' log2-transformed and stable variables plot displaying CV of stable variables
+#' against pooled CV measure. The stable variables are calculated by an 
+#' ANOVA comparison across sample conditions and selecting features with the 
+#' least clear difference.
+#'  
 #' @param nr Normalyzer results object.
 #' @param currentLayout Layout used for document.
 #' @param pageno Current page number.
@@ -464,67 +484,131 @@ plotReplicateVarAndStableVariables <- function(nr, currentLayout, pageno) {
     graphics::layout(tout)
     graphics::par(mar=c(6, 6, 3, 1), oma=c(2, 3, 3, 2), xpd=NA)
     
-    abc <- graphics::barplot(avgcvmempdiff, main="PCV compared to log2 ", 
-                             names.arg=c(methodnames), border="red", 
-                             ylim=c(min(avgcvmempdiff) - 10, max(avgmadmempdiff) + 5), 
-                             density=20, cex=0.9, cex.axis=0.7, las=2, xpd=FALSE)
+    abc <- graphics::barplot(
+        avgcvmempdiff, 
+        main="PCV compared to log2 ", 
+        names.arg=c(methodnames), 
+        border="red", 
+        ylim=c(min(avgcvmempdiff) - 10, 
+               max(avgmadmempdiff) + 5), 
+        density=20, 
+        cex=0.9, 
+        cex.axis=0.7, 
+        las=2, 
+        xpd=FALSE
+    )
     
     graphics::axis(1, at=c(0.2, (max(abc) + 0.5)), labels=FALSE, lwd.ticks=0)
     graphics::axis(1, at=abc, labels=FALSE, lwd=0, lwd.ticks=1)
     graphics::text(abc,avgcvmempdiff, labels=round(avgcvmempdiff, digits=0), 
                    pos=3, las=2)
     
-    abc<-graphics::barplot(avgmadmempdiff, main="PMAD compared to log2", 
-                           names.arg=c(methodnames), border="red", 
-                           ylim=c(min(avgmadmempdiff) - 10, max(avgmadmempdiff) + 5), 
-                           density=20, cex=0.9, cex.axis=0.7, las=2, xpd=FALSE)
+    abc <- graphics::barplot(
+        avgmadmempdiff, 
+        main="PMAD compared to log2", 
+        names.arg=c(methodnames), 
+        border="red", 
+        ylim=c(min(avgmadmempdiff) - 10, 
+               max(avgmadmempdiff) + 5), 
+        density=20, 
+        cex=0.9, 
+        cex.axis=0.7, 
+        las=2, 
+        xpd=FALSE
+    )
     
     graphics::axis(1, at=c(0.2, max(abc) + 0.5), labels=FALSE, lwd.ticks=0)
     graphics::axis(1, at=abc, labels=FALSE, lwd=0, lwd.ticks=1)
-    graphics::text(abc, avgmadmempdiff, 
-                   labels=round(avgmadmempdiff, digits=0), 
-                   pos=3, las=2)
+    graphics::text(
+        abc, 
+        avgmadmempdiff, 
+        labels=round(avgmadmempdiff, digits=0), 
+        pos=3, 
+        las=2
+    )
     
-    abc <- graphics::barplot(avgvarmempdiff, main="%PEV - compared to log2", 
-                             names.arg=c(methodnames), border="red", 
-                             ylim=c(min(avgvarmempdiff) - 10, max(avgmadmempdiff) + 5),
-                             density=20, cex=0.9, cex.axis=0.7, las=2, xpd=FALSE)
+    abc <- graphics::barplot(
+        avgvarmempdiff, 
+        main="%PEV - compared to log2", 
+        names.arg=c(methodnames), 
+        border="red", 
+        ylim=c(min(avgvarmempdiff) - 10, 
+               max(avgmadmempdiff) + 5),
+        density=20, 
+        cex=0.9, 
+        cex.axis=0.7, 
+        las=2, 
+        xpd=FALSE
+    )
     
-    graphics::axis(1, at=c(0.2, max(abc) + 0.5), labels=FALSE, lwd.ticks=0)
-    graphics::axis(1, at=abc, labels=FALSE, lwd=0, lwd.ticks=1)
-    graphics::text(abc, avgvarmempdiff, labels=round(avgvarmempdiff, digits=0), pos=3, las=2)
+    graphics::axis(
+        1, at = c(0.2, max(abc) + 0.5), labels = FALSE, lwd.ticks = 0
+    )
+    graphics::axis(
+        1, at=abc, labels=FALSE, lwd=0, lwd.ticks=1
+    )
+    graphics::text(
+        abc, 
+        avgvarmempdiff, 
+        labels=round(avgvarmempdiff, digits=0), 
+        pos=3, 
+        las=2
+    )
     
     if (!all(is.na(lowVarFeaturesCVsPercDiff))) {
         
-        if (min(avgcvmempdiff) < 0 || max(avgcvmempdiff) > 100 || 
-            min(lowVarFeaturesCVsPercDiff) < 0 || max(lowVarFeaturesCVsPercDiff) > 100) {
+        if (min(avgcvmempdiff) < 0 || 
+            max(avgcvmempdiff) > 100 || 
+            min(lowVarFeaturesCVsPercDiff) < 0 || 
+            max(lowVarFeaturesCVsPercDiff) > 100) {
             
-            graphics::plot(avgcvmempdiff, lowVarFeaturesCVsPercDiff, pch=18, 
-                           xlim=c(0, 100), ylim=c(0, 100), 
-                           main="Stable variables plot", 
-                           xlab="PCV (intragroup) compared to Log2", 
-                           ylab="% Global CV of stable variables compared to Log2")
-            car::showLabels(avgcvmempdiff, lowVarFeaturesCVsPercDiff, 
-                            labels=methodnames, id.method="mahal", 
-                            id.cex=0.7, id.col="black")
+            graphics::plot(
+                avgcvmempdiff, lowVarFeaturesCVsPercDiff, pch=18, 
+                xlim=c(0, 100), ylim=c(0, 100), 
+                main="Stable variables plot", 
+                xlab="PCV (intragroup) compared to Log2", 
+                ylab="% Global CV of stable variables compared to Log2"
+            )
+            car::showLabels(
+                avgcvmempdiff, 
+                lowVarFeaturesCVsPercDiff, 
+                labels=methodnames, 
+                id.method="mahal", 
+                id.cex=0.7, 
+                id.col="black"
+            )
         }
         else {
-            graphics::plot(avgcvmempdiff, lowVarFeaturesCVsPercDiff, pch=18, 
-                           main="Stable variables plot", 
-                           xlab="PCV (Intragroup) compared to Log2", 
-                           ylab="% Global CV of stable variables compared to Log2")
-            car::showLabels(avgcvmempdiff, lowVarFeaturesCVsPercDiff, 
-                            labels=methodnames, id.method="mahal", 
-                            id.cex=0.7, id.col="black")
+            graphics::plot(
+                avgcvmempdiff, 
+                lowVarFeaturesCVsPercDiff, 
+                pch=18, 
+                main="Stable variables plot", 
+                xlab="PCV (Intragroup) compared to Log2", 
+                ylab="% Global CV of stable variables compared to Log2"
+            )
+            car::showLabels(
+                avgcvmempdiff, 
+                lowVarFeaturesCVsPercDiff, 
+                labels=methodnames, 
+                id.method="mahal", 
+                id.cex=0.7, 
+                id.col="black"
+            )
         }
     }
     
     grid::pushViewport(grid::viewport(layout=currentLayout))
-    printMeta("Replicate variation (Relative to Log2)", pageno, currentjob, currentLayout)
+    printMeta(
+        "Replicate variation (Relative to Log2)", 
+        pageno, 
+        currentjob, 
+        currentLayout
+    )
 }
 
-#' Overview of coefficient of variation compared to intensity for variables
-#'  for different normalization methods
+#' Plots page displaying coefficient of variance (CV) against raw intensity
+#' for features across the performed normalizations
 #' 
 #' @param nr Normalyzer results object.
 #' @param currentLayout Layout used for document.
@@ -541,10 +625,16 @@ plotCVvsIntensity <- function(nr, currentLayout, pageno) {
     filterrawdata <- nds@filterrawdata
     
     datastore <- methodlist[[1]]
-    tempcvmat1 <- matrix(nrow=nrow(datastore), 
-                         ncol=length(methodlist), byrow=TRUE)
-    tempavgmat1 <- matrix(nrow=nrow(datastore), 
-                          ncol=length(methodlist), byrow=TRUE)
+    tempcvmat1 <- matrix(
+        nrow=nrow(datastore), 
+        ncol=length(methodlist), 
+        byrow=TRUE
+    )
+    tempavgmat1 <- matrix(
+        nrow=nrow(datastore), 
+        ncol=length(methodlist), 
+        byrow=TRUE
+    )
     maxtempcv <- 0
     
     for (j in seq_len(length(methodlist))) {
@@ -554,8 +644,14 @@ plotCVvsIntensity <- function(nr, currentLayout, pageno) {
 
         for (i in seq_len(nrow(datastore))) {
             
-            tempcv <- RcmdrMisc::numSummary(datastore[i, ], statistics=c("cv"))
-            tempavg <- RcmdrMisc::numSummary(filterrawdata[i, ], statistics=c("mean"))
+            tempcv <- RcmdrMisc::numSummary(
+                datastore[i, ], 
+                statistics=c("cv")
+            )
+            tempavg <- RcmdrMisc::numSummary(
+                filterrawdata[i, ], 
+                statistics=c("mean")
+            )
             
             tempcvmat1[i, j] <- 100 * tempcv$table
             tempavgmat1[i, j] <- tempavg$table 
@@ -566,22 +662,33 @@ plotCVvsIntensity <- function(nr, currentLayout, pageno) {
         }
     }
     
-    tout <- matrix(seq_len((currentLayout$nrow - 2) * (currentLayout$ncol - 2)), ncol=(currentLayout$ncol - 2), byrow=TRUE)
+    tout <- matrix(
+        seq_len((currentLayout$nrow - 2) * (currentLayout$ncol - 2)), 
+        ncol=(currentLayout$ncol - 2), 
+        byrow=TRUE
+    )
     graphics::layout(tout)
     graphics::par(mar=c(4, 4, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
     
     for (i in seq_len(ncol(tempcvmat1))) {
-        graphics::plot(tempavgmat1[, i], tempcvmat1[, i], main=methodnames[i], 
-                       xlab="Raw intensity", ylab="CV", cex=0.3, 
-                       ylim=c(0, maxtempcv))
+        graphics::plot(
+            tempavgmat1[, i], 
+            tempcvmat1[, i], 
+            main=methodnames[i], 
+            xlab="Raw intensity", 
+            ylab="CV", 
+            cex=0.3, 
+            ylim=c(0, maxtempcv)
+        )
     }
     
     grid::pushViewport(grid::viewport(layout=currentLayout))
     printMeta("CV vs Raw Intensity plots", pageno, currentjob, currentLayout)
 }
 
-#' Expression vs. fold-change for variables for each normalization method
-#' 
+#' Produces a page containing expression vs. fold-change figures (MA plots)
+#' The visualized fold is between the first sample in each group and the
+#' average of the replicate to which that sample belongs
 #' 
 #' @param nr Normalyzer results object.
 #' @param currentLayout Layout used for document.
@@ -623,7 +730,8 @@ plotMA <- function(nr, currentLayout, pageno) {
     printPlots(Malist, "MA plots", pageno, currentjob, currentLayout)
 }
 
-#' Scatter plot comparing replicate expression between samples
+#' Produces page containing scatter plot plotting the first two samples from 
+#' each dataset against each other for each normalization method
 #' 
 #' @param nr Normalyzer results object.
 #' @param currentLayout Layout used for document.
@@ -637,23 +745,40 @@ plotScatter <- function(nr, currentLayout, pageno) {
     methodlist <- getNormalizationMatrices(nr)
     currentjob <- nds@jobName
     
-    tout <- matrix(seq_len((currentLayout$nrow - 2) * (currentLayout$ncol - 2)), ncol=(currentLayout$ncol - 2), byrow=TRUE)
+    tout <- matrix(
+        seq_len((currentLayout$nrow - 2) * (currentLayout$ncol - 2)), 
+        ncol=(currentLayout$ncol - 2), 
+        byrow=TRUE
+    )
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(3, 2, 3, 2), xpd=NA)
     
     for (i in seq_len(length(methodlist))) {
         methodData <- methodlist[[i]]
         fit <- stats::lm(methodData[, 1]~methodData[, 2])
-        graphics::plot(methodData[, 1], methodData[, 2], xlab="", ylab="", main=methodnames[i], pch=19, cex=0.2)
+        graphics::plot(
+            methodData[, 1], 
+            methodData[, 2], 
+            xlab="", 
+            ylab="", 
+            main=methodnames[i], 
+            pch=19, 
+            cex=0.2
+        )
         
-        graphics::legend("topleft", bty="n", legend=paste("R2 ", format(summary(fit)$adj.r.squared, digits=2)), cex=0.7)
+        graphics::legend(
+            "topleft", 
+            bty="n", 
+            legend=paste("R2 ", format(summary(fit)$adj.r.squared, digits=2)), cex=0.7)
     }
     
     grid::pushViewport(grid::viewport(layout=currentLayout))
     printMeta("Scatterplots", pageno, currentjob, currentLayout)
 }
 
-#' QQ-plots for variable values
+#' Produces page showing QQ-plots for the first sample for each normalization
+#' method. This plot can be used to assess whether the data follows a normal
+#' distribution.
 #' 
 #' @param nr Normalyzer results object.
 #' @param currentLayout Layout used for document.
@@ -697,7 +822,11 @@ plotBoxPlot <- function(nr, currentLayout, pageno) {
     filterED <- nds@sampleReplicateGroups
     filterrawdata <- nds@filterrawdata
     
-    tout <- matrix(seq_len((currentLayout$nrow - 2) * (currentLayout$ncol - 2)), ncol=(currentLayout$ncol - 2), byrow=TRUE)
+    tout <- matrix(
+        seq_len((currentLayout$nrow - 2) * (currentLayout$ncol - 2)), 
+        ncol=(currentLayout$ncol - 2), 
+        byrow=TRUE
+    )
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(3, 2, 3, 2), xpd=NA)
     mindata <- 1000
@@ -716,15 +845,16 @@ plotBoxPlot <- function(nr, currentLayout, pageno) {
     
     for (i in seq_len(length(methodlist))) {   
         graphics::par(mar=c(5, 1, 1, 1))
-        graphics::boxplot(methodlist[[i]], 
-                          cex=0.1, 
-                          cex.axis=0.7, 
-                          las=2, 
-                          main=methodnames[i], 
-                          col=(filterED), 
-                          outcol="lightgray", 
-                          ylim=c(mindata - 1, maxdata + 1), 
-                          names=substr(colnames(methodlist[[i]]), 1, 10))
+        graphics::boxplot(
+            methodlist[[i]], 
+            cex=0.1, 
+            cex.axis=0.7, 
+            las=2, 
+            main=methodnames[i], 
+            col=(filterED), 
+            outcol="lightgray", 
+            ylim=c(mindata - 1, maxdata + 1), 
+            names=substr(colnames(methodlist[[i]]), 1, 10))
     }
     
     grid::pushViewport(grid::viewport(layout=currentLayout))
@@ -746,19 +876,36 @@ plotRLE <- function(nr, currentLayout, pageno) {
     currentjob <- nds@jobName
     filterED <- nds@sampleReplicateGroups
     
-    tout <- matrix(seq_len((currentLayout$nrow - 2) * (currentLayout$ncol - 2)), ncol=(currentLayout$ncol - 2), byrow=TRUE)
+    tout <- matrix(
+        seq_len((currentLayout$nrow - 2) * (currentLayout$ncol - 2)), 
+        ncol=(currentLayout$ncol - 2), 
+        byrow=TRUE
+    )
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(3, 2, 3, 2), xpd=NA)
     
     for (i in seq_len(length(methodlist))) {
         deviations = methodlist[[i]] - Biobase::rowMedians(methodlist[[i]], na.rm=TRUE)
-        graphics::boxplot(deviations, outcol="lightgray", cex=0.1, cex.axis=0.7, 
-                          las=2, main=methodnames[i], col=(filterED), 
-                          names=substr(colnames(methodlist[[i]]), 1, 6))
+        graphics::boxplot(
+            deviations, 
+            outcol="lightgray", 
+            cex=0.1, 
+            cex.axis=0.7, 
+            las=2,
+            main=methodnames[i], 
+            col=(filterED), 
+            names=substr(colnames(methodlist[[i]]), 
+                         1, 
+                         6))
     }
     
     grid::pushViewport(grid::viewport(layout=currentLayout))
-    printMeta("Relative Log Expression (RLE) plots", pageno, currentjob, currentLayout)
+    printMeta(
+        "Relative Log Expression (RLE) plots", 
+        pageno, 
+        currentjob, 
+        currentLayout
+    )
 }
 
 #' Density plots showing value distributions after normalizations
@@ -775,7 +922,11 @@ plotDensity <- function(nr, currentLayout, pageno) {
     methodlist <- getNormalizationMatrices(nr)
     currentjob <- nds@jobName
     
-    tout <- matrix(seq_len((currentLayout$nrow-2)*(currentLayout$ncol-2)), ncol=(currentLayout$ncol-2), byrow=TRUE)
+    tout <- matrix(
+        seq_len((currentLayout$nrow-2)*(currentLayout$ncol-2)), 
+        ncol=(currentLayout$ncol-2), 
+        byrow=TRUE
+    )
     graphics::layout(tout)
     graphics::par(mar=c(3, 2, 3, 1), oma=c(3, 2, 3, 2), xpd=NA)
     
@@ -813,23 +964,43 @@ plotMDS <- function(nr, currentLayout, pageno) {
     currentjob <- nds@jobName
     filterED <- nds@sampleReplicateGroups
     
-    tout <- matrix(seq_len((currentLayout$nrow-2)*(currentLayout$ncol-2)), ncol=(currentLayout$ncol-2), byrow=TRUE)
+    tout <- matrix(
+        seq_len((currentLayout$nrow-2)*(currentLayout$ncol-2)), 
+        ncol=(currentLayout$ncol-2), 
+        byrow=TRUE
+    )
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(3, 2, 3, 2), xpd=NA)
     
     for (i in seq_len(length(methodlist))) {
         
         datastore <- methodlist[[i]]
-        d <- stats::dist(scale(t(stats::na.omit(datastore)), center=TRUE, scale=TRUE))
+        d <- stats::dist(
+            scale(t(stats::na.omit(datastore)), 
+                  center=TRUE, 
+                  scale=TRUE)
+            )
         fit <- stats::cmdscale(d, eig=TRUE, k=2)
         x <- fit$points[, 1]
         y <- fit$points[, 2]
         graphics::plot(x, y, type="n", main=methodnames[i], xlab="", ylab="")
-        graphics::text(fit$points[, 1], fit$points[, 2], col=filterED, labels=filterED)
+        graphics::text(
+            fit$points[, 1], 
+            fit$points[, 2], 
+            col=filterED, 
+            labels=filterED
+        )
     }
     
     grid::pushViewport(grid::viewport(layout=currentLayout))
-    printMeta(paste("MDS plots - Built from", ncol(d), "variables with non-missing data", sep=" "), pageno, currentjob, currentLayout)
+    printMeta(
+        paste("MDS plots - Built from", 
+              ncol(d), 
+              "variables with non-missing data", sep=" "), 
+        pageno,
+        currentjob, 
+        currentLayout
+    )
 }
 
 #' Visualize standard deviation over (expression?) for different values
@@ -851,7 +1022,13 @@ plotMeanSD <- function(nr, currentLayout, pageno) {
     for (i in seq_len(length(methodlist))) {
         
         methodData <- methodlist[[i]]
-        msd <- vsn::meanSdPlot(methodData, xlab="", ylab="", plot=FALSE, na.rm=TRUE)
+        msd <- vsn::meanSdPlot(
+            methodData, 
+            xlab="", 
+            ylab="", 
+            plot=FALSE, 
+            na.rm=TRUE
+        )
         
         sdPlots[[i]] <- msd$gg + ggplot2::ggtitle(methodnames[i]) +
             ggplot2::theme(legend.position="none", plot.margin=ggplot2::unit(c(1,0,0,0), "cm"))
@@ -894,7 +1071,15 @@ plotCorrelation <- function(nr, currentLayout, pageno) {
                              names=c(methodnames), border="red", 
                              density=20, cex=0.3, cex.axis=0.9, las=2)
     
-    graphics::stripchart(as.data.frame(perdf), vertical=TRUE, cex=0.4, las=2, pch=20, add=TRUE, col="darkgreen")
+    graphics::stripchart(
+        as.data.frame(perdf), 
+        vertical=TRUE, 
+        cex=0.4, 
+        las=2, 
+        pch=20, 
+        add=TRUE, 
+        col="darkgreen"
+    )
     
     spedf <- data.frame(matrix(unlist(repCorSpear), 
                                nrow=as.numeric(max(summary(repCorSpear)[1])), 
@@ -904,8 +1089,15 @@ plotCorrelation <- function(nr, currentLayout, pageno) {
                              names=c(methodnames), border="red", 
                              density=20, cex=0.3, cex.axis=0.9, las=2)
     
-    graphics::stripchart(as.data.frame(spedf), 
-                         vertical=TRUE, cex=0.4, las=2, pch=20, add=TRUE, col="darkgreen")
+    graphics::stripchart(
+        as.data.frame(spedf), 
+        vertical=TRUE, 
+        cex=0.4, 
+        las=2, 
+        pch=20, 
+        add=TRUE, 
+        col="darkgreen"
+    )
     grid::pushViewport(grid::viewport(layout=currentLayout))
     printMeta("Correlation plots", pageno, currentjob, currentLayout)
 }
@@ -925,7 +1117,11 @@ plotDendrograms <- function(nr, currentLayout, pageno) {
     currentjob <- nds@jobName
     filterED <- nds@sampleReplicateGroups
     
-    tout <- matrix(seq_len((currentLayout$nrow - 2) * (currentLayout$ncol - 2)), ncol=(currentLayout$ncol - 2), byrow=TRUE)
+    tout <- matrix(
+        seq_len((currentLayout$nrow - 2) * (currentLayout$ncol - 2)), 
+        ncol=(currentLayout$ncol - 2), 
+        byrow=TRUE
+    )
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
     
@@ -943,7 +1139,12 @@ plotDendrograms <- function(nr, currentLayout, pageno) {
 
         hc <- stats::hclust(stats::dist(scaledTransposedMatrix), "ave")
         
-        graphics::plot(ape::as.phylo(hc), main=methodnames[j], cex=0.5, tip.color=colt[filterED])
+        graphics::plot(
+            ape::as.phylo(hc), 
+            main=methodnames[j], 
+            cex=0.5, 
+            tip.color=colt[filterED]
+        )
         ape::axisPhylo(side=1)
     }
     

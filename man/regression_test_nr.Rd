@@ -11,4 +11,4 @@ regression_test_nr
 \description{
 NormalyzerDE results object used internally for testing
 }
-\keyword{datasets}
+\keyword{internal}

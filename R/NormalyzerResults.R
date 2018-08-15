@@ -10,12 +10,18 @@ slotNamesMap <- c("data2log2"="Log2",
                   "data2rtLoess"="RT-Loess",
                   "data2rtVSN"="RT-VSN")
 
-#' S4 class to represent dataset information
+#' Representation of the results from performing normalization over a dataset
+#' 
+#' It is linked to a NormalyzerDataset instance representing the raw data
+#' which has been processed. After performing evaluation it also links to
+#' an instance of NormalyzerEvaluationResults representing the results
+#' from the evaluation.
 #' 
 #' @slot nds Normalyzer dataset representing run data
 #' @slot ner Normalyzer evaluation results
 #' @slot methodnames Short names for included normalization methods
-#' @slot furtherNormalizationMinThreshold Min threshold for running extended normalizations
+#' @slot furtherNormalizationMinThreshold Min threshold for running extended 
+#' normalizations
 #' @slot data2log2 Log2 of filtered raw data
 #' @slot fittedLR Fitted Loess regression 
 #' @slot data2loess Loess normalization
@@ -58,7 +64,9 @@ NormalyzerResults <- setClass("NormalyzerResults",
                                   data2ctr = "matrix",
                                   data2mad = "matrix"
                               ),
-                              prototype=prototype(nds=NULL, furtherNormalizationMinThreshold=100))
+                              prototype=prototype(
+                                  nds=NULL, 
+                                  furtherNormalizationMinThreshold=100))
 
 #' Initialize Normalyzer results object
 #'
@@ -105,7 +113,7 @@ setGeneric(name="performNormalizations",
 setMethod("performNormalizations", "NormalyzerResults",
           function(nr, forceAll=FALSE, rtNorm=FALSE, rtStepSizeMinutes=1, 
                    rtWindowMinCount=100, rtWindowShifts=1, 
-                   rtWindowMergeMethod="median", quiet=FALSE) {
+                   rtWindowMergeMethod="median") {
               
               nds <- nr@nds
               nr <- basicMetricNormalizations(nr)
@@ -127,7 +135,7 @@ setMethod("performNormalizations", "NormalyzerResults",
                           mergeMethod=rtWindowMergeMethod)
                   }
                   else {
-                      if (!quiet) print("No RT column specified (column named 'RT'). Skipping RT normalization.")
+                      warning("No RT column specified (column named 'RT'). Skipping RT normalization.")
                   }
               }
               

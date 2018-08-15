@@ -1,4 +1,6 @@
-#' Create empty directory for run if not already present
+#' Create empty directory for run
+#' 
+#' Creates a directory at provided path named to the jobname.
 #' 
 #' @param jobName Name of the run.
 #' @param outputDir Path to directory where to create the output directory.

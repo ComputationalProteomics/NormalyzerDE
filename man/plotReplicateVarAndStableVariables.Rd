@@ -2,8 +2,12 @@
 % Please edit documentation in R/generatePlots.R
 \name{plotReplicateVarAndStableVariables}
 \alias{plotReplicateVarAndStableVariables}
-\title{Generate replicate variance overview for normalization methods and CV
-plot for stable variables}
+\title{Write figures displaying pooled coefficient of variance, median absolute 
+deviation and pooled estimate of variance percentage compared to 
+log2-transformed and stable variables plot displaying CV of stable variables
+against pooled CV measure. The stable variables are calculated by an 
+ANOVA comparison across sample conditions and selecting features with the 
+least clear difference.}
 \usage{
 plotReplicateVarAndStableVariables(nr, currentLayout, pageno)
 }
@@ -18,7 +22,11 @@ plotReplicateVarAndStableVariables(nr, currentLayout, pageno)
 None
 }
 \description{
-Generate replicate variance overview for normalization methods and CV
-plot for stable variables
+Write figures displaying pooled coefficient of variance, median absolute 
+deviation and pooled estimate of variance percentage compared to 
+log2-transformed and stable variables plot displaying CV of stable variables
+against pooled CV measure. The stable variables are calculated by an 
+ANOVA comparison across sample conditions and selecting features with the 
+least clear difference.
 }
 \keyword{internal}

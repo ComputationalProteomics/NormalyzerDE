@@ -4,9 +4,11 @@
 \name{NormalyzerEvaluationResults-class}
 \alias{NormalyzerEvaluationResults-class}
 \alias{NormalyzerEvaluationResults}
-\title{S4 class to represent normalization evaluations}
+\title{Representation of evaluation results by calculating performance measures
+for an an NormalyzerResults instance}
 \description{
-S4 class to represent normalization evaluations
+Contains the resulting information from the processing which subsequently
+can be used to generate the quality assessment report.
 }
 \section{Slots}{
 

@@ -2,7 +2,8 @@
 % Please edit documentation in R/normMethods.R
 \name{performVSNNormalization}
 \alias{performVSNNormalization}
-\title{Perform Variance Stabilizing Normalization}
+\title{Log2 transformed data is normalized using the function "justvsn" from the
+VSN package.}
 \usage{
 performVSNNormalization(rawMatrix)
 }
@@ -13,7 +14,9 @@ performVSNNormalization(rawMatrix)
 Normalized matrix
 }
 \description{
-Perform Variance Stabilizing Normalization
+The VSN (Variance Stabilizing Normalization) attempts to transform the data 
+in such a way that the variance remains nearly constant over the intensity 
+spectrum
 }
 \examples{
 data(example_data_only_values)

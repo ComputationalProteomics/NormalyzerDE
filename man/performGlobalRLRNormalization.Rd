@@ -13,7 +13,8 @@ performGlobalRLRNormalization(rawMatrix)
 Normalized matrix
 }
 \description{
-Global linear regression normalization
+Log2 transformed data is normalized by robust linear regression using
+the function "rlm" from the MASS package.
 }
 \examples{
 data(example_data_only_values)

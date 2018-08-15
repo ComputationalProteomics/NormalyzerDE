@@ -4,9 +4,11 @@
 \name{NormalyzerDataset-class}
 \alias{NormalyzerDataset-class}
 \alias{NormalyzerDataset}
-\title{Raw data representation}
+\title{Represents raw input data together with basic annotation information}
 \description{
-Raw data representation
+Takes a job name, a data matrix, a design matrix as well as specification
+of the group and sample columns in the design matrix. Provides the
+basic representation of a dataset in the NormalyzerDE normalization part.
 }
 \section{Slots}{
 

@@ -2,8 +2,8 @@
 % Please edit documentation in R/higherOrderNormMethods.R
 \name{getRTNormalizedMatrix}
 \alias{getRTNormalizedMatrix}
-\title{Normalize over slices in retention time, using either datapoints within the
-time interval, or if too few, use neighboring datapoints for normalization}
+\title{Perform RT-segmented normalization by performing the supplied normalization
+over retention-time sliced data}
 \usage{
 getRTNormalizedMatrix(rawMatrix, retentionTimes, normMethod,
   stepSizeMinutes = 1, windowMinCount = 100, offset = 0)
@@ -25,11 +25,11 @@ getRTNormalizedMatrix(rawMatrix, retentionTimes, normMethod,
 Normalized matrix
 }
 \description{
-Key variables:
-    targetSliceIndices - Indices in raw matrix for rows falling within retention time interval
-    normalizationSliceIndices - Rows used for normalization, can include wider interval than target slice
-                                if target slice isn't containing enough data
-    indicesOfInterest - Target indices within the normalization slice window
+The function orders the retention times and steps through them using the
+supplied step size (in minutes). If smaller than a fixed lower boundary 
+the window is expanded to ensure a minimum amount of data in each 
+normalization step. An offset can be specified which can be used to perform
+multiple RT-segmentations with partial overlapping windows.
 }
 \examples{
 data(example_stat_data)

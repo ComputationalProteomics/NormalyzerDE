@@ -3,12 +3,14 @@
 \docType{data}
 \name{example_data_only_values}
 \alias{example_data_only_values}
-\title{Small example dataset only containing raw numerical values}
+\title{Same data as in "example_data", but omitting the annotation meaning that it
+only contains the expression data.}
 \format{A data frame containing expression data}
 \usage{
 example_data_only_values
 }
 \description{
-Small example dataset only containing raw numerical values
+Same data as in "example_data", but omitting the annotation meaning that it
+only contains the expression data.
 }
-\keyword{datasets}
+\keyword{internal}

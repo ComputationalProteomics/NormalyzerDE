@@ -6,8 +6,7 @@
 \usage{
 writeNormalizedDatasets(nr, jobdir, includePairwiseComparisons = FALSE,
   includeCvCol = FALSE, includeAnovaP = FALSE,
-  normSuffix = "-normalized.txt", rawdataName = "submitted_rawdata.txt",
-  hkVarsName = "housekeeping-variables.tsv")
+  normSuffix = "-normalized.txt", rawdataName = "submitted_rawdata.txt")
 }
 \arguments{
 \item{nr}{Results object.}
@@ -23,14 +22,12 @@ writeNormalizedDatasets(nr, jobdir, includePairwiseComparisons = FALSE,
 \item{normSuffix}{String used to name output together with normalization names.}
 
 \item{rawdataName}{Name of output raw data file.}
-
-\item{hkVarsName}{Name out output housekeeping variables file.}
 }
 \value{
 None
 }
 \description{
-Write normalization matrices to file
+Outputs each of the normalized datasets to the specified directory.
 }
 \examples{
 data(example_data)

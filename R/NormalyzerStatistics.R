@@ -1,4 +1,9 @@
-#' Statistical dataset representation
+#' Class representing a dataset for statistical processing in NormalyzerDE
+#' 
+#' Is initialized with an annotation matrix, a data matrix and a design
+#' data frame. This object can subsequently be processed to generate statistical
+#' values and in turn used to write a full matrix with additional statistical
+#' information as well as a graphical report of the comparisons.
 #' 
 #' @slot annotMat Matrix containing annotation information
 #' @slot dataMat Matrix containing (normalized) expression data
@@ -31,14 +36,23 @@ NormalyzerStatistics <- setClass("NormalyzerStatistics",
                                      designDf=NULL
                                  ))
 
-#' Main method for contrast calculation
+#' Performs statistical comparisons between the supplied conditions.
+#' It uses the design matrix and data matrix in the supplied 
+#' NormalyzerStatistics object. A column is supplied specifying which of the
+#' columns in the design matrix that is used for deciding the sample groups.
+#' The comparisons vector specifies which pairwise comparisons between
+#' condition levels that are to be calculated.
+#' 
+#' Optionally, a batch column can be specified allowing compensation for
+#' covariate variation in the statistical model. This is only compatible
+#' with a Limma-based statistical analysis.
 #'
 #' @param nst Results evaluation object.
 #' @param comparisons String with comparisons for contrasts.
 #' @param condCol Column name in design matrix containing condition information.
 #' @param batchCol Column name in design matrix containing batch information.
 #' @param splitter Character dividing contrast conditions.
-#' @param type Type of statistical test (Limma or ANOVA).
+#' @param type Type of statistical test (Limma or welch).
 #' @return nst Statistics object with statistical measures calculated
 #' @rdname calculateContrasts
 #' @export

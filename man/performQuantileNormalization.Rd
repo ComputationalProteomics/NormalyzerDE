@@ -2,9 +2,8 @@
 % Please edit documentation in R/normMethods.R
 \name{performQuantileNormalization}
 \alias{performQuantileNormalization}
-\title{Perform quantile normalization, where overall distribution is assumed
-to be the same, and using a 'average' distribution as measure to normalize
-again}
+\title{Quantile normalization is performed by the function "normalize.quantiles"
+from the package preprocessCore.}
 \usage{
 performQuantileNormalization(rawMatrix)
 }
@@ -15,9 +14,9 @@ performQuantileNormalization(rawMatrix)
 Normalized matrix
 }
 \description{
-Perform quantile normalization, where overall distribution is assumed
-to be the same, and using a 'average' distribution as measure to normalize
-again
+It makes the assumption that the data in different samples should originate
+from an identical distribution. It does this by generating a reference
+distribution and then scaling the other samples accordingly.
 }
 \examples{
 data(example_data_only_values)

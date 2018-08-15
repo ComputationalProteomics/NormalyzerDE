@@ -2,8 +2,8 @@
 % Please edit documentation in R/higherOrderNormMethods.R
 \name{getSmoothedRTNormalizedMatrix}
 \alias{getSmoothedRTNormalizedMatrix}
-\title{Generate two RT time-window normalized matrices where one is shifted.
-Then return the mean of these matrices.}
+\title{Generate multiple RT time-window normalized matrices where one is shifted.
+Merge them using a specified method (mean or median) and return the result.}
 \usage{
 getSmoothedRTNormalizedMatrix(rawMatrix, retentionTimes, normMethod,
   stepSizeMinutes, windowShifts = 2, windowMinCount = 100,
@@ -28,8 +28,10 @@ getSmoothedRTNormalizedMatrix(rawMatrix, retentionTimes, normMethod,
 Normalized matrix
 }
 \description{
-Generate two RT time-window normalized matrices where one is shifted.
-Then return the mean of these matrices.
+Uses the function getRTNormalizedMatrix to generate multiple normalized
+matrices which are shifted respective to each other and finally merged into
+a single matrix. This could potentially reduce effect of fluctuations
+within individual windows.
 }
 \examples{
 

@@ -17,7 +17,8 @@ loadDesign(designPath, sampleCol = "sample", groupCol = "group")
 designMatrix Design data loaded into data frame
 }
 \description{
-Load raw design into dataframe
+Takes a design path, loads the matrix and ensures that the sample column
+is in character format and that the group column is in factor format.
 }
 \examples{
 \dontrun{

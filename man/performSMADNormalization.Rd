@@ -3,7 +3,8 @@
 \name{performSMADNormalization}
 \alias{performSMADNormalization}
 \title{Median absolute deviation normalization
-Scales values with MAD and adds it with logged sample median}
+Normalization subtracts the median and divides the data by the
+median absolute deviation (MAD).}
 \usage{
 performSMADNormalization(rawMatrix)
 }
@@ -15,7 +16,8 @@ Normalized matrix
 }
 \description{
 Median absolute deviation normalization
-Scales values with MAD and adds it with logged sample median
+Normalization subtracts the median and divides the data by the
+median absolute deviation (MAD).
 }
 \examples{
 data(example_data_only_values)

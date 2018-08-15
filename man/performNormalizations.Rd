@@ -11,7 +11,7 @@ performNormalizations(nr, forceAll, rtNorm, rtStepSizeMinutes, rtWindowMinCount,
 
 \S4method{performNormalizations}{NormalyzerResults}(nr, forceAll = FALSE,
   rtNorm = FALSE, rtStepSizeMinutes = 1, rtWindowMinCount = 100,
-  rtWindowShifts = 1, rtWindowMergeMethod = "median", quiet = FALSE)
+  rtWindowShifts = 1, rtWindowMergeMethod = "median")
 }
 \arguments{
 \item{nr}{Normalyzer results object.}

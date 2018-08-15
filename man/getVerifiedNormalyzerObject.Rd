@@ -3,7 +3,7 @@
 \name{getVerifiedNormalyzerObject}
 \alias{getVerifiedNormalyzerObject}
 \title{Verify that input data is in correct format, and if so, return a generated
- Normalyzer data object from that input data}
+ NormalyzerDE data object from that input data}
 \usage{
 getVerifiedNormalyzerObject(jobName, designMatrix, rawData, threshold = 15,
   omitSamples = FALSE, requireReplicates = TRUE, sampleCol = "sample",
@@ -33,8 +33,11 @@ condition}
 Normalyzer data object representing verified input data.
 }
 \description{
-Verify that input data is in correct format, and if so, return a generated
- Normalyzer data object from that input data
+This function performs a number of checks on the input data and provides
+informative error messages if the data isn't fulfilling the required format.
+Checks include verifying that the design matrix matches to the data matrix,
+that the data matrix contains valid numbers and that samples have enough
+values for analysis
 }
 \examples{
 data(example_data)

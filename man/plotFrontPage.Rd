@@ -2,7 +2,7 @@
 % Please edit documentation in R/generatePlots.R
 \name{plotFrontPage}
 \alias{plotFrontPage}
-\title{Generate first page in output report}
+\title{Generate first page in output report and write to viewport}
 \usage{
 plotFrontPage(currentjob, currentFont)
 }
@@ -15,6 +15,6 @@ plotFrontPage(currentjob, currentFont)
 None
 }
 \description{
-Generate first page in output report
+Generate first page in output report and write to viewport
 }
 \keyword{internal}

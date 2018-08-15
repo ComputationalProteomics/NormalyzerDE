@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils.R
 \name{setupJobDir}
 \alias{setupJobDir}
-\title{Create empty directory for run if not already present}
+\title{Create empty directory for run}
 \usage{
 setupJobDir(jobName, outputDir)
 }
@@ -15,7 +15,7 @@ setupJobDir(jobName, outputDir)
 Path to newly created directory.
 }
 \description{
-Create empty directory for run if not already present
+Creates a directory at provided path named to the jobname.
 }
 \examples{
 setupJobDir("job_name", "path/to/outdir")

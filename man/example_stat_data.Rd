@@ -3,12 +3,14 @@
 \docType{data}
 \name{example_stat_data}
 \alias{example_stat_data}
-\title{Small example normalized dataset}
+\title{Same data as in "example_data", but normalized and ready for statistical
+processing.}
 \format{A normalized data frame ready for statistical processing}
 \usage{
 example_stat_data
 }
 \description{
-Small example normalized dataset
+Same data as in "example_data", but normalized and ready for statistical
+processing.
 }
-\keyword{datasets}
+\keyword{internal}

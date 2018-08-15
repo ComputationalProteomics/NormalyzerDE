@@ -1,11 +1,11 @@
-#' Normalize over slices in retention time, using either datapoints within the
-#' time interval, or if too few, use neighboring datapoints for normalization
+#' Perform RT-segmented normalization by performing the supplied normalization
+#' over retention-time sliced data
 #' 
-#' Key variables:
-#'     targetSliceIndices - Indices in raw matrix for rows falling within retention time interval
-#'     normalizationSliceIndices - Rows used for normalization, can include wider interval than target slice
-#'                                 if target slice isn't containing enough data
-#'     indicesOfInterest - Target indices within the normalization slice window
+#' The function orders the retention times and steps through them using the
+#' supplied step size (in minutes). If smaller than a fixed lower boundary 
+#' the window is expanded to ensure a minimum amount of data in each 
+#' normalization step. An offset can be specified which can be used to perform
+#' multiple RT-segmentations with partial overlapping windows.
 #' 
 #' @param rawMatrix Target matrix to be normalized
 #' @param retentionTimes Vector of retention times corresponding to rawMatrix
@@ -33,8 +33,21 @@ getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod,
                                   stepSizeMinutes=1, windowMinCount=100, 
                                   offset=0) {
     
+    # Key variables:
+    #    targetSliceIndices 
+    #        Indices in raw matrix for rows falling within retention time 
+    #        interval
+    #    normalizationSliceIndices 
+    #        Rows used for normalization, can include wider interval than 
+    #        target slice if target slice isn't containing enough data
+    #    indicesOfInterest
+    #        Target indices within the normalization slice window
+    
     if (!is(rawMatrix, "matrix")) {
-        stop(paste("Type of rawMatrix is expected to be matrix, received:", class(rawMatrix)))
+        stop(paste(
+            "Type of rawMatrix is expected to be matrix, received:", 
+            class(rawMatrix))
+        )
     }
     
     sortedRT <- sort(retentionTimes)
@@ -54,19 +67,29 @@ getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod,
         windowEnd <- windowStart + stepSizeMinutes
         normalizationStartRT <- windowStart
         normalizationEndRT <- windowEnd
-        targetSliceIndices <- which(retentionTimes >= windowStart & retentionTimes < windowEnd)
+        targetSliceIndices <- which(
+            retentionTimes >= windowStart & retentionTimes < windowEnd
+        )
         
         if (length(targetSliceIndices) == 0) {
             next
         }
         else if (length(targetSliceIndices) < windowMinCount) {
             
-            normalizationRange <- getWidenedRTRange(windowStart, windowEnd, windowMinCount, retentionTimes)
+            normalizationRange <- getWidenedRTRange(
+                windowStart, 
+                windowEnd, 
+                windowMinCount, 
+                retentionTimes
+            )
             normalizationStartRT <- normalizationRange[1]
             normalizationEndRT <- normalizationRange[2]
         }
         
-        normalizationSliceIndices <- which(retentionTimes >= normalizationStartRT & retentionTimes <= normalizationEndRT)
+        normalizationSliceIndices <- which(
+            retentionTimes >= normalizationStartRT & 
+                retentionTimes <= normalizationEndRT
+        )
         normalizationRows <- rawMatrix[normalizationSliceIndices,, drop=FALSE]
         processedNormalizationRows <- normMethod(normalizationRows)
         
@@ -75,7 +98,9 @@ getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod,
         
         if (length(targetSliceIndices) < length(normalizationSliceIndices)) {
             
-            indicesOfInterest <- which(normalizationSliceIndices %in% targetSliceIndices)
+            indicesOfInterest <- which(
+                normalizationSliceIndices %in% targetSliceIndices
+            )
             normalizedTargetRows <- processedNormalizationRows[indicesOfInterest,]
             # normalizedTargetRows <- processedNormalizationRows[indicesOfInterest,, drop=FALSE]
         }
@@ -179,8 +204,13 @@ getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes,
 }
 
 
-#' Generate two RT time-window normalized matrices where one is shifted.
-#' Then return the mean of these matrices.
+#' Generate multiple RT time-window normalized matrices where one is shifted.
+#' Merge them using a specified method (mean or median) and return the result.
+#' 
+#' Uses the function getRTNormalizedMatrix to generate multiple normalized
+#' matrices which are shifted respective to each other and finally merged into
+#' a single matrix. This could potentially reduce effect of fluctuations
+#' within individual windows.
 #' 
 #' @param rawMatrix Target matrix to be normalized
 #' @param retentionTimes Vector of retention times corresponding to rawMatrix
@@ -207,8 +237,9 @@ getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes,
 #' rtNormMat <- getSmoothedRTNormalizedMatrix(dataMat, retentionTimes, 
 #'     performCyclicLoessNormalization, stepSizeMinutes=1, windowMinCount=100, 
 #'     windowShifts=3, mergeMethod="median")
-getSmoothedRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, stepSizeMinutes, 
-                                          windowShifts=2, windowMinCount=100, mergeMethod="mean") {
+getSmoothedRTNormalizedMatrix <- function(
+    rawMatrix, retentionTimes, normMethod, stepSizeMinutes, 
+    windowShifts=2, windowMinCount=100, mergeMethod="mean") {
     
     matrices <- list()
     

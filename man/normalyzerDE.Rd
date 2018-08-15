@@ -2,7 +2,7 @@
 % Please edit documentation in R/NormalyzerDE.R
 \name{normalyzerDE}
 \alias{normalyzerDE}
-\title{Normalyzer differential expression}
+\title{NormalyzerDE differential expression}
 \usage{
 normalyzerDE(jobName, designPath, dataPath, comparisons, outputDir = ".",
   logTrans = FALSE, type = "limma", sampleCol = "sample",
@@ -45,7 +45,25 @@ replicates}
 None
 }
 \description{
-Normalyzer differential expression
+Performs differential expression analysis on a normalization matrix.
+This command executes a pipeline processing the data and generates an
+annotated normalization matrix and a report containing p-value histograms
+for each of the performed comparisons.
+}
+\details{
+When executed, it performs the following steps:
+
+1: Read the data and the design matrices into dataframes.
+2: Generate an instance of the NormalyzerStatistics class representing the
+data and their statistical comparisons.
+3: Optionally reduce technical replicates in both the data matrix and the 
+design matrix
+4: Calculate statistical contrats between supplied groups
+5: Generate an annotated version of the original dataframe where columns
+containing statistical key measures have been added
+6: Write the table to file
+7: Generate a PDF report displaying p-value histograms for each calculated
+contrast
 }
 \examples{
 \dontrun{

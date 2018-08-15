@@ -2,7 +2,7 @@
 % Please edit documentation in R/calculateStatistics.R
 \name{generateAnnotatedMatrix}
 \alias{generateAnnotatedMatrix}
-\title{Generate annotated dataframe from statistics object}
+\title{Generate an annotated data frame from statistics object}
 \usage{
 generateAnnotatedMatrix(nst)
 }
@@ -13,7 +13,9 @@ generateAnnotatedMatrix(nst)
 outDf Annotated statistics matrix
 }
 \description{
-Generate annotated dataframe from statistics object
+Extracts key values (p-value, adjusted p-value, log2-fold change and
+average expression values) from an NormalyzerStatistics instance
+and appends these to the annotation- and data-matrices
 }
 \examples{
 data(example_stat_data)

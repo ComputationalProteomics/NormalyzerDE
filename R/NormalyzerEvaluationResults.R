@@ -1,4 +1,8 @@
-#' S4 class to represent normalization evaluations
+#' Representation of evaluation results by calculating performance measures
+#' for an an NormalyzerResults instance
+#' 
+#' Contains the resulting information from the processing which subsequently
+#' can be used to generate the quality assessment report.
 #' 
 #' @slot avgcvmem Average coefficient of variance per method
 #' @slot avgcvmempdiff Percentage difference of mean coefficient of variance

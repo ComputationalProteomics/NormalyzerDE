@@ -2,7 +2,8 @@
 % Please edit documentation in R/calculateStatistics.R
 \name{plotContrastPHists}
 \alias{plotContrastPHists}
-\title{Generate P-histograms for each contrast}
+\title{Takes an NormalyzerStatistics instance and generates and prints a p-value
+histogram for each onto the viewport}
 \usage{
 plotContrastPHists(nst, jobName, currentLayout, pageno)
 }
@@ -19,6 +20,7 @@ plotContrastPHists(nst, jobName, currentLayout, pageno)
 None
 }
 \description{
-Generate P-histograms for each contrast
+Takes an NormalyzerStatistics instance and generates and prints a p-value
+histogram for each onto the viewport
 }
 \keyword{internal}

@@ -2,7 +2,6 @@
 
 export(analyzeNormalizations)
 export(calculateContrasts)
-export(calculateCorrSum)
 export(generateAnnotatedMatrix)
 export(generatePlots)
 export(generateStatsReport)

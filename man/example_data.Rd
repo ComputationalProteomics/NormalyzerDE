@@ -3,12 +3,14 @@
 \docType{data}
 \name{example_data}
 \alias{example_data}
-\title{Small example dataset}
+\title{Small example dataset used to demonstrate code consistency in testing and
+as dummy data in the vignette.}
 \format{A data frame containing annotation and expression data}
 \usage{
 example_data
 }
 \description{
-Small example dataset
+Small example dataset used to demonstrate code consistency in testing and
+as dummy data in the vignette.
 }
-\keyword{datasets}
+\keyword{internal}

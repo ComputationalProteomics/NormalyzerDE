@@ -3,12 +3,12 @@
 \docType{data}
 \name{example_design}
 \alias{example_design}
-\title{Small example design matrix}
-\format{A data frame containing expression data}
+\title{Design matrix corresponding to the small example datasets.}
+\format{A design matrix corresponding to the dataset "example_data"}
 \usage{
 example_design
 }
 \description{
-Small example design matrix
+Design matrix corresponding to the small example datasets.
 }
-\keyword{datasets}
+\keyword{internal}

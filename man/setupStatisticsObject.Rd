@@ -27,7 +27,12 @@ setupStatisticsObject(designDf, fullDf, sampleCol = "sample",
 Prepared statistics object.
 }
 \description{
-Setup NormalyzerDE statistics object
+It loads the raw data matrix and
+the design matrix, and uses these to separate the raw data into an annotation
+matrix and a data matrix. Next, it calculates a contrast showing which
+features have at least a set number of values in each of the conditions.
+Finally, this information is used to create and return an instance of the 
+NormalyzerStatistics class.
 }
 \examples{
 data(example_design)

@@ -4,20 +4,22 @@
 \alias{analyzeNormalizations}
 \title{Calculate measures for normalization results}
 \usage{
-analyzeNormalizations(nr, comparisons = NULL, categoricalAnova = FALSE)
+analyzeNormalizations(nr, categoricalAnova = FALSE)
 }
 \arguments{
 \item{nr}{Normalyzer results object with calculated results.}
 
-\item{comparisons}{Target sample contrasts to run.}
-
-\item{categoricalAnova}{ANOVA can be categorical or numerical.}
+\item{categoricalAnova}{Whether categorical or numerical (ordered) ANOVA
+should be calculated.}
 }
 \value{
 Normalyzer results with attached evaluation results object.
 }
 \description{
-Calculate measures for normalization results
+This function prepares an NormalyzerEvaluationResults object containing
+the evaluation measures CV (coefficient of variance), MAD (median absolute
+deviation), average variance, significance measures (ANOVA between
+condition groups) and correlation between replicates.
 }
 \examples{
 data(example_data)

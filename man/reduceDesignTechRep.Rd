@@ -2,10 +2,7 @@
 % Please edit documentation in R/calculateStatistics.R
 \name{reduceDesignTechRep}
 \alias{reduceDesignTechRep}
-\title{Remove technical replicates from design matrix.
-Technical replicates are specified as duplicate strings.
-The first sample name corresponding for each technical replicate group
-is retained.}
+\title{Remove technical replicates from design matrix.}
 \usage{
 reduceDesignTechRep(designMat, techRepGroups)
 }
@@ -18,7 +15,6 @@ reduceDesignTechRep(designMat, techRepGroups)
 collDesignDf Reduced design matrix
 }
 \description{
-Remove technical replicates from design matrix.
 Technical replicates are specified as duplicate strings.
 The first sample name corresponding for each technical replicate group
 is retained.

@@ -4,9 +4,12 @@
 \name{NormalyzerStatistics-class}
 \alias{NormalyzerStatistics-class}
 \alias{NormalyzerStatistics}
-\title{Statistical dataset representation}
+\title{Class representing a dataset for statistical processing in NormalyzerDE}
 \description{
-Statistical dataset representation
+Is initialized with an annotation matrix, a data matrix and a design
+data frame. This object can subsequently be processed to generate statistical
+values and in turn used to write a full matrix with additional statistical
+information as well as a graphical report of the comparisons.
 }
 \section{Slots}{
 

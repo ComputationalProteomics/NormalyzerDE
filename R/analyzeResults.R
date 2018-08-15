@@ -6,8 +6,8 @@
 #' condition groups) and correlation between replicates.
 #' 
 #' @param nr Normalyzer results object with calculated results.
-#' @param comparisons Target sample contrasts to run.
-#' @param categoricalAnova ANOVA can be categorical or numerical.
+#' @param categoricalAnova Whether categorical or numerical (ordered) ANOVA
+#' should be calculated.
 #' @return Normalyzer results with attached evaluation results object.
 #' @export
 #' @examples
@@ -16,7 +16,7 @@
 #' normObj <- getVerifiedNormalyzerObject("job_name", example_design, example_data)
 #' normResults <- normMethods(normObj)
 #' normResultsWithEval <- analyzeNormalizations(normResults)
-analyzeNormalizations <- function(nr, comparisons=NULL, categoricalAnova=FALSE) {
+analyzeNormalizations <- function(nr, categoricalAnova=FALSE) {
     
     nds <- nr@nds
     ner <- NormalyzerEvaluationResults()
@@ -254,17 +254,9 @@ calculateSummarizedCorrelationVector <- function(
 #'   replicates exceeds one
 #' @param corrType Type of correlation (Pearson or Spearman)
 #' @return corSums
-#' @export
-#' @examples
-#' data("example_data_only_values")
-#' data("example_design")
-#' testDesign <- example_design[which(example_design$group %in% c("1", "2", "3")), ]
-#' testData <- example_data_only_values[, as.character(testDesign$sample)]
-#' groupHeader <- testDesign$group
-#' uniqueGroups <- unique(groupHeader)
-#' calculateCorrSum(testData, groupHeader, uniqueGroups, "pearson")
-calculateCorrSum <- function(
-    methodData, allReplicateGroups, sampleGroupsWithReplicates, corrType) {
+#' @keywords internal
+calculateCorrSum <- function(methodData, allReplicateGroups, 
+                             sampleGroupsWithReplicates, corrType) {
     
     corSums <- vector()
     for (groupNbr in seq_len(length(sampleGroupsWithReplicates))) {

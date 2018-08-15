@@ -2,7 +2,9 @@
 % Please edit documentation in R/generatePlots.R
 \name{plotQQ}
 \alias{plotQQ}
-\title{QQ-plots for variable values}
+\title{Produces page showing QQ-plots for the first sample for each normalization
+method. This plot can be used to assess whether the data follows a normal
+distribution.}
 \usage{
 plotQQ(nr, currentLayout, pageno)
 }
@@ -17,6 +19,8 @@ plotQQ(nr, currentLayout, pageno)
 None
 }
 \description{
-QQ-plots for variable values
+Produces page showing QQ-plots for the first sample for each normalization
+method. This plot can be used to assess whether the data follows a normal
+distribution.
 }
 \keyword{internal}

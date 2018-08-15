@@ -2,7 +2,9 @@
 % Please edit documentation in R/generatePlots.R
 \name{plotMA}
 \alias{plotMA}
-\title{Expression vs. fold-change for variables for each normalization method}
+\title{Produces a page containing expression vs. fold-change figures (MA plots)
+The visualized fold is between the first sample in each group and the
+average of the replicate to which that sample belongs}
 \usage{
 plotMA(nr, currentLayout, pageno)
 }
@@ -17,6 +19,8 @@ plotMA(nr, currentLayout, pageno)
 None
 }
 \description{
-Expression vs. fold-change for variables for each normalization method
+Produces a page containing expression vs. fold-change figures (MA plots)
+The visualized fold is between the first sample in each group and the
+average of the replicate to which that sample belongs
 }
 \keyword{internal}

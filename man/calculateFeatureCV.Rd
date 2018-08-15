@@ -2,7 +2,9 @@
 % Please edit documentation in R/analyzeResults.R
 \name{calculateFeatureCV}
 \alias{calculateFeatureCV}
-\title{Calculate CV values for each feature}
+\title{Calculate CV values for each feature. Iterates through each normalization 
+method and calculates a matrix of CV values where each column correspond to 
+a method and each row corresponds to a feature.}
 \usage{
 calculateFeatureCV(methodList)
 }
@@ -16,6 +18,8 @@ methodFeatureCVMatrix Matrix with feature as rows and normalization
   method as columns
 }
 \description{
-Calculate CV values for each feature
+Calculate CV values for each feature. Iterates through each normalization 
+method and calculates a matrix of CV values where each column correspond to 
+a method and each row corresponds to a feature.
 }
 \keyword{internal}

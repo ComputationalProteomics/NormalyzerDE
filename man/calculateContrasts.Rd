@@ -4,7 +4,12 @@
 \name{calculateContrasts}
 \alias{calculateContrasts}
 \alias{calculateContrasts,NormalyzerStatistics-method}
-\title{Main method for contrast calculation}
+\title{Performs statistical comparisons between the supplied conditions.
+It uses the design matrix and data matrix in the supplied 
+NormalyzerStatistics object. A column is supplied specifying which of the
+columns in the design matrix that is used for deciding the sample groups.
+The comparisons vector specifies which pairwise comparisons between
+condition levels that are to be calculated.}
 \usage{
 calculateContrasts(nst, comparisons, condCol, batchCol = NULL,
   splitter = "-", type = "limma")
@@ -23,13 +28,15 @@ calculateContrasts(nst, comparisons, condCol, batchCol = NULL,
 
 \item{splitter}{Character dividing contrast conditions.}
 
-\item{type}{Type of statistical test (Limma or ANOVA).}
+\item{type}{Type of statistical test (Limma or welch).}
 }
 \value{
 nst Statistics object with statistical measures calculated
 }
 \description{
-Main method for contrast calculation
+Optionally, a batch column can be specified allowing compensation for
+covariate variation in the statistical model. This is only compatible
+with a Limma-based statistical analysis.
 }
 \examples{
 data("example_stat_data")

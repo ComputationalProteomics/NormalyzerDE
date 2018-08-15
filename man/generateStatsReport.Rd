@@ -2,7 +2,9 @@
 % Please edit documentation in R/calculateStatistics.R
 \name{generateStatsReport}
 \alias{generateStatsReport}
-\title{Generate full output report plot document}
+\title{Generate full output report plot document. Plots p-value histograms
+for each contrast in the NormalyzerStatistics instance and writes these
+to a PDF report.}
 \usage{
 generateStatsReport(nst, jobName, jobDir, plotRows = 3, plotCols = 4)
 }
@@ -21,7 +23,9 @@ generateStatsReport(nst, jobName, jobDir, plotRows = 3, plotCols = 4)
 None
 }
 \description{
-Generate full output report plot document
+Generate full output report plot document. Plots p-value histograms
+for each contrast in the NormalyzerStatistics instance and writes these
+to a PDF report.
 }
 \examples{
 data(example_stat_data)

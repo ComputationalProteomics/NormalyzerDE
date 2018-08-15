@@ -10,7 +10,8 @@ NormalyzerDE includes several normalization approaches, a empirical Bayes-based 
 
 # Installation
 
-Currently, the easiest way is to install directly from GitHub.
+Currently, the easiest way is to install directly from GitHub. It is recommended that you use
+R version 3.5 or later as this makes it easier to install the Bioconductor dependencies properly
 
 ```
 install.packages("devtools")
@@ -40,4 +41,30 @@ expression. *Bioinformatics* **2002**, 18, S96–S104.
 (7) van Ooijen, M. P.; Jong, V. L.; Eijkemans, M. J.; Heck, A. J.; Andeweg, A. C.; Binai, N. A.; van den Ham, H.-J. Identification of differentially expressed peptides in high-throughput proteomics data. *Brief. Bioinform.* **2017**, 1–11.
 
 (8) Wolfgang, H. et al. Orchestrating high-throughput genomic analysis with Bioconductor. *Nat. Methods* **2015**, 12, 115–121.
+
+# Code organization
+
+NormalyzerDE consists of a number of scripts and classes. They are focused around
+two separate workflows. One is for normalizing and evaluating the normalizations. The
+second is for performing differential expression analysis. Classes are contained in scripts with the same name.
+
+The standard workflow for the normalization is the following:
+
+* The `normalyzer` function in the `NormalyzerDE.R` script is called, starting the process.
+* If applicable (that is, input is in Proteois or MaxQuant format), the dataset is preprocessed into the standard format using code in `preparsers.R`.
+* The input is verified to capture standard errors early on using code in `inputVerification.R`. This results in an instance of the `NormalyzerDataset` class.
+* The data is normalized using several normalization methods present in `normMethods.R`. This yields an instance of `NormalyzerResults` which links to the original `NormalyzerDataset` instance and also contains all the resulting normalized datasets.
+* If specified (and if a column with retention time values is present) retention-time segmented approaches are performed by applying normalizations from `normMethods.R` over retention time using functions present in `higherOrderNormMethods.R`.
+* The results are analyzed using functions present in `analyzeResults.R`. This yields an instance of `NormalyzerEvaluationResults` containing the evaluation results. This instance is attached to the `NormalyzerResults` object.
+* The final results are sent to `outputUtils.R` where the normalizations are written to an output directory, and to `generatePlots.R` which contains visualizations for the performance measures. It also uses code in `printMeta.R` and `printPlots.R` to output the results in a desired format.
+
+When a normalized matrix is selected the analysis proceeds to the statistical analysis.
+
+* The `normalyzerde` function in the `NormalyzerDE.R` script is called starting the differential expression analysis pipeline.
+* An instance of `NormalyzerStatistics` is prepared containing the input data.
+* Code in the `calculateStatistics.R` script is used to calculate the statistical contrasts. The results are attached to the `NormalyzerStatistics` object.
+* The resulting statistics are used to generate a report and an annotated output matrix where key statistical measures are attached to the original matrix.
+
+![NormalyzerDE schematics](vignettes/180813_normalyzerde_schematics.png)
+
 

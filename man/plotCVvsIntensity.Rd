@@ -2,8 +2,8 @@
 % Please edit documentation in R/generatePlots.R
 \name{plotCVvsIntensity}
 \alias{plotCVvsIntensity}
-\title{Overview of coefficient of variation compared to intensity for variables
- for different normalization methods}
+\title{Plots page displaying coefficient of variance (CV) against raw intensity
+for features across the performed normalizations}
 \usage{
 plotCVvsIntensity(nr, currentLayout, pageno)
 }
@@ -18,7 +18,7 @@ plotCVvsIntensity(nr, currentLayout, pageno)
 None
 }
 \description{
-Overview of coefficient of variation compared to intensity for variables
- for different normalization methods
+Plots page displaying coefficient of variance (CV) against raw intensity
+for features across the performed normalizations
 }
 \keyword{internal}

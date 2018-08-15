@@ -38,7 +38,10 @@ normMethods <- function(nds, forceAll=FALSE, normalizeRetentionTime=TRUE,
     return(nr)
 }
 
-#' Normalization adjusting based on total sample intensity
+#' The normalization divides the intensity of each variable in a sample
+#' with the sum of intensities of all variables in the sample and multiplies
+#' with the median of sum of intensities of all variables in all samples.
+#' The normalized data is then log2-transformed.
 #' 
 #' @param rawMatrix Target matrix to be normalized
 #' @return Normalized and log-transformed matrix
@@ -63,7 +66,10 @@ globalIntensityNormalization <- function(rawMatrix) {
     normLog2Matrix
 }
 
-#' Normalization adjusting towards sample median intensity
+#' Intensity of each variable in a given sample is divided by the median of
+#' intensities of all variables in the sample and then multiplied by the mean
+#' of median of sum of intensities of all variables in all samples.
+#' The normalized data is then log2-transformed.
 #' 
 #' @param rawMatrix Target matrix to be normalized
 #' @return Normalized and log-transformed matrix
@@ -76,7 +82,9 @@ medianNormalization <- function(rawMatrix) {
     colMedians <- apply(rawMatrix, 2, FUN="median", na.rm=TRUE)
     meanColMedian <- mean(colMedians, na.rm=TRUE)
     normMatrix <- matrix(nrow=nrow(rawMatrix), ncol=ncol(rawMatrix), byrow=TRUE)
-    normFunc <- function(colIndex) { (rawMatrix[rowIndex, colIndex] / colMedians[colIndex]) * meanColMedian }
+    normFunc <- function(colIndex) { 
+        (rawMatrix[rowIndex, colIndex] / colMedians[colIndex]) * meanColMedian 
+    }
     
     for (rowIndex in seq_len(nrow(rawMatrix))) {
         normMatrix[rowIndex, ] <- vapply(seq_len(ncol(rawMatrix)), normFunc, 0)
@@ -87,7 +95,10 @@ medianNormalization <- function(rawMatrix) {
     normLog2Matrix
 }
 
-#' Normalization adjusting towards sample mean intensity
+#' Intensity of each variable in a given sample is divided by the mean of sum of
+#' intensities of all variables in the sample and then multiplied by the mean
+#' of sum of intensities of all variables in all samples. The normalized data
+#' is then transformed to log2.
 #' 
 #' @param rawMatrix Target matrix to be normalized
 #' @return Normalized and log-transformed matrix
@@ -112,7 +123,12 @@ meanNormalization <- function(rawMatrix) {
     normLog2Matrix
 }
 
-#' Perform Variance Stabilizing Normalization
+#' Log2 transformed data is normalized using the function "justvsn" from the
+#' VSN package. 
+#' 
+#' The VSN (Variance Stabilizing Normalization) attempts to transform the data 
+#' in such a way that the variance remains nearly constant over the intensity 
+#' spectrum
 #' 
 #' @param rawMatrix Target matrix to be normalized
 #' @return Normalized matrix
@@ -127,9 +143,12 @@ performVSNNormalization <- function(rawMatrix) {
     normMatrix
 }
 
-#' Perform quantile normalization, where overall distribution is assumed
-#' to be the same, and using a 'average' distribution as measure to normalize
-#' again
+#' Quantile normalization is performed by the function "normalize.quantiles"
+#' from the package preprocessCore.
+#' 
+#' It makes the assumption that the data in different samples should originate
+#' from an identical distribution. It does this by generating a reference
+#' distribution and then scaling the other samples accordingly.
 #' 
 #' @param rawMatrix Target matrix to be normalized
 #' @return Normalized matrix
@@ -147,7 +166,8 @@ performQuantileNormalization <- function(rawMatrix) {
 }
 
 #' Median absolute deviation normalization
-#' Scales values with MAD and adds it with logged sample median
+#' Normalization subtracts the median and divides the data by the
+#' median absolute deviation (MAD).
 #' 
 #' @param rawMatrix Target matrix to be normalized
 #' @return Normalized matrix
@@ -169,7 +189,10 @@ performSMADNormalization <- function(rawMatrix) {
 }
 
 #' Cyclic Loess normalization
-#' Local regression based on k-nearest-neighbor model
+#' 
+#' Log2 transformed data is normalized by Loess method using the function
+#' "normalizeCyclicLoess". Further information is available for the function
+#' "normalizeCyclicLoess" in the Limma package.
 #' 
 #' @param rawMatrix Target matrix to be normalized
 #' @return Normalized matrix
@@ -187,6 +210,9 @@ performCyclicLoessNormalization <- function(rawMatrix) {
 }
 
 #' Global linear regression normalization
+#' 
+#' Log2 transformed data is normalized by robust linear regression using
+#' the function "rlm" from the MASS package. 
 #' 
 #' @param rawMatrix Target matrix to be normalized
 #' @return Normalized matrix

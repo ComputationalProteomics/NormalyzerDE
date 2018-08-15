@@ -16,6 +16,7 @@ avgCVPerNormAndReplicates Matrix with group CVs as rows and
   normalization technique as columns
 }
 \description{
-Calculate CV per replicate group and normalization technique
+Iterates through each normalization method and calculate average CV values
+per replicate group.
 }
 \keyword{internal}

@@ -2,7 +2,10 @@
 % Please edit documentation in R/normMethods.R
 \name{medianNormalization}
 \alias{medianNormalization}
-\title{Normalization adjusting towards sample median intensity}
+\title{Intensity of each variable in a given sample is divided by the median of
+intensities of all variables in the sample and then multiplied by the mean
+of median of sum of intensities of all variables in all samples.
+The normalized data is then log2-transformed.}
 \usage{
 medianNormalization(rawMatrix)
 }
@@ -13,7 +16,10 @@ medianNormalization(rawMatrix)
 Normalized and log-transformed matrix
 }
 \description{
-Normalization adjusting towards sample median intensity
+Intensity of each variable in a given sample is divided by the median of
+intensities of all variables in the sample and then multiplied by the mean
+of median of sum of intensities of all variables in all samples.
+The normalized data is then log2-transformed.
 }
 \examples{
 data(example_data_only_values)
