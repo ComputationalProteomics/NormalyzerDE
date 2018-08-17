@@ -25,11 +25,10 @@ loadData <- function(dataPath, inputFormat="default", zeroToNA=FALSE) {
         rawData <- maxQuantToNormalyzer(dataPath, protLevel=TRUE)
     } else {
         valids <- c("default", "proteios", "maxquantpep", "maxquantprot")
-        stop(paste(
-            "Unknown inputFormat:", 
-            inputFormat, 
-            "valids are:", 
-            paste(valids, collapse=", "))
+        stop("Unknown inputFormat: ", 
+             inputFormat, 
+             " valids are: ", 
+             paste(valids, collapse=", ")
         )
     }
     
@@ -104,7 +103,7 @@ getVerifiedNormalyzerObject <- function(
     ) {
 
     if (!groupCol %in% colnames(designMatrix)) {
-        stop(paste0("Given groupCol: '", groupCol, "' was not present among design matrix columns"))
+        stop("Given groupCol: '", groupCol, "' was not present among design matrix columns")
     }
 
     groups <- as.numeric(as.factor(designMatrix[, groupCol]))
@@ -172,12 +171,12 @@ loadRawDataFromFile <- function(inputPath) {
                                                quote="",
                                                comment.char="")),
         error=function(e) {
-            print(paste0("Error encountered for input file:", inputPath, ", error: ", e))
+            message("Error encountered for input file:", inputPath, ", error: ", e)
             stop("Please provide a valid input file.")
         },
         
         warning=function(w) {
-            print(paste0("Provided input file (", inputPath, ") not found:"))
+            message("Provided input file (", inputPath, ") not found:")
             stop("Please provide a valid input file.")
         }
     )
@@ -225,7 +224,7 @@ verifyValidNumbers <- function(rawDataOnly, groups, quiet=FALSE) {
         stop(errorString)
     }
 
-    if (!quiet) print("Input data checked. All fields are valid.")
+    if (!quiet) message("Input data checked. All fields are valid.")
 }
 
 #' Verify that design matrix setup matches the data matrix
@@ -394,7 +393,7 @@ validateSampleReplication <- function(dataMatrix, groups, requireReplicates=TRUE
         }
     }
     else {
-        if (!quiet) print("Sample replication check: All samples have replicates")
+        if (!quiet) message("Sample replication check: All samples have replicates")
     }
 }
 
@@ -445,7 +444,7 @@ verifyMultipleSamplesPresent <- function(dataMatrix, groups, requireReplicates=T
              input validation steps.")
     }
     else {
-        if (!quiet) print("Sample check: More than one sample group found")
+        if (!quiet) message("Sample check: More than one sample group found")
     }
 }
 

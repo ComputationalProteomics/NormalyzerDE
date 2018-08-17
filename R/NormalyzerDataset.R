@@ -105,9 +105,9 @@ setMethod("detectSingleReplicate", "NormalyzerDataset",
               
               if (length(nonReplicatedSamples) > 0) {
                   singleReplicateRun <- TRUE
-                  print(paste("Non replicated samples in dataset:",
-                              paste(nonReplicatedSamples, collapse=" "),
-                              "performing limited single-replicate run"))
+                  message("Non replicated samples in dataset: ",
+                          paste(nonReplicatedSamples, collapse=" "),
+                          " performing limited single-replicate run")
               }
               else {
                   singleReplicateRun <- FALSE
@@ -136,10 +136,9 @@ setMethod("detectSingletonSample", "NormalyzerDataset",
               
               if (length(distinctSamples) == 1) {
                   singletonSamplePresent <- TRUE
-                  print(paste("Only one replicate group present.",
-                              paste("Group: ", distinctSamples[1]),
-                              "Proceeding with limited processing",
-                              sep="\n"))
+                  message("Only one replicate group present. ",
+                          paste("Group: ", distinctSamples[1]),
+                          " Proceeding with limited processing")
               }
               else if (length(distinctSamples) == 0) {
                   stop("No sample replicate groups found - Aborting.")
@@ -197,7 +196,7 @@ setMethod("setupRTColumn", "NormalyzerDataset",
               }
               else if (length(rtColumns) == 1) {
                   
-                  if (!quiet) print(paste0("RT annotation column found (", rtColumns, ")"))
+                  if (!quiet) message("RT annotation column found (", rtColumns, ")")
                   
                   rtValues <- nds@rawData[, rtColumns]
                   nds@retentionTimes <- as.numeric(rtValues)

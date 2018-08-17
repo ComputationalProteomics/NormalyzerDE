@@ -100,7 +100,7 @@ normalyzer <- function(
 
     startTime <- Sys.time()
     
-    if (!quiet) print("[Step 1/5] Load data and verify input")
+    if (!quiet) message("[Step 1/5] Load data and verify input")
     rawDesign <- loadDesign(designPath, sampleCol=sampleColName, groupCol=groupColName)
     rawData <- loadData(dataPath, inputFormat=inputFormat, zeroToNA=zeroToNA)
     
@@ -115,11 +115,12 @@ normalyzer <- function(
         groupCol=groupColName,
         quiet=quiet)
     jobDir <- setupJobDir(jobName, outputDir)
-    if (!quiet) print(
-        paste("[Step 1/5] Input verified, job directory prepared at:", jobDir)
+    if (!quiet) message(
+        "[Step 1/5] Input verified, job directory prepared at:", 
+        jobDir
     )
     
-    if (!quiet) print("[Step 2/5] Performing normalizations")
+    if (!quiet) message("[Step 2/5] Performing normalizations")
     normalyzerResultsObject <- normMethods(
         normObj,
         forceAll=forceAllMethods,
@@ -129,38 +130,38 @@ normalyzer <- function(
         rtWindowShifts=rtWindowShifts,
         rtWindowMergeMethod=rtWindowMergeMethod,
         quiet=quiet)
-    if (!quiet) print("[Step 2/5] Done!")
+    if (!quiet) message("[Step 2/5] Done!")
     
     if (!skipAnalysis) {
-        if (!quiet) print("[Step 3/5] Generating evaluation measures...")
+        if (!quiet) message("[Step 3/5] Generating evaluation measures...")
         normalyzerResultsObject <- analyzeNormalizations(normalyzerResultsObject)
-        if (!quiet) print("[Step 3/5] Done!")
+        if (!quiet) message("[Step 3/5] Done!")
     }
     else {
-        if (!quiet) print("[Step 3/5] skipAnalysis flag set so no analysis 
+        if (!quiet) message("[Step 3/5] skipAnalysis flag set so no analysis 
                           performed")
     }
     
-    if (!quiet) print("[Step 4/5] Writing matrices to file")
+    if (!quiet) message("[Step 4/5] Writing matrices to file")
     writeNormalizedDatasets(normalyzerResultsObject, jobDir)
-    if (!quiet) print("[Step 4/5] Matrices successfully written")
+    if (!quiet) message("[Step 4/5] Matrices successfully written")
     
     if (!skipAnalysis) {
-        if (!quiet) print("[Step 5/5] Generating plots...")
+        if (!quiet) message("[Step 5/5] Generating plots...")
         generatePlots(normalyzerResultsObject, jobDir, plotRows=plotRows, 
                       plotCols=plotCols)
-        if (!quiet) print("[Step 5/5] Plots successfully generated")
+        if (!quiet) message("[Step 5/5] Plots successfully generated")
     }
     else {
-        if (!quiet) print("[Step 5/5] skipAnalysis flag set so no plots 
+        if (!quiet) message("[Step 5/5] skipAnalysis flag set so no plots 
                           generated")
     }
     
     endTime <- Sys.time()
     totTime <- difftime(endTime, startTime, units="mins")
-    if (!quiet) print(paste0("All done! Results are stored in: ", jobDir, 
-                             ", processing time was ", round(totTime, 1), 
-                             " minutes"))
+    if (!quiet) message("All done! Results are stored in: ", jobDir, 
+                        ", processing time was ", round(totTime, 1), 
+                        " minutes")
 }
 
 #' NormalyzerDE differential expression

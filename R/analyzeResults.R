@@ -223,11 +223,10 @@ calculateSummarizedCorrelationVector <- function(
     
     validCorrTypes <- c("pearson", "spearman")
     if (!corrType %in% validCorrTypes) {
-        stop(paste(
-            "Unknown correlation type:", 
-            corrType, 
-            "valid are:", 
-            paste(validCorrTypes, collapse=", ")))
+        stop("Unknown correlation type: ", 
+             corrType, 
+             " valid are: ", 
+             paste(validCorrTypes, collapse=", "))
     }
     
     avgCorSum <- list()
@@ -344,8 +343,8 @@ findLowlyVariableFeatures <- function(referenceFDR, methodList) {
     nbrAbovePThres <- sum(referenceFDR >= pThresLowVal)
     
     if (is.infinite(pThresLowVal) || nbrAbovePThres == 0) {
-        warning(paste("Too few successful ANOVA calculations to generate lowly",
-                      "variable features, skipping"))
+        warning("Too few successful ANOVA calculations to generate lowly ",
+                "variable features, skipping")
         return(NULL)
     }
         

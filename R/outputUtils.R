@@ -41,9 +41,9 @@ writeNormalizedDatasets <- function(nr, jobdir, includePairwiseComparisons=FALSE
             anovaP <- ner@anovaP[,sampleIndex]
             
             if (nrow(outputTable) != length(anovaP)) {
-                stop(paste("Table row count:", nrow(outputTable), 
-                           "must match p-value vector length for anova: ", 
-                           length(anovaP)))
+                stop("Table row count: ", nrow(outputTable), 
+                     " must match p-value vector length for anova: ", 
+                     length(anovaP))
             }
             
             outputTable <- cbind(outputTable, anovaP=anovaP)

@@ -44,9 +44,8 @@ getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod,
     #        Target indices within the normalization slice window
     
     if (!is(rawMatrix, "matrix")) {
-        stop(paste(
-            "Type of rawMatrix is expected to be matrix, received:", 
-            class(rawMatrix))
+        stop("Type of rawMatrix is expected to be matrix, received: ", 
+             class(rawMatrix)
         )
     }
     
@@ -141,8 +140,8 @@ getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes,
             return(c(rtStart, rtEnd))
         }
         else {
-            stop(paste("Number of datapoints exceed minimum, add option",
-                       " 'allowTooWideData' to process anyway"))
+            stop("Number of datapoints exceed minimum, add option ",
+                 "'allowTooWideData' to process anyway")
         }
     }
     
@@ -181,18 +180,17 @@ getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes,
     newEndRtIndex <- endIndex + pickAfter
     
     if (newEndRtIndex - newStartRtIndex + 1 > length(sortedRts)) {
-        stop(paste0(
-            "Requested minimum window size (", 
-            newEndRtIndex - newStartRtIndex + 1, 
-            ") exceeds total number of datapoints (", 
-            length(sortedRts),
-            ")"))
+        stop("Requested minimum window size (", 
+             newEndRtIndex - newStartRtIndex + 1, 
+             ") exceeds total number of datapoints (", 
+             length(sortedRts),
+             ")")
     }
     
     widenedSlice <- sortedRts[newStartRtIndex:newEndRtIndex]
 
     if (length(widenedSlice) != minimumDatapoints) {
-        stop(paste("Widened slice should equal to minimum number of data points"))
+        stop("Widened slice should equal to minimum number of data points")
     }
     
     stopifnot(length(widenedSlice) == minimumDatapoints)
@@ -262,7 +260,7 @@ getSmoothedRTNormalizedMatrix <- function(
         combinedMatrices <- getCombinedMatrix(matrices, stats::median)
     }
     else {
-        stop(paste("Unknown merge method:", mergeMethod))
+        stop("Unknown merge method: ", mergeMethod)
     }
     
     colnames(combinedMatrices) <- colnames(rawMatrix)

@@ -85,10 +85,10 @@ setMethod(f="calculateContrasts",
               }
               else {
                   if (type != "limma") {
-                      stop(paste(
-                          "Batch compensation only compatible with Limma, got:", 
+                      stop(
+                          "Batch compensation only compatible with Limma, got: ", 
                           type
-                          ))
+                      )
                   }
                   Variable <- as.factor(nst@designDf[, condCol])
                   Batch <- as.factor(nst@designDf[, batchCol])
@@ -110,27 +110,25 @@ setMethod(f="calculateContrasts",
                   compSplit <- unlist(strsplit(comp, splitter))
                   
                   if (length(compSplit) != 2) {
-                      stop(paste("Comparison should be in format cond1-cond2, 
-                                 here the split product was:", 
-                                 paste(compSplit, collapse=" ")))
+                      stop("Comparison should be in format cond1-cond2 ", 
+                           "here the split product was: ", 
+                           paste(compSplit, collapse=" "))
                   }
                   
                   level1 <- compSplit[1]
                   level2 <- compSplit[2]
                   
                   if (length(sampleReplicateGroupsStrings %in% level1) == 0) {
-                      stop(paste(
-                           "No samples matching condition", 
+                      stop("No samples matching condition ", 
                            level1, 
-                           "found in conditions:", 
-                           paste(sampleReplicateGroupsStrings, collapse=" ")))
+                           " found in conditions: ", 
+                           paste(sampleReplicateGroupsStrings, collapse=" "))
                   }
                   
                   if (length(sampleReplicateGroupsStrings %in% level2) == 0) {
-                      stop(paste(
-                          "No samples matching condition", 
-                          level2, "found in conditions:", 
-                          paste(sampleReplicateGroupsStrings, collapse=" ")))
+                      stop("No samples matching condition ", 
+                           level2, " found in conditions: ", 
+                           paste(sampleReplicateGroupsStrings, collapse=" "))
                   }
                   
                   if (type == "welch") {
@@ -147,7 +145,7 @@ setMethod(f="calculateContrasts",
                           c(level1, level2))
                   }
                   else {
-                      stop(paste("Unknown statistics type:", type))
+                      stop("Unknown statistics type: ", type)
                   }
                   
                   for (statMeasure in statMeasures) {
