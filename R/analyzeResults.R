@@ -21,7 +21,7 @@ analyzeNormalizations <- function(nr, categoricalAnova=FALSE) {
     nds <- nr@nds
     ner <- NormalyzerEvaluationResults()
     ner <- calculateCV(ner, nr)
-    singleRepRun <- nr@nds@singleReplicateRun
+    singleRepRun <- singleReplicateRun(nds)
     
     if (!singleRepRun) {
         ner <- calculateMAD(ner, nr)
@@ -318,8 +318,10 @@ calculateANOVAPValues <- function(methodList,
         anovaPValCol <- apply(
             naFilteredData, 
             1, 
-            function(sampleIndex) 
-                summary(stats::aov(unlist(sampleIndex)~testLevels))[[1]][[5]][1])
+            function(sampleIndex) {
+                summary(stats::aov(unlist(sampleIndex)~testLevels))[[1]][[5]][1]
+            } 
+        )
         
         anovaPValsWithNA[naFilterContrast, methodIndex] <- anovaPValCol
     }

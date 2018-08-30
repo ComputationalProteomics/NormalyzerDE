@@ -82,9 +82,9 @@ setMethod("initializeResultsObject", "NormalyzerResults",
           function(nr) {
               
               nds <- nr@nds
-              nr@data2log2 <- log2(nds@filterrawdata)
-              nr@data2ctr <- matrix(nrow=nrow(nds@filterrawdata),
-                                    ncol=ncol(nds@filterrawdata), byrow=TRUE)
+              nr@data2log2 <- log2(filterrawdata(nds))
+              nr@data2ctr <- matrix(nrow=nrow(filterrawdata(nds)),
+                                    ncol=ncol(filterrawdata(nds)), byrow=TRUE)
               nr
           }
 )
@@ -117,13 +117,13 @@ setMethod("performNormalizations", "NormalyzerResults",
               
               nds <- nr@nds
               nr <- basicMetricNormalizations(nr)
-              rtColPresent <- length(nds@retentionTimes) > 0
+              rtColPresent <- length(retentionTimes(nds)) > 0
               
-              nr@data2vsn <- performVSNNormalization(nds@filterrawdata)
-              nr@data2quantile <- performQuantileNormalization(nds@filterrawdata)
-              nr@data2mad <- performSMADNormalization(nds@filterrawdata)
-              nr@data2loess <- performCyclicLoessNormalization(nds@filterrawdata)
-              nr@globalfittedRLR <- performGlobalRLRNormalization(nds@filterrawdata)
+              nr@data2vsn <- performVSNNormalization(filterrawdata(nds))
+              nr@data2quantile <- performQuantileNormalization(filterrawdata(nds))
+              nr@data2mad <- performSMADNormalization(filterrawdata(nds))
+              nr@data2loess <- performCyclicLoessNormalization(filterrawdata(nds))
+              nr@globalfittedRLR <- performGlobalRLRNormalization(filterrawdata(nds))
               
               if (rtNorm) {
                   if (rtColPresent) {
@@ -158,9 +158,9 @@ setMethod("basicMetricNormalizations", "NormalyzerResults",
           function(nr) {
               
               nds <- nr@nds
-              nr@data2GI <- globalIntensityNormalization(nds@filterrawdata)
-              nr@data2med <- medianNormalization(nds@filterrawdata)
-              nr@data2mean <- meanNormalization(nds@filterrawdata)
+              nr@data2GI <- globalIntensityNormalization(filterrawdata(nds))
+              nr@data2med <- medianNormalization(filterrawdata(nds))
+              nr@data2mean <- meanNormalization(filterrawdata(nds))
               nr
           }
 )
@@ -185,8 +185,8 @@ setMethod("performRTNormalizations", "NormalyzerResults",
               nds <- nr@nds
               
               smoothedRTMed <- getSmoothedRTNormalizedMatrix(
-                  rawMatrix=nds@filterrawdata, 
-                  retentionTimes=nds@retentionTimes, 
+                  rawMatrix=filterrawdata(nds), 
+                  retentionTimes=retentionTimes(nds), 
                   normMethod=medianNormalization, 
                   stepSizeMinutes=stepSizeMinutes,
                   windowMinCount=minWindowSize,
@@ -195,8 +195,8 @@ setMethod("performRTNormalizations", "NormalyzerResults",
               )
               
               smoothedRTMean <- getSmoothedRTNormalizedMatrix(
-                  rawMatrix=nds@filterrawdata, 
-                  retentionTimes=nds@retentionTimes, 
+                  rawMatrix=filterrawdata(nds), 
+                  retentionTimes=retentionTimes(nds), 
                   normMethod=meanNormalization, 
                   stepSizeMinutes=stepSizeMinutes,
                   windowMinCount=minWindowSize,
@@ -205,8 +205,8 @@ setMethod("performRTNormalizations", "NormalyzerResults",
               )
               
               smoothedRTLoess <- getSmoothedRTNormalizedMatrix(
-                  rawMatrix=nds@filterrawdata, 
-                  retentionTimes=nds@retentionTimes, 
+                  rawMatrix=filterrawdata(nds), 
+                  retentionTimes=retentionTimes(nds), 
                   normMethod=performCyclicLoessNormalization, 
                   stepSizeMinutes=stepSizeMinutes,
                   windowMinCount=minWindowSize,
@@ -215,8 +215,8 @@ setMethod("performRTNormalizations", "NormalyzerResults",
               )
               
               smoothedRTVSN <- getSmoothedRTNormalizedMatrix(
-                  rawMatrix=nds@filterrawdata, 
-                  retentionTimes=nds@retentionTimes, 
+                  rawMatrix=filterrawdata(nds), 
+                  retentionTimes=retentionTimes(nds), 
                   normMethod=performVSNNormalization, 
                   stepSizeMinutes=stepSizeMinutes,
                   windowMinCount=minWindowSize,

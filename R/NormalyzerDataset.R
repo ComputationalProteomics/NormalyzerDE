@@ -14,9 +14,6 @@
 #'  removed
 #' @slot sampleReplicateGroups Vector with sample replicate information
 #' @slot samplesGroupsWithReplicates Vector with replicated sample replicate information
-#' @slot colsum Vector with sum of values for each column
-#' @slot medofdata Vector with median values for each column
-#' @slot meanofdata Vector with mean values for each column
 #' @slot annotationValues Annotation part of original dataframe.
 #' @slot retentionTimes Vector of retention time values.
 #' @slot singleReplicateRun Conditional whether run is single replicate.
@@ -37,10 +34,6 @@ NormalyzerDataset <- setClass("NormalyzerDataset",
                                   sampleReplicateGroups = "numeric",
                                   samplesGroupsWithReplicates = "numeric",
                                   
-                                  colsum = "numeric",
-                                  medofdata = "numeric",
-                                  meanofdata = "numeric",
-                                  
                                   annotationValues = "matrix",
                                   retentionTimes = "numeric",
                                                                     
@@ -51,6 +44,97 @@ NormalyzerDataset <- setClass("NormalyzerDataset",
                                                   designMatrix=NULL,
                                                   sampleNameCol=NULL,
                                                   groupNameCol=NULL))
+
+# Getters
+setGeneric("jobName", function(object) { standardGeneric("jobName") })
+setMethod("jobName", signature(object="NormalyzerDataset"), 
+          function(object) { slot(object, "jobName") })
+
+setGeneric("rawData", function(object) { standardGeneric("rawData") })
+setMethod("rawData", signature(object="NormalyzerDataset"), 
+          function(object) { slot(object, "rawData") })
+
+setGeneric("sampleNameCol", function(object) { standardGeneric("sampleNameCol") })
+setMethod("sampleNameCol", signature(object="NormalyzerDataset"), 
+          function(object) { slot(object, "sampleNameCol") })
+
+setGeneric("groupNameCol", function(object) { standardGeneric("groupNameCol") })
+setMethod("groupNameCol", signature(object="NormalyzerDataset"), 
+          function(object) { slot(object, "groupNameCol") })
+
+setGeneric("designMatrix", function(object) { standardGeneric("designMatrix") })
+setMethod("designMatrix", signature(object="NormalyzerDataset"), 
+          function(object) { slot(object, "designMatrix") })
+
+setGeneric("sampleNames", function(object) { standardGeneric("sampleNames") })
+setMethod("sampleNames", signature(object="NormalyzerDataset"), 
+          function(object) { slot(object, "sampleNames") })
+setGeneric("sampleNames<-", function(object, value) { standardGeneric("sampleNames<-") })
+setReplaceMethod("sampleNames", signature(object="NormalyzerDataset"), 
+                 function(object, value) { 
+                     slot(object, "sampleNames") <- value
+                     validObject(object)
+                     object
+                     })
+
+setGeneric("filterrawdata", function(object) { standardGeneric("filterrawdata") })
+setMethod("filterrawdata", signature(object="NormalyzerDataset"), 
+          function(object) { slot(object, "filterrawdata") })
+setGeneric("filterrawdata<-", function(object, value) { standardGeneric("filterrawdata<-") })
+setReplaceMethod("filterrawdata", signature(object="NormalyzerDataset"), 
+                 function(object, value) { 
+                     slot(object, "filterrawdata") <- value
+                     validObject(object)
+                     object
+                 })
+
+setGeneric("sampleReplicateGroups", function(object) { standardGeneric("sampleReplicateGroups") })
+setMethod("sampleReplicateGroups", signature(object="NormalyzerDataset"), 
+          function(object) { slot(object, "sampleReplicateGroups") })
+setGeneric("sampleReplicateGroups<-", function(object, value) { standardGeneric("sampleReplicateGroups<-") })
+setReplaceMethod("sampleReplicateGroups", signature(object="NormalyzerDataset"), 
+                 function(object, value) { 
+                     slot(object, "sampleReplicateGroups") <- value
+                     validObject(object)
+                     object
+                 })
+
+setGeneric("samplesGroupsWithReplicates", function(object) { standardGeneric("samplesGroupsWithReplicates") })
+setMethod("samplesGroupsWithReplicates", signature(object="NormalyzerDataset"), 
+          function(object) { slot(object, "samplesGroupsWithReplicates") })
+setGeneric("samplesGroupsWithReplicates<-", function(object, value) { standardGeneric("samplesGroupsWithReplicates<-") })
+setReplaceMethod("samplesGroupsWithReplicates", signature(object="NormalyzerDataset"), 
+                 function(object, value) { 
+                     slot(object, "samplesGroupsWithReplicates") <- value
+                     validObject(object)
+                     object
+                 })
+
+setGeneric("annotationValues", function(object) { standardGeneric("annotationValues") })
+setMethod("annotationValues", signature(object="NormalyzerDataset"), 
+          function(object) { slot(object, "annotationValues") })
+setGeneric("annotationValues<-", function(object, value) { standardGeneric("annotationValues<-") })
+setReplaceMethod("annotationValues", signature(object="NormalyzerDataset"), 
+                 function(object, value) { 
+                     slot(object, "annotationValues") <- value
+                     validObject(object)
+                     object
+                 })
+
+setGeneric("retentionTimes", function(object) { standardGeneric("retentionTimes") })
+setMethod("retentionTimes", signature(object="NormalyzerDataset"), 
+          function(object) { slot(object, "retentionTimes") })
+
+setGeneric("singleReplicateRun", function(object) { standardGeneric("singleReplicateRun") })
+setMethod("singleReplicateRun", signature(object="NormalyzerDataset"), 
+          function(object) { slot(object, "singleReplicateRun") })
+setGeneric("singleReplicateRun<-", function(object, value) { standardGeneric("singleReplicateRun<-") })
+setReplaceMethod("singleReplicateRun", signature(object="NormalyzerDataset"), 
+                 function(object, value) { 
+                     slot(object, "singleReplicateRun") <- value
+                     validObject(object)
+                     object
+                 })
 
 #' Initialize values for dataset
 #'
@@ -64,19 +148,19 @@ setGeneric(name="setupValues", function(nds, quiet) standardGeneric("setupValues
 setMethod("setupValues", "NormalyzerDataset",
           function(nds, quiet=FALSE) {
               
-              nds@sampleReplicateGroups <- as.numeric(as.factor(nds@designMatrix[, nds@groupNameCol]))
-              nds@samplesGroupsWithReplicates <- as.numeric(
-                  names(table(nds@sampleReplicateGroups)[which(table(nds@sampleReplicateGroups) > 1)]))
-              nds@sampleNames <- as.character(nds@designMatrix[, nds@sampleNameCol])
+              sampleReplicateGroups(nds) <- as.numeric(as.factor(designMatrix(nds)[, groupNameCol(nds)]))
+              samplesGroupsWithReplicates(nds) <- as.numeric(
+                  names(table(sampleReplicateGroups(nds))[which(table(sampleReplicateGroups(nds)) > 1)]))
+              sampleNames(nds) <- as.character(designMatrix(nds)[, sampleNameCol(nds)])
 
               singleReplicateRun <- detectSingleReplicate(nds)
               singletonSamplePresent <- detectSingletonSample(nds)
               
               if (singleReplicateRun || singletonSamplePresent) {
-                  nds@singleReplicateRun <- TRUE
+                  singleReplicateRun(nds) <- TRUE
               }
               else {
-                  nds@singleReplicateRun <- FALSE
+                  singleReplicateRun(nds) <- FALSE
               }
               
               nds <- setupBasicValues(nds)
@@ -100,7 +184,7 @@ setGeneric(name="detectSingleReplicate",
 setMethod("detectSingleReplicate", "NormalyzerDataset",
           function(nds) {
               
-              headerCounts <- table(nds@sampleReplicateGroups)
+              headerCounts <- table(sampleReplicateGroups(nds))
               nonReplicatedSamples <- names(headerCounts[which(headerCounts == 1)])
               
               if (length(nonReplicatedSamples) > 0) {
@@ -130,7 +214,7 @@ setGeneric(name="detectSingletonSample",
 setMethod("detectSingletonSample", "NormalyzerDataset",
           function(nds) {
               
-              groups <- nds@sampleReplicateGroups
+              groups <- sampleReplicateGroups(nds)
               distinctSamples <- unique(groups)
               singletonSamplePresent <- FALSE
               
@@ -161,14 +245,9 @@ setGeneric(name="setupBasicValues",
 setMethod("setupBasicValues", "NormalyzerDataset",
           function(nds) {
               
-              # nds@sampleReplicateGroups <- as.numeric(nds@sampleReplicateGroups)
-              nds@annotationValues <- nds@rawData[, !(colnames(nds@rawData) %in% nds@sampleNames), drop=FALSE]
+              annotationValues(nds) <- rawData(nds)[, !(colnames(rawData(nds)) %in% sampleNames(nds)), drop=FALSE]
               nds <- setupFilterRawData(nds)
 
-              nds@colsum <- colSums(nds@filterrawdata, na.rm=TRUE)
-              nds@medofdata <- apply(nds@filterrawdata, 2, FUN="median", na.rm=TRUE)
-              nds@meanofdata <- apply(nds@filterrawdata, 2, FUN="mean", na.rm=TRUE)
-              
               nds
           }
 )
@@ -186,7 +265,7 @@ setGeneric(name="setupRTColumn",
 setMethod("setupRTColumn", "NormalyzerDataset",
           function(nds, quiet=FALSE) {
               
-              rtColumns <- grep("\\bRT\\b", colnames(nds@rawData))
+              rtColumns <- grep("\\bRT\\b", colnames(rawData(nds)))
               
               if (length(rtColumns) > 1) {
                   errorMessage <- paste(
@@ -198,8 +277,8 @@ setMethod("setupRTColumn", "NormalyzerDataset",
                   
                   if (!quiet) message("RT annotation column found (", rtColumns, ")")
                   
-                  rtValues <- nds@rawData[, rtColumns]
-                  nds@retentionTimes <- as.numeric(rtValues)
+                  rtValues <- rawData(nds)[, rtColumns]
+                  retentionTimes(nds) <- as.numeric(rtValues)
               }
               
               nds
@@ -220,10 +299,10 @@ setGeneric(name="setupFilterRawData",
 setMethod("setupFilterRawData", "NormalyzerDataset",
           function(nds) {
 
-              stopifnot(!is.null(nds@rawData))
+              stopifnot(!is.null(rawData(nds)))
               
-              nds@filterrawdata <- nds@rawData[, nds@sampleNames]
-              class(nds@filterrawdata) <- "numeric"
+              filterrawdata(nds) <- rawData(nds)[, sampleNames(nds)]
+              class(filterrawdata(nds)) <- "numeric"
 
               nds
           }

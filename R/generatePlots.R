@@ -107,7 +107,7 @@
 generatePlots <- function(nr, jobdir, plotRows=3, plotCols=4) {
     
     nds <- nr@nds
-    currentjob <- nds@jobName
+    currentjob <- jobName(nds)
     nrows <- plotRows + 2
     ncols <- plotCols + 2
     
@@ -122,7 +122,7 @@ generatePlots <- function(nr, jobdir, plotRows=3, plotCols=4) {
     currentFont <- "Helvetica"
     setupPlotting(currentjob, jobdir, "Norm-report")
     plotFrontPage(currentjob, currentFont)
-    isLimitedRun <- nr@nds@singleReplicateRun
+    isLimitedRun <- singleReplicateRun(nds)
     
     # TI
     pageno <- 2
@@ -314,9 +314,9 @@ plotSampleOutlierSummary <- function(nr, currentLayout, pageno) {
     
     nds <- nr@nds
     methodlist <- getNormalizationMatrices(nr)
-    filterED <- nds@sampleReplicateGroups
-    filterrawdata <- nds@filterrawdata
-    currentjob <- nds@jobName
+    filterED <- sampleReplicateGroups(nds)
+    filterrawdata <- filterrawdata(nds)
+    currentjob <- jobName(nds)
     
     tout <- rbind(c(1, 2), c(3, 4))
     graphics::layout(tout)
@@ -375,7 +375,7 @@ plotReplicateVariance <- function(nr, currentLayout, pageno) {
     
     nds <- nr@nds
     methodnames <- getUsedMethodNames(nr)
-    currentjob <- nds@jobName
+    currentjob <- jobName(nds)
     
     ner <- nr@ner
     avgCVMem <- ner@avgcvmem
@@ -472,7 +472,7 @@ plotReplicateVarAndStableVariables <- function(nr, currentLayout, pageno) {
     
     nds <- nr@nds
     methodnames <- getUsedMethodNames(nr)
-    currentjob <- nds@jobName
+    currentjob <- jobName(nds)
     
     ner <- nr@ner
     lowVarFeaturesCVsPercDiff <- ner@lowVarFeaturesCVsPercDiff
@@ -620,9 +620,9 @@ plotCVvsIntensity <- function(nr, currentLayout, pageno) {
     nds <- nr@nds
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
-    currentjob <- nds@jobName
-    sampleReplicateGroups <- nds@sampleReplicateGroups
-    filterrawdata <- nds@filterrawdata
+    currentjob <- jobName(nds)
+    sampleReplicateGroups <- sampleReplicateGroups(nds)
+    filterrawdata <- filterrawdata(nds)
     
     datastore <- methodlist[[1]]
     tempcvmat1 <- matrix(
@@ -701,9 +701,9 @@ plotMA <- function(nr, currentLayout, pageno) {
     nds <- nr@nds
     methodNames <- getUsedMethodNames(nr)
     normalizedDataList <- getNormalizationMatrices(nr)
-    currentjob <- nds@jobName
-    sampleReplicateGroups <- nds@sampleReplicateGroups
-    filterrawdata <- nds@filterrawdata
+    currentjob <- jobName(nds)
+    sampleReplicateGroups <- sampleReplicateGroups(nds)
+    filterrawdata <- filterrawdata(nds)
     
     Malist <- list()
     for (i in seq_len(length(normalizedDataList))) {
@@ -743,7 +743,7 @@ plotScatter <- function(nr, currentLayout, pageno) {
     nds <- nr@nds
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
-    currentjob <- nds@jobName
+    currentjob <- jobName(nds)
     
     tout <- matrix(
         seq_len((currentLayout$nrow - 2) * (currentLayout$ncol - 2)), 
@@ -790,7 +790,7 @@ plotQQ <- function(nr, currentLayout, pageno) {
     nds <- nr@nds
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
-    currentjob <- nds@jobName
+    currentjob <- jobName(nds)
     
     qqlist <- list()
     
@@ -818,9 +818,9 @@ plotBoxPlot <- function(nr, currentLayout, pageno) {
     nds <- nr@nds
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
-    currentjob <- nds@jobName
-    filterED <- nds@sampleReplicateGroups
-    filterrawdata <- nds@filterrawdata
+    currentjob <- jobName(nds)
+    filterED <- sampleReplicateGroups(nds)
+    filterrawdata <- filterrawdata(nds)
     
     tout <- matrix(
         seq_len((currentLayout$nrow - 2) * (currentLayout$ncol - 2)), 
@@ -873,8 +873,8 @@ plotRLE <- function(nr, currentLayout, pageno) {
     nds <- nr@nds
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
-    currentjob <- nds@jobName
-    filterED <- nds@sampleReplicateGroups
+    currentjob <- jobName(nds)
+    filterED <- sampleReplicateGroups(nds)
     
     tout <- matrix(
         seq_len((currentLayout$nrow - 2) * (currentLayout$ncol - 2)), 
@@ -920,7 +920,7 @@ plotDensity <- function(nr, currentLayout, pageno) {
     nds <- nr@nds
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
-    currentjob <- nds@jobName
+    currentjob <- jobName(nds)
     
     tout <- matrix(
         seq_len((currentLayout$nrow-2)*(currentLayout$ncol-2)), 
@@ -961,8 +961,8 @@ plotMDS <- function(nr, currentLayout, pageno) {
     nds <- nr@nds
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
-    currentjob <- nds@jobName
-    filterED <- nds@sampleReplicateGroups
+    currentjob <- jobName(nds)
+    filterED <- sampleReplicateGroups(nds)
     
     tout <- matrix(
         seq_len((currentLayout$nrow-2)*(currentLayout$ncol-2)), 
@@ -1015,7 +1015,7 @@ plotMeanSD <- function(nr, currentLayout, pageno) {
     nds <- nr@nds
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
-    currentjob <- nds@jobName
+    currentjob <- jobName(nds)
     
     sdPlots <- list()
     
@@ -1055,9 +1055,9 @@ plotCorrelation <- function(nr, currentLayout, pageno) {
     nds <- nr@nds
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
-    currentjob <- nds@jobName
-    filterED <- nds@sampleReplicateGroups
-    filterrawdata <- nds@filterrawdata
+    currentjob <- jobName(nds)
+    filterED <- sampleReplicateGroups(nds)
+    filterrawdata <- filterrawdata(nds)
     
     tout <- rbind(c(1, 2), c(3))
     graphics::layout(tout)
@@ -1114,8 +1114,8 @@ plotDendrograms <- function(nr, currentLayout, pageno) {
     nds <- nr@nds
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
-    currentjob <- nds@jobName
-    filterED <- nds@sampleReplicateGroups
+    currentjob <- jobName(nds)
+    filterED <- sampleReplicateGroups(nds)
     
     tout <- matrix(
         seq_len((currentLayout$nrow - 2) * (currentLayout$ncol - 2)), 
@@ -1166,7 +1166,7 @@ plotPHist <- function(nr, currentLayout, pageno) {
     nds <- nr@nds
     ner <- nr@ner
     methodnames <- getUsedMethodNames(nr)
-    currentjob <- nds@jobName
+    currentjob <- jobName(nds)
     anovaP <- ner@anovaP
     histPlots <- list()
     

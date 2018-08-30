@@ -64,7 +64,9 @@ setGeneric(name="calculateCV",
 setMethod("calculateCV", "NormalyzerEvaluationResults",
           function(ner, nr) {
               
-              sampleReplicateGroups <- nr@nds@sampleReplicateGroups
+              nds <- nr@nds
+              sampleReplicateGroups <- sampleReplicateGroups(nds)
+              sampleReplicateGroups <- sampleReplicateGroups(nds)
               methodList <- getNormalizationMatrices(nr)
 
               avgCVPerNormAndReplicates <- calculateReplicateCV(methodList, sampleReplicateGroups)
@@ -90,10 +92,10 @@ setGeneric(name="calculateMAD",
 setMethod("calculateMAD", "NormalyzerEvaluationResults",
           function(ner, nr) {
               
-              sampleReplicateGroups <- nr@nds@sampleReplicateGroups
+              nds <- nr@nds
+              sampleReplicateGroups <- sampleReplicateGroups(nds)
               methodList <- getNormalizationMatrices(nr)
               avgmadmem <- calculateAvgMadMem(methodList, sampleReplicateGroups)
-
               avgMadPdiff<- calculatePercentageAvgDiffInMat(avgmadmem)
 
               ner@avgmadmem <- avgmadmem
@@ -117,7 +119,8 @@ setGeneric(name="calculateAvgVar",
 setMethod("calculateAvgVar", "NormalyzerEvaluationResults",
           function(ner, nr) {
               
-              sampleReplicateGroups <- nr@nds@sampleReplicateGroups
+              nds <- nr@nds
+              sampleReplicateGroups <- sampleReplicateGroups(nds)
               methodList <- getNormalizationMatrices(nr)
 
               avgVarianceMat <- calculateAvgReplicateVariation(methodList, sampleReplicateGroups)
@@ -145,7 +148,8 @@ setGeneric(name="calculateSignificanceMeasures",
 setMethod("calculateSignificanceMeasures", "NormalyzerEvaluationResults",
           function(ner, nr, categoricalAnova=TRUE) {
               
-              sampleReplicateGroups <- nr@nds@sampleReplicateGroups
+              nds <- nr@nds
+              sampleReplicateGroups <- sampleReplicateGroups(nds)
               methodList <- getNormalizationMatrices(nr)
 
               anovaPValsWithNA <- calculateANOVAPValues(methodList, sampleReplicateGroups, categoricalAnova)
@@ -182,14 +186,23 @@ setGeneric(name="calculateCorrelations",
 setMethod("calculateCorrelations", "NormalyzerEvaluationResults",
           function(ner, nr) {
 
+            nds <- nr@nds
             methodlist <- getNormalizationMatrices(nr)
-            allReplicateGroups <- nr@nds@sampleReplicateGroups
-            sampleGroupsWithReplicates <- nr@nds@samplesGroupsWithReplicates
+            allReplicateGroups <- sampleReplicateGroups(nds)
+            sampleGroupsWithReplicates <- samplesGroupsWithReplicates(nds)
             
             ner@repCorPear <- calculateSummarizedCorrelationVector(
-                methodlist, allReplicateGroups, sampleGroupsWithReplicates, "pearson")
+                methodlist, 
+                allReplicateGroups, 
+                sampleGroupsWithReplicates, "pearson"
+            )
             ner@repCorSpear <- calculateSummarizedCorrelationVector(
-                methodlist, allReplicateGroups, sampleGroupsWithReplicates, "spearman")
+                methodlist, 
+                allReplicateGroups, 
+                sampleGroupsWithReplicates, 
+                "spearman"
+            )
+            
             ner
           }
 )

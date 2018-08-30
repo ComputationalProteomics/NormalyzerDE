@@ -29,7 +29,7 @@ writeNormalizedDatasets <- function(nr, jobdir, includePairwiseComparisons=FALSE
 
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
-    annotationColumns <- nds@annotationValues
+    annotationColumns <- annotationValues(nds)
     
     for (sampleIndex in seq_len(length(methodnames))) {
         
@@ -76,7 +76,7 @@ writeNormalizedDatasets <- function(nr, jobdir, includePairwiseComparisons=FALSE
     }
     
     rawFilePath <- paste(jobdir, "/", rawdataName, sep="")
-    rawOutputTable <- cbind(annotationColumns, nds@filterrawdata)
+    rawOutputTable <- cbind(annotationColumns, filterrawdata(nds))
     
     utils::write.table(
         rawOutputTable, 

@@ -460,7 +460,12 @@ verifyMultipleSamplesPresent <- function(dataMatrix, groups, requireReplicates=T
 #' @keywords internal
 generateNormalyzerDataset <- function(jobName, designMatrix, fullRawMatrix, sampleNameCol, groupNameCol, quiet=FALSE) {
     
-    nds <- NormalyzerDataset(jobName=jobName, rawData=fullRawMatrix, designMatrix=designMatrix, sampleNameCol=sampleNameCol, groupNameCol=groupNameCol)
+    nds <- NormalyzerDataset(
+        jobName=jobName, 
+        rawData=fullRawMatrix, 
+        designMatrix=designMatrix,
+        sampleNameCol=sampleNameCol, 
+        groupNameCol=groupNameCol)
     nds <- setupValues(nds, quiet=quiet)
     nds
 }
