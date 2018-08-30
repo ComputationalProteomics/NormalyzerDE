@@ -1,4 +1,4 @@
-context("calculateStatistics")
+context("calculateStatistics.R")
 
 data("example_data_only_values")
 

@@ -11,7 +11,8 @@ data("regression_test_nr")
 regression_test_ner <- regression_test_nr@ner
 # data("regression_test_ner")
 
-sampleReplicateGroups <- regression_test_nr@nds@sampleReplicateGroups
+nds <- regression_test_nr@nds
+sampleReplicateGroups <- sampleReplicateGroups(nds)
 normMatrices <- getNormalizationMatrices(regression_test_nr)
 anova_pvalues <- calculateANOVAPValues(
     normMatrices, 
@@ -34,8 +35,6 @@ test_that("calculateCorrSum gives same Pearson output", {
         ),
         is_true()
     )
-    
-
 })
 
 test_that("calculateCorrSum gives same Spearman output", {
@@ -116,7 +115,8 @@ test_that("calculateAvgReplicateVariation", {
 test_that("calculateANOVAPValues", {
     
     expected_out <- regression_test_ner@anovaP
-    sampleReplicateGroups <- regression_test_nr@nds@sampleReplicateGroups
+    nds <- regression_test_nr@nds
+    sampleReplicateGroups <- sampleReplicateGroups(nds)
     
     expect_that(
         all.equal(
