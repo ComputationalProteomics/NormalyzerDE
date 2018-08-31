@@ -237,8 +237,8 @@ normalyzerDE <- function(jobName, designPath, dataPath, comparisons, outputDir="
     
     if (!is.null(techRepCol)) {
         if (!quiet) print("Reducing technical replicates")
-        nst@dataMat <- reduceTechnicalReplicates(nst@dataMat, nst@designDf[, techRepCol])
-        nst@designDf <- reduceDesignTechRep(nst@designDf, nst@designDf[, techRepCol])
+        dataMat(nst) <- reduceTechnicalReplicates(dataMat(nst), designDf(nst)[, techRepCol])
+        designDf(nst) <- reduceDesignTechRep(designDf(nst), designDf(nst)[, techRepCol])
     }
     
     if (!quiet) print("Calculating statistical contrasts...")

@@ -36,6 +36,106 @@ NormalyzerStatistics <- setClass("NormalyzerStatistics",
                                      designDf=NULL
                                  ))
 
+setGeneric("annotMat", function(object) { standardGeneric("annotMat") })
+setMethod("annotMat", signature(object="NormalyzerStatistics"), 
+          function(object) { slot(object, "annotMat") })
+setGeneric("annotMat<-", function(object, value) { standardGeneric("annotMat<-") })
+setReplaceMethod("annotMat", signature(object="NormalyzerStatistics"), 
+                 function(object, value) { 
+                     slot(object, "annotMat") <- value
+                     validObject(object)
+                     object
+                 })
+
+setGeneric("dataMat", function(object) { standardGeneric("dataMat") })
+setMethod("dataMat", signature(object="NormalyzerStatistics"), 
+          function(object) { slot(object, "dataMat") })
+setGeneric("dataMat<-", function(object, value) { standardGeneric("dataMat<-") })
+setReplaceMethod("dataMat", signature(object="NormalyzerStatistics"), 
+                 function(object, value) { 
+                     slot(object, "dataMat") <- value
+                     validObject(object)
+                     object
+                 })
+
+setGeneric("filteredDataMat", function(object) { standardGeneric("filteredDataMat") })
+setMethod("filteredDataMat", signature(object="NormalyzerStatistics"), 
+          function(object) { slot(object, "filteredDataMat") })
+setGeneric("filteredDataMat<-", function(object, value) { standardGeneric("filteredDataMat<-") })
+setReplaceMethod("filteredDataMat", signature(object="NormalyzerStatistics"), 
+                 function(object, value) { 
+                     slot(object, "filteredDataMat") <- value
+                     validObject(object)
+                     object
+                 })
+
+setGeneric("designDf", function(object) { standardGeneric("designDf") })
+setMethod("designDf", signature(object="NormalyzerStatistics"), 
+          function(object) { slot(object, "designDf") })
+setGeneric("designDf<-", function(object, value) { standardGeneric("designDf<-") })
+setReplaceMethod("designDf", signature(object="NormalyzerStatistics"), 
+                 function(object, value) { 
+                     slot(object, "designDf") <- value
+                     validObject(object)
+                     object
+                 })
+
+setGeneric("filteringContrast", function(object) { standardGeneric("filteringContrast") })
+setMethod("filteringContrast", signature(object="NormalyzerStatistics"), 
+          function(object) { slot(object, "filteringContrast") })
+setGeneric("filteringContrast<-", function(object, value) { standardGeneric("filteringContrast<-") })
+setReplaceMethod("filteringContrast", signature(object="NormalyzerStatistics"), 
+                 function(object, value) { 
+                     slot(object, "filteringContrast") <- value
+                     validObject(object)
+                     object
+                 })
+
+setGeneric("pairwiseCompsP", function(object) { standardGeneric("pairwiseCompsP") })
+setMethod("pairwiseCompsP", signature(object="NormalyzerStatistics"), 
+          function(object) { slot(object, "pairwiseCompsP") })
+setGeneric("pairwiseCompsP<-", function(object, value) { standardGeneric("pairwiseCompsP<-") })
+setReplaceMethod("pairwiseCompsP", signature(object="NormalyzerStatistics"), 
+                 function(object, value) { 
+                     slot(object, "pairwiseCompsP") <- value
+                     validObject(object)
+                     object
+                 })
+
+setGeneric("pairwiseCompsFdr", function(object) { standardGeneric("pairwiseCompsFdr") })
+setMethod("pairwiseCompsFdr", signature(object="NormalyzerStatistics"), 
+          function(object) { slot(object, "pairwiseCompsFdr") })
+setGeneric("pairwiseCompsFdr<-", function(object, value) { standardGeneric("pairwiseCompsFdr<-") })
+setReplaceMethod("pairwiseCompsFdr", signature(object="NormalyzerStatistics"), 
+                 function(object, value) { 
+                     slot(object, "pairwiseCompsFdr") <- value
+                     validObject(object)
+                     object
+                 })
+
+setGeneric("pairwiseCompsAve", function(object) { standardGeneric("pairwiseCompsAve") })
+setMethod("pairwiseCompsAve", signature(object="NormalyzerStatistics"), 
+          function(object) { slot(object, "pairwiseCompsAve") })
+setGeneric("pairwiseCompsAve<-", function(object, value) { standardGeneric("pairwiseCompsAve<-") })
+setReplaceMethod("pairwiseCompsAve", signature(object="NormalyzerStatistics"), 
+                 function(object, value) { 
+                     slot(object, "pairwiseCompsAve") <- value
+                     validObject(object)
+                     object
+                 })
+
+setGeneric("pairwiseCompsFold", function(object) { standardGeneric("pairwiseCompsFold") })
+setMethod("pairwiseCompsFold", signature(object="NormalyzerStatistics"), 
+          function(object) { slot(object, "pairwiseCompsFold") })
+setGeneric("pairwiseCompsFold<-", function(object, value) { standardGeneric("pairwiseCompsFold<-") })
+setReplaceMethod("pairwiseCompsFold", signature(object="NormalyzerStatistics"), 
+                 function(object, value) { 
+                     slot(object, "pairwiseCompsFold") <- value
+                     validObject(object)
+                     object
+                 })
+
+
 #' Performs statistical comparisons between the supplied conditions.
 #' It uses the design matrix and data matrix in the supplied 
 #' NormalyzerStatistics object. A column is supplied specifying which of the
@@ -72,15 +172,15 @@ setMethod(f="calculateContrasts",
           function(nst, comparisons, condCol, batchCol=NULL, splitter="-", 
                    type="limma") {
               
-              sampleReplicateGroups <- nst@designDf[, condCol]
-              sampleReplicateGroupsStrings <- as.character(nst@designDf[, condCol])
+              sampleReplicateGroups <- designDf(nst)[, condCol]
+              sampleReplicateGroupsStrings <- as.character(designDf(nst)[, condCol])
               statMeasures <- c("P", "FDR", "Ave", "Fold")
 
-              naFilterContrast <- nst@filteringContrast
-              dataMatNAFiltered <- nst@filteredDataMat
+              naFilterContrast <- filteringContrast(nst)
+              dataMatNAFiltered <- filteredDataMat(nst)
               
               if (is.null(batchCol)) {
-                  Variable <- as.factor(nst@designDf[, condCol])
+                  Variable <- as.factor(designDf(nst)[, condCol])
                   model <- ~0+Variable
               }
               else {
@@ -90,8 +190,8 @@ setMethod(f="calculateContrasts",
                           type
                       )
                   }
-                  Variable <- as.factor(nst@designDf[, condCol])
-                  Batch <- as.factor(nst@designDf[, batchCol])
+                  Variable <- as.factor(designDf(nst)[, condCol])
+                  Batch <- as.factor(designDf(nst)[, batchCol])
                   model <- ~0+Variable+Batch
               }
               
@@ -154,10 +254,10 @@ setMethod(f="calculateContrasts",
                   }
               }
               
-              nst@pairwiseCompsP <- compLists[["P"]]
-              nst@pairwiseCompsFdr <- compLists[["FDR"]]
-              nst@pairwiseCompsAve <- compLists[["Ave"]]
-              nst@pairwiseCompsFold <- compLists[["Fold"]]
+              pairwiseCompsP(nst) <- compLists[["P"]]
+              pairwiseCompsFdr(nst) <- compLists[["FDR"]]
+              pairwiseCompsAve(nst) <- compLists[["Ave"]]
+              pairwiseCompsFold(nst) <- compLists[["Fold"]]
               nst
           })
 

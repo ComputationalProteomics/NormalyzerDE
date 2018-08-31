@@ -131,26 +131,26 @@ setupStatisticsObject <- function(designDf, fullDf, sampleCol="sample",
 generateAnnotatedMatrix <- function(nst) {
     
     pairwiseHead <- paste(
-        names(nst@pairwiseCompsP), "PValue", sep="_"
+        names(pairwiseCompsP(nst)), "PValue", sep="_"
     )
-    pMat <- data.frame(nst@pairwiseCompsP)
+    pMat <- data.frame(pairwiseCompsP(nst))
     colnames(pMat) <- pairwiseHead
     
     pairwiseHeadFdr <- paste(
-        names(nst@pairwiseCompsFdr), "AdjPVal", sep="_"
+        names(pairwiseCompsFdr(nst)), "AdjPVal", sep="_"
     )
-    fdrMat <- data.frame(nst@pairwiseCompsFdr)
+    fdrMat <- data.frame(pairwiseCompsFdr(nst))
     colnames(fdrMat) <- pairwiseHeadFdr
     
     pairwiseHeadFold <- paste(
-        names(nst@pairwiseCompsFold), "log2FoldChange", sep="_"
+        names(pairwiseCompsFold(nst)), "log2FoldChange", sep="_"
     )
-    foldMat <- data.frame(nst@pairwiseCompsFold)
+    foldMat <- data.frame(pairwiseCompsFold(nst))
     colnames(foldMat) <- pairwiseHeadFold
     
-    aveMat <- data.frame(nst@pairwiseCompsAve)
-    outDf <- cbind(nst@annotMat, pMat, fdrMat, foldMat, 
-                   featureAvg=aveMat[, 1], nst@dataMat)
+    aveMat <- data.frame(pairwiseCompsAve(nst))
+    outDf <- cbind(annotMat(nst), pMat, fdrMat, foldMat, 
+                   featureAvg=aveMat[, 1], dataMat(nst))
     outDf
 }
 
@@ -205,7 +205,7 @@ generateStatsReport <- function(nst, jobName, jobDir, plotRows=3, plotCols=4) {
 #' @keywords internal
 plotContrastPHists <- function(nst, jobName, currentLayout, pageno) {
 
-    contrastPLists <- nst@pairwiseCompsP
+    contrastPLists <- pairwiseCompsP(nst)
     histPlots <- list()
     
     for (i in seq_len(length(contrastPLists))) {

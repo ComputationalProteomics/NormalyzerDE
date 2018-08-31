@@ -54,7 +54,7 @@ calculateReplicateCV <- function(methodList, sampleReplicateGroups) {
     
     methodCount <- length(methodList)
     numberFeatures <- nrow(methodList[[1]])
-    conditionLevels <- length(levels(as.factor(unlist(sampleReplicateGroups))))
+    conditionLevels <- length(unique(unlist(sampleReplicateGroups)))
     avgCVPerNormAndReplicates <- matrix(
         nrow=conditionLevels, 
         ncol=methodCount, 
@@ -66,7 +66,8 @@ calculateReplicateCV <- function(methodList, sampleReplicateGroups) {
         processedDataMatrix <- methodList[[methodIndex]]
         featureCondCVs <- matrix(
             nrow=nrow(processedDataMatrix), 
-            ncol=length(levels(as.factor(unlist(sampleReplicateGroups)))), 
+            ncol=length(unique(unlist(sampleReplicateGroups))), 
+            # ncol=length(levels(as.factor(unlist(sampleReplicateGroups)))), 
             byrow=TRUE)
         
         for (i in seq_len(nrow(processedDataMatrix))) {
@@ -127,7 +128,7 @@ calculateFeatureCV <- function(methodList) {
 calculateAvgMadMem <- function(methodList, sampleReplicateGroups) {
     
     methodCount <- length(methodList)
-    conditionLevels <- length(levels(as.factor(unlist(sampleReplicateGroups))))
+    conditionLevels <- length(unique(unlist(sampleReplicateGroups)))
     condAvgMadMat <- matrix(nrow=conditionLevels, ncol=methodCount, byrow=TRUE)
     indexList <- getIndexList(sampleReplicateGroups)
     
@@ -137,7 +138,7 @@ calculateAvgMadMem <- function(methodList, sampleReplicateGroups) {
         
         featureMedianAbsDevMat <- matrix(
             nrow=nrow(processedDataMatrix), 
-            ncol=length(levels(as.factor(unlist(sampleReplicateGroups)))), 
+            ncol=length(unique(unlist(sampleReplicateGroups))), 
             byrow=TRUE)
         
         for (sampleIndex in seq_len(length(names(indexList)))) {
