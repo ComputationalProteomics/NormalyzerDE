@@ -18,8 +18,6 @@
 #' normResultsWithEval <- analyzeNormalizations(normResults)
 analyzeNormalizations <- function(nr, categoricalAnova=FALSE) {
     
-    # browser()
-    
     nds <- nds(nr)
     ner <- NormalyzerEvaluationResults()
     ner <- calculateCV(ner, nr)
@@ -64,19 +62,39 @@ calculateReplicateCV <- function(methodList, sampleReplicateGroups) {
     for (methodIndex in seq_len(methodCount)) {
         
         processedDataMatrix <- methodList[[methodIndex]]
-        featureCondCVs <- matrix(
-            nrow=nrow(processedDataMatrix), 
-            ncol=length(unique(unlist(sampleReplicateGroups))), 
-            byrow=TRUE)
         
+        # Do some double checking of logic here, so variables are named
+        # correctly
+        # calculateFeatureCVs <- function(index, groups) {
+        #     featureCVs <- RcmdrMisc::numSummary(
+        #         processedDataMatrix[index, ], 
+        #         statistics=c("cv"), 
+        #         groups=groups)
+        #     featureCVs$table
+        # }
+        # 
+        # featureCondCVs <- t(vapply(
+        #     seq_len(nrow(processedDataMatrix)),
+        #     calculateFeatureCVs,
+        #     rep(0, length(unique(sampleReplicateGroups))),
+        #     groups=unlist(sampleReplicateGroups)
+        # ))
+
+        featureCondCVs <- matrix(
+            nrow=nrow(processedDataMatrix),
+            ncol=length(unique(unlist(sampleReplicateGroups))),
+            byrow=TRUE)
+
         for (i in seq_len(nrow(processedDataMatrix))) {
-            
+
             featureCVs <- RcmdrMisc::numSummary(
-                processedDataMatrix[i, ], 
-                statistics=c("cv"), 
+                processedDataMatrix[i, ],
+                statistics=c("cv"),
                 groups=unlist(sampleReplicateGroups))
             featureCondCVs[i, ] <- featureCVs$table
         }
+        
+        # browser()
         
         # Calculate mean CV for all features for each condition
         summedCondCVs <- colMeans(featureCondCVs, na.rm=TRUE)
@@ -337,7 +355,7 @@ calculateANOVAPValues <- function(methodList,
 #' @return lowVarFeaturesAverageCVs Average CV values for lowly variable
 #' features in each normalization approach
 #' @keywords internal
-findLowlyVariableFeatures <- function(referenceFDR, methodList) {
+findLowlyVariableFeaturesCVs <- function(referenceFDR, methodList) {
     
     fivePercCount <- 5 * length(referenceFDR) / 100
     pThresLowVal <- min(utils::head(rev(sort(referenceFDR)), n=fivePercCount))

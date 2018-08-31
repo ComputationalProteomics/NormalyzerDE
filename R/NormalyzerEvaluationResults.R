@@ -309,7 +309,7 @@ setMethod("calculateSignificanceMeasures", "NormalyzerEvaluationResults",
               anovaPValsWithNA <- calculateANOVAPValues(methodList, sampleReplicateGroups, categoricalAnova)
               log2AnovaFDR <- stats::p.adjust(anovaPValsWithNA[, 1][!is.na(anovaPValsWithNA[, 1])], method="BH")
               
-              lowVarFeaturesCVs <- findLowlyVariableFeatures(log2AnovaFDR, methodList)
+              lowVarFeaturesCVs <- findLowlyVariableFeaturesCVs(log2AnovaFDR, methodList)
               lowVarFeaturesCVsPercDiff <- vapply(
                       seq_along(lowVarFeaturesCVs),
                       function(sampleIndex) {

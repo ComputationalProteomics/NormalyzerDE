@@ -141,7 +141,7 @@ normalyzer <- function(
         if (!quiet) message("[Step 3/5] skipAnalysis flag set so no analysis 
                           performed")
     }
-    
+
     if (!quiet) message("[Step 4/5] Writing matrices to file")
     writeNormalizedDatasets(normalyzerResultsObject, jobDir)
     if (!quiet) message("[Step 4/5] Matrices successfully written")

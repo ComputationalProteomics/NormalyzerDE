@@ -1,5 +1,7 @@
 context("analyzeResults.R")
 
+# browser()
+
 data("example_data_only_values")
 data("example_design")
 test_design <- example_design[example_design$group %in% c("1", "2", "3"), ]
@@ -8,7 +10,7 @@ group_header <- test_design$group
 unique_groups <- unique(group_header)
 
 data("regression_test_nr")
-ner <- ner(regression_test_nr)
+regression_test_ner <- ner(regression_test_nr)
 nds <- nds(regression_test_nr)
 
 sampleReplicateGroups <- sampleReplicateGroups(nds)
@@ -126,12 +128,12 @@ test_that("calculateANOVAPValues", {
     )
 }) 
 
-test_that("findLowlyVariableFeatures", {
+test_that("findLowlyVariableFeaturesCVs", {
     
-    expected_out <- nonsiganfdrlist(regression_test_ner)
+    expected_out <- lowVarFeaturesCVs(regression_test_ner)
     log2AnovaFDR <- stats::p.adjust(
         anova_pvalues[, 1][!is.na(anova_pvalues[, 1])], method="BH")
-    out <- findLowlyVariableFeatures(log2AnovaFDR, normMatrices)
+    out <- findLowlyVariableFeaturesCVs(log2AnovaFDR, normMatrices)
     
     expect_that(
         all.equal(
