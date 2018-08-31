@@ -60,6 +60,7 @@ test_that("calculateReplicateCV", {
     
     expected_out <- avgcvmem(regression_test_ner)
     out <- calculateReplicateCV(normMatrices, sampleReplicateGroups)
+    dimnames(out) <- NULL
     
     expect_that(
         all.equal(
@@ -75,6 +76,9 @@ test_that("calculateFeatureCV", {
     expected_out <- featureCVPerMethod(regression_test_ner)
     out <- calculateFeatureCV(normMatrices)
     
+    print("Comparing without header for now")
+    dimnames(out) <- NULL
+    
     expect_that(
         all.equal(
             expected_out,
@@ -88,6 +92,7 @@ test_that("calculateAvgMadMem", {
     
     expected_out <- avgmadmem(regression_test_ner)
     out <- calculateAvgMadMem(normMatrices, sampleReplicateGroups)
+    dimnames(out) <- NULL
     
     expect_that(
         all.equal(

@@ -50,57 +50,35 @@ analyzeNormalizations <- function(nr, categoricalAnova=FALSE) {
 #' @keywords internal
 calculateReplicateCV <- function(methodList, sampleReplicateGroups) {
     
-    methodCount <- length(methodList)
-    numberFeatures <- nrow(methodList[[1]])
-    conditionLevels <- length(unique(unlist(sampleReplicateGroups)))
-    avgCVPerNormAndReplicates <- matrix(
-        nrow=conditionLevels, 
-        ncol=methodCount, 
-        byrow=TRUE
-    )
+    calculateFeatureCVs <- function(feature, groups) {
+        featureCVs <- RcmdrMisc::numSummary(
+            feature,
+            statistics=c("cv"),
+            groups=groups)
+        featureCVs$table
+    }
     
-    for (methodIndex in seq_len(methodCount)) {
+    calculateMethodReplicateCVs <- function(methodData, groups) {
         
-        processedDataMatrix <- methodList[[methodIndex]]
-        
-        # Do some double checking of logic here, so variables are named
-        # correctly
-        # calculateFeatureCVs <- function(index, groups) {
-        #     featureCVs <- RcmdrMisc::numSummary(
-        #         processedDataMatrix[index, ], 
-        #         statistics=c("cv"), 
-        #         groups=groups)
-        #     featureCVs$table
-        # }
-        # 
-        # featureCondCVs <- t(vapply(
-        #     seq_len(nrow(processedDataMatrix)),
-        #     calculateFeatureCVs,
-        #     rep(0, length(unique(sampleReplicateGroups))),
-        #     groups=unlist(sampleReplicateGroups)
-        # ))
-
-        featureCondCVs <- matrix(
-            nrow=nrow(processedDataMatrix),
-            ncol=length(unique(unlist(sampleReplicateGroups))),
-            byrow=TRUE)
-
-        for (i in seq_len(nrow(processedDataMatrix))) {
-
-            featureCVs <- RcmdrMisc::numSummary(
-                processedDataMatrix[i, ],
-                statistics=c("cv"),
-                groups=unlist(sampleReplicateGroups))
-            featureCondCVs[i, ] <- featureCVs$table
-        }
-        
-        # browser()
+        featureCondCVs <- t(apply(
+            methodData,
+            1,
+            calculateFeatureCVs,
+            groups=sampleReplicateGroups
+        ))
         
         # Calculate mean CV for all features for each condition
         summedCondCVs <- colMeans(featureCondCVs, na.rm=TRUE)
-        avgCVPerNormAndReplicates[, methodIndex] <- summedCondCVs * 100
+        summedCondCVs * 100
     }
     
+    avgCVPerNormAndReplicates <- vapply(
+        methodList,
+        calculateMethodReplicateCVs,
+        rep(0, length(unique(sampleReplicateGroups))),
+        groups=sampleReplicateGroups
+    )
+        
     avgCVPerNormAndReplicates
 }
 
@@ -117,21 +95,24 @@ calculateFeatureCV <- function(methodList) {
     
     methodCount <- length(methodList)
     numberFeatures <- nrow(methodList[[1]])
-    methodFeatureCVMatrix <- matrix(nrow=numberFeatures, ncol=methodCount)
 
-    for (methodIndex in seq_len(methodCount)) {
-        
-        processedDataMatrix <- methodList[[methodIndex]]
-        # Calculate sample-wise CV
+    calculateFeatureCVVector <- function(processedDataMatrix) {
         cv <- function(row) {
             stDev <- stats::sd(row, na.rm=TRUE)
             meanVal <- mean(unlist(row), na.rm=TRUE)
             stDev / mean(meanVal) * 100
         }
         featureCVs <- apply(processedDataMatrix, 1, cv)
-        methodFeatureCVMatrix[, methodIndex] <- featureCVs
+        featureCVs
     }
     
+    methodFeatureCVMatrix <- vapply(
+        methodList,
+        calculateFeatureCVVector,
+        rep(0, numberFeatures)
+    )
+
+    colnames(methodFeatureCVMatrix) <- names(methodList)
     methodFeatureCVMatrix
 }
 
@@ -144,32 +125,40 @@ calculateFeatureCV <- function(methodList) {
 #' @keywords internal
 calculateAvgMadMem <- function(methodList, sampleReplicateGroups) {
     
-    methodCount <- length(methodList)
-    conditionLevels <- length(unique(unlist(sampleReplicateGroups)))
-    condAvgMadMat <- matrix(nrow=conditionLevels, ncol=methodCount, byrow=TRUE)
-    indexList <- getIndexList(sampleReplicateGroups)
-    
-    for (methodIndex in seq_len(methodCount)) {
-        
-        processedDataMatrix <- methodList[[methodIndex]]
-        
-        featureMedianAbsDevMat <- matrix(
-            nrow=nrow(processedDataMatrix), 
-            ncol=length(unique(unlist(sampleReplicateGroups))), 
-            byrow=TRUE)
-        
-        for (sampleIndex in seq_along(names(indexList))) {
-            repVal <- names(indexList)[sampleIndex]
-            cols <- indexList[[repVal]]
-            featureMedianAbsDevMat[, sampleIndex] <- apply(
-                processedDataMatrix[, cols], 
-                1, 
-                function(x) { stats::mad(x, na.rm=TRUE) })
-        }
-        
-        condAvgMadMat[, methodIndex] <- colMeans(
-            featureMedianAbsDevMat, na.rm=TRUE)
+    groupIndexList <- getIndexList(sampleReplicateGroups)
+
+    calculateAvgFeatureMadForGroup <- function(groupIndices, methodData) {
+        groupData <- methodData[, groupIndices]
+        featureMedianAbsDev <- apply(
+            groupData,
+            1,
+            function(groupRow) { stats::mad(groupRow, na.rm=TRUE) }
+        )
+        featureMedianAbsDev
     }
+        
+    methodSpecificCalculation <- function(methodData, groups, indexList) {
+
+        # Extracts groups of replicates and calculate MAD for each feature
+        featureMADMat <- vapply(
+            indexList,
+            calculateAvgFeatureMadForGroup,
+            rep(0, nrow(methodData)),
+            methodData=methodData
+        )
+        
+        methodRepGroupMADMean <- colMeans(featureMADMat, na.rm=TRUE)
+        methodRepGroupMADMean
+    }
+    
+    condAvgMadMat <- vapply(
+        methodList,
+        methodSpecificCalculation,
+        rep(0, length(unique(sampleReplicateGroups))),
+        groups=sampleReplicateGroups,
+        indexList=groupIndexList
+    ) 
+
     condAvgMadMat
 }
 
