@@ -378,9 +378,9 @@ plotReplicateVariance <- function(nr, currentLayout, pageno) {
     currentjob <- jobName(nds)
     
     ner <- ner(nr)
-    avgCVMem <- ner@avgcvmem
-    avgMADMem <- ner@avgmadmem
-    avgVarMem <- ner@avgvarmem
+    avgCVMem <- avgcvmem(ner)
+    avgMADMem <- avgmadmem(ner)
+    avgVarMem <- avgvarmem(ner)
     
     tout <- rbind(c(1, 2, 3), c(4))
     graphics::layout(tout)
@@ -474,11 +474,11 @@ plotReplicateVarAndStableVariables <- function(nr, currentLayout, pageno) {
     methodnames <- getUsedMethodNames(nr)
     currentjob <- jobName(nds)
     
-    ner <- nr@ner
-    lowVarFeaturesCVsPercDiff <- ner@lowVarFeaturesCVsPercDiff
-    avgcvmempdiff <- ner@avgcvmempdiff
-    avgmadmempdiff <- ner@avgmadmempdiff
-    avgvarmempdiff <- ner@avgvarmempdiff
+    ner <- ner(nr)
+    lowVarFeaturesCVsPercDiff <- lowVarFeaturesCVsPercDiff(ner)
+    avgcvmempdiff <- avgcvmempdiff(ner)
+    avgmadmempdiff <- avgmadmempdiff(ner)
+    avgvarmempdiff <- avgvarmempdiff(ner)
     
     tout <- rbind(c(1, 2, 3), c(4, 5, 5))
     graphics::layout(tout)
@@ -1048,9 +1048,9 @@ plotMeanSD <- function(nr, currentLayout, pageno) {
 #' @keywords internal
 plotCorrelation <- function(nr, currentLayout, pageno) {
     
-    ner <- nr@ner
-    repCorPear <- ner@repCorPear
-    repCorSpear <- ner@repCorSpear
+    ner <- ner(nr)
+    repCorPear <- repCorPear(ner)
+    repCorSpear <- repCorSpear(ner)
     
     nds <- nds(nr)
     methodnames <- getUsedMethodNames(nr)
@@ -1164,10 +1164,10 @@ plotDendrograms <- function(nr, currentLayout, pageno) {
 plotPHist <- function(nr, currentLayout, pageno) {
     
     nds <- nds(nr)
-    ner <- nr@ner
+    ner <- ner(nr)
     methodnames <- getUsedMethodNames(nr)
     currentjob <- jobName(nds)
-    anovaP <- ner@anovaP
+    anovaP <- anovaP(ner)
     histPlots <- list()
     
     for (i in seq_len(length(methodnames))) {

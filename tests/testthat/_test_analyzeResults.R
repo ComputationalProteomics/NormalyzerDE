@@ -56,7 +56,7 @@ test_that("calculateCorrSum gives same Spearman output", {
 
 test_that("calculateReplicateCV", {
     
-    expected_out <- regression_test_ner@avgcvmem
+    expected_out <- avgcvmem(regression_test_ner)
     out <- calculateReplicateCV(normMatrices, sampleReplicateGroups)
     
     expect_that(
@@ -70,7 +70,7 @@ test_that("calculateReplicateCV", {
 
 test_that("calculateFeatureCV", {
     
-    expected_out <- regression_test_ner@featureCVPerMethod
+    expected_out <- featureCVPerMethod(regression_test_ner)
     out <- calculateFeatureCV(normMatrices)
     
     expect_that(
@@ -84,7 +84,7 @@ test_that("calculateFeatureCV", {
 
 test_that("calculateAvgMadMem", {
     
-    expected_out <- regression_test_ner@avgmadmem
+    expected_out <- avgmadmem(regression_test_ner)
     out <- calculateAvgMadMem(normMatrices, sampleReplicateGroups)
     
     expect_that(
@@ -98,7 +98,7 @@ test_that("calculateAvgMadMem", {
 
 test_that("calculateAvgReplicateVariation", {
     
-    expected_out <- regression_test_ner@avgvarmem
+    expected_out <- avgvarmem(regression_test_ner)
     out <- calculateAvgReplicateVariation(normMatrices, sampleReplicateGroups)
     
     expect_that(
@@ -128,7 +128,7 @@ test_that("calculateANOVAPValues", {
 
 test_that("findLowlyVariableFeatures", {
     
-    expected_out <- regression_test_ner@nonsiganfdrlist
+    expected_out <- nonsiganfdrlist(regression_test_ner)
     log2AnovaFDR <- stats::p.adjust(
         anova_pvalues[, 1][!is.na(anova_pvalues[, 1])], method="BH")
     out <- findLowlyVariableFeatures(log2AnovaFDR, normMatrices)
@@ -159,7 +159,7 @@ test_that("calculatePercentageAvgDiffInMat_small_test", {
 
 test_that("calculatePercentageAvgDiffInMat_MAD", {
     
-    expected_out <- regression_test_ner@avgmadmempdiff
+    expected_out <- avgmadmempdiff(regression_test_ner)
     avgMadMemMat <- calculateAvgMadMem(normMatrices, sampleReplicateGroups)
     out <- calculatePercentageAvgDiffInMat(avgMadMemMat)
     
@@ -174,7 +174,7 @@ test_that("calculatePercentageAvgDiffInMat_MAD", {
 
 test_that("calculatePercentageAvgDiffInMat_CV", {
     
-    expected_out <- regression_test_ner@avgcvmempdiff
+    expected_out <- avgcvmempdiff(regression_test_ner)
     avgCVMat <- calculateReplicateCV(normMatrices, sampleReplicateGroups)
     out <- calculatePercentageAvgDiffInMat(avgCVMat)
     

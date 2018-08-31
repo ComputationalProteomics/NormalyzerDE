@@ -38,7 +38,7 @@ writeNormalizedDatasets <- function(nr, jobdir, includePairwiseComparisons=FALSE
         outputTable <- cbind(annotationColumns, methodlist[[sampleIndex]])
 
         if (includeAnovaP) {
-            anovaP <- ner@anovaP[,sampleIndex]
+            anovaP <- anovaP(ner)[,sampleIndex]
             
             if (nrow(outputTable) != length(anovaP)) {
                 stop("Table row count: ", nrow(outputTable), 
@@ -54,8 +54,8 @@ writeNormalizedDatasets <- function(nr, jobdir, includePairwiseComparisons=FALSE
             ner <- ner(nr)
             for (comp in names(pairwiseComps(ner))) {
                 
-                compColP <- ner@pairwiseComps[[comp]][, sampleIndex]
-                compColFdr <- ner@pairwiseCompsFdr[[comp]][, sampleIndex]
+                compColP <- pairwiseComps(ner)[[comp]][, sampleIndex]
+                compColFdr <- pairwiseCompsFdr(ner)[[comp]][, sampleIndex]
                 
                 newColnames <- c(
                     colnames(outputTable), 
@@ -68,7 +68,7 @@ writeNormalizedDatasets <- function(nr, jobdir, includePairwiseComparisons=FALSE
         }
         
         if (includeCvCol) {
-            cvCol <- ner@featureCVPerMethod[, sampleIndex]
+            cvCol <- featureCVPerMethod(ner)[, sampleIndex]
             outputTable <- cbind(outputTable, CV=cvCol)
         }
 
