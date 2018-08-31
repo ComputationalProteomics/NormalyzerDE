@@ -162,13 +162,13 @@ test_that("calculateAvgReplicateVariation", {
 test_that("calculateANOVAPValues", {
     
     expected_out <- anovaP(regression_test_ner)
-    nds <- nds(regression_test_nr)
-    sampleReplicateGroups <- sampleReplicateGroups(nds)
-    
+    anova_pvalues_copy <- anova_pvalues
+    dimnames(anova_pvalues_copy) <- NULL
+
     expect_that(
         all.equal(
             expected_out,
-            anova_pvalues
+            anova_pvalues_copy
         ),
         is_true()
     )
@@ -177,9 +177,15 @@ test_that("calculateANOVAPValues", {
 test_that("findLowlyVariableFeaturesCVs", {
     
     expected_out <- lowVarFeaturesCVs(regression_test_ner)
-    log2AnovaFDR <- stats::p.adjust(
-        anova_pvalues[, 1][!is.na(anova_pvalues[, 1])], method="BH")
+    
+    anova_pvalues_contrast_nonna <- !is.na(anova_pvalues[, 1])
+    log2AnovaFDR <- rep(NA, length(anova_pvalues_contrast_nonna))
+    log2AnovaFDR[anova_pvalues_contrast_nonna] <- stats::p.adjust(
+        anova_pvalues[, 1][anova_pvalues_contrast_nonna], 
+        method="BH")
+    
     out <- findLowlyVariableFeaturesCVs(log2AnovaFDR, normMatrices)
+    dimnames(out) <- NULL
     
     expect_that(
         all.equal(

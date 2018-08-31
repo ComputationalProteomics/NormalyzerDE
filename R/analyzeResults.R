@@ -264,18 +264,18 @@ calculateCorrSum <- function(methodData, allReplicateGroups,
     
     corSums <- vector()
     for (groupNbr in seq_along(sampleGroupsWithReplicates)) {
-        
+
         specificReplicateVals <- as.matrix(
             methodData[, which(allReplicateGroups == sampleGroupsWithReplicates[groupNbr])])
         class(specificReplicateVals) <- "numeric"
         corVals <- stats::cor(
-            specificReplicateVals , 
-            use="pairwise.complete.obs", 
+            specificReplicateVals ,
+            use="pairwise.complete.obs",
             method=corrType)
-        
+
         for (index in seq_len(ncol(specificReplicateVals) - 1)) {
             corSums <- c(
-                corSums, 
+                corSums,
                 corVals[index, -(seq_len(index)), drop="FALSE"]
             )
         }
@@ -299,19 +299,14 @@ calculateANOVAPValues <- function(methodList,
                                   sampleReplicateGroups, 
                                   categoricalANOVA) {
     
-    anovaPVals <- list()
-    methodCount <- length(methodList)
-    anovaPValsWithNA <- matrix(NA, ncol=methodCount, nrow=nrow(methodList[[1]]))
-  
-    for (methodIndex in seq_len(methodCount)) {
+    calculateANOVAsForMethod <- function(methodData, sampleReplicateGroups) {
         
-        processedDataMatrix <- methodList[[methodIndex]]
         naFilterContrast <- getRowNAFilterContrast(
-            processedDataMatrix,
+            methodData,
             sampleReplicateGroups,
             2)
         
-        naFilteredData <- processedDataMatrix[naFilterContrast,]
+        naFilteredData <- methodData[naFilterContrast,]
         
         if (categoricalANOVA) {
             testLevels <- factor(sampleReplicateGroups)
@@ -327,9 +322,18 @@ calculateANOVAPValues <- function(methodList,
                 summary(stats::aov(unlist(sampleIndex)~testLevels))[[1]][[5]][1]
             } 
         )
-        
-        anovaPValsWithNA[naFilterContrast, methodIndex] <- anovaPValCol
+
+        anovaPValsWithNACol <- rep(NA, nrow(methodData))        
+        anovaPValsWithNACol[naFilterContrast] <- anovaPValCol
+        anovaPValsWithNACol
     }
+    
+    anovaPValsWithNA <- vapply(
+        methodList,
+        calculateANOVAsForMethod,
+        rep(0, nrow(methodList[[1]])),
+        sampleReplicateGroups=sampleReplicateGroups
+    )
     
     anovaPValsWithNA
 }
@@ -345,29 +349,67 @@ calculateANOVAPValues <- function(methodList,
 #' @keywords internal
 findLowlyVariableFeaturesCVs <- function(referenceFDR, methodList) {
     
-    fivePercCount <- 5 * length(referenceFDR) / 100
-    pThresLowVal <- min(utils::head(rev(sort(referenceFDR)), n=fivePercCount))
-    nbrAbovePThres <- sum(referenceFDR >= pThresLowVal)
+    # browser()
+    
+    referenceFDRWoNA <- na.omit(referenceFDR)
+    
+    fivePercCount <- 5 * length(referenceFDRWoNA) / 100
+    pThresLowVal <- min(utils::head(rev(sort(referenceFDRWoNA)), n=fivePercCount))
+    nbrAbovePThres <- sum(referenceFDRWoNA >= pThresLowVal)
     
     if (is.infinite(pThresLowVal) || nbrAbovePThres == 0) {
         warning("Too few successful ANOVA calculations to generate lowly ",
                 "variable features, skipping")
         return(NULL)
     }
-        
-    lowlyVariableFeatures <- which(referenceFDR >= pThresLowVal)
+    
+    lowlyVariableFeatures <- referenceFDR >= pThresLowVal
+    
+    if (length(lowlyVariableFeatures) != nrow(methodList[[1]])) {
+        stop("Lowly variable features contrast needs to be same length as ",
+             "number of rows in matrix")
+    }
+    
+    # lowlyVariableFeatures <- which(referenceFDR >= pThresLowVal)
     lowVarFeaturesAverageCVs <- vector()
     methodCount <- length(methodList)
+
+    # browser()
     
-    for (mlist in seq_len(methodCount)) {
-        lowVarFeatures <- methodList[[mlist]][lowlyVariableFeatures, ]
-        lowVarFeaturesAverageCVs[mlist] <- mean(
+    calculateAverageCVs <- function(methodData, lowVarContrast) {
+        
+        lowVarFeatures <- methodData[lowVarContrast, ]
+        averageCVs <- mean(
             apply(
                 lowVarFeatures, 
                 1, 
                 function(sampleIndex) raster::cv(sampleIndex, na.rm=TRUE)), 
             na.rm=TRUE)
+        averageCVs
     }
+        
+    lowVarFeaturesAverageCVs <- vapply(
+        methodList,
+        calculateAverageCVs,
+        0,
+        lowVarContrast=lowlyVariableFeatures
+    )
+    
+    # for (mlist in seq_len(methodCount)) {
+    #     lowVarFeatures <- methodList[[mlist]][lowlyVariableFeatures, ]
+    #     lowVarFeaturesAverageCVs[mlist] <- mean(
+    #         apply(
+    #             lowVarFeatures, 
+    #             1, 
+    #             function(sampleIndex) raster::cv(sampleIndex, na.rm=TRUE)), 
+    #         na.rm=TRUE)
+    # }
     
     lowVarFeaturesAverageCVs
 }
+
+
+
+
+
+
