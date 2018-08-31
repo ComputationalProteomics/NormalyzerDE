@@ -22,3 +22,50 @@ test_that("getRowNAFilterContrast", {
         is_true()
     )
 })
+
+test_that("getReplicateSortedData_constant", {
+
+    rawMat <- as.matrix(data.frame(
+        "A"=c(1, 1, 1), 
+        "A"=c(2, 2, 2),
+        "B"=c(3, 3, 3),
+        "B"=c(4, 4, 4)
+    ))
+    
+    groups <- c("A", "A", "B", "B")
+    sortedMat <- getReplicateSortedData(rawMat, groups)
+            
+    expect_that(
+        all.equal(
+            rawMat,
+            sortedMat),
+        is_true()
+    )
+})
+
+test_that("getReplicateSortedData_reordering", {
+    
+    rawMat <- as.matrix(data.frame(
+        "B"=c(3, 3, 3),
+        "A"=c(1, 1, 1), 
+        "B"=c(4, 4, 4),
+        "A"=c(2, 2, 2)
+    ))
+    
+    expectedMat <- as.matrix(data.frame(
+        "A"=c(1, 1, 1), 
+        "A"=c(2, 2, 2),
+        "B"=c(3, 3, 3),
+        "B"=c(4, 4, 4)
+    ))
+    
+    groups <- c("B", "A", "B", "A")
+    sortedMat <- getReplicateSortedData(rawMat, groups)
+    
+    expect_that(
+        all.equal(
+            sortedMat,
+            expectedMat),
+        is_true()
+    )
+})

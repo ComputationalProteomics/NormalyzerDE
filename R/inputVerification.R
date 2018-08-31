@@ -278,23 +278,6 @@ verifyDesignMatrix <- function(fullMatrix, designMatrix, sampleCol="sample") {
 }
 
 
-#' Get dataframe with raw data column sorted on replicates
-#' 
-#' @param rawDataOnly Dataframe with unparsed input data matrix.
-#' @param groups Vector containing condition levels.
-#' @return rawData sorted on replicate
-#' @keywords internal
-getReplicateSortedData <- function(rawDataOnly, groups) {
-
-    factorLevels <- sort(as.numeric(unique(groups)))
-    tempDf <- NULL
-
-    for (i in seq_along(factorLevels)) {
-        tempDf <- cbind(tempDf, rawDataOnly[, which(groups == factorLevels[as.numeric(i)]), drop=FALSE])
-    }
-
-    tempDf
-}
 
 
 #' Replace 0 values with NA in input data

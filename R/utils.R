@@ -21,6 +21,30 @@ setupJobDir <- function(jobName, outputDir) {
     jobDir
 }
 
+#' Get dataframe with raw data column sorted on replicates
+#' 
+#' @param rawDataOnly Dataframe with unparsed input data matrix.
+#' @param groups Vector containing condition levels.
+#' @return rawData sorted on replicate
+#' @keywords internal
+getReplicateSortedData <- function(rawDataOnly, groups) {
+
+    indexList <- getIndexList(groups)
+    orderedIndices <- unlist(indexList[sort(names(indexList))])
+    
+    repSortDf <- vapply(
+        orderedIndices,
+        function(index) {
+            rawDataOnly[, index]
+        },
+        rawDataOnly[, 1]
+    )
+    
+    colnames(repSortDf) <- colnames(rawDataOnly)[orderedIndices]
+    
+    repSortDf
+}
+
 #' Create directory, or return error if already present
 #' 
 #' @param targetPath Path where to attempt to create directory
