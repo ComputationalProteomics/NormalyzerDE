@@ -176,8 +176,11 @@ loadRawDataFromFile <- function(inputPath) {
         },
         
         warning=function(w) {
-            message("Provided input file (", inputPath, ") not found:")
-            stop("Please provide a valid input file.")
+            message("An issue was encountered when attempting to load:", 
+                    inputPath,
+                    "Warning:",
+                    w)
+            stop("Please investigate the warning and provide a valid input file.")
         }
     )
     
