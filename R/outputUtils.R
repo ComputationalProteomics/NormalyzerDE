@@ -24,8 +24,8 @@ writeNormalizedDatasets <- function(nr, jobdir, includePairwiseComparisons=FALSE
                                     normSuffix="-normalized.txt",
                                     rawdataName="submitted_rawdata.txt") {
     
-    nds <- nr@nds
-    ner <- nr@ner
+    nds <- nds(nr)
+    ner <- ner(nr)
 
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
@@ -51,7 +51,8 @@ writeNormalizedDatasets <- function(nr, jobdir, includePairwiseComparisons=FALSE
         
         if (includePairwiseComparisons) {
             
-            for (comp in names(nr@ner@pairwiseComps)) {
+            ner <- ner(nr)
+            for (comp in names(pairwiseComps(ner))) {
                 
                 compColP <- ner@pairwiseComps[[comp]][, sampleIndex]
                 compColFdr <- ner@pairwiseCompsFdr[[comp]][, sampleIndex]

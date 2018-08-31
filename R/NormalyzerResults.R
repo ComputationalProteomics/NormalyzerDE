@@ -1,14 +1,14 @@
-slotNamesMap <- c("data2log2"="Log2",
-                  "data2loess"="Loess-G",
-                  "data2vsn"="VSN-G",
-                  "data2GI"="AI-G",
-                  "data2med"="MedI-G",
-                  "data2mean"="MeanI-G",
-                  "data2quantile"="Quantile",
-                  "data2rtMed"="RT-med",
-                  "data2rtMean"="RT-mean",
-                  "data2rtLoess"="RT-Loess",
-                  "data2rtVSN"="RT-VSN")
+slotNamesMap <- c("log2Matrix"="Log2",
+                  "loessMatrix"="Loess-G",
+                  "vsnMatrix"="VSN-G",
+                  "GIMatrix"="AI-G",
+                  "medMatrix"="MedI-G",
+                  "meanMatrix"="MeanI-G",
+                  "quantileMatrix"="Quantile",
+                  "rtMedMatrix"="RT-med",
+                  "rtMeanMatrix"="RT-mean",
+                  "rtLoessMatrix"="RT-Loess",
+                  "rtVSNMatrix"="RT-VSN")
 
 #' Representation of the results from performing normalization over a dataset
 #' 
@@ -22,21 +22,21 @@ slotNamesMap <- c("data2log2"="Log2",
 #' @slot methodnames Short names for included normalization methods
 #' @slot furtherNormalizationMinThreshold Min threshold for running extended 
 #' normalizations
-#' @slot data2log2 Log2 of filtered raw data
+#' @slot log2Matrix Log2 transformed filtered raw data
 #' @slot fittedLR Fitted Loess regression 
-#' @slot data2loess Loess normalization
+#' @slot loessMatrix Loess normalization
 #' @slot globalfittedRLR Global fitted RLR normalization
-#' @slot data2vsn Global VSN normalized data
-#' @slot data2GI GI-normalized data
-#' @slot data2med Median normalized data
-#' @slot data2mean Mean normalized data
-#' @slot data2quantile Quantile normalized data
-#' @slot data2rtMed Retention time normalized for median
-#' @slot data2rtMean Retention time normalized for Mean
-#' @slot data2rtLoess Retention time normalized for Loess
-#' @slot data2rtVSN Retention time normalized for VSN
-#' @slot data2ctr CTR normalized data
-#' @slot data2mad MAD normalized data
+#' @slot vsnMatrix Global VSN normalized data
+#' @slot GIMatrix GI-normalized data
+#' @slot medMatrix Median normalized data
+#' @slot meanMatrix Mean normalized data
+#' @slot quantileMatrix Quantile normalized data
+#' @slot rtMedMatrix Retention time normalized for median
+#' @slot rtMeanMatrix Retention time normalized for Mean
+#' @slot rtLoessMatrix Retention time normalized for Loess
+#' @slot rtVSNMatrix Retention time normalized for VSN
+#' @slot ctrMatrix CTR normalized data
+#' @slot madMatrix MAD normalized data
 #' @export
 NormalyzerResults <- setClass("NormalyzerResults",
                               slots=c(
@@ -46,27 +46,250 @@ NormalyzerResults <- setClass("NormalyzerResults",
                                   methodnames = "character",
                                   furtherNormalizationMinThreshold="numeric",
                                   
-                                  data2log2 = "matrix",
+                                  normalizations = "SummarizedExperiment",
+                                  
+                                  log2Matrix = "matrix",
                                   fittedLR = "matrix",
-                                  data2loess = "matrix",
+                                  loessMatrix = "matrix",
                                   globalfittedRLR = "matrix",
-                                  data2vsn = "matrix",
-                                  data2GI = "matrix",
-                                  data2med = "matrix",
-                                  data2mean = "matrix",
-                                  data2quantile = "matrix",
+                                  vsnMatrix = "matrix",
+                                  GIMatrix = "matrix",
+                                  medMatrix = "matrix",
+                                  meanMatrix = "matrix",
+                                  quantileMatrix = "matrix",
                                   
-                                  data2rtMed = "matrix",
-                                  data2rtMean = "matrix",
-                                  data2rtLoess = "matrix",
-                                  data2rtVSN = "matrix",
+                                  rtMedMatrix = "matrix",
+                                  rtMeanMatrix = "matrix",
+                                  rtLoessMatrix = "matrix",
+                                  rtVSNMatrix = "matrix",
                                   
-                                  data2ctr = "matrix",
-                                  data2mad = "matrix"
+                                  ctrMatrix = "matrix",
+                                  madMatrix = "matrix"
                               ),
                               prototype=prototype(
                                   nds=NULL, 
                                   furtherNormalizationMinThreshold=100))
+
+
+setGeneric("normalizations", function(object) { standardGeneric("normalizations") })
+setMethod("normalizations", signature(object="NormalyzerResults"), 
+          function(object) { slot(object, "normalizations") })
+setGeneric("normalizations<-", function(object, value) { standardGeneric("normalizations<-") })
+setReplaceMethod("normalizations", signature(object="NormalyzerResults"), 
+                 function(object, value) { 
+                     slot(object, "normalizations") <- value
+                     validObject(object)
+                     object
+                 })
+
+setGeneric("nds", function(object) { standardGeneric("nds") })
+setMethod("nds", signature(object="NormalyzerResults"), 
+          function(object) { slot(object, "nds") })
+setGeneric("nds<-", function(object, value) { standardGeneric("nds<-") })
+setReplaceMethod("nds", signature(object="NormalyzerResults"), 
+                 function(object, value) { 
+                     slot(object, "nds") <- value
+                     validObject(object)
+                     object
+                 })
+
+setGeneric("ner", function(object) { standardGeneric("ner") })
+setMethod("ner", signature(object="NormalyzerResults"), 
+          function(object) { slot(object, "ner") })
+setGeneric("ner<-", function(object, value) { standardGeneric("ner<-") })
+setReplaceMethod("ner", signature(object="NormalyzerResults"), 
+                 function(object, value) { 
+                     slot(object, "ner") <- value
+                     validObject(object)
+                     object
+                 })
+
+setGeneric("methodnames", function(object) { standardGeneric("methodnames") })
+setMethod("methodnames", signature(object="NormalyzerResults"), 
+          function(object) { slot(object, "methodnames") })
+setGeneric("methodnames<-", function(object, value) { standardGeneric("methodnames<-") })
+setReplaceMethod("methodnames", signature(object="NormalyzerResults"), 
+                 function(object, value) { 
+                     slot(object, "methodnames") <- value
+                     validObject(object)
+                     object
+                 })
+
+setGeneric("furtherNormalizationMinThreshold", function(object) { standardGeneric("furtherNormalizationMinThreshold") })
+setMethod("furtherNormalizationMinThreshold", signature(object="NormalyzerResults"), 
+          function(object) { slot(object, "furtherNormalizationMinThreshold") })
+setGeneric("furtherNormalizationMinThreshold<-", function(object, value) { standardGeneric("furtherNormalizationMinThreshold<-") })
+setReplaceMethod("furtherNormalizationMinThreshold", signature(object="NormalyzerResults"), 
+                 function(object, value) { 
+                     slot(object, "furtherNormalizationMinThreshold") <- value
+                     validObject(object)
+                     object
+                 })
+
+setGeneric("log2Matrix", function(object) { standardGeneric("log2Matrix") })
+setMethod("log2Matrix", signature(object="NormalyzerResults"), 
+          function(object) { slot(object, "log2Matrix") })
+setGeneric("log2Matrix<-", function(object, value) { standardGeneric("log2Matrix<-") })
+setReplaceMethod("log2Matrix", signature(object="NormalyzerResults"), 
+                 function(object, value) { 
+                     slot(object, "log2Matrix") <- value
+                     validObject(object)
+                     object
+                 })
+
+setGeneric("fittedLR", function(object) { standardGeneric("fittedLR") })
+setMethod("fittedLR", signature(object="NormalyzerResults"), 
+          function(object) { slot(object, "fittedLR") })
+setGeneric("fittedLR<-", function(object, value) { standardGeneric("fittedLR<-") })
+setReplaceMethod("fittedLR", signature(object="NormalyzerResults"), 
+                 function(object, value) { 
+                     slot(object, "fittedLR") <- value
+                     validObject(object)
+                     object
+                 })
+
+setGeneric("loessMatrix", function(object) { standardGeneric("loessMatrix") })
+setMethod("loessMatrix", signature(object="NormalyzerResults"), 
+          function(object) { slot(object, "loessMatrix") })
+setGeneric("loessMatrix<-", function(object, value) { standardGeneric("loessMatrix<-") })
+setReplaceMethod("loessMatrix", signature(object="NormalyzerResults"), 
+                 function(object, value) { 
+                     slot(object, "loessMatrix") <- value
+                     validObject(object)
+                     object
+                 })
+
+setGeneric("globalfittedRLR", function(object) { standardGeneric("globalfittedRLR") })
+setMethod("globalfittedRLR", signature(object="NormalyzerResults"), 
+          function(object) { slot(object, "globalfittedRLR") })
+setGeneric("globalfittedRLR<-", function(object, value) { standardGeneric("globalfittedRLR<-") })
+setReplaceMethod("globalfittedRLR", signature(object="NormalyzerResults"), 
+                 function(object, value) { 
+                     slot(object, "globalfittedRLR") <- value
+                     validObject(object)
+                     object
+                 })
+
+setGeneric("vsnMatrix", function(object) { standardGeneric("vsnMatrix") })
+setMethod("vsnMatrix", signature(object="NormalyzerResults"), 
+          function(object) { slot(object, "vsnMatrix") })
+setGeneric("vsnMatrix<-", function(object, value) { standardGeneric("vsnMatrix<-") })
+setReplaceMethod("vsnMatrix", signature(object="NormalyzerResults"), 
+                 function(object, value) { 
+                     slot(object, "vsnMatrix") <- value
+                     validObject(object)
+                     object
+                 })
+
+setGeneric("GIMatrix", function(object) { standardGeneric("GIMatrix") })
+setMethod("GIMatrix", signature(object="NormalyzerResults"), 
+          function(object) { slot(object, "GIMatrix") })
+setGeneric("GIMatrix<-", function(object, value) { standardGeneric("GIMatrix<-") })
+setReplaceMethod("GIMatrix", signature(object="NormalyzerResults"), 
+                 function(object, value) { 
+                     slot(object, "GIMatrix") <- value
+                     validObject(object)
+                     object
+                 })
+
+setGeneric("medMatrix", function(object) { standardGeneric("medMatrix") })
+setMethod("medMatrix", signature(object="NormalyzerResults"), 
+          function(object) { slot(object, "medMatrix") })
+setGeneric("medMatrix<-", function(object, value) { standardGeneric("medMatrix<-") })
+setReplaceMethod("medMatrix", signature(object="NormalyzerResults"), 
+                 function(object, value) { 
+                     slot(object, "medMatrix") <- value
+                     validObject(object)
+                     object
+                 })
+
+setGeneric("meanMatrix", function(object) { standardGeneric("meanMatrix") })
+setMethod("meanMatrix", signature(object="NormalyzerResults"), 
+          function(object) { slot(object, "meanMatrix") })
+setGeneric("meanMatrix<-", function(object, value) { standardGeneric("meanMatrix<-") })
+setReplaceMethod("meanMatrix", signature(object="NormalyzerResults"), 
+                 function(object, value) { 
+                     slot(object, "meanMatrix") <- value
+                     validObject(object)
+                     object
+                 })
+
+setGeneric("quantileMatrix", function(object) { standardGeneric("quantileMatrix") })
+setMethod("quantileMatrix", signature(object="NormalyzerResults"), 
+          function(object) { slot(object, "quantileMatrix") })
+setGeneric("quantileMatrix<-", function(object, value) { standardGeneric("quantileMatrix<-") })
+setReplaceMethod("quantileMatrix", signature(object="NormalyzerResults"), 
+                 function(object, value) { 
+                     slot(object, "quantileMatrix") <- value
+                     validObject(object)
+                     object
+                 })
+
+setGeneric("rtMedMatrix", function(object) { standardGeneric("rtMedMatrix") })
+setMethod("rtMedMatrix", signature(object="NormalyzerResults"), 
+          function(object) { slot(object, "rtMedMatrix") })
+setGeneric("rtMedMatrix<-", function(object, value) { standardGeneric("rtMedMatrix<-") })
+setReplaceMethod("rtMedMatrix", signature(object="NormalyzerResults"), 
+                 function(object, value) { 
+                     slot(object, "rtMedMatrix") <- value
+                     validObject(object)
+                     object
+                 })
+
+setGeneric("rtMeanMatrix", function(object) { standardGeneric("rtMeanMatrix") })
+setMethod("rtMeanMatrix", signature(object="NormalyzerResults"), 
+          function(object) { slot(object, "rtMeanMatrix") })
+setGeneric("rtMeanMatrix<-", function(object, value) { standardGeneric("rtMeanMatrix<-") })
+setReplaceMethod("rtMeanMatrix", signature(object="NormalyzerResults"), 
+                 function(object, value) { 
+                     slot(object, "rtMeanMatrix") <- value
+                     validObject(object)
+                     object
+                 })
+
+setGeneric("rtLoessMatrix", function(object) { standardGeneric("rtLoessMatrix") })
+setMethod("rtLoessMatrix", signature(object="NormalyzerResults"), 
+          function(object) { slot(object, "rtLoessMatrix") })
+setGeneric("rtLoessMatrix<-", function(object, value) { standardGeneric("rtLoessMatrix<-") })
+setReplaceMethod("rtLoessMatrix", signature(object="NormalyzerResults"), 
+                 function(object, value) { 
+                     slot(object, "rtLoessMatrix") <- value
+                     validObject(object)
+                     object
+                 })
+
+setGeneric("rtVSNMatrix", function(object) { standardGeneric("rtVSNMatrix") })
+setMethod("rtVSNMatrix", signature(object="NormalyzerResults"), 
+          function(object) { slot(object, "rtVSNMatrix") })
+setGeneric("rtVSNMatrix<-", function(object, value) { standardGeneric("rtVSNMatrix<-") })
+setReplaceMethod("rtVSNMatrix", signature(object="NormalyzerResults"), 
+                 function(object, value) { 
+                     slot(object, "rtVSNMatrix") <- value
+                     validObject(object)
+                     object
+                 })
+
+setGeneric("ctrMatrix", function(object) { standardGeneric("ctrMatrix") })
+setMethod("ctrMatrix", signature(object="NormalyzerResults"), 
+          function(object) { slot(object, "ctrMatrix") })
+setGeneric("ctrMatrix<-", function(object, value) { standardGeneric("ctrMatrix<-") })
+setReplaceMethod("ctrMatrix", signature(object="NormalyzerResults"), 
+                 function(object, value) { 
+                     slot(object, "ctrMatrix") <- value
+                     validObject(object)
+                     object
+                 })
+
+setGeneric("madMatrix", function(object) { standardGeneric("madMatrix") })
+setMethod("madMatrix", signature(object="NormalyzerResults"), 
+          function(object) { slot(object, "madMatrix") })
+setGeneric("madMatrix<-", function(object, value) { standardGeneric("madMatrix<-") })
+setReplaceMethod("madMatrix", signature(object="NormalyzerResults"), 
+                 function(object, value) { 
+                     slot(object, "madMatrix") <- value
+                     validObject(object)
+                     object
+                 })
 
 #' Initialize Normalyzer results object
 #'
@@ -81,13 +304,42 @@ setGeneric(name="initializeResultsObject",
 setMethod("initializeResultsObject", "NormalyzerResults",
           function(nr) {
               
-              nds <- nr@nds
-              nr@data2log2 <- log2(filterrawdata(nds))
-              nr@data2ctr <- matrix(nrow=nrow(filterrawdata(nds)),
-                                    ncol=ncol(filterrawdata(nds)), byrow=TRUE)
+              # browser()
+              
+              nds <- nds(nr)
+              # log2Matrix(nr) <- log2(filterrawdata(nds))
+              
+              # browser()
+              
+              normalizations(nr) <- SummarizedExperiment::SummarizedExperiment(
+                  assays=list(log2=log2(filterrawdata(nds)))
+              )
+              
+              # message("Is this matrix used?")
+              # ctrMatrix(nr) <- matrix(
+              #     nrow=nrow(filterrawdata(nds)),
+              #     ncol=ncol(filterrawdata(nds)), byrow=TRUE)
               nr
           }
 )
+
+
+setGeneric(name="addNormalization",
+           function(nr, name, normalization) standardGeneric("addNormalization"))
+setMethod("addNormalization", "NormalyzerResults",
+          function(nr, name, normalization) {
+              
+              # browser()
+              
+              normObj <- normalizations(nr)
+              SummarizedExperiment::assays(normObj)[[name]] <- normalization
+              normalizations(nr) <- normObj
+              nr
+          }
+)
+
+
+
 
 #' Main function for executing normalizations
 #'
@@ -115,15 +367,37 @@ setMethod("performNormalizations", "NormalyzerResults",
                    rtWindowMinCount=100, rtWindowShifts=1, 
                    rtWindowMergeMethod="median") {
               
-              nds <- nr@nds
+              nds <- nds(nr)
               nr <- basicMetricNormalizations(nr)
               rtColPresent <- length(retentionTimes(nds)) > 0
               
-              nr@data2vsn <- performVSNNormalization(filterrawdata(nds))
-              nr@data2quantile <- performQuantileNormalization(filterrawdata(nds))
-              nr@data2mad <- performSMADNormalization(filterrawdata(nds))
-              nr@data2loess <- performCyclicLoessNormalization(filterrawdata(nds))
-              nr@globalfittedRLR <- performGlobalRLRNormalization(filterrawdata(nds))
+              # vsnMatrix(nr) <- performVSNNormalization(filterrawdata(nds))
+              # quantileMatrix(nr) <- performQuantileNormalization(filterrawdata(nds))
+              # madMatrix(nr) <- performSMADNormalization(filterrawdata(nds))
+              # loessMatrix(nr) <- performCyclicLoessNormalization(filterrawdata(nds))
+              # globalfittedRLR(nr) <- performGlobalRLRNormalization(filterrawdata(nds))
+              
+              nr <- addNormalization(
+                  nr, 
+                  "VSN", 
+                  performVSNNormalization(filterrawdata(nds)))
+              nr <- addNormalization(
+                  nr, 
+                  "SMAD", 
+                  performSMADNormalization(filterrawdata(nds)))
+              nr <- addNormalization(
+                  nr, 
+                  "CycLoess", 
+                  performCyclicLoessNormalization(filterrawdata(nds)))
+              nr <- addNormalization(
+                  nr, 
+                  "RLR", 
+                  performGlobalRLRNormalization(filterrawdata(nds)))
+              
+              # quantileMatrix(nr) <- performQuantileNormalization(filterrawdata(nds))
+              # madMatrix(nr) <- performSMADNormalization(filterrawdata(nds))
+              # loessMatrix(nr) <- performCyclicLoessNormalization(filterrawdata(nds))
+              # globalfittedRLR(nr) <- performGlobalRLRNormalization(filterrawdata(nds))
               
               if (rtNorm) {
                   if (rtColPresent) {
@@ -138,7 +412,6 @@ setMethod("performNormalizations", "NormalyzerResults",
                       warning("No RT column specified (column named 'RT'). Skipping RT normalization.")
                   }
               }
-              
               nr
           }
 )
@@ -157,10 +430,26 @@ setGeneric(name="basicMetricNormalizations",
 setMethod("basicMetricNormalizations", "NormalyzerResults",
           function(nr) {
               
-              nds <- nr@nds
-              nr@data2GI <- globalIntensityNormalization(filterrawdata(nds))
-              nr@data2med <- medianNormalization(filterrawdata(nds))
-              nr@data2mean <- meanNormalization(filterrawdata(nds))
+              nds <- nds(nr)
+              # GIMatrix(nr) <- globalIntensityNormalization(filterrawdata(nds))
+              # medMatrix(nr) <- medianNormalization(filterrawdata(nds))
+              # meanMatrix(nr) <- meanNormalization(filterrawdata(nds))
+              
+              nr <- addNormalization(
+                  nr, 
+                  "GI", 
+                  globalIntensityNormalization(filterrawdata(nds)))
+              
+              nr <- addNormalization(
+                  nr, 
+                  "median", 
+                  medianNormalization(filterrawdata(nds)))
+              
+              nr <- addNormalization(
+                  nr, 
+                  "mean", 
+                  meanNormalization(filterrawdata(nds)))
+              
               nr
           }
 )
@@ -182,7 +471,7 @@ setGeneric(name="performRTNormalizations",
 setMethod("performRTNormalizations", "NormalyzerResults",
           function(nr, stepSizeMinutes, minWindowSize, windowShifts, mergeMethod) {
               
-              nds <- nr@nds
+              nds <- nds(nr)
               
               smoothedRTMed <- getSmoothedRTNormalizedMatrix(
                   rawMatrix=filterrawdata(nds), 
@@ -224,10 +513,31 @@ setMethod("performRTNormalizations", "NormalyzerResults",
                   windowShifts=windowShifts
               )
               
-              nr@data2rtMed <- smoothedRTMed
-              nr@data2rtMean <- smoothedRTMean
-              nr@data2rtLoess <- smoothedRTLoess
-              nr@data2rtVSN <- smoothedRTVSN
+              rtMedMatrix(nr) <- smoothedRTMed
+              rtMeanMatrix(nr) <- smoothedRTMean
+              rtLoessMatrix(nr) <- smoothedRTLoess
+              rtVSNMatrix(nr) <- smoothedRTVSN
+              
+              nr <- addNormalization(
+                  nr, 
+                  "RT-median", 
+                  smoothedRTMed)
+              
+              nr <- addNormalization(
+                  nr, 
+                  "RT-mean", 
+                  smoothedRTMean)
+              
+              nr <- addNormalization(
+                  nr, 
+                  "RT-Loess", 
+                  smoothedRTLoess)
+              
+              nr <- addNormalization(
+                  nr, 
+                  "RT-VSN", 
+                  smoothedRTVSN)
+              
               nr
           })
 
@@ -243,46 +553,55 @@ setGeneric(name="getUsedMethodNames",
 #' @rdname getUsedMethodNames
 setMethod("getUsedMethodNames", "NormalyzerResults",
           function(nr) {
+
+              matrices <- SummarizedExperiment::assays(normalizations(nr))
               
-              usedMethodNames <- c()
-              for (i in seq_len(length(slotNamesMap))) {
-                  name <- names(slotNamesMap)[i]
-                  fieldValue <- methods::slot(nr, name)
-                  
-                  if (!all(is.na(fieldValue))) {
-                      outputName <- slotNamesMap[name]
-                      usedMethodNames <- c(usedMethodNames, outputName)
-                  }
-              }
+              # Returns as a list of matrices rather than SimpleList of
+              # sub-SummarizedExperiments
+              # lapply(matrices@listData, function(normMat) { normMat })
+              names(matrices)
               
-              usedMethodNames
+              # usedMethodNames <- c()
+              # for (i in seq_len(length(slotNamesMap))) {
+              #     name <- names(slotNamesMap)[i]
+              #     fieldValue <- methods::slot(nr, name)
+              # 
+              #     if (!all(is.na(fieldValue))) {
+              #         outputName <- slotNamesMap[name]
+              #         usedMethodNames <- c(usedMethodNames, outputName)
+              #     }
+              # }
+              # 
+              # usedMethodNames
           })
 
-#' Get list of names for slots
-#'
-#' @param nr Normalyzer results object.
-#' @return None
-#' @rdname getSlotNameList
-#' @keywords internal
-setGeneric(name="getSlotNameList",
-           function(nr) standardGeneric("getSlotNameList"))
-
-#' @rdname getSlotNameList
-setMethod("getSlotNameList", "NormalyzerResults",
-          function(nr) {
-              methodDataList <- c()
-              
-              for (i in seq_len(length(slotNamesMap))) {
-                  slotName <- names(slotNamesMap)[i]
-                  fieldValue <- methods::slot(nr, slotName)
-                  
-                  if (!all(is.na(fieldValue))) {
-                      methodDataList <- c(methodDataList, slotName)
-                  }
-              }
-              
-              methodDataList
-          })
+#' #' Get list of names for slots
+#' #'
+#' #' @param nr Normalyzer results object.
+#' #' @return None
+#' #' @rdname getSlotNameList
+#' #' @keywords internal
+#' setGeneric(name="getSlotNameList",
+#'            function(nr) standardGeneric("getSlotNameList"))
+#' 
+#' #' @rdname getSlotNameList
+#' setMethod("getSlotNameList", "NormalyzerResults",
+#'           function(nr) {
+#'               methodDataList <- c()
+#'               
+#'               browser()
+#'               
+#'               for (i in seq_len(length(slotNamesMap))) {
+#'                   slotName <- names(slotNamesMap)[i]
+#'                   fieldValue <- methods::slot(nr, slotName)
+#'                   
+#'                   if (!all(is.na(fieldValue))) {
+#'                       methodDataList <- c(methodDataList, slotName)
+#'                   }
+#'               }
+#'               
+#'               methodDataList
+#'           })
 
 #' Get list with normalization matrices
 #'
@@ -297,25 +616,26 @@ setGeneric(name="getNormalizationMatrices",
 setMethod("getNormalizationMatrices", "NormalyzerResults",
           function(nr) {
               
-              methodDataList <- list()
-              listCounter <- 1
-              for (i in seq_len(length(slotNamesMap))) {
-                  slotName <- names(slotNamesMap)[i]
-                  fieldValue <- methods::slot(nr, slotName)
-                  
-                  if (!all(is.na(fieldValue))) {
-                      methodDataList[[listCounter]] <- fieldValue
-                      listCounter <- listCounter + 1
-                  }
-              }
-              methodDataList
+              # browser()
+              
+              matrices <- SummarizedExperiment::assays(normalizations(nr))
+              
+              # Returns as a list of matrices rather than SimpleList of
+              # sub-SummarizedExperiments
+              # lapply(matrices@listData, function(normMat) { normMat })
+              matrices
+              
+              # methodDataList <- list()
+              # listCounter <- 1
+              # for (i in seq_len(length(slotNamesMap))) {
+              #     slotName <- names(slotNamesMap)[i]
+              #     fieldValue <- methods::slot(nr, slotName)
+              #     
+              #     if (!all(is.na(fieldValue))) {
+              #         methodDataList[[listCounter]] <- fieldValue
+              #         listCounter <- listCounter + 1
+              #     }
+              # }
+              # methodDataList
           })
-
-
-
-
-
-
-
-
 

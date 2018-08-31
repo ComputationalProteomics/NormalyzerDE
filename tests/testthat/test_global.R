@@ -6,7 +6,7 @@ tempOut <- tempdir()
 
 test_that("Normalization run succeeds without errors", {
     
-    expect_silent(    
+    expect_silent(
         normalyzer(
             jobName="unit_test_run_norm",
             dataPath=dataPath,

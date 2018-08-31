@@ -8,10 +8,9 @@ group_header <- test_design$group
 unique_groups <- unique(group_header)
 
 data("regression_test_nr")
-regression_test_ner <- regression_test_nr@ner
-# data("regression_test_ner")
+ner <- ner(regression_test_nr)
+nds <- nds(regression_test_nr)
 
-nds <- regression_test_nr@nds
 sampleReplicateGroups <- sampleReplicateGroups(nds)
 normMatrices <- getNormalizationMatrices(regression_test_nr)
 anova_pvalues <- calculateANOVAPValues(
@@ -114,8 +113,8 @@ test_that("calculateAvgReplicateVariation", {
 
 test_that("calculateANOVAPValues", {
     
-    expected_out <- regression_test_ner@anovaP
-    nds <- regression_test_nr@nds
+    expected_out <- anovaP(regression_test_ner)
+    nds <- nds(regression_test_nr)
     sampleReplicateGroups <- sampleReplicateGroups(nds)
     
     expect_that(

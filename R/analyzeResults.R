@@ -18,7 +18,9 @@
 #' normResultsWithEval <- analyzeNormalizations(normResults)
 analyzeNormalizations <- function(nr, categoricalAnova=FALSE) {
     
-    nds <- nr@nds
+    # browser()
+    
+    nds <- nds(nr)
     ner <- NormalyzerEvaluationResults()
     ner <- calculateCV(ner, nr)
     singleRepRun <- singleReplicateRun(nds)
@@ -33,7 +35,7 @@ analyzeNormalizations <- function(nr, categoricalAnova=FALSE) {
     }
     
     ner <- calculateCorrelations(ner, nr)
-    nr@ner <- ner
+    ner(nr) <- ner
     
     nr
 }

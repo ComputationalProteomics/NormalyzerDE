@@ -64,7 +64,7 @@ setGeneric(name="calculateCV",
 setMethod("calculateCV", "NormalyzerEvaluationResults",
           function(ner, nr) {
               
-              nds <- nr@nds
+              nds <- nds(nr)
               sampleReplicateGroups <- sampleReplicateGroups(nds)
               sampleReplicateGroups <- sampleReplicateGroups(nds)
               methodList <- getNormalizationMatrices(nr)
@@ -92,7 +92,7 @@ setGeneric(name="calculateMAD",
 setMethod("calculateMAD", "NormalyzerEvaluationResults",
           function(ner, nr) {
               
-              nds <- nr@nds
+              nds <- nds(nr)
               sampleReplicateGroups <- sampleReplicateGroups(nds)
               methodList <- getNormalizationMatrices(nr)
               avgmadmem <- calculateAvgMadMem(methodList, sampleReplicateGroups)
@@ -119,7 +119,7 @@ setGeneric(name="calculateAvgVar",
 setMethod("calculateAvgVar", "NormalyzerEvaluationResults",
           function(ner, nr) {
               
-              nds <- nr@nds
+              nds <- nds(nr)
               sampleReplicateGroups <- sampleReplicateGroups(nds)
               methodList <- getNormalizationMatrices(nr)
 
@@ -148,7 +148,7 @@ setGeneric(name="calculateSignificanceMeasures",
 setMethod("calculateSignificanceMeasures", "NormalyzerEvaluationResults",
           function(ner, nr, categoricalAnova=TRUE) {
               
-              nds <- nr@nds
+              nds <- nds(nr)
               sampleReplicateGroups <- sampleReplicateGroups(nds)
               methodList <- getNormalizationMatrices(nr)
 
@@ -186,7 +186,7 @@ setGeneric(name="calculateCorrelations",
 setMethod("calculateCorrelations", "NormalyzerEvaluationResults",
           function(ner, nr) {
 
-            nds <- nr@nds
+            nds <- nds(nr)
             methodlist <- getNormalizationMatrices(nr)
             allReplicateGroups <- sampleReplicateGroups(nds)
             sampleGroupsWithReplicates <- samplesGroupsWithReplicates(nds)

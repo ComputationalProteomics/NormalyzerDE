@@ -26,7 +26,8 @@ Imports:
     RcmdrMisc,
     raster,
     utils,
-    stats
+    stats,
+    SummarizedExperiment
 Suggests:
     knitr,
     testthat,

@@ -106,7 +106,7 @@
 #' generatePlots(normResultsWithEval, outputDir)
 generatePlots <- function(nr, jobdir, plotRows=3, plotCols=4) {
     
-    nds <- nr@nds
+    nds <- nds(nr)
     currentjob <- jobName(nds)
     nrows <- plotRows + 2
     ncols <- plotCols + 2
@@ -312,7 +312,7 @@ plotFrontPage <- function(currentjob, currentFont) {
 #' @keywords internal
 plotSampleOutlierSummary <- function(nr, currentLayout, pageno) {
     
-    nds <- nr@nds
+    nds <- nds(nr)
     methodlist <- getNormalizationMatrices(nr)
     filterED <- sampleReplicateGroups(nds)
     filterrawdata <- filterrawdata(nds)
@@ -373,11 +373,11 @@ plotSampleOutlierSummary <- function(nr, currentLayout, pageno) {
 #' @keywords internal
 plotReplicateVariance <- function(nr, currentLayout, pageno) {
     
-    nds <- nr@nds
+    nds <- nds(nr)
     methodnames <- getUsedMethodNames(nr)
     currentjob <- jobName(nds)
     
-    ner <- nr@ner
+    ner <- ner(nr)
     avgCVMem <- ner@avgcvmem
     avgMADMem <- ner@avgmadmem
     avgVarMem <- ner@avgvarmem
@@ -470,7 +470,7 @@ plotReplicateVariance <- function(nr, currentLayout, pageno) {
 #' @keywords internal
 plotReplicateVarAndStableVariables <- function(nr, currentLayout, pageno) {
     
-    nds <- nr@nds
+    nds <- nds(nr)
     methodnames <- getUsedMethodNames(nr)
     currentjob <- jobName(nds)
     
@@ -617,7 +617,7 @@ plotReplicateVarAndStableVariables <- function(nr, currentLayout, pageno) {
 #' @keywords internal
 plotCVvsIntensity <- function(nr, currentLayout, pageno) {
     
-    nds <- nr@nds
+    nds <- nds(nr)
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
     currentjob <- jobName(nds)
@@ -698,7 +698,7 @@ plotCVvsIntensity <- function(nr, currentLayout, pageno) {
 #' @keywords internal
 plotMA <- function(nr, currentLayout, pageno) {
     
-    nds <- nr@nds
+    nds <- nds(nr)
     methodNames <- getUsedMethodNames(nr)
     normalizedDataList <- getNormalizationMatrices(nr)
     currentjob <- jobName(nds)
@@ -740,7 +740,7 @@ plotMA <- function(nr, currentLayout, pageno) {
 #' @keywords internal
 plotScatter <- function(nr, currentLayout, pageno) {
     
-    nds <- nr@nds
+    nds <- nds(nr)
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
     currentjob <- jobName(nds)
@@ -787,7 +787,7 @@ plotScatter <- function(nr, currentLayout, pageno) {
 #' @keywords internal
 plotQQ <- function(nr, currentLayout, pageno) {
     
-    nds <- nr@nds
+    nds <- nds(nr)
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
     currentjob <- jobName(nds)
@@ -815,7 +815,7 @@ plotQQ <- function(nr, currentLayout, pageno) {
 #' @keywords internal
 plotBoxPlot <- function(nr, currentLayout, pageno) {
     
-    nds <- nr@nds
+    nds <- nds(nr)
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
     currentjob <- jobName(nds)
@@ -870,7 +870,7 @@ plotBoxPlot <- function(nr, currentLayout, pageno) {
 #' @keywords internal
 plotRLE <- function(nr, currentLayout, pageno) {
     
-    nds <- nr@nds
+    nds <- nds(nr)
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
     currentjob <- jobName(nds)
@@ -917,7 +917,7 @@ plotRLE <- function(nr, currentLayout, pageno) {
 #' @keywords internal
 plotDensity <- function(nr, currentLayout, pageno) {
     
-    nds <- nr@nds
+    nds <- nds(nr)
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
     currentjob <- jobName(nds)
@@ -958,7 +958,7 @@ plotDensity <- function(nr, currentLayout, pageno) {
 #' @keywords internal
 plotMDS <- function(nr, currentLayout, pageno) {
     
-    nds <- nr@nds
+    nds <- nds(nr)
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
     currentjob <- jobName(nds)
@@ -1012,7 +1012,7 @@ plotMDS <- function(nr, currentLayout, pageno) {
 #' @keywords internal
 plotMeanSD <- function(nr, currentLayout, pageno) {
     
-    nds <- nr@nds
+    nds <- nds(nr)
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
     currentjob <- jobName(nds)
@@ -1052,7 +1052,7 @@ plotCorrelation <- function(nr, currentLayout, pageno) {
     repCorPear <- ner@repCorPear
     repCorSpear <- ner@repCorSpear
     
-    nds <- nr@nds
+    nds <- nds(nr)
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
     currentjob <- jobName(nds)
@@ -1111,7 +1111,7 @@ plotCorrelation <- function(nr, currentLayout, pageno) {
 #' @keywords internal
 plotDendrograms <- function(nr, currentLayout, pageno) {
     
-    nds <- nr@nds
+    nds <- nds(nr)
     methodnames <- getUsedMethodNames(nr)
     methodlist <- getNormalizationMatrices(nr)
     currentjob <- jobName(nds)
@@ -1163,7 +1163,7 @@ plotDendrograms <- function(nr, currentLayout, pageno) {
 #' @keywords internal
 plotPHist <- function(nr, currentLayout, pageno) {
     
-    nds <- nr@nds
+    nds <- nds(nr)
     ner <- nr@ner
     methodnames <- getUsedMethodNames(nr)
     currentjob <- jobName(nds)

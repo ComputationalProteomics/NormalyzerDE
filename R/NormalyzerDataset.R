@@ -45,7 +45,6 @@ NormalyzerDataset <- setClass("NormalyzerDataset",
                                                   sampleNameCol=NULL,
                                                   groupNameCol=NULL))
 
-# Getters
 setGeneric("jobName", function(object) { standardGeneric("jobName") })
 setMethod("jobName", signature(object="NormalyzerDataset"), 
           function(object) { slot(object, "jobName") })
@@ -124,6 +123,13 @@ setReplaceMethod("annotationValues", signature(object="NormalyzerDataset"),
 setGeneric("retentionTimes", function(object) { standardGeneric("retentionTimes") })
 setMethod("retentionTimes", signature(object="NormalyzerDataset"), 
           function(object) { slot(object, "retentionTimes") })
+setGeneric("retentionTimes<-", function(object, value) { standardGeneric("retentionTimes<-") })
+setReplaceMethod("retentionTimes", signature(object="NormalyzerDataset"), 
+                 function(object, value) { 
+                     slot(object, "retentionTimes") <- value
+                     validObject(object)
+                     object
+                 })
 
 setGeneric("singleReplicateRun", function(object) { standardGeneric("singleReplicateRun") })
 setMethod("singleReplicateRun", signature(object="NormalyzerDataset"), 
