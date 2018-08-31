@@ -306,8 +306,13 @@ setMethod("calculateSignificanceMeasures", "NormalyzerEvaluationResults",
               sampleReplicateGroups <- sampleReplicateGroups(nds)
               methodList <- getNormalizationMatrices(nr)
 
-              anovaPValsWithNA <- calculateANOVAPValues(methodList, sampleReplicateGroups, categoricalAnova)
-              log2AnovaFDR <- stats::p.adjust(anovaPValsWithNA[, 1][!is.na(anovaPValsWithNA[, 1])], method="BH")
+              anovaPValsWithNAMat <- calculateANOVAPValues(methodList, sampleReplicateGroups, categoricalAnova)
+              validPValuesContrast <- !is.na(anovaPValsWithNAMat[, 1])
+              
+              log2AnovaFDR <- rep(NA, length(anovaPValsWithNAMat[, 1]))
+              log2AnovaFDR[validPValuesContrast] <- stats::p.adjust(
+                  anovaPValsWithNAMat[, 1][validPValuesContrast], 
+                  method="BH")
               
               lowVarFeaturesCVs <- findLowlyVariableFeaturesCVs(log2AnovaFDR, methodList)
               lowVarFeaturesCVsPercDiff <- vapply(
@@ -318,7 +323,7 @@ setMethod("calculateSignificanceMeasures", "NormalyzerEvaluationResults",
                       0
                   )
               
-              anovaP(ner) <- anovaPValsWithNA
+              anovaP(ner) <- anovaPValsWithNAMat
               lowVarFeaturesCVs(ner) <- lowVarFeaturesCVs
               lowVarFeaturesCVsPercDiff(ner) <- lowVarFeaturesCVsPercDiff
               

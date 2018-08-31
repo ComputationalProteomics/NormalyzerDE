@@ -5,6 +5,7 @@ R/Rplots.pdf
 .Rbuildignore
 *.Rproj
 .RData
+*.old
 
 # Folders
 inst/doc

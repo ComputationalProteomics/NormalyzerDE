@@ -1,7 +1,5 @@
 context("analyzeResults.R")
 
-# browser()
-
 data("example_data_only_values")
 data("example_design")
 test_design <- example_design[example_design$group %in% c("1", "2", "3"), ]
@@ -58,15 +56,14 @@ test_that("calculateCorrSum gives same Spearman output", {
 
 test_that("calculateSummarizedCorrelationVector_Spearman", {
     
-    expected_out <- matrix(unlist(repCorSpear(regression_test_ner)), nrow=length(sampleReplicateGroups), byrow=FALSE)
+    expected_out <- repCorSpear(regression_test_ner)
     out <- calculateSummarizedCorrelationVector(
         normMatrices, 
         sampleReplicateGroups,
         unique(sampleReplicateGroups),
         "spearman"
     )
-    dimnames(out) <- NULL
-    
+
     expect_that(
         all.equal(
             expected_out,
@@ -78,15 +75,14 @@ test_that("calculateSummarizedCorrelationVector_Spearman", {
 
 test_that("calculateSummarizedCorrelationVector_Pearson", {
     
-    expected_out <- matrix(unlist(repCorPear(regression_test_ner)), nrow=length(sampleReplicateGroups), byrow=FALSE)
+    expected_out <- repCorPear(regression_test_ner)
     out <- as.matrix(unlist(calculateSummarizedCorrelationVector(
         normMatrices, 
         sampleReplicateGroups,
         unique(sampleReplicateGroups),
         "pearson"
     )))
-    dimnames(out) <- NULL
-    
+
     expect_that(
         all.equal(
             expected_out,
@@ -100,8 +96,7 @@ test_that("calculateReplicateCV", {
     
     expected_out <- avgcvmem(regression_test_ner)
     out <- calculateReplicateCV(normMatrices, sampleReplicateGroups)
-    dimnames(out) <- NULL
-    
+
     expect_that(
         all.equal(
             expected_out,
@@ -116,9 +111,6 @@ test_that("calculateFeatureCV", {
     expected_out <- featureCVPerMethod(regression_test_ner)
     out <- calculateFeatureCV(normMatrices)
     
-    print("Comparing without header for now")
-    dimnames(out) <- NULL
-    
     expect_that(
         all.equal(
             expected_out,
@@ -132,8 +124,7 @@ test_that("calculateAvgMadMem", {
     
     expected_out <- avgmadmem(regression_test_ner)
     out <- calculateAvgMadMem(normMatrices, sampleReplicateGroups)
-    dimnames(out) <- NULL
-    
+
     expect_that(
         all.equal(
             expected_out,
@@ -147,8 +138,7 @@ test_that("calculateAvgReplicateVariation", {
     
     expected_out <- avgvarmem(regression_test_ner)
     out <- calculateAvgReplicateVariation(normMatrices, sampleReplicateGroups)
-    dimnames(out) <- NULL
-    
+
     expect_that(
         all.equal(
             expected_out,
@@ -163,7 +153,6 @@ test_that("calculateANOVAPValues", {
     
     expected_out <- anovaP(regression_test_ner)
     anova_pvalues_copy <- anova_pvalues
-    dimnames(anova_pvalues_copy) <- NULL
 
     expect_that(
         all.equal(
@@ -185,8 +174,7 @@ test_that("findLowlyVariableFeaturesCVs", {
         method="BH")
     
     out <- findLowlyVariableFeaturesCVs(log2AnovaFDR, normMatrices)
-    dimnames(out) <- NULL
-    
+
     expect_that(
         all.equal(
             expected_out,
