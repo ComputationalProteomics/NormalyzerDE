@@ -156,7 +156,7 @@ setMethod("setupValues", "NormalyzerDataset",
               
               sampleReplicateGroups(nds) <- as.numeric(as.factor(designMatrix(nds)[, groupNameCol(nds)]))
               samplesGroupsWithReplicates(nds) <- as.numeric(
-                  names(table(sampleReplicateGroups(nds))[which(table(sampleReplicateGroups(nds)) > 1)]))
+                  names(table(sampleReplicateGroups(nds))[table(sampleReplicateGroups(nds)) > 1]))
               sampleNames(nds) <- as.character(designMatrix(nds)[, sampleNameCol(nds)])
 
               singleReplicateRun <- detectSingleReplicate(nds)
@@ -191,7 +191,7 @@ setMethod("detectSingleReplicate", "NormalyzerDataset",
           function(nds) {
               
               headerCounts <- table(sampleReplicateGroups(nds))
-              nonReplicatedSamples <- names(headerCounts[which(headerCounts == 1)])
+              nonReplicatedSamples <- names(headerCounts[headerCounts == 1])
               
               if (length(nonReplicatedSamples) > 0) {
                   singleReplicateRun <- TRUE

@@ -2,7 +2,7 @@ context("analyzeResults.R")
 
 data("example_data_only_values")
 data("example_design")
-test_design <- example_design[which(example_design$group %in% c("1", "2", "3")), ]
+test_design <- example_design[example_design$group %in% c("1", "2", "3"), ]
 test_data <- example_data_only_values[, as.character(test_design$sample)]
 group_header <- test_design$group
 unique_groups <- unique(group_header)

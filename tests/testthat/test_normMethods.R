@@ -4,7 +4,7 @@ data("example_design")
 data("example_data_only_values")
 
 # Subset the data to only look at first three conditions
-test_design <- example_design[which(example_design$group %in% c("1", "2", "3")), ]
+test_design <- example_design[example_design$group %in% c("1", "2", "3"), ]
 test_data <- example_data_only_values[, as.character(test_design$sample)]
 
 # Remove rows with only NA-values

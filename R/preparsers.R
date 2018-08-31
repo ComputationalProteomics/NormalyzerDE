@@ -23,7 +23,7 @@ maxQuantToNormalyzer <- function(maxQuantFp, protLevel, sep="\t") {
     
     fullDf <- utils::read.csv(maxQuantFp, sep=sep, stringsAsFactors=FALSE, comment.char="", quote="", header=TRUE)
     cnames <- colnames(fullDf)
-    intensityCols <- cnames[which(grepl(pepIntensityPattern, cnames))]
+    intensityCols <- cnames[grepl(pepIntensityPattern, cnames)]
     
     headerNames <- c(annotCols, intensityCols)
     headerNamesTrimmed <- gsub("Intensity.", "", headerNames)

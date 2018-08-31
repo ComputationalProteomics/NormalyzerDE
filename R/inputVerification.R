@@ -128,7 +128,7 @@ getVerifiedNormalyzerObject <- function(
         stopIfTooFew=!omitSamples
     )
     
-    designMatrix <- designMatrix[which(designMatrix$sample %in% colnames(lowCountSampleFiltered)), ]
+    designMatrix <- designMatrix[designMatrix$sample %in% colnames(lowCountSampleFiltered), ]
     
     # If no samples left after omitting, stop
     verifyMultipleSamplesPresent(
@@ -304,7 +304,7 @@ getReplicateSortedData <- function(rawDataOnly, groups) {
 #' @keywords internal
 preprocessData <- function(dataMatrix) {
 
-    dataMatrix[which(dataMatrix == 0)] <- NA
+    dataMatrix[dataMatrix == 0] <- NA
     dataMatrix
 }
 
@@ -376,7 +376,7 @@ getLowCountSampleFiltered <- function(dataMatrix, groups, threshold=15, stopIfTo
 validateSampleReplication <- function(dataMatrix, groups, requireReplicates=TRUE, quiet=FALSE) {
     
     headerCounts <- table(groups)
-    nonReplicatedSamples <- names(headerCounts[which(headerCounts == 1)])
+    nonReplicatedSamples <- names(headerCounts[headerCounts == 1])
 
     if (length(nonReplicatedSamples) > 0) {
         
@@ -411,7 +411,7 @@ validateSampleReplication <- function(dataMatrix, groups, requireReplicates=TRUE
 #' @keywords internal
 verifyMultipleSamplesPresent <- function(dataMatrix, groups, requireReplicates=TRUE, quiet=FALSE) {
     
-    samples <- groups[which(as.numeric(groups) > 0)]
+    samples <- groups[as.numeric(groups) > 0]
     distinctSamples <- unique(samples)
 
     if (length(samples) < 2) {
