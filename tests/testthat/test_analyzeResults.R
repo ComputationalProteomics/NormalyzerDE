@@ -56,6 +56,46 @@ test_that("calculateCorrSum gives same Spearman output", {
     )
 })
 
+test_that("calculateSummarizedCorrelationVector_Spearman", {
+    
+    expected_out <- matrix(unlist(repCorSpear(regression_test_ner)), nrow=length(sampleReplicateGroups), byrow=FALSE)
+    out <- calculateSummarizedCorrelationVector(
+        normMatrices, 
+        sampleReplicateGroups,
+        unique(sampleReplicateGroups),
+        "spearman"
+    )
+    dimnames(out) <- NULL
+    
+    expect_that(
+        all.equal(
+            expected_out,
+            out
+        ),
+        is_true()
+    )
+})
+
+test_that("calculateSummarizedCorrelationVector_Pearson", {
+    
+    expected_out <- matrix(unlist(repCorPear(regression_test_ner)), nrow=length(sampleReplicateGroups), byrow=FALSE)
+    out <- as.matrix(unlist(calculateSummarizedCorrelationVector(
+        normMatrices, 
+        sampleReplicateGroups,
+        unique(sampleReplicateGroups),
+        "pearson"
+    )))
+    dimnames(out) <- NULL
+    
+    expect_that(
+        all.equal(
+            expected_out,
+            out
+        ),
+        is_true()
+    )
+})
+
 test_that("calculateReplicateCV", {
     
     expected_out <- avgcvmem(regression_test_ner)
@@ -107,6 +147,7 @@ test_that("calculateAvgReplicateVariation", {
     
     expected_out <- avgvarmem(regression_test_ner)
     out <- calculateAvgReplicateVariation(normMatrices, sampleReplicateGroups)
+    dimnames(out) <- NULL
     
     expect_that(
         all.equal(

@@ -137,7 +137,7 @@ calculateAvgMadMem <- function(methodList, sampleReplicateGroups) {
         featureMedianAbsDev
     }
         
-    methodSpecificCalculation <- function(methodData, groups, indexList) {
+    calculateGroupMadForMethod <- function(methodData, groups, indexList) {
 
         # Extracts groups of replicates and calculate MAD for each feature
         featureMADMat <- vapply(
@@ -153,7 +153,7 @@ calculateAvgMadMem <- function(methodList, sampleReplicateGroups) {
     
     condAvgMadMat <- vapply(
         methodList,
-        methodSpecificCalculation,
+        calculateGroupMadForMethod,
         rep(0, length(unique(sampleReplicateGroups))),
         groups=sampleReplicateGroups,
         indexList=groupIndexList
@@ -172,48 +172,47 @@ calculateAvgMadMem <- function(methodList, sampleReplicateGroups) {
 #' @keywords internal
 calculateAvgReplicateVariation <- function(methodList, sampleReplicateGroups) {
 
-    methodCount <- length(methodList)
-    indexList <- getIndexList(sampleReplicateGroups)
-    conditionLevelCount <- length(unique(sampleReplicateGroups))
-    avgVarianceMat <- matrix(
-        nrow=conditionLevelCount, 
-        ncol=methodCount, 
-        byrow=TRUE)
+    groupIndexList <- getIndexList(sampleReplicateGroups)
+    
+    calculateReplicateGroupVariance <- function(groupIndices, methodData) {
+        
+        groupData <- methodData[, groupIndices]
+        rowNonNACount <- apply(
+            groupData,
+            1,
+            function(x) { sum(!is.na(x)) }) - 1
 
-    for (methodIndex in seq_len(methodCount)) {
-        
-        replicateGroupVariance <- vector()
-        rowVariances <- vector()
-        processedDataMatrix <- methodList[[methodIndex]]
-        
-        for (sampleIndex in seq_along(names(indexList))) {
-            
-            repVal <- names(indexList)[sampleIndex]
-            cols <- indexList[[repVal]]
-            
-            rowNonNACount <- apply(
-                processedDataMatrix[, cols], 
-                1, 
-                function(x) { sum(!is.na(x)) }) - 1
-            
-            rowVariances <- rowNonNACount * apply(
-                processedDataMatrix[, cols], 
-                1, 
-                function(x) { stats::var(x, na.rm=TRUE) })
-            
-            replicateGroupVariance <- c(
-                replicateGroupVariance, 
-                sum(rowVariances, na.rm=TRUE) / sum(rowNonNACount, na.rm=TRUE))
-        }
-        
-        avgVarianceMat[, methodIndex] <- replicateGroupVariance
+        rowVariances <- rowNonNACount * apply(
+            groupData,
+            1,
+            function(x) { stats::var(x, na.rm=TRUE) })
+
+        replicateGroupVariance <- sum(
+            rowVariances, na.rm=TRUE) / sum(rowNonNACount, na.rm=TRUE)
+        replicateGroupVariance
     }
+    
+    avgVarianceMat <- vapply(
+        methodList,
+        function(methodData) {
+            replicateGroupVariance <- vapply(
+                groupIndexList,
+                calculateReplicateGroupVariance,
+                0,
+                methodData=methodData
+            )
+            replicateGroupVariance
+        },
+        rep(0, length(unique(sampleReplicateGroups)))
+    )
     
     avgVarianceMat
 }
 
 #' Calculates correlation values between replicates for each condition matrix.
-#' Finally returns a list containing the results for all matrices.
+#' Finally returns a matrix containing the results for all dataset
+#' 
+#' TODO: Unit test for this function
 #' 
 #' @param methodlist List containing normalized matrices for each normalization
 #'   method
@@ -222,7 +221,8 @@ calculateAvgReplicateVariation <- function(methodList, sampleReplicateGroups) {
 #' @param sampleGroupsWithReplicates Unique vector with condition groups
 #'   present in two or more samples
 #' @param corrType Type of correlation (Pearson or Spearman)
-#' @return avgCorSum
+#' @return avgCorSum Matrix with column corresponding to normalization
+#' approaches and rows corresponding to replicate group
 #' @keywords internal
 calculateSummarizedCorrelationVector <- function(
     methodlist, allReplicateGroups, sampleGroupsWithReplicates, corrType) {
@@ -234,16 +234,15 @@ calculateSummarizedCorrelationVector <- function(
              " valid are: ", 
              paste(validCorrTypes, collapse=", "))
     }
-    
-    avgCorSum <- list()
-    for (i in seq_along(methodlist)) {
-        
-        methodData <- as.matrix(methodlist[[i]])
-        corSum <- calculateCorrSum(
-            methodData, allReplicateGroups, 
-            sampleGroupsWithReplicates, corrType)
-        avgCorSum[[i]] <- corSum
-    }
+
+    avgCorSum <- vapply(
+        methodlist,
+        calculateCorrSum,
+        rep(0, length(allReplicateGroups)),
+        allReplicateGroups=allReplicateGroups,
+        sampleGroupsWithReplicates=sampleGroupsWithReplicates,
+        corrType=corrType
+    )
     
     avgCorSum
 }

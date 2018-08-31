@@ -11,20 +11,6 @@
 #' @slot ner Normalyzer evaluation results
 #' @slot furtherNormalizationMinThreshold Minimum number of features threshold 
 #' for running extended normalizations
-#' @slot log2Matrix Log2 transformed filtered raw data
-#' @slot loessMatrix Loess normalization
-#' @slot globalfittedRLR Global fitted RLR normalization
-#' @slot vsnMatrix Global VSN normalized data
-#' @slot GIMatrix GI-normalized data
-#' @slot medMatrix Median normalized data
-#' @slot meanMatrix Mean normalized data
-#' @slot quantileMatrix Quantile normalized data
-#' @slot rtMedMatrix Retention time normalized for median
-#' @slot rtMeanMatrix Retention time normalized for Mean
-#' @slot rtLoessMatrix Retention time normalized for Loess
-#' @slot rtVSNMatrix Retention time normalized for VSN
-#' @slot ctrMatrix CTR normalized data
-#' @slot madMatrix MAD normalized data
 #' @export
 NormalyzerResults <- setClass("NormalyzerResults",
                               slots=c(

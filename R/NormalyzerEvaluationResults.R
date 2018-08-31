@@ -43,8 +43,8 @@ NormalyzerEvaluationResults <- setClass("NormalyzerEvaluationResults",
                                                anovaFDRWithNA = "matrix",
                                                anovaP = "matrix",
                                                
-                                               repCorPear = "list",
-                                               repCorSpear = "list"
+                                               repCorPear = "matrix",
+                                               repCorSpear = "matrix"
                                            ),
                                            prototype=prototype())
 

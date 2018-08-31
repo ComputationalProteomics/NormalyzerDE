@@ -1063,9 +1063,11 @@ plotCorrelation <- function(nr, currentLayout, pageno) {
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
     
-    perdf <- data.frame(matrix(unlist(repCorPear), 
-                               nrow=as.numeric(max(summary(repCorPear)[1])), 
-                               byrow=TRUE))
+    # perdf <- data.frame(matrix(unlist(repCorPear), 
+    #                            nrow=as.numeric(max(summary(repCorPear)[1])), 
+    #                            byrow=TRUE))
+    
+    perdf <- data.frame(repCorPear)
     
     abc <- graphics::boxplot(perdf, main="Pearson correlation - Intragroup", 
                              names=c(methodnames), border="red", 
@@ -1081,9 +1083,11 @@ plotCorrelation <- function(nr, currentLayout, pageno) {
         col="darkgreen"
     )
     
-    spedf <- data.frame(matrix(unlist(repCorSpear), 
-                               nrow=as.numeric(max(summary(repCorSpear)[1])), 
-                               byrow=TRUE))
+    # spedf <- data.frame(matrix(unlist(repCorSpear), 
+    #                            nrow=as.numeric(max(summary(repCorSpear)[1])), 
+    #                            byrow=TRUE))
+    
+    spedf <- data.frame(repCorSpear)
     
     abc <- graphics::boxplot(spedf, main="Spearman correlation - Intragroup", 
                              names=c(methodnames), border="red", 
