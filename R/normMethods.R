@@ -108,7 +108,7 @@ medianNormalization <- function(rawMatrix) {
 #' normMatrix <- meanNormalization(example_data_only_values)
 meanNormalization <- function(rawMatrix) {
     
-    colMeans <- apply(rawMatrix, 2, FUN="mean", na.rm=TRUE)
+    colMeans <- colMeans(rawMatrix, na.rm=TRUE)
     avgColMean <- mean(colMeans, na.rm=TRUE)
     normMatrix <- matrix(nrow=nrow(rawMatrix), ncol=ncol(rawMatrix), byrow=TRUE)
     

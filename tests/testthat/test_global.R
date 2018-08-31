@@ -4,6 +4,10 @@ designPath <- "../../vignettes/design.tsv"
 dataPath <- "../../vignettes/data.tsv"
 tempOut <- tempdir()
 
+# Note: During testing the expect_silent uses sink() to capture all output
+# For debugging using the browser() statement while in sink - run
+# closeAllConnections()
+
 test_that("Normalization run succeeds without errors", {
     
     expect_silent(

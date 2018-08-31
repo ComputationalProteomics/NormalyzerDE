@@ -637,7 +637,7 @@ plotCVvsIntensity <- function(nr, currentLayout, pageno) {
     )
     maxtempcv <- 0
     
-    for (j in seq_len(length(methodlist))) {
+    for (j in seq_along(methodlist)) {
         
         datastore <- methodlist[[j]]
         datastore <- datastore[, sampleReplicateGroups == min(sampleReplicateGroups)]
@@ -706,7 +706,7 @@ plotMA <- function(nr, currentLayout, pageno) {
     filterrawdata <- filterrawdata(nds)
     
     Malist <- list()
-    for (i in seq_len(length(normalizedDataList))) {
+    for (i in seq_along(normalizedDataList)) {
         
         methodData <- as.matrix(normalizedDataList[[i]])
         methodDataFirstCond <- methodData[, sampleReplicateGroups == min(sampleReplicateGroups)]
@@ -753,7 +753,7 @@ plotScatter <- function(nr, currentLayout, pageno) {
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(3, 2, 3, 2), xpd=NA)
     
-    for (i in seq_len(length(methodlist))) {
+    for (i in seq_along(methodlist)) {
         methodData <- methodlist[[i]]
         fit <- stats::lm(methodData[, 1]~methodData[, 2])
         graphics::plot(
@@ -794,7 +794,7 @@ plotQQ <- function(nr, currentLayout, pageno) {
     
     qqlist <- list()
     
-    for (i in seq_len(length(methodlist))) {  
+    for (i in seq_along(methodlist)) {  
         methodData <- methodlist[[i]]
         tempcolname <- colnames(methodData)
         qqlist[[i]] <- ggplot2::qplot(sample=methodData[, 1], na.rm=TRUE) + 
@@ -832,7 +832,7 @@ plotBoxPlot <- function(nr, currentLayout, pageno) {
     mindata <- 1000
     maxdata <- 0
     
-    for (i in seq_len(length(methodlist))) { 
+    for (i in seq_along(methodlist)) { 
         tempmin <- min(methodlist[[i]], na.rm=TRUE)
         tempmax <- max(methodlist[[i]], na.rm=TRUE)
         if (tempmin < mindata) {
@@ -843,7 +843,7 @@ plotBoxPlot <- function(nr, currentLayout, pageno) {
         }
     }
     
-    for (i in seq_len(length(methodlist))) {   
+    for (i in seq_along(methodlist)) {   
         graphics::par(mar=c(5, 1, 1, 1))
         graphics::boxplot(
             methodlist[[i]], 
@@ -884,7 +884,7 @@ plotRLE <- function(nr, currentLayout, pageno) {
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(3, 2, 3, 2), xpd=NA)
     
-    for (i in seq_len(length(methodlist))) {
+    for (i in seq_along(methodlist)) {
         deviations = methodlist[[i]] - Biobase::rowMedians(methodlist[[i]], na.rm=TRUE)
         graphics::boxplot(
             deviations, 
@@ -930,7 +930,7 @@ plotDensity <- function(nr, currentLayout, pageno) {
     graphics::layout(tout)
     graphics::par(mar=c(3, 2, 3, 1), oma=c(3, 2, 3, 2), xpd=NA)
     
-    for (i in seq_len(length(methodlist))) {
+    for (i in seq_along(methodlist)) {
         
         methodData <- methodlist[[i]]
         tempd <- stats::density(methodData[, 1], na.rm=TRUE)
@@ -972,7 +972,7 @@ plotMDS <- function(nr, currentLayout, pageno) {
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(3, 2, 3, 2), xpd=NA)
     
-    for (i in seq_len(length(methodlist))) {
+    for (i in seq_along(methodlist)) {
         
         datastore <- methodlist[[i]]
         d <- stats::dist(
@@ -1019,7 +1019,7 @@ plotMeanSD <- function(nr, currentLayout, pageno) {
     
     sdPlots <- list()
     
-    for (i in seq_len(length(methodlist))) {
+    for (i in seq_along(methodlist)) {
         
         methodData <- methodlist[[i]]
         msd <- vsn::meanSdPlot(
@@ -1131,7 +1131,7 @@ plotDendrograms <- function(nr, currentLayout, pageno) {
                     "darkgoldenrod4", "coral1")
     colt <- rep(colorVect, ceiling(length(filterED) / length(colorVect)))
     
-    for (j in seq_len(length(methodlist))) {
+    for (j in seq_along(methodlist)) {
         
         dataMatrix <- stats::na.omit(methodlist[[j]])
         colnames(dataMatrix) <- filterED
@@ -1170,7 +1170,7 @@ plotPHist <- function(nr, currentLayout, pageno) {
     anovaP <- anovaP(ner)
     histPlots <- list()
     
-    for (i in seq_len(length(methodnames))) {
+    for (i in seq_along(methodnames)) {
         
         anovaPVals <- anovaP[, i]
         df <- data.frame(anovaPVals=anovaPVals)

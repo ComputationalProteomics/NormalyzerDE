@@ -311,7 +311,7 @@ setMethod("calculateSignificanceMeasures", "NormalyzerEvaluationResults",
               
               lowVarFeaturesCVs <- findLowlyVariableFeatures(log2AnovaFDR, methodList)
               lowVarFeaturesCVsPercDiff <- vapply(
-                      seq_len(length(lowVarFeaturesCVs)),
+                      seq_along(lowVarFeaturesCVs),
                       function(sampleIndex) {
                           (lowVarFeaturesCVs[sampleIndex] * 100) / lowVarFeaturesCVs[1]
                       },

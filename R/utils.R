@@ -87,7 +87,7 @@ getRowNAFilterContrast <- function(dataMatrix,
     replicatesHaveData <- rep(TRUE, nrow(dataMatrix))
     indexList <- getIndexList(replicateHeader)
     
-    for (sampleIndex in seq_len(length(names(indexList)))) {
+    for (sampleIndex in seq_along(names(indexList))) {
         
         repVal <- names(indexList)[sampleIndex]
         cols <- indexList[[repVal]]

@@ -208,7 +208,7 @@ plotContrastPHists <- function(nst, jobName, currentLayout, pageno) {
     contrastPLists <- pairwiseCompsP(nst)
     histPlots <- list()
     
-    for (i in seq_len(length(contrastPLists))) {
+    for (i in seq_along(contrastPLists)) {
         contrast <- names(contrastPLists)[i]
         pVals <- contrastPLists[[contrast]]
         df <- data.frame(pVals=pVals)

@@ -37,7 +37,7 @@ printPlots <- function(plotlist, plotname, pageno, jobname, currentLayout) {
     col <- 2  # Start value
 
     posCounter <- 0
-    for (i in seq_len(length(plotlist))) {
+    for (i in seq_along(plotlist)) {
         
         if (gridSize == 1 || (i != 1 && i %% gridSize == 1)) {
             print(paste("New page, row:", row, "col:", col))

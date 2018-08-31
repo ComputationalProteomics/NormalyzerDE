@@ -285,7 +285,7 @@ calculateWelch <- function(dataMat, groupHeader, levels) {
 
     statResults[["P"]] <- welchPValCol
     statResults[["FDR"]] <- welchFDRCol
-    statResults[["Ave"]] <- apply(dataMat, 1, mean, na.rm=TRUE)
+    statResults[["Ave"]] <- rowMeans(dataMat, na.rm=TRUE)
     statResults[["Fold"]] <- apply(
         dataMat, 
         1,

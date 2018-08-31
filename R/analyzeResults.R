@@ -67,7 +67,6 @@ calculateReplicateCV <- function(methodList, sampleReplicateGroups) {
         featureCondCVs <- matrix(
             nrow=nrow(processedDataMatrix), 
             ncol=length(unique(unlist(sampleReplicateGroups))), 
-            # ncol=length(levels(as.factor(unlist(sampleReplicateGroups)))), 
             byrow=TRUE)
         
         for (i in seq_len(nrow(processedDataMatrix))) {
@@ -79,8 +78,8 @@ calculateReplicateCV <- function(methodList, sampleReplicateGroups) {
             featureCondCVs[i, ] <- featureCVs$table
         }
         
-        # Sum up CV for all features for each condition
-        summedCondCVs <- apply(featureCondCVs, 2, mean, na.rm=TRUE)
+        # Calculate mean CV for all features for each condition
+        summedCondCVs <- colMeans(featureCondCVs, na.rm=TRUE)
         avgCVPerNormAndReplicates[, methodIndex] <- summedCondCVs * 100
     }
     
@@ -141,7 +140,7 @@ calculateAvgMadMem <- function(methodList, sampleReplicateGroups) {
             ncol=length(unique(unlist(sampleReplicateGroups))), 
             byrow=TRUE)
         
-        for (sampleIndex in seq_len(length(names(indexList)))) {
+        for (sampleIndex in seq_along(names(indexList))) {
             repVal <- names(indexList)[sampleIndex]
             cols <- indexList[[repVal]]
             featureMedianAbsDevMat[, sampleIndex] <- apply(
@@ -150,11 +149,8 @@ calculateAvgMadMem <- function(methodList, sampleReplicateGroups) {
                 function(x) { stats::mad(x, na.rm=TRUE) })
         }
         
-        condAvgMadMat[, methodIndex] <- apply(
-            featureMedianAbsDevMat, 
-            2, 
-            mean, 
-            na.rm=TRUE)
+        condAvgMadMat[, methodIndex] <- colMeans(
+            featureMedianAbsDevMat, na.rm=TRUE)
     }
     condAvgMadMat
 }
@@ -183,7 +179,7 @@ calculateAvgReplicateVariation <- function(methodList, sampleReplicateGroups) {
         rowVariances <- vector()
         processedDataMatrix <- methodList[[methodIndex]]
         
-        for (sampleIndex in seq_len(length(names(indexList)))) {
+        for (sampleIndex in seq_along(names(indexList))) {
             
             repVal <- names(indexList)[sampleIndex]
             cols <- indexList[[repVal]]
@@ -233,7 +229,7 @@ calculateSummarizedCorrelationVector <- function(
     }
     
     avgCorSum <- list()
-    for (i in seq_len(length(methodlist))) {
+    for (i in seq_along(methodlist)) {
         
         methodData <- as.matrix(methodlist[[i]])
         corSum <- calculateCorrSum(
@@ -261,7 +257,7 @@ calculateCorrSum <- function(methodData, allReplicateGroups,
                              sampleGroupsWithReplicates, corrType) {
     
     corSums <- vector()
-    for (groupNbr in seq_len(length(sampleGroupsWithReplicates))) {
+    for (groupNbr in seq_along(sampleGroupsWithReplicates)) {
         
         specificReplicateVals <- as.matrix(
             methodData[, which(allReplicateGroups == sampleGroupsWithReplicates[groupNbr])])

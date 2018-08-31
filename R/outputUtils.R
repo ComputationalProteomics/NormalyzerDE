@@ -31,7 +31,7 @@ writeNormalizedDatasets <- function(nr, jobdir, includePairwiseComparisons=FALSE
     methodlist <- getNormalizationMatrices(nr)
     annotationColumns <- annotationValues(nds)
     
-    for (sampleIndex in seq_len(length(methodnames))) {
+    for (sampleIndex in seq_along(methodnames)) {
         
         currentMethod <- methodnames[sampleIndex]
         filePath <- paste(jobdir, "/", currentMethod, normSuffix, sep="")
