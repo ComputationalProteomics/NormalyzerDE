@@ -51,8 +51,8 @@ getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod,
     
     sortedRT <- sort(retentionTimes)
     
-    startVal <- min(stats::na.omit(retentionTimes))
-    endVal <- max(stats::na.omit(retentionTimes))
+    startVal <- min(retentionTimes, na.rm=TRUE)
+    endVal <- max(retentionTimes, na.rm=TRUE)
     rowNumbers <- c()
 
     if (offset) {
