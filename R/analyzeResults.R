@@ -129,12 +129,8 @@ calculateAvgMadMem <- function(methodList, sampleReplicateGroups) {
 
     calculateAvgFeatureMadForGroup <- function(groupIndices, methodData) {
         groupData <- methodData[, groupIndices]
-        featureMedianAbsDev <- apply(
-            groupData,
-            1,
-            function(groupRow) { stats::mad(groupRow, na.rm=TRUE) }
-        )
-        featureMedianAbsDev
+        featureMAD <- matrixStats::rowMads(groupData, na.rm=TRUE)
+        featureMAD
     }
         
     calculateGroupMadForMethod <- function(methodData, groups, indexList) {
@@ -364,14 +360,11 @@ findLowlyVariableFeaturesCVs <- function(referenceFDR, methodList) {
         
         lowVarFeatures <- methodData[lowVarContrast, ]
         averageCVs <- mean(
-            apply(
-                lowVarFeatures, 
-                1, 
-                function(sampleIndex) raster::cv(sampleIndex, na.rm=TRUE)), 
+            matrixStats::rowSds(lowVarFeatures, na.rm=TRUE) / rowMeans(lowVarFeatures, na.rm=TRUE) * 100,
             na.rm=TRUE)
         averageCVs
     }
-        
+    
     lowVarFeaturesAverageCVs <- vapply(
         methodList,
         calculateAverageCVs,

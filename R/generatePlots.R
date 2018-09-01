@@ -321,8 +321,8 @@ plotSampleOutlierSummary <- function(nr, currentLayout, pageno) {
     tout <- rbind(c(1, 2), c(3, 4))
     graphics::layout(tout)
     graphics::par(mar=c(4, 4, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)        
-    
-    datacoltotal <- apply(filterrawdata, 2, function(x) { sum(x, na.rm=TRUE) })
+
+    datacoltotal <- colSums(filterrawdata, na.rm=TRUE)
     
     graphics::barplot(
         datacoltotal, 
@@ -331,6 +331,7 @@ plotSampleOutlierSummary <- function(nr, currentLayout, pageno) {
         cex.names=0.5, 
         names.arg=substr(names(datacoltotal), 1, 10)
     )
+    
     datamissingcol <- apply(filterrawdata, 2, function(x) { sum(is.na(x)) })
     graphics::barplot(
         datamissingcol, 
@@ -339,6 +340,7 @@ plotSampleOutlierSummary <- function(nr, currentLayout, pageno) {
         cex.names=0.5, 
         names.arg=substr(names(datamissingcol), 1, 10)
     )
+    
     datastore <- methodlist[[1]]
     
     d <- stats::dist(
