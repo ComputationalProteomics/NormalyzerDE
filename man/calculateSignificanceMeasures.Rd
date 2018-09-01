@@ -9,8 +9,8 @@ Kruskal-Wallis}
 \usage{
 calculateSignificanceMeasures(ner, nr, categoricalAnova)
 
-\S4method{calculateSignificanceMeasures}{NormalyzerEvaluationResults}(ner, nr,
-  categoricalAnova = TRUE)
+\S4method{calculateSignificanceMeasures}{NormalyzerEvaluationResults}(ner,
+  nr, categoricalAnova = TRUE)
 }
 \arguments{
 \item{ner}{NormalyzerDE evaluation object.}

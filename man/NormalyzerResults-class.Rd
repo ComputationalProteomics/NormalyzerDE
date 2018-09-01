@@ -14,43 +14,14 @@ from the evaluation.
 \section{Slots}{
 
 \describe{
+\item{\code{normalizations}}{SummarizedExperiment object containing calculated
+normalization results}
+
 \item{\code{nds}}{Normalyzer dataset representing run data}
 
 \item{\code{ner}}{Normalyzer evaluation results}
 
-\item{\code{methodnames}}{Short names for included normalization methods}
-
-\item{\code{furtherNormalizationMinThreshold}}{Min threshold for running extended 
-normalizations}
-
-\item{\code{data2log2}}{Log2 of filtered raw data}
-
-\item{\code{fittedLR}}{Fitted Loess regression}
-
-\item{\code{data2loess}}{Loess normalization}
-
-\item{\code{globalfittedRLR}}{Global fitted RLR normalization}
-
-\item{\code{data2vsn}}{Global VSN normalized data}
-
-\item{\code{data2GI}}{GI-normalized data}
-
-\item{\code{data2med}}{Median normalized data}
-
-\item{\code{data2mean}}{Mean normalized data}
-
-\item{\code{data2quantile}}{Quantile normalized data}
-
-\item{\code{data2rtMed}}{Retention time normalized for median}
-
-\item{\code{data2rtMean}}{Retention time normalized for Mean}
-
-\item{\code{data2rtLoess}}{Retention time normalized for Loess}
-
-\item{\code{data2rtVSN}}{Retention time normalized for VSN}
-
-\item{\code{data2ctr}}{CTR normalized data}
-
-\item{\code{data2mad}}{MAD normalized data}
+\item{\code{furtherNormalizationMinThreshold}}{Minimum number of features threshold 
+for running extended normalizations}
 }}
 

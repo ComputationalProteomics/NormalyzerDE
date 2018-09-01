@@ -32,12 +32,6 @@ removed}
 
 \item{\code{samplesGroupsWithReplicates}}{Vector with replicated sample replicate information}
 
-\item{\code{colsum}}{Vector with sum of values for each column}
-
-\item{\code{medofdata}}{Vector with median values for each column}
-
-\item{\code{meanofdata}}{Vector with mean values for each column}
-
 \item{\code{annotationValues}}{Annotation part of original dataframe.}
 
 \item{\code{retentionTimes}}{Vector of retention time values.}

@@ -4,8 +4,8 @@
 \alias{generateNormalyzerDataset}
 \title{Setup Normalyzer dataset from given raw data}
 \usage{
-generateNormalyzerDataset(jobName, designMatrix, fullRawMatrix, sampleNameCol,
-  groupNameCol, quiet = FALSE)
+generateNormalyzerDataset(jobName, designMatrix, fullRawMatrix,
+  sampleNameCol, groupNameCol, quiet = FALSE)
 }
 \arguments{
 \item{jobName}{Name of ongoing run.}

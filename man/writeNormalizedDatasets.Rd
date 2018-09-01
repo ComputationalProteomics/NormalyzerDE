@@ -6,7 +6,8 @@
 \usage{
 writeNormalizedDatasets(nr, jobdir, includePairwiseComparisons = FALSE,
   includeCvCol = FALSE, includeAnovaP = FALSE,
-  normSuffix = "-normalized.txt", rawdataName = "submitted_rawdata.txt")
+  normSuffix = "-normalized.txt",
+  rawdataName = "submitted_rawdata.txt")
 }
 \arguments{
 \item{nr}{Results object.}

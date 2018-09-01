@@ -5,9 +5,9 @@
 \title{Verify that input data is in correct format, and if so, return a generated
  NormalyzerDE data object from that input data}
 \usage{
-getVerifiedNormalyzerObject(jobName, designMatrix, rawData, threshold = 15,
-  omitSamples = FALSE, requireReplicates = TRUE, sampleCol = "sample",
-  groupCol = "group", quiet = FALSE)
+getVerifiedNormalyzerObject(jobName, designMatrix, rawData,
+  threshold = 15, omitSamples = FALSE, requireReplicates = TRUE,
+  sampleCol = "sample", groupCol = "group", quiet = FALSE)
 }
 \arguments{
 \item{jobName}{Name of ongoing run.}

@@ -3,7 +3,7 @@
 \name{calculateSummarizedCorrelationVector}
 \alias{calculateSummarizedCorrelationVector}
 \title{Calculates correlation values between replicates for each condition matrix.
-Finally returns a list containing the results for all matrices.}
+Finally returns a matrix containing the results for all dataset}
 \usage{
 calculateSummarizedCorrelationVector(methodlist, allReplicateGroups,
   sampleGroupsWithReplicates, corrType)
@@ -21,10 +21,10 @@ present in two or more samples}
 \item{corrType}{Type of correlation (Pearson or Spearman)}
 }
 \value{
-avgCorSum
+avgCorSum Matrix with column corresponding to normalization
+approaches and rows corresponding to replicate group
 }
 \description{
-Calculates correlation values between replicates for each condition matrix.
-Finally returns a list containing the results for all matrices.
+TODO: Unit test for this function
 }
 \keyword{internal}
