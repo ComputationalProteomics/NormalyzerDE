@@ -221,7 +221,7 @@ setMethod("calculateCV", "NormalyzerEvaluationResults",
               nds <- nds(nr)
               sampleReplicateGroups <- sampleReplicateGroups(nds)
               sampleReplicateGroups <- sampleReplicateGroups(nds)
-              methodList <- getNormalizationMatrices(nr)
+              methodList <- normalizations(nr)
 
               avgCVPerNormAndReplicates <- calculateReplicateCV(methodList, sampleReplicateGroups)
               avgcvmem(ner) <- avgCVPerNormAndReplicates
@@ -248,7 +248,7 @@ setMethod("calculateMAD", "NormalyzerEvaluationResults",
               
               nds <- nds(nr)
               sampleReplicateGroups <- sampleReplicateGroups(nds)
-              methodList <- getNormalizationMatrices(nr)
+              methodList <- normalizations(nr)
               avgmadmem <- calculateAvgMadMem(methodList, sampleReplicateGroups)
               avgMadPdiff<- calculatePercentageAvgDiffInMat(avgmadmem)
 
@@ -275,7 +275,7 @@ setMethod("calculateAvgVar", "NormalyzerEvaluationResults",
               
               nds <- nds(nr)
               sampleReplicateGroups <- sampleReplicateGroups(nds)
-              methodList <- getNormalizationMatrices(nr)
+              methodList <- normalizations(nr)
 
               avgVarianceMat <- calculateAvgReplicateVariation(methodList, sampleReplicateGroups)
               avgvarmem(ner) <- avgVarianceMat
@@ -304,7 +304,7 @@ setMethod("calculateSignificanceMeasures", "NormalyzerEvaluationResults",
               
               nds <- nds(nr)
               sampleReplicateGroups <- sampleReplicateGroups(nds)
-              methodList <- getNormalizationMatrices(nr)
+              methodList <- normalizations(nr)
 
               anovaPValsWithNAMat <- calculateANOVAPValues(methodList, sampleReplicateGroups, categoricalAnova)
               validPValuesContrast <- !is.na(anovaPValsWithNAMat[, 1])
@@ -346,7 +346,7 @@ setMethod("calculateCorrelations", "NormalyzerEvaluationResults",
           function(ner, nr) {
 
             nds <- nds(nr)
-            methodlist <- getNormalizationMatrices(nr)
+            methodlist <- normalizations(nr)
             allReplicateGroups <- sampleReplicateGroups(nds)
             sampleGroupsWithReplicates <- samplesGroupsWithReplicates(nds)
             

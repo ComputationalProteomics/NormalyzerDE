@@ -24,7 +24,7 @@ normMethods <- function(nds, forceAll=FALSE, normalizeRetentionTime=TRUE,
                         rtWindowShifts=1, rtWindowMergeMethod="mean") {
     
     nr <- NormalyzerResults(nds=nds)
-    nr <- initializeResultsObject(nr)
+    # nr <- initializeResultsObject(nr)
     nr <- performNormalizations(
         nr, 
         forceAll=forceAll, 

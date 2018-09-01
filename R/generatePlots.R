@@ -313,7 +313,7 @@ plotFrontPage <- function(currentjob, currentFont) {
 plotSampleOutlierSummary <- function(nr, currentLayout, pageno) {
     
     nds <- nds(nr)
-    methodlist <- getNormalizationMatrices(nr)
+    methodlist <- normalizations(nr)
     filterED <- sampleReplicateGroups(nds)
     filterrawdata <- filterrawdata(nds)
     currentjob <- jobName(nds)
@@ -376,7 +376,7 @@ plotSampleOutlierSummary <- function(nr, currentLayout, pageno) {
 plotReplicateVariance <- function(nr, currentLayout, pageno) {
     
     nds <- nds(nr)
-    methodnames <- getUsedMethodNames(nr)
+    methodnames <- names(normalizations(nr))
     currentjob <- jobName(nds)
     
     ner <- ner(nr)
@@ -473,7 +473,7 @@ plotReplicateVariance <- function(nr, currentLayout, pageno) {
 plotReplicateVarAndStableVariables <- function(nr, currentLayout, pageno) {
     
     nds <- nds(nr)
-    methodnames <- getUsedMethodNames(nr)
+    methodnames <- names(normalizations(nr))
     currentjob <- jobName(nds)
     
     ner <- ner(nr)
@@ -620,8 +620,8 @@ plotReplicateVarAndStableVariables <- function(nr, currentLayout, pageno) {
 plotCVvsIntensity <- function(nr, currentLayout, pageno) {
     
     nds <- nds(nr)
-    methodnames <- getUsedMethodNames(nr)
-    methodlist <- getNormalizationMatrices(nr)
+    methodnames <- names(normalizations(nr))
+    methodlist <- normalizations(nr)
     currentjob <- jobName(nds)
     sampleReplicateGroups <- sampleReplicateGroups(nds)
     filterrawdata <- filterrawdata(nds)
@@ -701,8 +701,8 @@ plotCVvsIntensity <- function(nr, currentLayout, pageno) {
 plotMA <- function(nr, currentLayout, pageno) {
     
     nds <- nds(nr)
-    methodNames <- getUsedMethodNames(nr)
-    normalizedDataList <- getNormalizationMatrices(nr)
+    methodNames <- names(normalizations(nr))
+    normalizedDataList <- normalizations(nr)
     currentjob <- jobName(nds)
     sampleReplicateGroups <- sampleReplicateGroups(nds)
     filterrawdata <- filterrawdata(nds)
@@ -743,8 +743,8 @@ plotMA <- function(nr, currentLayout, pageno) {
 plotScatter <- function(nr, currentLayout, pageno) {
     
     nds <- nds(nr)
-    methodnames <- getUsedMethodNames(nr)
-    methodlist <- getNormalizationMatrices(nr)
+    methodnames <- names(normalizations(nr))
+    methodlist <- normalizations(nr)
     currentjob <- jobName(nds)
     
     tout <- matrix(
@@ -790,8 +790,8 @@ plotScatter <- function(nr, currentLayout, pageno) {
 plotQQ <- function(nr, currentLayout, pageno) {
     
     nds <- nds(nr)
-    methodnames <- getUsedMethodNames(nr)
-    methodlist <- getNormalizationMatrices(nr)
+    methodnames <- names(normalizations(nr))
+    methodlist <- normalizations(nr)
     currentjob <- jobName(nds)
     
     qqlist <- list()
@@ -818,8 +818,8 @@ plotQQ <- function(nr, currentLayout, pageno) {
 plotBoxPlot <- function(nr, currentLayout, pageno) {
     
     nds <- nds(nr)
-    methodnames <- getUsedMethodNames(nr)
-    methodlist <- getNormalizationMatrices(nr)
+    methodnames <- names(normalizations(nr))
+    methodlist <- normalizations(nr)
     currentjob <- jobName(nds)
     filterED <- sampleReplicateGroups(nds)
     filterrawdata <- filterrawdata(nds)
@@ -873,8 +873,8 @@ plotBoxPlot <- function(nr, currentLayout, pageno) {
 plotRLE <- function(nr, currentLayout, pageno) {
     
     nds <- nds(nr)
-    methodnames <- getUsedMethodNames(nr)
-    methodlist <- getNormalizationMatrices(nr)
+    methodnames <- names(normalizations(nr))
+    methodlist <- normalizations(nr)
     currentjob <- jobName(nds)
     filterED <- sampleReplicateGroups(nds)
     
@@ -920,8 +920,8 @@ plotRLE <- function(nr, currentLayout, pageno) {
 plotDensity <- function(nr, currentLayout, pageno) {
     
     nds <- nds(nr)
-    methodnames <- getUsedMethodNames(nr)
-    methodlist <- getNormalizationMatrices(nr)
+    methodnames <- names(normalizations(nr))
+    methodlist <- normalizations(nr)
     currentjob <- jobName(nds)
     
     tout <- matrix(
@@ -961,8 +961,8 @@ plotDensity <- function(nr, currentLayout, pageno) {
 plotMDS <- function(nr, currentLayout, pageno) {
     
     nds <- nds(nr)
-    methodnames <- getUsedMethodNames(nr)
-    methodlist <- getNormalizationMatrices(nr)
+    methodnames <- names(normalizations(nr))
+    methodlist <- normalizations(nr)
     currentjob <- jobName(nds)
     filterED <- sampleReplicateGroups(nds)
     
@@ -1015,8 +1015,8 @@ plotMDS <- function(nr, currentLayout, pageno) {
 plotMeanSD <- function(nr, currentLayout, pageno) {
     
     nds <- nds(nr)
-    methodnames <- getUsedMethodNames(nr)
-    methodlist <- getNormalizationMatrices(nr)
+    methodnames <- names(normalizations(nr))
+    methodlist <- normalizations(nr)
     currentjob <- jobName(nds)
     
     sdPlots <- list()
@@ -1055,8 +1055,8 @@ plotCorrelation <- function(nr, currentLayout, pageno) {
     repCorSpear <- repCorSpear(ner)
     
     nds <- nds(nr)
-    methodnames <- getUsedMethodNames(nr)
-    methodlist <- getNormalizationMatrices(nr)
+    methodnames <- names(normalizations(nr))
+    methodlist <- normalizations(nr)
     currentjob <- jobName(nds)
     filterED <- sampleReplicateGroups(nds)
     filterrawdata <- filterrawdata(nds)
@@ -1118,8 +1118,8 @@ plotCorrelation <- function(nr, currentLayout, pageno) {
 plotDendrograms <- function(nr, currentLayout, pageno) {
     
     nds <- nds(nr)
-    methodnames <- getUsedMethodNames(nr)
-    methodlist <- getNormalizationMatrices(nr)
+    methodnames <- names(normalizations(nr))
+    methodlist <- normalizations(nr)
     currentjob <- jobName(nds)
     filterED <- sampleReplicateGroups(nds)
     
@@ -1171,7 +1171,7 @@ plotPHist <- function(nr, currentLayout, pageno) {
     
     nds <- nds(nr)
     ner <- ner(nr)
-    methodnames <- getUsedMethodNames(nr)
+    methodnames <- names(normalizations(nr))
     currentjob <- jobName(nds)
     anovaP <- anovaP(ner)
     histPlots <- list()

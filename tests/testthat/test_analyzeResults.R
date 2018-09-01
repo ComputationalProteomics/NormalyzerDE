@@ -12,7 +12,7 @@ regression_test_ner <- ner(regression_test_nr)
 nds <- nds(regression_test_nr)
 
 sampleReplicateGroups <- sampleReplicateGroups(nds)
-normMatrices <- getNormalizationMatrices(regression_test_nr)
+normMatrices <- normalizations(regression_test_nr)
 anova_pvalues <- calculateANOVAPValues(
     normMatrices, 
     sampleReplicateGroups, 

@@ -27,8 +27,8 @@ writeNormalizedDatasets <- function(nr, jobdir, includePairwiseComparisons=FALSE
     nds <- nds(nr)
     ner <- ner(nr)
 
-    methodnames <- getUsedMethodNames(nr)
-    methodlist <- getNormalizationMatrices(nr)
+    methodlist <- normalizations(nr)
+    methodnames <- names(methodlist)
     annotationColumns <- annotationValues(nds)
     
     for (sampleIndex in seq_along(methodnames)) {
