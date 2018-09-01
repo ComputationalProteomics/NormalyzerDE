@@ -75,8 +75,9 @@
 #' }
 normalyzer <- function(
         jobName,
-        designPath, 
-        dataPath,
+        designPath=NULL, 
+        dataPath=NULL,
+        experimentObj=NULL,
         outputDir=".",
         forceAllMethods=FALSE,
         omitLowAbundSamples=FALSE,
@@ -98,22 +99,31 @@ normalyzer <- function(
         rtWindowMergeMethod="mean"
     ) {
 
+    if (is.null(experimentObj) && (is.null(designPath) || is.null(dataPath))) {
+        stop("Either options 'designPath' plus 'dataPath' or 'summarizedExp' need to be provided")
+    }
+    
     startTime <- Sys.time()
     
     if (!quiet) message("[Step 1/5] Load data and verify input")
-    rawDesign <- loadDesign(designPath, sampleCol=sampleColName, groupCol=groupColName)
-    rawData <- loadData(dataPath, inputFormat=inputFormat, zeroToNA=zeroToNA)
-    
+
+    if (is.null(experimentObj)) {
+        experimentObj <- setupRawDataObject(dataPath, designPath, inputFormat, 
+                                            zeroToNA, sampleColName, groupColName)
+    }
+    else {
+        metadata(experimentObj) <- list(sample=sampleColName, group=groupColName)
+        colData(experimentObj)[[sample]] <- as.character(colData(experimentObj)[[sample]])
+    }
+
     normObj <- getVerifiedNormalyzerObject(
         jobName=jobName,
-        designMatrix=rawDesign,
-        rawData=rawData,
+        summarizedExp=experimentObj,
         threshold=sampleAbundThres,
         omitSamples=omitLowAbundSamples,
         requireReplicates=requireReplicates,
-        sampleCol=sampleColName,
-        groupCol=groupColName,
         quiet=quiet)
+        
     jobDir <- setupJobDir(jobName, outputDir)
     if (!quiet) message(
         "[Step 1/5] Input verified, job directory prepared at:", 
@@ -211,30 +221,29 @@ normalyzer <- function(
 #'   c("1-2", "1-4"),  outputDir="path/to/output")
 #' }
 #' @export
-normalyzerDE <- function(jobName, designPath, dataPath, comparisons, outputDir=".", logTrans=FALSE, 
+normalyzerDE <- function(jobName, comparisons, designPath=NULL, dataPath=NULL, 
+                         experimentObj=NULL, outputDir=".", logTrans=FALSE, 
                          type="limma", sampleCol="sample", condCol="group", 
                          batchCol=NULL, techRepCol=NULL, leastRepCount=1, quiet=FALSE) {
 
+    if (is.null(experimentObj) && (is.null(designPath) || is.null(dataPath))) {
+        stop("Either options 'designPath' plus 'dataPath' or 'summarizedExp' need to be provided")
+    }
+    
     startTime <- Sys.time()
     jobDir <- setupJobDir(jobName, outputDir)
 
     if (!quiet) print("Setting up statistics object")
-    fullDf <- utils::read.csv(
-        dataPath, 
-        sep="\t", 
-        stringsAsFactors=FALSE, 
-        quote="", 
-        comment.char="")
-    designDf <- utils::read.csv(
-        designPath, 
-        sep="\t",
-        stringsAsFactors=FALSE,
-        quote="",
-        comment.char="")
-    designDf[, sampleCol] <- as.character(designDf[, sampleCol])
-    
-    nst <- setupStatisticsObject(designDf, fullDf, logTrans=logTrans, leastRepCount=leastRepCount)
-    
+    if (is.null(experimentObj)) {
+        experimentObj <- setupRawContrastObject(dataPath, designPath, sampleCol)
+    }
+
+    nst <- setupStatisticsObject(experimentObj, 
+                                 logTrans=logTrans, 
+                                 leastRepCount=leastRepCount,
+                                 sampleCol=sampleCol,
+                                 conditionCol=condCol)
+
     if (!is.null(techRepCol)) {
         if (!quiet) print("Reducing technical replicates")
         dataMat(nst) <- reduceTechnicalReplicates(dataMat(nst), designDf(nst)[, techRepCol])
@@ -242,7 +251,7 @@ normalyzerDE <- function(jobName, designPath, dataPath, comparisons, outputDir="
     }
     
     if (!quiet) print("Calculating statistical contrasts...")
-    nst <- calculateContrasts(nst, comparisons, condCol="group", type=type, batchCol=batchCol)
+    nst <- calculateContrasts(nst, comparisons, condCol=condCol, type=type, batchCol=batchCol)
     if (!quiet) print("Contrast calculations done!")
     
     annotDf <- generateAnnotatedMatrix(nst)
@@ -250,7 +259,7 @@ normalyzerDE <- function(jobName, designPath, dataPath, comparisons, outputDir="
     
     if (!quiet) print(paste("Writing", nrow(annotDf), "annotated rows to", outPath))
     utils::write.table(annotDf, file=outPath, sep="\t", row.names = FALSE)
-    if (!quiet) print(paste("Writing statistics report"))
+    if (!quiet) print(paste("Writing statistics report"))
     generateStatsReport(nst, jobName, jobDir)
     
     endTime <- Sys.time()

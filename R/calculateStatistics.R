@@ -82,13 +82,17 @@ reduceDesignTechRep <- function(designMat, techRepGroups) {
 #' data(example_design)
 #' data(example_stat_data)
 #' setupStatisticsObject(example_design, example_stat_data)
-setupStatisticsObject <- function(designDf, fullDf, sampleCol="sample", 
-                                  conditionCol="group", batchCol=NULL, 
+setupStatisticsObject <- function(experimentObj, sampleCol="sample", conditionCol="group", 
                                   logTrans=FALSE, leastRepCount=2) {
 
-    dataCols <- as.character(designDf[, sampleCol])
-    annotMat <- as.matrix(fullDf[, which(!colnames(fullDf) %in% dataCols)])
-    dataMat <- as.matrix(fullDf[, dataCols], )
+    dataMat <- assay(experimentObj)
+    if (logTrans) {
+        dataMat <- log2(dataMat)
+    }
+    
+    annotMat <- rowData(experimentObj)
+    designDf <- colData(experimentObj)
+    designDf[[sampleCol]] <- as.character(designDf[[sampleCol]])
     
     rownames(dataMat) <- seq_len(nrow(dataMat))
     dataMatNAFiltered <- filterLowRep(
@@ -98,14 +102,10 @@ setupStatisticsObject <- function(designDf, fullDf, sampleCol="sample",
     )
     naFilterContrast <- rownames(dataMat) %in% rownames(dataMatNAFiltered)
       
-    if (logTrans) {
-        dataMat <- log2(dataMat)
-    }
-    
     nst <- NormalyzerStatistics(
-        annotMat=annotMat, 
-        dataMat=dataMat, 
-        designDf=designDf, 
+        annotMat=as.matrix(annotMat), 
+        dataMat=as.matrix(dataMat), 
+        designDf=as.data.frame(designDf), 
         filteredDataMat=dataMatNAFiltered,
         filteringContrast=naFilterContrast
     )

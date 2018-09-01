@@ -280,7 +280,7 @@ calculateWelch <- function(dataMat, groupHeader, levels) {
         dataMat, 1, 
         function(row) doTTest(row[s1cols], row[s2cols], default=NA))
     welchFDRCol <- stats::p.adjust(welchPValCol, method="BH")
-
+    
     statResults <- list()
 
     statResults[["P"]] <- welchPValCol

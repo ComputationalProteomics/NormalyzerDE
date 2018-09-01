@@ -65,6 +65,72 @@ loadDesign <- function(designPath, sampleCol="sample", groupCol="group") {
     designMatrix
 }
 
+#' Load raw design into dataframe
+#' 
+#' Takes a design path, loads the matrix and ensures that the sample column
+#' is in character format and that the group column is in factor format.
+#' 
+#' @param designPath File path to design matrix.
+#' @param sampleCol Column name for column containing sample names.
+#' @param groupCol Column name for column containing condition levels.
+#' @return designMatrix Design data loaded into data frame
+#' @export
+#' @examples \dontrun{
+#' df <- loadDesign("design.tsv")
+#' }
+setupRawDataObject <- function(dataPath, designPath, inputFormat, zeroToNA, sampleColName, groupColName) {
+    
+    rawDesign <- loadDesign(designPath, sampleCol=sampleColName, groupCol=groupColName)
+    rawDesign[[sampleColName]] <- as.character(rawDesign[[sampleColName]])
+    rawData <- loadData(dataPath, inputFormat=inputFormat, zeroToNA=zeroToNA)
+    
+    rdf <- rawData[2:nrow(rawData), ]
+    colnames(rdf) <- rawData[1, ]
+    
+    sdf <- rdf[, as.character(rawDesign[[sampleColName]])]
+    adf <- rdf[, !(colnames(rdf) %in% as.character(rawDesign[[sampleColName]]))]
+    
+    experimentObj <- SummarizedExperiment::SummarizedExperiment(
+        assays=list(raw=as.matrix(sdf)),
+        rowData=adf,
+        colData=rawDesign,
+        metadata=list(sample=sampleColName, group=groupColName)
+    )
+    experimentObj
+}
+
+setupRawContrastObject <- function(dataPath, designPath, sampleColName) {
+    
+    fullDf <- utils::read.csv(
+        dataPath, 
+        sep="\t", 
+        stringsAsFactors=FALSE, 
+        quote="", 
+        comment.char="",
+        check.names=FALSE
+    )
+    
+    designDf <- utils::read.csv(
+        designPath, 
+        sep="\t",
+        stringsAsFactors=FALSE,
+        quote="",
+        comment.char="",
+        check.names=FALSE
+    )
+    
+    sdf <- fullDf[, designDf[[sampleColName]]]
+    adf <- fullDf[, !(colnames(fullDf) %in% as.character(designDf[[sampleColName]]))]
+    
+    experimentObj <- SummarizedExperiment::SummarizedExperiment(
+        assays=list(raw=as.matrix(sdf)),
+        colData=designDf,
+        rowData=adf,
+        metadata=list(sample=sampleColName)
+    )
+    experimentObj
+}
+
 #' Verify that input data is in correct format, and if so, return a generated
 #'  NormalyzerDE data object from that input data
 #' 
@@ -92,30 +158,28 @@ loadDesign <- function(designPath, sampleCol="sample", groupCol="group") {
 #' normObj <- getVerifiedNormalyzerObject("job_name", example_design, example_data)
 getVerifiedNormalyzerObject <- function(
         jobName, 
-        designMatrix, 
-        rawData,
+        summarizedExp,
         threshold=15, 
         omitSamples=FALSE,
         requireReplicates=TRUE,
-        sampleCol="sample",
-        groupCol="group",
         quiet=FALSE
     ) {
 
+    groupCol <- metadata(summarizedExp)$group
+    sampleCol <- metadata(summarizedExp)$sample
+    designMatrix <- as.data.frame(colData(summarizedExp))
+    
     if (!groupCol %in% colnames(designMatrix)) {
         stop("Given groupCol: '", groupCol, "' was not present among design matrix columns")
     }
 
-    groups <- as.numeric(as.factor(designMatrix[, groupCol]))
-    samples <- as.character(designMatrix[, sampleCol])
-    
-    fullMatrix <- rawData[-1,]
-    colnames(fullMatrix) <- rawData[1,]
+    groups <- colData(summarizedExp)[[groupCol]]
+    samples <- colData(summarizedExp)[[sampleCol]]
+    fullMatrix <- assay(summarizedExp)
+    annotationMatrix <- as.matrix(rowData(summarizedExp))
 
     verifyDesignMatrix(fullMatrix, designMatrix, sampleCol=sampleCol)
     dataMatrix <- fullMatrix[, samples]
-    annotationMatrix <- fullMatrix[, -which(colnames(fullMatrix) %in% samples)]
-
     verifyValidNumbers(dataMatrix, groups, quiet=quiet)
     
     repSortedRawData <- getReplicateSortedData(dataMatrix, groups)
