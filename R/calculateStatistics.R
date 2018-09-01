@@ -85,13 +85,13 @@ reduceDesignTechRep <- function(designMat, techRepGroups) {
 setupStatisticsObject <- function(experimentObj, sampleCol="sample", conditionCol="group", 
                                   logTrans=FALSE, leastRepCount=2) {
 
-    dataMat <- assay(experimentObj)
+    dataMat <- SummarizedExperiment::assay(experimentObj)
     if (logTrans) {
         dataMat <- log2(dataMat)
     }
     
-    annotMat <- rowData(experimentObj)
-    designDf <- colData(experimentObj)
+    annotMat <- SummarizedExperiment::rowData(experimentObj)
+    designDf <- SummarizedExperiment::colData(experimentObj)
     designDf[[sampleCol]] <- as.character(designDf[[sampleCol]])
     
     rownames(dataMat) <- seq_len(nrow(dataMat))

@@ -45,10 +45,10 @@ NormalyzerDataset <- setClass("NormalyzerDataset",
                                                   sampleNameCol=NULL,
                                                   groupNameCol=NULL))
 
-setGeneric("initialize", function(object) { standardGeneric("initialize") })
-setMethod("initialize", "NormalyzerDataset", function(object) {
-    object
-})
+# setGeneric("initialize", function(object) { standardGeneric("initialize") })
+# setMethod("initialize", "NormalyzerDataset", function(object) {
+#     object
+# })
 
 setGeneric("jobName", function(object) { standardGeneric("jobName") })
 setMethod("jobName", signature(object="NormalyzerDataset"), 

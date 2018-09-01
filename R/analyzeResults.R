@@ -17,22 +17,24 @@
 #' normResults <- normMethods(normObj)
 #' normResultsWithEval <- analyzeNormalizations(normResults)
 analyzeNormalizations <- function(nr, categoricalAnova=FALSE) {
-    
-    nds <- nds(nr)
-    ner <- NormalyzerEvaluationResults()
-    ner <- calculateCV(ner, nr)
-    singleRepRun <- singleReplicateRun(nds)
-    
-    if (!singleRepRun) {
-        ner <- calculateMAD(ner, nr)
-        ner <- calculateAvgVar(ner, nr)
-        ner <- calculateSignificanceMeasures(
-            ner, 
-            nr, 
-            categoricalAnova=categoricalAnova)
-    }
-    
-    ner <- calculateCorrelations(ner, nr)
+
+    # browser()
+        
+    # nds <- nds(nr)
+    ner <- NormalyzerEvaluationResults(nr)
+    # ner <- calculateCV(ner, nr)
+    # singleRepRun <- singleReplicateRun(nds)
+    # 
+    # if (!singleRepRun) {
+    #     ner <- calculateMAD(ner, nr)
+    #     ner <- calculateAvgVar(ner, nr)
+    #     ner <- calculateSignificanceMeasures(
+    #         ner, 
+    #         nr, 
+    #         categoricalAnova=categoricalAnova)
+    # }
+    # 
+    # ner <- calculateCorrelations(ner, nr)
     ner(nr) <- ner
     
     nr

@@ -165,18 +165,19 @@ getVerifiedNormalyzerObject <- function(
         quiet=FALSE
     ) {
 
-    groupCol <- metadata(summarizedExp)$group
-    sampleCol <- metadata(summarizedExp)$sample
-    designMatrix <- as.data.frame(colData(summarizedExp))
+    # TODO: The getter was not available in version 1.10.1, check again when running the latest version
+    groupCol <- summarizedExp@metadata$group
+    sampleCol <- summarizedExp@metadata$sample
+    designMatrix <- as.data.frame(SummarizedExperiment::colData(summarizedExp))
     
     if (!groupCol %in% colnames(designMatrix)) {
         stop("Given groupCol: '", groupCol, "' was not present among design matrix columns")
     }
 
-    groups <- colData(summarizedExp)[[groupCol]]
-    samples <- colData(summarizedExp)[[sampleCol]]
-    fullMatrix <- assay(summarizedExp)
-    annotationMatrix <- as.matrix(rowData(summarizedExp))
+    groups <- SummarizedExperiment::colData(summarizedExp)[[groupCol]]
+    samples <- SummarizedExperiment::colData(summarizedExp)[[sampleCol]]
+    fullMatrix <- SummarizedExperiment::assay(summarizedExp)
+    annotationMatrix <- as.matrix(SummarizedExperiment::rowData(summarizedExp))
 
     verifyDesignMatrix(fullMatrix, designMatrix, sampleCol=sampleCol)
     dataMatrix <- fullMatrix[, samples]
