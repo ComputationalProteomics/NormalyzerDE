@@ -177,18 +177,9 @@ calculateAvgReplicateVariation <- function(methodList, sampleReplicateGroups) {
     calculateReplicateGroupVariance <- function(groupIndices, methodData) {
         
         groupData <- methodData[, groupIndices]
-        rowNonNACount <- apply(
-            groupData,
-            1,
-            function(x) { sum(!is.na(x)) }) - 1
-
-        rowVariances <- rowNonNACount * apply(
-            groupData,
-            1,
-            function(x) { stats::var(x, na.rm=TRUE) })
-
-        replicateGroupVariance <- sum(
-            rowVariances, na.rm=TRUE) / sum(rowNonNACount, na.rm=TRUE)
+        rowNonNACount <- rowSums(!is.na(groupData)) - 1
+        rowVariances <- rowNonNACount * matrixStats::rowVars(groupData, na.rm=TRUE)
+        replicateGroupVariance <- sum(rowVariances, na.rm=TRUE) / sum(rowNonNACount, na.rm=TRUE)
         replicateGroupVariance
     }
     
@@ -211,8 +202,6 @@ calculateAvgReplicateVariation <- function(methodList, sampleReplicateGroups) {
 
 #' Calculates correlation values between replicates for each condition matrix.
 #' Finally returns a matrix containing the results for all dataset
-#' 
-#' TODO: Unit test for this function
 #' 
 #' @param methodlist List containing normalized matrices for each normalization
 #'   method

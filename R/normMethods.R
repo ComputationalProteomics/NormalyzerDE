@@ -77,8 +77,8 @@ globalIntensityNormalization <- function(rawMatrix) {
 #' data(example_data_only_values)
 #' normMatrix <- medianNormalization(example_data_only_values)
 medianNormalization <- function(rawMatrix) {
-    
-    colMedians <- apply(rawMatrix, 2, FUN="median", na.rm=TRUE)
+
+    colMedians <- matrixStats::colMedians(rawMatrix, na.rm=TRUE)
     meanColMedian <- mean(colMedians, na.rm=TRUE)
     normMatrix <- matrix(nrow=nrow(rawMatrix), ncol=ncol(rawMatrix), byrow=TRUE)
     normFunc <- function(colIndex) { 
@@ -159,7 +159,6 @@ performQuantileNormalization <- function(rawMatrix) {
     
     log2Matrix <- log2(rawMatrix)
     normMatrix <- preprocessCore::normalize.quantiles(log2Matrix, copy=TRUE)
-    
     colnames(normMatrix) <- colnames(rawMatrix)
     normMatrix
 }
@@ -177,8 +176,8 @@ performQuantileNormalization <- function(rawMatrix) {
 performSMADNormalization <- function(rawMatrix) {
     
     log2Matrix <- log2(rawMatrix)
-    sampleLog2Median <- apply(log2Matrix, 2, "median", na.rm=TRUE)
-    sampleMAD <- apply(log2Matrix, 2, function(col) stats::mad(col, na.rm=TRUE))
+    sampleLog2Median <- matrixStats::colMedians(log2Matrix, na.rm=TRUE)
+    sampleMAD <- matrixStats::colMads(log2Matrix, na.rm=TRUE)
     madMatrix <- t(apply(log2Matrix, 1, function(row) ((row - sampleLog2Median) / sampleMAD)))
     
     madPlusMedianMatrix <- madMatrix + mean(sampleLog2Median)
@@ -222,26 +221,26 @@ performCyclicLoessNormalization <- function(rawMatrix) {
 performGlobalRLRNormalization <- function(rawMatrix) {
     
     log2Matrix <- log2(rawMatrix)
-    sampleLog2Median <- apply(log2Matrix, 1, "median", na.rm=TRUE)
-    isFirstSample <- TRUE
+    sampleLog2Median <- matrixStats::rowMedians(log2Matrix, na.rm=TRUE)
     
-    for (colIndex in seq_len(ncol(log2Matrix))) {
+    calculateRLMForCol <- function(colIndex, sampleLog2Median, log2Matrix) {
         
         lrFit <- MASS::rlm(as.matrix(log2Matrix[, colIndex])~sampleLog2Median, na.action=stats::na.exclude)
         coeffs <- lrFit$coefficients
         coefIntercept <- coeffs[1]
         coefSlope <- coeffs[2]
-        
-        if (isFirstSample) {
-            globalFittedRLR <- (log2Matrix[, colIndex] - coefIntercept) / coefSlope
-            isFirstSample <- FALSE
-        }
-        else {
-            globalFittedRLR <- cbind(globalFittedRLR, (log2Matrix[, colIndex] - coefIntercept) / coefSlope)
-        }
+        globalFittedRLRCol <- (log2Matrix[, colIndex] - coefIntercept) / coefSlope
+        globalFittedRLRCol
     }
     
-    colnames(globalFittedRLR) <- colnames(rawMatrix)
+    globalFittedRLR <- vapply(
+        seq_len(ncol(log2Matrix)),
+        calculateRLMForCol,
+        rep(0, nrow(log2Matrix)),
+        sampleLog2Median=sampleLog2Median,
+        log2Matrix=log2Matrix
+    )
+    
     globalFittedRLR
 }
 
