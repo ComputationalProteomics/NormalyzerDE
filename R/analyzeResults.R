@@ -349,9 +349,7 @@ calculateANOVAPValues <- function(methodList,
 #' @keywords internal
 findLowlyVariableFeaturesCVs <- function(referenceFDR, methodList) {
     
-    # browser()
-    
-    referenceFDRWoNA <- na.omit(referenceFDR)
+    referenceFDRWoNA <- stats::na.omit(referenceFDR)
     
     fivePercCount <- 5 * length(referenceFDRWoNA) / 100
     pThresLowVal <- min(utils::head(rev(sort(referenceFDRWoNA)), n=fivePercCount))
@@ -370,12 +368,9 @@ findLowlyVariableFeaturesCVs <- function(referenceFDR, methodList) {
              "number of rows in matrix")
     }
     
-    # lowlyVariableFeatures <- which(referenceFDR >= pThresLowVal)
     lowVarFeaturesAverageCVs <- vector()
     methodCount <- length(methodList)
 
-    # browser()
-    
     calculateAverageCVs <- function(methodData, lowVarContrast) {
         
         lowVarFeatures <- methodData[lowVarContrast, ]
@@ -394,16 +389,6 @@ findLowlyVariableFeaturesCVs <- function(referenceFDR, methodList) {
         0,
         lowVarContrast=lowlyVariableFeatures
     )
-    
-    # for (mlist in seq_len(methodCount)) {
-    #     lowVarFeatures <- methodList[[mlist]][lowlyVariableFeatures, ]
-    #     lowVarFeaturesAverageCVs[mlist] <- mean(
-    #         apply(
-    #             lowVarFeatures, 
-    #             1, 
-    #             function(sampleIndex) raster::cv(sampleIndex, na.rm=TRUE)), 
-    #         na.rm=TRUE)
-    # }
     
     lowVarFeaturesAverageCVs
 }

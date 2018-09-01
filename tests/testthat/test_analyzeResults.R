@@ -161,7 +161,7 @@ test_that("calculateANOVAPValues", {
         ),
         is_true()
     )
-}) 
+})
 
 test_that("findLowlyVariableFeaturesCVs", {
     

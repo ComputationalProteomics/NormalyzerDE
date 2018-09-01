@@ -54,7 +54,7 @@ writeNormalizedDatasets <- function(nr, jobdir, includePairwiseComparisons=FALSE
             ner <- ner(nr)
             for (comp in names(pairwiseComps(ner))) {
                 
-                compColP <- pairwiseComps(ner)[[comp]][, sampleIndex]
+                compColP <- pairwiseCompsP(ner)[[comp]][, sampleIndex]
                 compColFdr <- pairwiseCompsFdr(ner)[[comp]][, sampleIndex]
                 
                 newColnames <- c(

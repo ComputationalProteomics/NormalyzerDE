@@ -54,7 +54,6 @@ globalIntensityNormalization <- function(rawMatrix) {
     colSums <- colSums(rawMatrix, na.rm=TRUE)
     colSumsMedian <- stats::median(colSums)
     normMatrix <- matrix(nrow=nrow(rawMatrix), ncol=ncol(rawMatrix), byrow=TRUE)
-    
     normFunc <- function(colIndex) { (rawMatrix[rowIndex, colIndex] / colSums[colIndex]) * colSumsMedian }
     
     for (rowIndex in seq_len(nrow(rawMatrix))) {

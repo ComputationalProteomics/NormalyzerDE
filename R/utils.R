@@ -153,27 +153,6 @@ setupTestData <- function(nSamples, nFeatures, rtMin=40, rtMax=80, mean=20, sd=4
     df
 }
 
-
-#' Generate design matrix
-#' 
-#' @param nSamples Number of samples
-#' @return Design matrix
-#' @export
-#' @examples
-#' df <- setupTestDesign(6)
-#' @keywords internal
-setupTestDesign <- function(nSamples) {
-    
-    df <- data.frame(sample=rep(NA, nSamples), condition=rep(NA, nSamples))
-    for (i in seq_len(nSamples)) {
-        row <- c(sample=paste0("S", i), condition=as.character(as.factor(i %% 2)))
-        df[i, ] <- row
-    }
-    df
-}
-
-
-
 #' General function for calculating percentage difference of average column
 #' means in matrix
 #' 
@@ -195,7 +174,6 @@ calculatePercentageAvgDiffInMat <- function(targetMat) {
     
     percDiffVector
 }
-
 
 #' Filter rows with lower than given number of replicates for any condition
 #' 

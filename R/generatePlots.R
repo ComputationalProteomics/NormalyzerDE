@@ -624,14 +624,14 @@ plotCVvsIntensity <- function(nr, currentLayout, pageno) {
     sampleReplicateGroups <- sampleReplicateGroups(nds)
     filterrawdata <- filterrawdata(nds)
     
-    datastore <- methodlist[[1]]
+    log2Mat <- methodlist[[1]]
     tempcvmat1 <- matrix(
-        nrow=nrow(datastore), 
+        nrow=nrow(log2Mat), 
         ncol=length(methodlist), 
         byrow=TRUE
     )
     tempavgmat1 <- matrix(
-        nrow=nrow(datastore), 
+        nrow=nrow(log2Mat), 
         ncol=length(methodlist), 
         byrow=TRUE
     )
@@ -639,13 +639,13 @@ plotCVvsIntensity <- function(nr, currentLayout, pageno) {
     
     for (j in seq_along(methodlist)) {
         
-        datastore <- methodlist[[j]]
-        datastore <- datastore[, sampleReplicateGroups == min(sampleReplicateGroups)]
+        log2Mat <- methodlist[[j]]
+        log2Mat <- log2Mat[, sampleReplicateGroups == min(sampleReplicateGroups)]
 
-        for (i in seq_len(nrow(datastore))) {
+        for (i in seq_len(nrow(log2Mat))) {
             
             tempcv <- RcmdrMisc::numSummary(
-                datastore[i, ], 
+                log2Mat[i, ], 
                 statistics=c("cv")
             )
             tempavg <- RcmdrMisc::numSummary(

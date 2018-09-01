@@ -11,6 +11,7 @@
 #' @slot ner Normalyzer evaluation results
 #' @slot furtherNormalizationMinThreshold Minimum number of features threshold 
 #' for running extended normalizations
+#' @importClassesFrom SummarizedExperiment SummarizedExperiment
 #' @export
 NormalyzerResults <- setClass("NormalyzerResults",
                               slots=c(

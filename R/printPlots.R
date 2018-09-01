@@ -58,6 +58,7 @@ printPlots <- function(plotlist, plotname, pageno, jobname, currentLayout) {
 }
 
 drawRectangles <- function(nrow, ncol, gpfill, gp) {
+    
     for (pos in seq_len((ncol - 1) * (nrow - 1))) {
         if (pos <= ncol) row <- 1
         else row <- nrow

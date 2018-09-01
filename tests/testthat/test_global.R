@@ -1,7 +1,9 @@
 context("Global test")
 
-designPath <- "../../vignettes/design.tsv"
-dataPath <- "../../vignettes/data.tsv"
+designPath <- system.file(package="NormalyzerDE", "extdata", "design.tsv")
+dataPath <- system.file(package="NormalyzerDE", "extdata", "data.tsv")
+# designPath <- "../../vignettes/design.tsv"
+# dataPath <- "../../vignettes/data.tsv"
 tempOut <- tempdir()
 
 # Note: During testing the expect_silent uses sink() to capture all output
