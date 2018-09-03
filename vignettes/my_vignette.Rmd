@@ -198,14 +198,14 @@ This step performs input validation of the data, and generates an object of the 
 
 ```{r}
 jobName <- "vignette_run"
-#designDf <- loadDesign(designFp)
-#dataDf <- loadData(dataFp)
 experimentObj <- setupRawDataObject(dataFp, designFp, "default", TRUE, "sample", "group")
 normObj <- getVerifiedNormalyzerObject(jobName, experimentObj)
 ```
 
-Alternatively the dataset can be prepared directly as a `SummarizedExperiment` dataset
-where the design is assigned as column data, and the annotations as row data.
+The function `setupRawDataObject` returns a `SummarizedExperiment` object.
+This object can be prepared directly and should in that case contain the raw
+data as the default assay, the design matrix as `colData` and possible
+annotation as `rowData`.
 
 ## Step 2: Generate normalizations
 
@@ -252,16 +252,16 @@ the normalization step.
 
 ```{r}
 bestNormMatPath <- paste(jobDir, "RT-Loess-normalized.txt", sep="/")
-experimentObj <- setupRawContrastObject(bestNormMatPath, designDf, "sample")
-# fullDf <- utils::read.csv(bestNormMatPath, sep="\t")
-# designDf <- utils::read.csv(designFp, sep="\t")
-# nst <- setupStatisticsObject(designDf, fullDf)
+experimentObj <- setupRawContrastObject(bestNormMatPath, designFp, "sample")
 nst <- NormalyzerStatistics(experimentObj,
                             logTrans=FALSE,
                             leastRepCount=2,
                             sampleCol="sample",
                             conditionCol="group")
 ```
+
+Similarly as to for the normalization evaluation step the `experimentObj`
+above can be prepared directly as a `SummarizedExperiment` object.
 
 ## Step 2: Calculate statistics
 

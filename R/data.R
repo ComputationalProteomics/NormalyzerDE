@@ -32,8 +32,15 @@
 "regression_test_nr"
 
 #' SummarizedExperiment object prepared with design-matrix, data-matrix
-#' and annotation columns loaded
+#' and annotation columns loaded for raw data
 #' 
 #' @format An instance of the class SummarizedExperiment
 #' @keywords internal
 "example_summarized_experiment"
+
+# SummarizedExperiment object prepared with design-matrix, data-matrix
+# and annotation columns for normalized data
+# 
+# @format An instance of the class SummarizedExperiment with stats data
+# @keywords internal
+# "example_stat_summarized_experiment"

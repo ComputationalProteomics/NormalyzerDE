@@ -46,7 +46,6 @@ NormalyzerStatistics <- setClass("NormalyzerStatistics",
 #' @param logTrans Whether the input data should be log transformed
 #' @param leastRepCount Least replicates in each group to be retained for 
 #'   contrast calculations
-#' @export
 setGeneric("NormalyzerStatistics", function(experimentObj, sampleCol="sample", conditionCol="group", logTrans=FALSE, leastRepCount=2
                                             ) { standardGeneric("NormalyzerStatistics") })
 setMethod("NormalyzerStatistics", 
@@ -181,8 +180,8 @@ setReplaceMethod("pairwiseCompsFold", signature(object="NormalyzerStatistics"),
 #' @rdname calculateContrasts
 #' @export
 #' @examples
-#' data("example_summarized_experiment")
-#' nst <- NormalyzerStatistics(example_summarized_experiment)
+#' data("example_stat_summarized_experiment")
+#' nst <- NormalyzerStatistics(example_stat_summarized_experiment)
 #' results <- calculateContrasts(nst, c("1-2", "2-3"), "group")
 #' resultsBatch <- calculateContrasts(nst, c("1-2", "2-3"), "group", "batch")
 setGeneric(name="calculateContrasts", 

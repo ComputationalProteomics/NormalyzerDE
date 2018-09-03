@@ -4,13 +4,13 @@
 \name{example_summarized_experiment}
 \alias{example_summarized_experiment}
 \title{SummarizedExperiment object prepared with design-matrix, data-matrix
-and annotation columns loaded}
+and annotation columns loaded for raw data}
 \format{An instance of the class SummarizedExperiment}
 \usage{
 example_summarized_experiment
 }
 \description{
 SummarizedExperiment object prepared with design-matrix, data-matrix
-and annotation columns loaded
+and annotation columns loaded for raw data
 }
 \keyword{internal}

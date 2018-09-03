@@ -4,11 +4,11 @@
 \alias{NormalyzerStatistics}
 \title{Class representing a dataset for statistical processing in NormalyzerDE}
 \usage{
-NormalyzerStatistics(experimentObj, sampleCol, conditionCol, logTrans,
-  leastRepCount)
+NormalyzerStatistics(experimentObj, sampleCol = "sample",
+  conditionCol = "group", logTrans = FALSE, leastRepCount = 2)
 
-NormalyzerStatistics(experimentObj, sampleCol, conditionCol, logTrans,
-  leastRepCount)
+NormalyzerStatistics(experimentObj, sampleCol = "sample",
+  conditionCol = "group", logTrans = FALSE, leastRepCount = 2)
 }
 \arguments{
 \item{experimentObj}{Instance of SummarizedExperiment containing matrix
