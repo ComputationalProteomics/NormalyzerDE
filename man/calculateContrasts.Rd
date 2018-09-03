@@ -14,8 +14,8 @@ condition levels that are to be calculated.}
 calculateContrasts(nst, comparisons, condCol, batchCol = NULL,
   splitter = "-", type = "limma")
 
-\S4method{calculateContrasts}{NormalyzerStatistics}(nst, comparisons,
-  condCol, batchCol = NULL, splitter = "-", type = "limma")
+\S4method{calculateContrasts}{NormalyzerStatistics}(nst, comparisons, condCol,
+  batchCol = NULL, splitter = "-", type = "limma")
 }
 \arguments{
 \item{nst}{Results evaluation object.}

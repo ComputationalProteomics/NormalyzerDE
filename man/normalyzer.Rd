@@ -4,14 +4,14 @@
 \alias{normalyzer}
 \title{NormalyzerDE pipeline entry point}
 \usage{
-normalyzer(jobName, designPath, dataPath, outputDir = ".",
-  forceAllMethods = FALSE, omitLowAbundSamples = FALSE,
-  sampleAbundThres = 15, requireReplicates = TRUE,
-  normalizeRetentionTime = TRUE, plotRows = 3, plotCols = 4,
-  zeroToNA = FALSE, sampleColName = "sample", groupColName = "group",
-  inputFormat = "default", skipAnalysis = FALSE, quiet = FALSE,
-  rtStepSizeMinutes = 1, rtWindowMinCount = 100, rtWindowShifts = 1,
-  rtWindowMergeMethod = "mean")
+normalyzer(jobName, designPath = NULL, dataPath = NULL,
+  experimentObj = NULL, outputDir = ".", forceAllMethods = FALSE,
+  omitLowAbundSamples = FALSE, sampleAbundThres = 15,
+  requireReplicates = TRUE, normalizeRetentionTime = TRUE, plotRows = 3,
+  plotCols = 4, zeroToNA = FALSE, sampleColName = "sample",
+  groupColName = "group", inputFormat = "default", skipAnalysis = FALSE,
+  quiet = FALSE, rtStepSizeMinutes = 1, rtWindowMinCount = 100,
+  rtWindowShifts = 1, rtWindowMergeMethod = "mean")
 }
 \arguments{
 \item{jobName}{Give the current run a name.}

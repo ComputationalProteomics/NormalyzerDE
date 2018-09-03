@@ -5,16 +5,11 @@
 \title{Verify that input data is in correct format, and if so, return a generated
  NormalyzerDE data object from that input data}
 \usage{
-getVerifiedNormalyzerObject(jobName, designMatrix, rawData,
-  threshold = 15, omitSamples = FALSE, requireReplicates = TRUE,
-  sampleCol = "sample", groupCol = "group", quiet = FALSE)
+getVerifiedNormalyzerObject(jobName, summarizedExp, threshold = 15,
+  omitSamples = FALSE, requireReplicates = TRUE, quiet = FALSE)
 }
 \arguments{
 \item{jobName}{Name of ongoing run.}
-
-\item{designMatrix}{Data frame containing design data.}
-
-\item{rawData}{Data frame containing raw data.}
 
 \item{threshold}{Minimum number of features.}
 
@@ -23,11 +18,15 @@ getVerifiedNormalyzerObject(jobName, designMatrix, rawData,
 \item{requireReplicates}{Require there to be at least to samples per
 condition}
 
+\item{quiet}{Don't print output messages during processing}
+
+\item{designMatrix}{Data frame containing design data.}
+
+\item{rawData}{Data frame containing raw data.}
+
 \item{sampleCol}{Name of the column containing samples in design matrix.}
 
 \item{groupCol}{Name of column containing conditions in design matrix.}
-
-\item{quiet}{Don't print output messages during processing}
 }
 \value{
 Normalyzer data object representing verified input data.

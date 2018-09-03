@@ -4,20 +4,20 @@
 \alias{normalyzerDE}
 \title{NormalyzerDE differential expression}
 \usage{
-normalyzerDE(jobName, designPath, dataPath, comparisons, outputDir = ".",
-  logTrans = FALSE, type = "limma", sampleCol = "sample",
-  condCol = "group", batchCol = NULL, techRepCol = NULL,
-  leastRepCount = 1, quiet = FALSE)
+normalyzerDE(jobName, comparisons, designPath = NULL, dataPath = NULL,
+  experimentObj = NULL, outputDir = ".", logTrans = FALSE,
+  type = "limma", sampleCol = "sample", condCol = "group",
+  batchCol = NULL, techRepCol = NULL, leastRepCount = 1, quiet = FALSE)
 }
 \arguments{
 \item{jobName}{Name of job}
 
+\item{comparisons}{Character vector containing target contrasts. 
+If comparing condA with condB, then the vector would be c("condA-condB")}
+
 \item{designPath}{File path to design matrix}
 
 \item{dataPath}{File path to normalized matrix}
-
-\item{comparisons}{Character vector containing target contrasts. 
-If comparing condA with condB, then the vector would be c("condA-condB")}
 
 \item{outputDir}{Path to output directory}
 

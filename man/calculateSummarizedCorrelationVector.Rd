@@ -25,6 +25,7 @@ avgCorSum Matrix with column corresponding to normalization
 approaches and rows corresponding to replicate group
 }
 \description{
-TODO: Unit test for this function
+Calculates correlation values between replicates for each condition matrix.
+Finally returns a matrix containing the results for all dataset
 }
 \keyword{internal}
