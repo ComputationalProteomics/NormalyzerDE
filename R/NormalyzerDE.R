@@ -239,11 +239,11 @@ normalyzerDE <- function(jobName, comparisons, designPath=NULL, dataPath=NULL,
         experimentObj <- setupRawContrastObject(dataPath, designPath, sampleCol)
     }
 
-    nst <- setupStatisticsObject(experimentObj, 
-                                 logTrans=logTrans, 
-                                 leastRepCount=leastRepCount,
-                                 sampleCol=sampleCol,
-                                 conditionCol=condCol)
+    nst <- NormalyzerStatistics(experimentObj, 
+                                logTrans=logTrans, 
+                                leastRepCount=leastRepCount,
+                                sampleCol=sampleCol,
+                                conditionCol=condCol)
 
     if (!is.null(techRepCol)) {
         if (!quiet) print("Reducing technical replicates")

@@ -29,67 +29,63 @@ NormalyzerStatistics <- setClass("NormalyzerStatistics",
                                      pairwiseCompsFdr = "list",
                                      pairwiseCompsAve = "list",
                                      pairwiseCompsFold = "list"
-                                 ),
-                                 prototype=prototype(
-                                     annotMat=NULL,
-                                     dataMat=NULL,
-                                     designDf=NULL
                                  ))
+
+setGeneric("NormalyzerStatistics", function(experimentObj, sampleCol, conditionCol, 
+                                            logTrans=FALSE, leastRepCount
+                                            ) { standardGeneric("NormalyzerStatistics") })
+setMethod("NormalyzerStatistics", 
+          definition = function(
+              experimentObj, sampleCol="sample", conditionCol="group", logTrans=FALSE, 
+              leastRepCount=2) { 
+             
+              dataMat <- SummarizedExperiment::assay(experimentObj)
+              if (logTrans) {
+                  dataMat <- log2(dataMat)
+              }
+              
+              annotMat <- SummarizedExperiment::rowData(experimentObj)
+              designDf <- SummarizedExperiment::colData(experimentObj)
+              designDf[[sampleCol]] <- as.character(designDf[[sampleCol]])
+              
+              rownames(dataMat) <- seq_len(nrow(dataMat))
+              dataMatNAFiltered <- filterLowRep(
+                  dataMat, 
+                  designDf[, conditionCol], 
+                  leastRep=leastRepCount
+              )
+              naFilterContrast <- rownames(dataMat) %in% rownames(dataMatNAFiltered)
+              
+              nst <- new("NormalyzerStatistics",
+                  annotMat=as.matrix(annotMat), 
+                  dataMat=as.matrix(dataMat), 
+                  designDf=as.data.frame(designDf), 
+                  filteredDataMat=dataMatNAFiltered,
+                  filteringContrast=naFilterContrast
+              ) 
+
+              nst
+          })
 
 setGeneric("annotMat", function(object) { standardGeneric("annotMat") })
 setMethod("annotMat", signature(object="NormalyzerStatistics"), 
           function(object) { slot(object, "annotMat") })
-setGeneric("annotMat<-", function(object, value) { standardGeneric("annotMat<-") })
-setReplaceMethod("annotMat", signature(object="NormalyzerStatistics"), 
-                 function(object, value) { 
-                     slot(object, "annotMat") <- value
-                     validObject(object)
-                     object
-                 })
 
 setGeneric("dataMat", function(object) { standardGeneric("dataMat") })
 setMethod("dataMat", signature(object="NormalyzerStatistics"), 
           function(object) { slot(object, "dataMat") })
-setGeneric("dataMat<-", function(object, value) { standardGeneric("dataMat<-") })
-setReplaceMethod("dataMat", signature(object="NormalyzerStatistics"), 
-                 function(object, value) { 
-                     slot(object, "dataMat") <- value
-                     validObject(object)
-                     object
-                 })
 
 setGeneric("filteredDataMat", function(object) { standardGeneric("filteredDataMat") })
 setMethod("filteredDataMat", signature(object="NormalyzerStatistics"), 
           function(object) { slot(object, "filteredDataMat") })
-setGeneric("filteredDataMat<-", function(object, value) { standardGeneric("filteredDataMat<-") })
-setReplaceMethod("filteredDataMat", signature(object="NormalyzerStatistics"), 
-                 function(object, value) { 
-                     slot(object, "filteredDataMat") <- value
-                     validObject(object)
-                     object
-                 })
 
 setGeneric("designDf", function(object) { standardGeneric("designDf") })
 setMethod("designDf", signature(object="NormalyzerStatistics"), 
           function(object) { slot(object, "designDf") })
-setGeneric("designDf<-", function(object, value) { standardGeneric("designDf<-") })
-setReplaceMethod("designDf", signature(object="NormalyzerStatistics"), 
-                 function(object, value) { 
-                     slot(object, "designDf") <- value
-                     validObject(object)
-                     object
-                 })
 
 setGeneric("filteringContrast", function(object) { standardGeneric("filteringContrast") })
 setMethod("filteringContrast", signature(object="NormalyzerStatistics"), 
           function(object) { slot(object, "filteringContrast") })
-setGeneric("filteringContrast<-", function(object, value) { standardGeneric("filteringContrast<-") })
-setReplaceMethod("filteringContrast", signature(object="NormalyzerStatistics"), 
-                 function(object, value) { 
-                     slot(object, "filteringContrast") <- value
-                     validObject(object)
-                     object
-                 })
 
 setGeneric("pairwiseCompsP", function(object) { standardGeneric("pairwiseCompsP") })
 setMethod("pairwiseCompsP", signature(object="NormalyzerStatistics"), 
