@@ -165,7 +165,7 @@ getVerifiedNormalyzerObject <- function(
         quiet=FALSE
     ) {
 
-    # TODO: The getter was not available in version 1.10.1, check again when running the latest version
+    # TODO: The getter seems to not be available, check later if temporary issue
     groupCol <- summarizedExp@metadata$group
     sampleCol <- summarizedExp@metadata$sample
     designMatrix <- as.data.frame(SummarizedExperiment::colData(summarizedExp))
@@ -176,11 +176,13 @@ getVerifiedNormalyzerObject <- function(
 
     groups <- SummarizedExperiment::colData(summarizedExp)[[groupCol]]
     samples <- SummarizedExperiment::colData(summarizedExp)[[sampleCol]]
-    fullMatrix <- SummarizedExperiment::assay(summarizedExp)
-    annotationMatrix <- as.matrix(SummarizedExperiment::rowData(summarizedExp))
+    dataMatrix <- SummarizedExperiment::assay(summarizedExp)
+    annotationMatrix <- as.matrix(data.frame(lapply(
+        SummarizedExperiment::rowData(summarizedExp),
+        as.character
+    ), stringsAsFactors=FALSE))
 
-    verifyDesignMatrix(fullMatrix, designMatrix, sampleCol=sampleCol)
-    dataMatrix <- fullMatrix[, samples]
+    verifyDesignMatrix(dataMatrix, designMatrix, sampleCol=sampleCol)
     verifyValidNumbers(dataMatrix, groups, quiet=quiet)
     
     repSortedRawData <- getReplicateSortedData(dataMatrix, groups)
@@ -210,16 +212,51 @@ getVerifiedNormalyzerObject <- function(
         quiet=quiet
     )
     
-    nds <- generateNormalyzerDataset(
-        jobName, 
-        designMatrix, 
-        cbind(annotationMatrix, lowCountSampleFiltered), 
-        sampleCol, 
-        groupCol, 
+    nds <- NormalyzerDataset(
+        jobName=jobName,
+        designMatrix=designMatrix,
+        rawData=dataMatrix,
+        annotationData=annotationMatrix,
+        sampleNameCol=sampleCol,
+        groupNameCol=groupCol,
         quiet=quiet
     )
+    
+    # nds <- generateNormalyzerDataset(
+    #     jobName, 
+    #     designMatrix, 
+    #     cbind(annotationMatrix, lowCountSampleFiltered), 
+    #     sampleCol, 
+    #     groupCol, 
+    #     quiet=quiet
+    # )
     nds
 }
+
+
+
+
+#' #' Setup Normalyzer dataset from given raw data
+#' #' 
+#' #' @param jobName Name of ongoing run.
+#' #' @param designMatrix Dataframe containing condition matrix.
+#' #' @param fullRawMatrix Dataframe with unparsed input data.
+#' #' @param sampleNameCol Name of column in design matrix containing sample names.
+#' #' @param groupNameCol Name of column in design matrix contaning conditions.
+#' #' @return Data object representing loaded data.
+#' #' @keywords internal
+#' generateNormalyzerDataset <- function(jobName, designMatrix, fullRawMatrix, sampleNameCol, groupNameCol, quiet=FALSE) {
+#'     
+#'     nds <- NormalyzerDataset(
+#'         jobName=jobName, 
+#'         rawData=fullRawMatrix, 
+#'         designMatrix=designMatrix,
+#'         sampleNameCol=sampleNameCol, 
+#'         groupNameCol=groupNameCol)
+#'     nds <- setupValues(nds, quiet=quiet)
+#'     nds
+#' }
+
 
 #' Try reading raw Normalyzer matrix from provided filepath
 #' 
@@ -500,24 +537,24 @@ verifyMultipleSamplesPresent <- function(dataMatrix, groups, requireReplicates=T
 }
 
 
-#' Setup Normalyzer dataset from given raw data
-#' 
-#' @param jobName Name of ongoing run.
-#' @param designMatrix Dataframe containing condition matrix.
-#' @param fullRawMatrix Dataframe with unparsed input data.
-#' @param sampleNameCol Name of column in design matrix containing sample names.
-#' @param groupNameCol Name of column in design matrix contaning conditions.
-#' @return Data object representing loaded data.
-#' @keywords internal
-generateNormalyzerDataset <- function(jobName, designMatrix, fullRawMatrix, sampleNameCol, groupNameCol, quiet=FALSE) {
-    
-    nds <- NormalyzerDataset(
-        jobName=jobName, 
-        rawData=fullRawMatrix, 
-        designMatrix=designMatrix,
-        sampleNameCol=sampleNameCol, 
-        groupNameCol=groupNameCol)
-    nds <- setupValues(nds, quiet=quiet)
-    nds
-}
+#' #' Setup Normalyzer dataset from given raw data
+#' #' 
+#' #' @param jobName Name of ongoing run.
+#' #' @param designMatrix Dataframe containing condition matrix.
+#' #' @param fullRawMatrix Dataframe with unparsed input data.
+#' #' @param sampleNameCol Name of column in design matrix containing sample names.
+#' #' @param groupNameCol Name of column in design matrix contaning conditions.
+#' #' @return Data object representing loaded data.
+#' #' @keywords internal
+#' generateNormalyzerDataset <- function(jobName, designMatrix, fullRawMatrix, sampleNameCol, groupNameCol, quiet=FALSE) {
+#'     
+#'     nds <- NormalyzerDataset(
+#'         jobName=jobName, 
+#'         rawData=fullRawMatrix, 
+#'         designMatrix=designMatrix,
+#'         sampleNameCol=sampleNameCol, 
+#'         groupNameCol=groupNameCol)
+#'     nds <- setupValues(nds, quiet=quiet)
+#'     nds
+#' }
 

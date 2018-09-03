@@ -46,7 +46,7 @@ NormalyzerEvaluationResults <- setClass("NormalyzerEvaluationResults",
 
 
 setGeneric("NormalyzerEvaluationResults", function(nr) { standardGeneric("NormalyzerEvaluationResults") })
-setMethod("NormalyzerEvaluationResults", signature  = "NormalyzerResults",
+setMethod("NormalyzerEvaluationResults",
            definition = function (nr) {
 
                nds <- nds(nr)

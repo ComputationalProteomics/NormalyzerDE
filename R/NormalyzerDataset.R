@@ -38,17 +38,47 @@ NormalyzerDataset <- setClass("NormalyzerDataset",
                                   retentionTimes = "numeric",
                                                                     
                                   singleReplicateRun = "logical"
-                              ),
-                              prototype=prototype(jobName=NULL, 
-                                                  rawData=NULL,
-                                                  designMatrix=NULL,
-                                                  sampleNameCol=NULL,
-                                                  groupNameCol=NULL))
+                              ))
 
-# setGeneric("initialize", function(object) { standardGeneric("initialize") })
-# setMethod("initialize", "NormalyzerDataset", function(object) {
-#     object
-# })
+setGeneric("NormalyzerDataset", function(jobName, designMatrix, rawData, annotationData,
+                                         sampleNameCol, groupNameCol, quiet
+                                         ) { standardGeneric("NormalyzerDataset") })
+setMethod("NormalyzerDataset", 
+          definition = function(jobName, designMatrix, rawData, annotationData,
+                                sampleNameCol, groupNameCol, quiet=FALSE) {
+              
+              sampleReplicateGroups <- as.numeric(
+                  as.factor(designMatrix[, groupNameCol]))
+              samplesGroupsWithReplicates <- as.numeric(
+                  names(table(sampleReplicateGroups)[table(sampleReplicateGroups) > 1]))
+              sampleNames <- as.character(designMatrix[, sampleNameCol])
+              
+              annotationValues <- rawData[, !(colnames(rawData) %in% sampleNames), drop=FALSE]
+              filterrawdata <- rawData[, sampleNames]
+              class(filterrawdata) <- "numeric"
+              
+              nds <- new(
+                  "NormalyzerDataset",
+                  jobName=jobName,
+                  designMatrix=designMatrix,
+                  rawData=rawData,
+                  sampleNameCol=sampleNameCol,
+                  groupNameCol=groupNameCol,
+                  filterrawdata=filterrawdata,
+                  sampleReplicateGroups=sampleReplicateGroups,
+                  samplesGroupsWithReplicates=samplesGroupsWithReplicates,
+                  annotationValues=annotationData
+              )
+              
+              rtColumn <- getRTColumn(annotationData, quiet=quiet)
+              if (!is.null(rtColumn)) {
+                  retentionTimes(nds) <- rtColumn
+              }
+              
+              singleReplicateRun(nds) <- checkSingleReplicateRun(nds)
+              
+              nds
+          })
 
 setGeneric("jobName", function(object) { standardGeneric("jobName") })
 setMethod("jobName", signature(object="NormalyzerDataset"), 
@@ -147,39 +177,39 @@ setReplaceMethod("singleReplicateRun", signature(object="NormalyzerDataset"),
                      object
                  })
 
-#' Initialize values for dataset
-#'
-#' @param nds Normalyzer dataset
-#' @return None
-#' @rdname setupValues
-#' @keywords internal
-setGeneric(name="setupValues", function(nds, quiet) standardGeneric("setupValues"))
-
-#' @rdname setupValues
-setMethod("setupValues", "NormalyzerDataset",
-          function(nds, quiet=FALSE) {
-              
-              sampleReplicateGroups(nds) <- as.numeric(as.factor(designMatrix(nds)[, groupNameCol(nds)]))
-              samplesGroupsWithReplicates(nds) <- as.numeric(
-                  names(table(sampleReplicateGroups(nds))[table(sampleReplicateGroups(nds)) > 1]))
-              sampleNames(nds) <- as.character(designMatrix(nds)[, sampleNameCol(nds)])
-
-              singleReplicateRun <- detectSingleReplicate(nds)
-              singletonSamplePresent <- detectSingletonSample(nds)
-              
-              if (singleReplicateRun || singletonSamplePresent) {
-                  singleReplicateRun(nds) <- TRUE
-              }
-              else {
-                  singleReplicateRun(nds) <- FALSE
-              }
-              
-              nds <- setupBasicValues(nds)
-              nds <- setupRTColumn(nds, quiet=quiet)
-              
-              nds
-          }
-)
+#' #' Initialize values for dataset
+#' #'
+#' #' @param nds Normalyzer dataset
+#' #' @return None
+#' #' @rdname setupValues
+#' #' @keywords internal
+#' setGeneric(name="setupValues", function(nds, quiet) standardGeneric("setupValues"))
+#' 
+#' #' @rdname setupValues
+#' setMethod("setupValues", "NormalyzerDataset",
+#'           function(nds, quiet=FALSE) {
+#'               
+#'               sampleReplicateGroups(nds) <- as.numeric(as.factor(designMatrix(nds)[, groupNameCol(nds)]))
+#'               samplesGroupsWithReplicates(nds) <- as.numeric(
+#'                   names(table(sampleReplicateGroups(nds))[table(sampleReplicateGroups(nds)) > 1]))
+#'               sampleNames(nds) <- as.character(designMatrix(nds)[, sampleNameCol(nds)])
+#' 
+#'               singleReplicateRun <- detectSingleReplicate(nds)
+#'               singletonSamplePresent <- detectSingletonSample(nds)
+#'               
+#'               if (singleReplicateRun || singletonSamplePresent) {
+#'                   singleReplicateRun(nds) <- TRUE
+#'               }
+#'               else {
+#'                   singleReplicateRun(nds) <- FALSE
+#'               }
+#'               
+#'               nds <- setupBasicValues(nds)
+#'               nds <- setupRTColumn(nds, quiet=quiet)
+#'               
+#'               nds
+#'           }
+#' )
 
 
 #' Detect single replicate, and assign related logical
@@ -243,79 +273,120 @@ setMethod("detectSingletonSample", "NormalyzerDataset",
           }
 )
 
-#' Setup basic values for dataset
-#'
-#' @param nds Normalyzer dataset
-#' @return Updated dataset object
-#' @rdname setupBasicValues
-#' @keywords internal
-setGeneric(name="setupBasicValues", 
-           function(nds) standardGeneric("setupBasicValues"))
-
-#' @rdname setupBasicValues
-setMethod("setupBasicValues", "NormalyzerDataset",
+setGeneric(name="checkSingleReplicateRun", 
+           function(nds) standardGeneric("checkSingleReplicateRun"))
+setMethod("checkSingleReplicateRun", "NormalyzerDataset",
           function(nds) {
               
-              annotationValues(nds) <- rawData(nds)[, !(colnames(rawData(nds)) %in% sampleNames(nds)), drop=FALSE]
-              nds <- setupFilterRawData(nds)
-
-              nds
-          }
-)
-
-#' Check for and set up RT column if single -1 annotation present
-#'
-#' @param nds Normalyzer dataset
-#' @return Updated dataset object
-#' @rdname setupRTColumn
-#' @keywords internal
-setGeneric(name="setupRTColumn", 
-           function(nds, quiet) standardGeneric("setupRTColumn"))
-
-#' @rdname setupRTColumn
-setMethod("setupRTColumn", "NormalyzerDataset",
-          function(nds, quiet=FALSE) {
+              singleReplicateRun <- detectSingleReplicate(nds)
+              singletonSamplePresent <- detectSingletonSample(nds)
               
-              rtColumns <- grep("\\bRT\\b", colnames(rawData(nds)))
-              
-              if (length(rtColumns) > 1) {
-                  errorMessage <- paste(
-                      "Only able to handle single RT column (name containing RT standing by itself)",
-                      "Please change name or remove unwanted RT columns")
-                  stop(errorMessage)
+              if (singleReplicateRun || singletonSamplePresent) {
+                  singleReplicateRun <- TRUE
               }
-              else if (length(rtColumns) == 1) {
-                  
-                  if (!quiet) message("RT annotation column found (", rtColumns, ")")
-                  
-                  rtValues <- rawData(nds)[, rtColumns]
-                  retentionTimes(nds) <- as.numeric(rtValues)
+              else {
+                  singleReplicateRun <- FALSE
               }
-              
-              nds
-          }
-)
+              singleReplicateRun
+          })
+
+#' #' Setup basic values for dataset
+#' #'
+#' #' @param nds Normalyzer dataset
+#' #' @return Updated dataset object
+#' #' @rdname setupBasicValues
+#' #' @keywords internal
+#' setGeneric(name="setupBasicValues", 
+#'            function(nds) standardGeneric("setupBasicValues"))
+#' 
+#' #' @rdname setupBasicValues
+#' setMethod("setupBasicValues", "NormalyzerDataset",
+#'           function(nds) {
+#'               
+#'               annotationValues(nds) <- rawData(nds)[, !(colnames(rawData(nds)) %in% sampleNames(nds)), drop=FALSE]
+#'               nds <- setupFilterRawData(nds)
+#' 
+#'               nds
+#'           }
+#' )
+
+getRTColumn <- function(annotData, quiet=FALSE) {
+    
+    rtColumns <- grep("\\bRT\\b", colnames(annotData))
+    
+    if (length(rtColumns) > 1) {
+        errorMessage <- paste(
+            "Only able to handle single RT column (name containing RT standing by itself) ",
+            "Please change name or remove unwanted RT columns")
+        stop(errorMessage)
+    }
+    else if (length(rtColumns) == 1) {
+        
+        if (!quiet) message("RT annotation column found (", rtColumns, ")")
+        
+        rtValues <- annotData[, rtColumns]
+        retentionTimes <- as.numeric(rtValues)
+        return(retentionTimes)
+    }
+    else {
+        if (!quiet) message("No RT column found, skipping RT processing")
+        return(NULL)
+    }
+}
+
+#' #' Check for and set up RT column if single -1 annotation present
+#' #'
+#' #' @param nds Normalyzer dataset
+#' #' @return Updated dataset object
+#' #' @rdname setupRTColumn
+#' #' @keywords internal
+#' setGeneric(name="setupRTColumn", 
+#'            function(nds, quiet) standardGeneric("setupRTColumn"))
+#' 
+#' #' @rdname setupRTColumn
+#' setMethod("setupRTColumn", "NormalyzerDataset",
+#'           function(nds, quiet=FALSE) {
+#'               
+#'               rtColumns <- grep("\\bRT\\b", colnames(rawData(nds)))
+#'               
+#'               if (length(rtColumns) > 1) {
+#'                   errorMessage <- paste(
+#'                       "Only able to handle single RT column (name containing RT standing by itself) ",
+#'                       "Please change name or remove unwanted RT columns")
+#'                   stop(errorMessage)
+#'               }
+#'               else if (length(rtColumns) == 1) {
+#'                   
+#'                   if (!quiet) message("RT annotation column found (", rtColumns, ")")
+#'                   
+#'                   rtValues <- rawData(nds)[, rtColumns]
+#'                   retentionTimes(nds) <- as.numeric(rtValues)
+#'               }
+#'               
+#'               nds
+#'           }
+#' )
 
 
-#' Setup filtered raw data slot
-#'
-#' @param nds Normalyzer dataset.
-#' @return None
-#' @rdname setupFilterRawData
-#' @keywords internal
-setGeneric(name="setupFilterRawData", 
-           function(nds) standardGeneric("setupFilterRawData"))
-
-#' @rdname setupFilterRawData
-setMethod("setupFilterRawData", "NormalyzerDataset",
-          function(nds) {
-
-              stopifnot(!is.null(rawData(nds)))
-              
-              filterrawdata(nds) <- rawData(nds)[, sampleNames(nds)]
-              class(filterrawdata(nds)) <- "numeric"
-
-              nds
-          }
-)
+#' #' Setup filtered raw data slot
+#' #'
+#' #' @param nds Normalyzer dataset.
+#' #' @return None
+#' #' @rdname setupFilterRawData
+#' #' @keywords internal
+#' setGeneric(name="setupFilterRawData", 
+#'            function(nds) standardGeneric("setupFilterRawData"))
+#' 
+#' #' @rdname setupFilterRawData
+#' setMethod("setupFilterRawData", "NormalyzerDataset",
+#'           function(nds) {
+#' 
+#'               stopifnot(!is.null(rawData(nds)))
+#'               
+#'               filterrawdata(nds) <- rawData(nds)[, sampleNames(nds)]
+#'               class(filterrawdata(nds)) <- "numeric"
+#' 
+#'               nds
+#'           }
+#' )
 

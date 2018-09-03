@@ -153,8 +153,8 @@ setMethod("performNormalizations", "NormalyzerResults",
                   )
               }
               else {
-                  warning("No RT column specified (column named 'RT') or option not specified"
-                          ,"Skipping RT normalization.")
+                  warning("No RT column specified (column named 'RT') or option not specified",
+                          " Skipping RT normalization.")
               }
               
               normalizations(nr) <- normResults
