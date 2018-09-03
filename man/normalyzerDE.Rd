@@ -7,7 +7,8 @@
 normalyzerDE(jobName, comparisons, designPath = NULL, dataPath = NULL,
   experimentObj = NULL, outputDir = ".", logTrans = FALSE,
   type = "limma", sampleCol = "sample", condCol = "group",
-  batchCol = NULL, techRepCol = NULL, leastRepCount = 1, quiet = FALSE)
+  batchCol = NULL, techRepCol = NULL, leastRepCount = 1,
+  quiet = FALSE)
 }
 \arguments{
 \item{jobName}{Name of job}
@@ -18,6 +19,9 @@ If comparing condA with condB, then the vector would be c("condA-condB")}
 \item{designPath}{File path to design matrix}
 
 \item{dataPath}{File path to normalized matrix}
+
+\item{experimentObj}{SummarizedExperiment object, can be provided as input
+as alternative to 'designPath' and 'dataPath'}
 
 \item{outputDir}{Path to output directory}
 

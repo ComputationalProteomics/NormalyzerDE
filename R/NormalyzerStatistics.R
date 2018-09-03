@@ -29,16 +29,30 @@ NormalyzerStatistics <- setClass("NormalyzerStatistics",
                                      pairwiseCompsFdr = "list",
                                      pairwiseCompsAve = "list",
                                      pairwiseCompsFold = "list"
+                                 ), prototype = c(
+                                     sampleCol="sample",
+                                     conditionCol="group",
+                                     logTrans=TRUE,
+                                     leastRepCount=2
                                  ))
 
-setGeneric("NormalyzerStatistics", function(experimentObj, sampleCol, conditionCol, 
-                                            logTrans=FALSE, leastRepCount
+#' Constructor for NormalyzerStatistics
+#' 
+#' @param experimentObj Instance of SummarizedExperiment containing matrix
+#'   and design information as column data
+#' @param sampleCol Column in column data containing the sample information
+#' @param conditionCol Column in column data containing the condition information
+#'   for which contrasts will be performed
+#' @param logTrans Whether the input data should be log transformed
+#' @param leastRepCount Least replicates in each group to be retained for 
+#'   contrast calculations
+#' @export
+setGeneric("NormalyzerStatistics", function(experimentObj, sampleCol="sample", conditionCol="group", logTrans=FALSE, leastRepCount=2
                                             ) { standardGeneric("NormalyzerStatistics") })
 setMethod("NormalyzerStatistics", 
           definition = function(
-              experimentObj, sampleCol="sample", conditionCol="group", logTrans=FALSE, 
-              leastRepCount=2) { 
-             
+              experimentObj, sampleCol, conditionCol, logTrans, leastRepCount) { 
+              
               dataMat <- SummarizedExperiment::assay(experimentObj)
               if (logTrans) {
                   dataMat <- log2(dataMat)
@@ -74,6 +88,13 @@ setMethod("annotMat", signature(object="NormalyzerStatistics"),
 setGeneric("dataMat", function(object) { standardGeneric("dataMat") })
 setMethod("dataMat", signature(object="NormalyzerStatistics"), 
           function(object) { slot(object, "dataMat") })
+setGeneric("dataMat<-", function(object, value) { standardGeneric("dataMat<-") })
+setReplaceMethod("dataMat", signature(object="NormalyzerStatistics"), 
+                 function(object, value) { 
+                     slot(object, "dataMat") <- value
+                     validObject(object)
+                     object
+                 })
 
 setGeneric("filteredDataMat", function(object) { standardGeneric("filteredDataMat") })
 setMethod("filteredDataMat", signature(object="NormalyzerStatistics"), 
@@ -82,6 +103,13 @@ setMethod("filteredDataMat", signature(object="NormalyzerStatistics"),
 setGeneric("designDf", function(object) { standardGeneric("designDf") })
 setMethod("designDf", signature(object="NormalyzerStatistics"), 
           function(object) { slot(object, "designDf") })
+setGeneric("designDf<-", function(object, value) { standardGeneric("designDf<-") })
+setReplaceMethod("designDf", signature(object="NormalyzerStatistics"), 
+                 function(object, value) { 
+                     slot(object, "designDf") <- value
+                     validObject(object)
+                     object
+                 })
 
 setGeneric("filteringContrast", function(object) { standardGeneric("filteringContrast") })
 setMethod("filteringContrast", signature(object="NormalyzerStatistics"), 
@@ -153,9 +181,8 @@ setReplaceMethod("pairwiseCompsFold", signature(object="NormalyzerStatistics"),
 #' @rdname calculateContrasts
 #' @export
 #' @examples
-#' data("example_stat_data")
-#' data("example_design")
-#' nst <- setupStatisticsObject(example_design, example_stat_data)
+#' data("example_summarized_experiment")
+#' nst <- NormalyzerStatistics(example_summarized_experiment)
 #' results <- calculateContrasts(nst, c("1-2", "2-3"), "group")
 #' resultsBatch <- calculateContrasts(nst, c("1-2", "2-3"), "group", "batch")
 setGeneric(name="calculateContrasts", 

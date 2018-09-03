@@ -15,9 +15,8 @@
 #'  as attributes
 #' @export
 #' @examples
-#' data(example_data)
-#' data(example_design)
-#' normObj <- getVerifiedNormalyzerObject("job_name", example_design, example_data)
+#' data(example_summarized_experiment)
+#' normObj <- getVerifiedNormalyzerObject("job_name", example_summarized_experiment)
 #' normResults <- normMethods(normObj)
 normMethods <- function(nds, forceAll=FALSE, normalizeRetentionTime=TRUE, 
                         quiet=FALSE, rtStepSizeMinutes=1, rtWindowMinCount=100, 

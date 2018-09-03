@@ -40,6 +40,21 @@ NormalyzerDataset <- setClass("NormalyzerDataset",
                                   singleReplicateRun = "logical"
                               ))
 
+#' Constructor for NormalyzerDataset
+#' 
+#' @param jobName Name of the NormalyzerDE processing run
+#' @param designMatrix Matrix containing sample conditions
+#' @param rawData Matrix containing raw input data
+#' @param annotationData Matrix containing annotation information for each
+#'   input feature. Is expected to contain the same number of rows as the data
+#'   but can contain any number of features
+#' @param sampleNameCol Name of column in design matrix containing sample
+#'   information
+#' @param groupNameCol Name of column in design matrix containing condition
+#'   information
+#' @param quiet If set to TRUE no information messages will be printed
+#' @return nds Generated NormalyzerDataset instance
+#' @export
 setGeneric("NormalyzerDataset", function(jobName, designMatrix, rawData, annotationData,
                                          sampleNameCol, groupNameCol, quiet
                                          ) { standardGeneric("NormalyzerDataset") })

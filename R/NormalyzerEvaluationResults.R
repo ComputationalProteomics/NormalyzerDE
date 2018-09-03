@@ -43,8 +43,10 @@ NormalyzerEvaluationResults <- setClass("NormalyzerEvaluationResults",
                                                repCorSpear = "matrix"
                                            ))
 
-
-
+#' Constructor for NormalyzerEvaluationResults
+#' 
+#' @param nr NormalyzerResults object
+#' @export
 setGeneric("NormalyzerEvaluationResults", function(nr) { standardGeneric("NormalyzerEvaluationResults") })
 setMethod("NormalyzerEvaluationResults",
            definition = function (nr) {

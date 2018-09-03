@@ -1,6 +1,6 @@
 Package: NormalyzerDE
 Title: Evaluation of normalization methods and calculation of differential expression analysis statistics
-Version: 0.99.7
+Version: 0.99.8
 Maintainer: Jakob Willforss <jakob.willforss@immun.lth.se>
 Author: Jakob Willforss
 Authors@R: c(
@@ -27,7 +27,8 @@ Imports:
     raster,
     utils,
     stats,
-    SummarizedExperiment
+    SummarizedExperiment,
+    matrixStats
 Suggests:
     knitr,
     testthat,

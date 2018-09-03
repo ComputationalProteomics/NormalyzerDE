@@ -6,7 +6,8 @@
 \usage{
 writeNormalizedDatasets(nr, jobdir, includePairwiseComparisons = FALSE,
   includeCvCol = FALSE, includeAnovaP = FALSE,
-  normSuffix = "-normalized.txt", rawdataName = "submitted_rawdata.txt")
+  normSuffix = "-normalized.txt",
+  rawdataName = "submitted_rawdata.txt")
 }
 \arguments{
 \item{nr}{Results object.}
@@ -30,9 +31,8 @@ None
 Outputs each of the normalized datasets to the specified directory.
 }
 \examples{
-data(example_data)
-data(example_design)
-normObj <- getVerifiedNormalyzerObject("job_name", example_design, example_data)
+data(example_summarized_experiment)
+normObj <- getVerifiedNormalyzerObject("job_name", example_summarized_experiment)
 normResults <- normMethods(normObj)
 normResultsWithEval <- analyzeNormalizations(normResults)
 outputDir <- tempdir()

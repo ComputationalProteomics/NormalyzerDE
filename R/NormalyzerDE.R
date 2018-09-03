@@ -23,6 +23,8 @@
 #' @param designPath Path to file containing design matrix.
 #' @param dataPath Specify an output directory for generated files.
 #'  Defaults to current working directory.
+#' @param experimentObj SummarizedExperiment object, can be provided as input
+#'  as alternative to 'designPath' and 'dataPath'
 #' @param outputDir Directory where results folder is created.
 #' @param forceAllMethods Debugging function. Run all normalizations even if
 #'  they aren't in the recommended range of number of values
@@ -199,6 +201,8 @@ normalyzer <- function(
 #' @param jobName Name of job
 #' @param designPath File path to design matrix
 #' @param dataPath File path to normalized matrix
+#' @param experimentObj SummarizedExperiment object, can be provided as input
+#'  as alternative to 'designPath' and 'dataPath'
 #' @param comparisons Character vector containing target contrasts. 
 #'   If comparing condA with condB, then the vector would be c("condA-condB")
 #' @param outputDir Path to output directory

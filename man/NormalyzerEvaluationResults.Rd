@@ -6,6 +6,11 @@
 for an an NormalyzerResults instance}
 \usage{
 NormalyzerEvaluationResults(nr)
+
+NormalyzerEvaluationResults(nr)
+}
+\arguments{
+\item{nr}{NormalyzerResults object}
 }
 \description{
 Contains the resulting information from the processing which subsequently

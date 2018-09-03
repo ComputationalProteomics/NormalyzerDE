@@ -4,8 +4,25 @@
 \alias{NormalyzerStatistics}
 \title{Class representing a dataset for statistical processing in NormalyzerDE}
 \usage{
-NormalyzerStatistics(experimentObj, sampleCol, conditionCol, logTrans = FALSE,
+NormalyzerStatistics(experimentObj, sampleCol, conditionCol, logTrans,
   leastRepCount)
+
+NormalyzerStatistics(experimentObj, sampleCol, conditionCol, logTrans,
+  leastRepCount)
+}
+\arguments{
+\item{experimentObj}{Instance of SummarizedExperiment containing matrix
+and design information as column data}
+
+\item{sampleCol}{Column in column data containing the sample information}
+
+\item{conditionCol}{Column in column data containing the condition information
+for which contrasts will be performed}
+
+\item{logTrans}{Whether the input data should be log transformed}
+
+\item{leastRepCount}{Least replicates in each group to be retained for 
+contrast calculations}
 }
 \description{
 Is initialized with an annotation matrix, a data matrix and a design

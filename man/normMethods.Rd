@@ -34,8 +34,7 @@ Returns Normalyzer results object with performed analyzes assigned
 Perform normalizations on Normalyzer dataset
 }
 \examples{
-data(example_data)
-data(example_design)
-normObj <- getVerifiedNormalyzerObject("job_name", example_design, example_data)
+data(example_summarized_experiment)
+normObj <- getVerifiedNormalyzerObject("job_name", example_summarized_experiment)
 normResults <- normMethods(normObj)
 }

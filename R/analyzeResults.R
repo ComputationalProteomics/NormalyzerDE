@@ -11,30 +11,13 @@
 #' @return Normalyzer results with attached evaluation results object.
 #' @export
 #' @examples
-#' data(example_data)
-#' data(example_design)
-#' normObj <- getVerifiedNormalyzerObject("job_name", example_design, example_data)
+#' data(example_summarized_experiment)
+#' normObj <- getVerifiedNormalyzerObject("job_name", example_summarized_experiment)
 #' normResults <- normMethods(normObj)
 #' normResultsWithEval <- analyzeNormalizations(normResults)
 analyzeNormalizations <- function(nr, categoricalAnova=FALSE) {
 
-    # browser()
-        
-    # nds <- nds(nr)
     ner <- NormalyzerEvaluationResults(nr)
-    # ner <- calculateCV(ner, nr)
-    # singleRepRun <- singleReplicateRun(nds)
-    # 
-    # if (!singleRepRun) {
-    #     ner <- calculateMAD(ner, nr)
-    #     ner <- calculateAvgVar(ner, nr)
-    #     ner <- calculateSignificanceMeasures(
-    #         ner, 
-    #         nr, 
-    #         categoricalAnova=categoricalAnova)
-    # }
-    # 
-    # ner <- calculateCorrelations(ner, nr)
     ner(nr) <- ner
     
     nr

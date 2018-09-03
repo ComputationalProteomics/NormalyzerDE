@@ -30,3 +30,10 @@
 #' @format An instance of the class NormalyzerResults
 #' @keywords internal
 "regression_test_nr"
+
+#' SummarizedExperiment object prepared with design-matrix, data-matrix
+#' and annotation columns loaded
+#' 
+#' @format An instance of the class SummarizedExperiment
+#' @keywords internal
+"example_summarized_experiment"

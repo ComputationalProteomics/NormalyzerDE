@@ -7,11 +7,12 @@
 normalyzer(jobName, designPath = NULL, dataPath = NULL,
   experimentObj = NULL, outputDir = ".", forceAllMethods = FALSE,
   omitLowAbundSamples = FALSE, sampleAbundThres = 15,
-  requireReplicates = TRUE, normalizeRetentionTime = TRUE, plotRows = 3,
-  plotCols = 4, zeroToNA = FALSE, sampleColName = "sample",
-  groupColName = "group", inputFormat = "default", skipAnalysis = FALSE,
-  quiet = FALSE, rtStepSizeMinutes = 1, rtWindowMinCount = 100,
-  rtWindowShifts = 1, rtWindowMergeMethod = "mean")
+  requireReplicates = TRUE, normalizeRetentionTime = TRUE,
+  plotRows = 3, plotCols = 4, zeroToNA = FALSE,
+  sampleColName = "sample", groupColName = "group",
+  inputFormat = "default", skipAnalysis = FALSE, quiet = FALSE,
+  rtStepSizeMinutes = 1, rtWindowMinCount = 100, rtWindowShifts = 1,
+  rtWindowMergeMethod = "mean")
 }
 \arguments{
 \item{jobName}{Give the current run a name.}
@@ -20,6 +21,9 @@ normalyzer(jobName, designPath = NULL, dataPath = NULL,
 
 \item{dataPath}{Specify an output directory for generated files.
 Defaults to current working directory.}
+
+\item{experimentObj}{SummarizedExperiment object, can be provided as input
+as alternative to 'designPath' and 'dataPath'}
 
 \item{outputDir}{Directory where results folder is created.}
 
