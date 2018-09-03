@@ -103,57 +103,22 @@ setMethod("designMatrix", signature(object="NormalyzerDataset"),
 setGeneric("sampleNames", function(object) { standardGeneric("sampleNames") })
 setMethod("sampleNames", signature(object="NormalyzerDataset"), 
           function(object) { slot(object, "sampleNames") })
-setGeneric("sampleNames<-", function(object, value) { standardGeneric("sampleNames<-") })
-setReplaceMethod("sampleNames", signature(object="NormalyzerDataset"), 
-                 function(object, value) { 
-                     slot(object, "sampleNames") <- value
-                     validObject(object)
-                     object
-                     })
 
 setGeneric("filterrawdata", function(object) { standardGeneric("filterrawdata") })
 setMethod("filterrawdata", signature(object="NormalyzerDataset"), 
           function(object) { slot(object, "filterrawdata") })
-setGeneric("filterrawdata<-", function(object, value) { standardGeneric("filterrawdata<-") })
-setReplaceMethod("filterrawdata", signature(object="NormalyzerDataset"), 
-                 function(object, value) { 
-                     slot(object, "filterrawdata") <- value
-                     validObject(object)
-                     object
-                 })
 
 setGeneric("sampleReplicateGroups", function(object) { standardGeneric("sampleReplicateGroups") })
 setMethod("sampleReplicateGroups", signature(object="NormalyzerDataset"), 
           function(object) { slot(object, "sampleReplicateGroups") })
-setGeneric("sampleReplicateGroups<-", function(object, value) { standardGeneric("sampleReplicateGroups<-") })
-setReplaceMethod("sampleReplicateGroups", signature(object="NormalyzerDataset"), 
-                 function(object, value) { 
-                     slot(object, "sampleReplicateGroups") <- value
-                     validObject(object)
-                     object
-                 })
 
 setGeneric("samplesGroupsWithReplicates", function(object) { standardGeneric("samplesGroupsWithReplicates") })
 setMethod("samplesGroupsWithReplicates", signature(object="NormalyzerDataset"), 
           function(object) { slot(object, "samplesGroupsWithReplicates") })
-setGeneric("samplesGroupsWithReplicates<-", function(object, value) { standardGeneric("samplesGroupsWithReplicates<-") })
-setReplaceMethod("samplesGroupsWithReplicates", signature(object="NormalyzerDataset"), 
-                 function(object, value) { 
-                     slot(object, "samplesGroupsWithReplicates") <- value
-                     validObject(object)
-                     object
-                 })
 
 setGeneric("annotationValues", function(object) { standardGeneric("annotationValues") })
 setMethod("annotationValues", signature(object="NormalyzerDataset"), 
           function(object) { slot(object, "annotationValues") })
-setGeneric("annotationValues<-", function(object, value) { standardGeneric("annotationValues<-") })
-setReplaceMethod("annotationValues", signature(object="NormalyzerDataset"), 
-                 function(object, value) { 
-                     slot(object, "annotationValues") <- value
-                     validObject(object)
-                     object
-                 })
 
 setGeneric("retentionTimes", function(object) { standardGeneric("retentionTimes") })
 setMethod("retentionTimes", signature(object="NormalyzerDataset"), 
@@ -176,41 +141,6 @@ setReplaceMethod("singleReplicateRun", signature(object="NormalyzerDataset"),
                      validObject(object)
                      object
                  })
-
-#' #' Initialize values for dataset
-#' #'
-#' #' @param nds Normalyzer dataset
-#' #' @return None
-#' #' @rdname setupValues
-#' #' @keywords internal
-#' setGeneric(name="setupValues", function(nds, quiet) standardGeneric("setupValues"))
-#' 
-#' #' @rdname setupValues
-#' setMethod("setupValues", "NormalyzerDataset",
-#'           function(nds, quiet=FALSE) {
-#'               
-#'               sampleReplicateGroups(nds) <- as.numeric(as.factor(designMatrix(nds)[, groupNameCol(nds)]))
-#'               samplesGroupsWithReplicates(nds) <- as.numeric(
-#'                   names(table(sampleReplicateGroups(nds))[table(sampleReplicateGroups(nds)) > 1]))
-#'               sampleNames(nds) <- as.character(designMatrix(nds)[, sampleNameCol(nds)])
-#' 
-#'               singleReplicateRun <- detectSingleReplicate(nds)
-#'               singletonSamplePresent <- detectSingletonSample(nds)
-#'               
-#'               if (singleReplicateRun || singletonSamplePresent) {
-#'                   singleReplicateRun(nds) <- TRUE
-#'               }
-#'               else {
-#'                   singleReplicateRun(nds) <- FALSE
-#'               }
-#'               
-#'               nds <- setupBasicValues(nds)
-#'               nds <- setupRTColumn(nds, quiet=quiet)
-#'               
-#'               nds
-#'           }
-#' )
-
 
 #' Detect single replicate, and assign related logical
 #'
@@ -290,28 +220,9 @@ setMethod("checkSingleReplicateRun", "NormalyzerDataset",
               singleReplicateRun
           })
 
-#' #' Setup basic values for dataset
-#' #'
-#' #' @param nds Normalyzer dataset
-#' #' @return Updated dataset object
-#' #' @rdname setupBasicValues
-#' #' @keywords internal
-#' setGeneric(name="setupBasicValues", 
-#'            function(nds) standardGeneric("setupBasicValues"))
-#' 
-#' #' @rdname setupBasicValues
-#' setMethod("setupBasicValues", "NormalyzerDataset",
-#'           function(nds) {
-#'               
-#'               annotationValues(nds) <- rawData(nds)[, !(colnames(rawData(nds)) %in% sampleNames(nds)), drop=FALSE]
-#'               nds <- setupFilterRawData(nds)
-#' 
-#'               nds
-#'           }
-#' )
-
-getRTColumn <- function(annotData, quiet=FALSE) {
-    
+setGeneric(name="getRTColumn", 
+           function(annotData, quiet) standardGeneric("getRTColumn"))
+setMethod("getRTColumn", "matrix", function(annotData, quiet=FALSE) {
     rtColumns <- grep("\\bRT\\b", colnames(annotData))
     
     if (length(rtColumns) > 1) {
@@ -332,61 +243,5 @@ getRTColumn <- function(annotData, quiet=FALSE) {
         if (!quiet) message("No RT column found, skipping RT processing")
         return(NULL)
     }
-}
-
-#' #' Check for and set up RT column if single -1 annotation present
-#' #'
-#' #' @param nds Normalyzer dataset
-#' #' @return Updated dataset object
-#' #' @rdname setupRTColumn
-#' #' @keywords internal
-#' setGeneric(name="setupRTColumn", 
-#'            function(nds, quiet) standardGeneric("setupRTColumn"))
-#' 
-#' #' @rdname setupRTColumn
-#' setMethod("setupRTColumn", "NormalyzerDataset",
-#'           function(nds, quiet=FALSE) {
-#'               
-#'               rtColumns <- grep("\\bRT\\b", colnames(rawData(nds)))
-#'               
-#'               if (length(rtColumns) > 1) {
-#'                   errorMessage <- paste(
-#'                       "Only able to handle single RT column (name containing RT standing by itself) ",
-#'                       "Please change name or remove unwanted RT columns")
-#'                   stop(errorMessage)
-#'               }
-#'               else if (length(rtColumns) == 1) {
-#'                   
-#'                   if (!quiet) message("RT annotation column found (", rtColumns, ")")
-#'                   
-#'                   rtValues <- rawData(nds)[, rtColumns]
-#'                   retentionTimes(nds) <- as.numeric(rtValues)
-#'               }
-#'               
-#'               nds
-#'           }
-#' )
-
-
-#' #' Setup filtered raw data slot
-#' #'
-#' #' @param nds Normalyzer dataset.
-#' #' @return None
-#' #' @rdname setupFilterRawData
-#' #' @keywords internal
-#' setGeneric(name="setupFilterRawData", 
-#'            function(nds) standardGeneric("setupFilterRawData"))
-#' 
-#' #' @rdname setupFilterRawData
-#' setMethod("setupFilterRawData", "NormalyzerDataset",
-#'           function(nds) {
-#' 
-#'               stopifnot(!is.null(rawData(nds)))
-#'               
-#'               filterrawdata(nds) <- rawData(nds)[, sampleNames(nds)]
-#'               class(filterrawdata(nds)) <- "numeric"
-#' 
-#'               nds
-#'           }
-#' )
+})
 
