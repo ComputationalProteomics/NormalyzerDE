@@ -21,7 +21,6 @@
 #' @slot anovaP ANOVA calculated p-values
 #' @slot repCorPear Within group Pearson correlations
 #' @slot repCorSpear Within group Spearman correlations
-#' @export
 NormalyzerEvaluationResults <- setClass("NormalyzerEvaluationResults",
                                            representation(
                                                avgcvmem = "matrix",
@@ -46,10 +45,9 @@ NormalyzerEvaluationResults <- setClass("NormalyzerEvaluationResults",
 #' Constructor for NormalyzerEvaluationResults
 #' 
 #' @param nr NormalyzerResults object
+#' @return nds Generated NormalyzerEvaluationResults instance
 #' @export
-setGeneric("NormalyzerEvaluationResults", function(nr) { standardGeneric("NormalyzerEvaluationResults") })
-setMethod("NormalyzerEvaluationResults",
-           definition = function (nr) {
+NormalyzerEvaluationResults <- function (nr) {
 
                nds <- nds(nr)
                sampleReplicateGroups <- sampleReplicateGroups(nds) 
@@ -129,7 +127,7 @@ setMethod("NormalyzerEvaluationResults",
                )
                
                return (object)
-           })
+           }
 
 setGeneric("avgcvmem", function(object) { standardGeneric("avgcvmem") })
 setMethod("avgcvmem", signature(object="NormalyzerEvaluationResults"),

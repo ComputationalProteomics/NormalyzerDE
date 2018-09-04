@@ -16,7 +16,6 @@
 #' @slot pairwiseCompsAve List with average expression values
 #' @slot pairwiseCompsFold List with log2 fold-change values for pairwise 
 #'   comparisons
-#' @export
 NormalyzerStatistics <- setClass("NormalyzerStatistics",
                                  representation(
                                      annotMat = "matrix",
@@ -29,11 +28,6 @@ NormalyzerStatistics <- setClass("NormalyzerStatistics",
                                      pairwiseCompsFdr = "list",
                                      pairwiseCompsAve = "list",
                                      pairwiseCompsFold = "list"
-                                 ), prototype = c(
-                                     sampleCol="sample",
-                                     conditionCol="group",
-                                     logTrans=TRUE,
-                                     leastRepCount=2
                                  ))
 
 #' Constructor for NormalyzerStatistics
@@ -46,12 +40,13 @@ NormalyzerStatistics <- setClass("NormalyzerStatistics",
 #' @param logTrans Whether the input data should be log transformed
 #' @param leastRepCount Least replicates in each group to be retained for 
 #'   contrast calculations
-setGeneric("NormalyzerStatistics", function(experimentObj, sampleCol="sample", conditionCol="group", logTrans=FALSE, leastRepCount=2
-                                            ) { standardGeneric("NormalyzerStatistics") })
-setMethod("NormalyzerStatistics", 
-          definition = function(
-              experimentObj, sampleCol, conditionCol, logTrans, leastRepCount) { 
-              
+#' @return nds Generated NormalyzerStatistics instance
+#' @export
+# setMethod("NormalyzerStatistics", definition = function(
+#               experimentObj, sampleCol, conditionCol, logTrans, leastRepCount) { 
+NormalyzerStatistics <- function(experimentObj, sampleCol="sample", conditionCol="group", logTrans=FALSE, leastRepCount=2) { 
+    
+
               dataMat <- SummarizedExperiment::assay(experimentObj)
               if (logTrans) {
                   dataMat <- log2(dataMat)
@@ -78,7 +73,7 @@ setMethod("NormalyzerStatistics",
               ) 
 
               nst
-          })
+          }
 
 setGeneric("annotMat", function(object) { standardGeneric("annotMat") })
 setMethod("annotMat", signature(object="NormalyzerStatistics"), 

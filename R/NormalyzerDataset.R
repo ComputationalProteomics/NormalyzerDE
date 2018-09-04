@@ -17,7 +17,6 @@
 #' @slot annotationValues Annotation part of original dataframe.
 #' @slot retentionTimes Vector of retention time values.
 #' @slot singleReplicateRun Conditional whether run is single replicate.
-#' @export
 NormalyzerDataset <- setClass("NormalyzerDataset",
                               representation(
                                   
@@ -55,12 +54,8 @@ NormalyzerDataset <- setClass("NormalyzerDataset",
 #' @param quiet If set to TRUE no information messages will be printed
 #' @return nds Generated NormalyzerDataset instance
 #' @export
-setGeneric("NormalyzerDataset", function(jobName, designMatrix, rawData, annotationData,
-                                         sampleNameCol, groupNameCol, quiet
-                                         ) { standardGeneric("NormalyzerDataset") })
-setMethod("NormalyzerDataset", 
-          definition = function(jobName, designMatrix, rawData, annotationData,
-                                sampleNameCol, groupNameCol, quiet=FALSE) {
+NormalyzerDataset <- function(jobName, designMatrix, rawData, annotationData,
+                                sampleNameCol, groupNameCol, quiet) {
               
               sampleReplicateGroups <- as.numeric(
                   as.factor(designMatrix[, groupNameCol]))
@@ -93,7 +88,7 @@ setMethod("NormalyzerDataset",
               singleReplicateRun(nds) <- checkSingleReplicateRun(nds)
               
               nds
-          })
+          }
 
 setGeneric("jobName", function(object) { standardGeneric("jobName") })
 setMethod("jobName", signature(object="NormalyzerDataset"), 

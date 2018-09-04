@@ -123,9 +123,8 @@ reduceDesignTechRep <- function(designMat, techRepGroups) {
 #' @return outDf Annotated statistics matrix
 #' @export
 #' @examples
-#' data(example_stat_data)
-#' data(example_design)
-#' statObj <- setupStatisticsObject(example_design, example_stat_data)
+#' data("example_stat_summarized_experiment")
+#' statObj <- NormalyzerStatistics(example_stat_summarized_experiment)
 #' statObj <- calculateContrasts(statObj, comparisons=c("1-2", "2-3"), condCol="group", type="limma")
 #' annotDf <- generateAnnotatedMatrix(statObj)
 generateAnnotatedMatrix <- function(nst) {
@@ -166,9 +165,8 @@ generateAnnotatedMatrix <- function(nst) {
 #' @return None
 #' @export
 #' @examples
-#' data(example_stat_data)
-#' data(example_design)
-#' statObj <- setupStatisticsObject(example_design, example_stat_data)
+#' data("example_stat_summarized_experiment")
+#' statObj <- NormalyzerStatistics(example_stat_summarized_experiment)
 #' statObj <- calculateContrasts(statObj, comparisons=c("1-2", "2-3"), 
 #'   condCol="group", type="limma")
 #' outputDir <- tempdir()
