@@ -22,7 +22,7 @@ vignette: >
 
 # Installation
 
-Installation is preferably performed using BiocManager (requires R version 3.5):
+Installation is preferably performed using BiocManager (requires R version >= 3.5):
 
 ```
 install.packages("BiocManager")
@@ -60,11 +60,18 @@ s3      condB
 s4      condB
 ```
 
+Alternatively the data can be provided as an instance of a `SummarizedExperiment` S4 class.
+This class is available in the `SummarizedExperiment` Bioconductor package.
+
 ## Running NormalyzerDE evaluation
 
 The evaluation step can be performed with one command, `normalyzer`.
 This command expects a path to the data file, a name for the run-job,
 a path to a design matrix and finally a path to an output directory.
+
+Alternatively the `designPath` and `dataPath` arguments can be replaced with the `experimentObj` argument
+where the first assay should contain the data matrix of interest, the `colData` attribute the design matrix
+and the `rowData` attribute the annotation columns.
 
 ```{r}
 library(NormalyzerDE)
@@ -84,6 +91,9 @@ Here, expected parameters are the path to the target normalization matrix, the s
 in the previous step, a job name, the path to an output directory and a list of the pairwise comparisons
 for which you want to calculate contrasts. They are provided as a character vector with conditions to
 compare separated by a dash ("-").
+
+Similarly as for the normalization step the `designPath` and `dataPath` arguments can be replaced with
+an instance of `SummarizedExperiment` sent to the `experimentObj` argument.
 
 ```{r}
 normMatrixPath <- paste(outDir, "vignette_run/CycLoess-normalized.txt", sep="/")
@@ -204,8 +214,8 @@ normObj <- getVerifiedNormalyzerObject(jobName, experimentObj)
 
 The function `setupRawDataObject` returns a `SummarizedExperiment` object.
 This object can be prepared directly and should in that case contain the raw
-data as the default assay, the design matrix as `colData` and possible
-annotation as `rowData`.
+data as the default assay, the design matrix as `colData` and annotation rows
+as `rowData`.
 
 ## Step 2: Generate normalizations
 

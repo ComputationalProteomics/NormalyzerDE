@@ -8,7 +8,7 @@ R/Rplots.pdf
 *.old
 
 # Folders
-inst/doc
+ignore
 tests/testthat/output/
 
 # Vignette output
