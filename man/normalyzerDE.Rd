@@ -70,9 +70,14 @@ containing statistical key measures have been added
 contrast
 }
 \examples{
-\dontrun{
+data_path <- system.file(package="NormalyzerDE", "extdata", "tiny_data.tsv")
+design_path <- system.file(package="NormalyzerDE", "extdata", "design.tsv")
+out_dir <- tempdir()
 normalyzerDE(
-  "results/normalized.tsv", "design.tsv", "my_jobname", 
-  c("1-2", "1-4"),  outputDir="path/to/output")
-}
+  jobName="my_jobname", 
+  comparisons=c("1-2", "1-4"), 
+  designPath=design_path, 
+  dataPath=data_path,
+  outputDir=out_dir,
+  condCol="group")
 }

@@ -60,59 +60,6 @@ reduceDesignTechRep <- function(designMat, techRepGroups) {
     collDesignDf
 }
 
-# #' Setup NormalyzerDE statistics object
-# #' 
-# #' It loads the raw data matrix and
-# #' the design matrix, and uses these to separate the raw data into an annotation
-# #' matrix and a data matrix. Next, it calculates a contrast showing which
-# #' features have at least a set number of values in each of the conditions.
-# #' Finally, this information is used to create and return an instance of the 
-# #' NormalyzerStatistics class.
-# #' 
-# #' @param designDf Design matrix.
-# #' @param fullDf Full data matrix containing expression data and annotation data.
-# #' @param sampleCol Name of column containing sample IDs.
-# #' @param conditionCol Name of column containing condition levels.
-# #' @param batchCol Optional name of column containing batch effect levels.
-# #' @param logTrans Option for log transforming input data.
-# #' @param leastRepCount Lowest number of replicate required.
-# #' @return Prepared statistics object.
-# #' @export
-# #' @examples 
-# #' data(example_design)
-# #' data(example_stat_data)
-# #' setupStatisticsObject(example_design, example_stat_data)
-# setupStatisticsObject <- function(experimentObj, sampleCol="sample", conditionCol="group", 
-#                                   logTrans=FALSE, leastRepCount=2) {
-# 
-#     dataMat <- SummarizedExperiment::assay(experimentObj)
-#     if (logTrans) {
-#         dataMat <- log2(dataMat)
-#     }
-#     
-#     annotMat <- SummarizedExperiment::rowData(experimentObj)
-#     designDf <- SummarizedExperiment::colData(experimentObj)
-#     designDf[[sampleCol]] <- as.character(designDf[[sampleCol]])
-#     
-#     rownames(dataMat) <- seq_len(nrow(dataMat))
-#     dataMatNAFiltered <- filterLowRep(
-#         dataMat, 
-#         designDf[, conditionCol], 
-#         leastRep=leastRepCount
-#     )
-#     naFilterContrast <- rownames(dataMat) %in% rownames(dataMatNAFiltered)
-#       
-#     nst <- NormalyzerStatistics(
-#         annotMat=as.matrix(annotMat), 
-#         dataMat=as.matrix(dataMat), 
-#         designDf=as.data.frame(designDf), 
-#         filteredDataMat=dataMatNAFiltered,
-#         filteringContrast=naFilterContrast
-#     )
-#     
-#     nst
-# }
-
 #' Generate an annotated data frame from statistics object
 #' 
 #' Extracts key values (p-value, adjusted p-value, log2-fold change and
@@ -123,7 +70,7 @@ reduceDesignTechRep <- function(designMat, techRepGroups) {
 #' @return outDf Annotated statistics matrix
 #' @export
 #' @examples
-#' data("example_stat_summarized_experiment")
+#' data(example_stat_summarized_experiment)
 #' statObj <- NormalyzerStatistics(example_stat_summarized_experiment)
 #' statObj <- calculateContrasts(statObj, comparisons=c("1-2", "2-3"), condCol="group", type="limma")
 #' annotDf <- generateAnnotatedMatrix(statObj)
@@ -165,7 +112,7 @@ generateAnnotatedMatrix <- function(nst) {
 #' @return None
 #' @export
 #' @examples
-#' data("example_stat_summarized_experiment")
+#' data(example_stat_summarized_experiment)
 #' statObj <- NormalyzerStatistics(example_stat_summarized_experiment)
 #' statObj <- calculateContrasts(statObj, comparisons=c("1-2", "2-3"), 
 #'   condCol="group", type="limma")

@@ -92,12 +92,15 @@ NormalyzerEvaluationResults object.
 write them to a PDF report.
 }
 \examples{
-\dontrun{
+data_path <- system.file(package="NormalyzerDE", "extdata", "data.tsv")
+design_path <- system.file(package="NormalyzerDE", "extdata", "design.tsv")
+out_dir <- tempdir()
 normalyzer(
-    "data.tsv", 
-    "my_jobname", 
-    designMatrix="design.tsv", 
-    outputDir="path/to/output")
+    jobName="my_jobname", 
+    designPath=design_path, 
+    dataPath=data_path, 
+    outputDir=out_dir)
+\dontrun{
 normalyzer(
     "data.tsv", 
     "my_jobname", 

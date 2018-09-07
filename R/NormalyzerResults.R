@@ -9,7 +9,6 @@
 #'   normalization results
 #' @slot nds Normalyzer dataset representing run data
 #' @slot ner Normalyzer evaluation results
-#' @slot furtherNormalizationMinThreshold Minimum number of features threshold 
 #' for running extended normalizations
 #' @importClassesFrom SummarizedExperiment SummarizedExperiment
 #' @export
@@ -17,12 +16,10 @@ NormalyzerResults <- setClass("NormalyzerResults",
                               slots=c(
                                   nds = "NormalyzerDataset",
                                   ner = "NormalyzerEvaluationResults",
-                                  furtherNormalizationMinThreshold="numeric",
                                   normalizations = "list"
                               ),
                               prototype=prototype(
-                                  nds=NULL, 
-                                  furtherNormalizationMinThreshold=100))
+                                  nds=NULL))
 
 
 setGeneric("normalizations", function(object) { standardGeneric("normalizations") })
@@ -54,17 +51,6 @@ setGeneric("ner<-", function(object, value) { standardGeneric("ner<-") })
 setReplaceMethod("ner", signature(object="NormalyzerResults"), 
                  function(object, value) { 
                      slot(object, "ner") <- value
-                     validObject(object)
-                     object
-                 })
-
-setGeneric("furtherNormalizationMinThreshold", function(object) { standardGeneric("furtherNormalizationMinThreshold") })
-setMethod("furtherNormalizationMinThreshold", signature(object="NormalyzerResults"), 
-          function(object) { slot(object, "furtherNormalizationMinThreshold") })
-setGeneric("furtherNormalizationMinThreshold<-", function(object, value) { standardGeneric("furtherNormalizationMinThreshold<-") })
-setReplaceMethod("furtherNormalizationMinThreshold", signature(object="NormalyzerResults"), 
-                 function(object, value) { 
-                     slot(object, "furtherNormalizationMinThreshold") <- value
                      validObject(object)
                      object
                  })

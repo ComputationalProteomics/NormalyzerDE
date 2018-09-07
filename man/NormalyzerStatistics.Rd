@@ -4,17 +4,15 @@
 \alias{NormalyzerStatistics}
 \title{Class representing a dataset for statistical processing in NormalyzerDE}
 \usage{
-NormalyzerStatistics(experimentObj, sampleCol = "sample",
-  conditionCol = "group", logTrans = FALSE, leastRepCount = 2)
+NormalyzerStatistics(experimentObj, conditionCol = "group",
+  logTrans = FALSE, leastRepCount = 2)
 
-NormalyzerStatistics(experimentObj, sampleCol = "sample",
-  conditionCol = "group", logTrans = FALSE, leastRepCount = 2)
+NormalyzerStatistics(experimentObj, conditionCol = "group",
+  logTrans = FALSE, leastRepCount = 2)
 }
 \arguments{
 \item{experimentObj}{Instance of SummarizedExperiment containing matrix
 and design information as column data}
-
-\item{sampleCol}{Column in column data containing the sample information}
 
 \item{conditionCol}{Column in column data containing the condition information
 for which contrasts will be performed}
@@ -23,6 +21,9 @@ for which contrasts will be performed}
 
 \item{leastRepCount}{Least replicates in each group to be retained for 
 contrast calculations}
+}
+\value{
+nds Generated NormalyzerStatistics instance
 }
 \description{
 Is initialized with an annotation matrix, a data matrix and a design
@@ -54,3 +55,7 @@ information as well as a graphical report of the comparisons.
 comparisons}
 }}
 
+\examples{
+data(example_stat_summarized_experiment)
+nst <- NormalyzerStatistics(example_stat_summarized_experiment)
+}

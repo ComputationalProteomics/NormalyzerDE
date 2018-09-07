@@ -53,9 +53,9 @@ NormalyzerDataset <- setClass("NormalyzerDataset",
 #'   information
 #' @param quiet If set to TRUE no information messages will be printed
 #' @return nds Generated NormalyzerDataset instance
-#' @export
+#' @keywords internal
 NormalyzerDataset <- function(jobName, designMatrix, rawData, annotationData,
-                                sampleNameCol, groupNameCol, quiet) {
+                                sampleNameCol, groupNameCol, quiet=FALSE) {
               
               sampleReplicateGroups <- as.numeric(
                   as.factor(designMatrix[, groupNameCol]))

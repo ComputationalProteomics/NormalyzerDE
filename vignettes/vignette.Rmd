@@ -101,7 +101,8 @@ normalyzerDE("vignette_run",
              designFp, 
              normMatrixPath,
              outputDir=outDir, 
-             comparisons=c("1-2", "1-3"))
+             comparisons=c("1-2", "1-3"),
+             condCol="group")
 ```
 
 # Retention time normalization
@@ -266,7 +267,6 @@ experimentObj <- setupRawContrastObject(bestNormMatPath, designFp, "sample")
 nst <- NormalyzerStatistics(experimentObj,
                             logTrans=FALSE,
                             leastRepCount=2,
-                            sampleCol="sample",
                             conditionCol="group")
 ```
 

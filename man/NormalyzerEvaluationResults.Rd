@@ -12,6 +12,9 @@ NormalyzerEvaluationResults(nr)
 \arguments{
 \item{nr}{NormalyzerResults object}
 }
+\value{
+nds Generated NormalyzerEvaluationResults instance
+}
 \description{
 Contains the resulting information from the processing which subsequently
 can be used to generate the quality assessment report.
@@ -49,3 +52,9 @@ entries}
 \item{\code{repCorSpear}}{Within group Spearman correlations}
 }}
 
+\examples{
+data(example_summarized_experiment)
+normObj <- getVerifiedNormalyzerObject("job_name", example_summarized_experiment)
+normResults <- normMethods(normObj)
+normEval <- NormalyzerEvaluationResults(normResults)
+}

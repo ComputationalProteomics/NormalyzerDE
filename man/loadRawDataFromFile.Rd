@@ -2,27 +2,7 @@
 % Please edit documentation in R/inputVerification.R
 \name{loadRawDataFromFile}
 \alias{loadRawDataFromFile}
-\title{#' Setup Normalyzer dataset from given raw data
-#' 
-#' @param jobName Name of ongoing run.
-#' @param designMatrix Dataframe containing condition matrix.
-#' @param fullRawMatrix Dataframe with unparsed input data.
-#' @param sampleNameCol Name of column in design matrix containing sample names.
-#' @param groupNameCol Name of column in design matrix contaning conditions.
-#' @return Data object representing loaded data.
-#' @keywords internal
-generateNormalyzerDataset <- function(jobName, designMatrix, fullRawMatrix, sampleNameCol, groupNameCol, quiet=FALSE) {
-    
-    nds <- NormalyzerDataset(
-        jobName=jobName, 
-        rawData=fullRawMatrix, 
-        designMatrix=designMatrix,
-        sampleNameCol=sampleNameCol, 
-        groupNameCol=groupNameCol)
-    nds <- setupValues(nds, quiet=quiet)
-    nds
-}
-Try reading raw Normalyzer matrix from provided filepath}
+\title{Try reading raw Normalyzer matrix from provided filepath}
 \usage{
 loadRawDataFromFile(inputPath)
 }
@@ -33,26 +13,6 @@ loadRawDataFromFile(inputPath)
 Table containing raw data from input file.
 }
 \description{
-#' Setup Normalyzer dataset from given raw data
-#' 
-#' @param jobName Name of ongoing run.
-#' @param designMatrix Dataframe containing condition matrix.
-#' @param fullRawMatrix Dataframe with unparsed input data.
-#' @param sampleNameCol Name of column in design matrix containing sample names.
-#' @param groupNameCol Name of column in design matrix contaning conditions.
-#' @return Data object representing loaded data.
-#' @keywords internal
-generateNormalyzerDataset <- function(jobName, designMatrix, fullRawMatrix, sampleNameCol, groupNameCol, quiet=FALSE) {
-    
-    nds <- NormalyzerDataset(
-        jobName=jobName, 
-        rawData=fullRawMatrix, 
-        designMatrix=designMatrix,
-        sampleNameCol=sampleNameCol, 
-        groupNameCol=groupNameCol)
-    nds <- setupValues(nds, quiet=quiet)
-    nds
-}
 Try reading raw Normalyzer matrix from provided filepath
 }
 \keyword{internal}

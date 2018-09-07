@@ -76,11 +76,12 @@ loadDesign <- function(designPath, sampleCol="sample", groupCol="group") {
 #' @param groupColName Column name for column containing condition levels
 #' @return experimentObj SummarizedExperiment object loaded with the data
 #' @export
-#' @examples \dontrun{
-#' df <- loadDesign("design.tsv")
-#' }
-setupRawDataObject <- function(dataPath, designPath, inputFormat, zeroToNA, 
-                               sampleColName, groupColName) {
+#' @examples 
+#' data_path <- system.file(package="NormalyzerDE", "extdata", "data.tsv")
+#' design_path <- system.file(package="NormalyzerDE", "extdata", "design.tsv")
+#' df <- setupRawDataObject(data_path, design_path)
+setupRawDataObject <- function(dataPath, designPath, inputFormat="default", zeroToNA=FALSE, 
+                               sampleColName="sample", groupColName="group") {
     
     rawDesign <- loadDesign(designPath, sampleCol=sampleColName, groupCol=groupColName)
     rawDesign[[sampleColName]] <- as.character(rawDesign[[sampleColName]])
@@ -108,9 +109,10 @@ setupRawDataObject <- function(dataPath, designPath, inputFormat, zeroToNA,
 #' @param sampleColName Name for column in design matrix containing sample names
 #' @return experimentObj Prepared instance of SummarizedExperiment
 #' @export
-#' @examples \dontrun{
-#' sumExpObj <- setupRawContrastObject("data.tsv", "design.tsv", "sample")
-#' }
+#' @examples 
+#' data_path <- system.file(package="NormalyzerDE", "extdata", "data.tsv")
+#' design_path <- system.file(package="NormalyzerDE", "extdata", "design.tsv")
+#' sumExpObj <- setupRawContrastObject(data_path, design_path, "sample")
 setupRawContrastObject <- function(dataPath, designPath, sampleColName) {
     
     fullDf <- utils::read.csv(
@@ -230,40 +232,10 @@ getVerifiedNormalyzerObject <- function(
         quiet=quiet
     )
     
-    # nds <- generateNormalyzerDataset(
-    #     jobName, 
-    #     designMatrix, 
-    #     cbind(annotationMatrix, lowCountSampleFiltered), 
-    #     sampleCol, 
-    #     groupCol, 
-    #     quiet=quiet
-    # )
     nds
 }
 
 
-
-
-#' #' Setup Normalyzer dataset from given raw data
-#' #' 
-#' #' @param jobName Name of ongoing run.
-#' #' @param designMatrix Dataframe containing condition matrix.
-#' #' @param fullRawMatrix Dataframe with unparsed input data.
-#' #' @param sampleNameCol Name of column in design matrix containing sample names.
-#' #' @param groupNameCol Name of column in design matrix contaning conditions.
-#' #' @return Data object representing loaded data.
-#' #' @keywords internal
-#' generateNormalyzerDataset <- function(jobName, designMatrix, fullRawMatrix, sampleNameCol, groupNameCol, quiet=FALSE) {
-#'     
-#'     nds <- NormalyzerDataset(
-#'         jobName=jobName, 
-#'         rawData=fullRawMatrix, 
-#'         designMatrix=designMatrix,
-#'         sampleNameCol=sampleNameCol, 
-#'         groupNameCol=groupNameCol)
-#'     nds <- setupValues(nds, quiet=quiet)
-#'     nds
-#' }
 
 
 #' Try reading raw Normalyzer matrix from provided filepath

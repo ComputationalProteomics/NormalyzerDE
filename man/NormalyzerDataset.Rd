@@ -5,10 +5,10 @@
 \title{Represents raw input data together with basic annotation information}
 \usage{
 NormalyzerDataset(jobName, designMatrix, rawData, annotationData,
-  sampleNameCol, groupNameCol, quiet)
+  sampleNameCol, groupNameCol, quiet = FALSE)
 
 NormalyzerDataset(jobName, designMatrix, rawData, annotationData,
-  sampleNameCol, groupNameCol, quiet)
+  sampleNameCol, groupNameCol, quiet = FALSE)
 }
 \arguments{
 \item{jobName}{Name of the NormalyzerDE processing run}
@@ -66,3 +66,4 @@ removed}
 \item{\code{singleReplicateRun}}{Conditional whether run is single replicate.}
 }}
 
+\keyword{internal}

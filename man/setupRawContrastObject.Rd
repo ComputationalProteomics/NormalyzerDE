@@ -20,7 +20,7 @@ experimentObj Prepared instance of SummarizedExperiment
 Prepare SummarizedExperiment object for statistics data
 }
 \examples{
-\dontrun{
-sumExpObj <- setupRawContrastObject("data.tsv", "design.tsv", "sample")
-}
+data_path <- system.file(package="NormalyzerDE", "extdata", "data.tsv")
+design_path <- system.file(package="NormalyzerDE", "extdata", "design.tsv")
+sumExpObj <- setupRawContrastObject(data_path, design_path, "sample")
 }

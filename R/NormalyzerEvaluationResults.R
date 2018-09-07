@@ -47,6 +47,11 @@ NormalyzerEvaluationResults <- setClass("NormalyzerEvaluationResults",
 #' @param nr NormalyzerResults object
 #' @return nds Generated NormalyzerEvaluationResults instance
 #' @export
+#' @examples
+#' data(example_summarized_experiment)
+#' normObj <- getVerifiedNormalyzerObject("job_name", example_summarized_experiment)
+#' normResults <- normMethods(normObj)
+#' normEval <- NormalyzerEvaluationResults(normResults)
 NormalyzerEvaluationResults <- function (nr) {
 
                nds <- nds(nr)

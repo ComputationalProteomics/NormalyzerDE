@@ -19,9 +19,7 @@ normalization results}
 
 \item{\code{nds}}{Normalyzer dataset representing run data}
 
-\item{\code{ner}}{Normalyzer evaluation results}
-
-\item{\code{furtherNormalizationMinThreshold}}{Minimum number of features threshold 
+\item{\code{ner}}{Normalyzer evaluation results
 for running extended normalizations}
 }}
 

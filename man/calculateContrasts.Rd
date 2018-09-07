@@ -39,7 +39,7 @@ covariate variation in the statistical model. This is only compatible
 with a Limma-based statistical analysis.
 }
 \examples{
-data("example_stat_summarized_experiment")
+data(example_stat_summarized_experiment)
 nst <- NormalyzerStatistics(example_stat_summarized_experiment)
 results <- calculateContrasts(nst, c("1-2", "2-3"), "group")
 resultsBatch <- calculateContrasts(nst, c("1-2", "2-3"), "group", "batch")
