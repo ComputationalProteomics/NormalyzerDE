@@ -9,6 +9,7 @@ R/Rplots.pdf
 
 # Folders
 ignore
+inst/doc
 tests/testthat/output/
 
 # Vignette output
