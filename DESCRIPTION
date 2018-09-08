@@ -1,6 +1,6 @@
 Package: NormalyzerDE
 Title: Evaluation of normalization methods and calculation of differential expression analysis statistics
-Version: 0.99.11
+Version: 0.99.12
 Maintainer: Jakob Willforss <jakob.willforss@immun.lth.se>
 Author: Jakob Willforss
 Authors@R: c(
