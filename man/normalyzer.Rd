@@ -92,6 +92,7 @@ NormalyzerEvaluationResults object.
 write them to a PDF report.
 }
 \examples{
+\dontrun{
 data_path <- system.file(package="NormalyzerDE", "extdata", "tiny_data.tsv")
 design_path <- system.file(package="NormalyzerDE", "extdata", "tiny_design.tsv")
 out_dir <- tempdir()
@@ -100,18 +101,17 @@ normalyzer(
     designPath=design_path, 
     dataPath=data_path, 
     outputDir=out_dir)
-\dontrun{
 normalyzer(
-    "data.tsv", 
     "my_jobname", 
     designMatrix="design.tsv", 
+    "data.tsv", 
     outputDir="path/to/output", 
     normalizeRetentionTime=TRUE, 
     retentionTimeWindow=2)
 normalyzer(
-    "data.tsv", 
     "my_jobname", 
     designMatrix="design.tsv", 
+    "data.tsv", 
     outputDir="path/to/output", 
     inputFormat="maxquantprot")
 }
