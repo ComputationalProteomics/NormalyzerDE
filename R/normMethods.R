@@ -46,7 +46,7 @@ normMethods <- function(nds, forceAll=FALSE, normalizeRetentionTime=TRUE,
 #' @return Normalized and log-transformed matrix
 #' @export
 #' @examples
-#' data(example_data_only_values)
+#' data(example_data_only_values_small)
 #' normMatrix <- globalIntensityNormalization(example_data_only_values)
 globalIntensityNormalization <- function(rawMatrix) {
     
@@ -73,7 +73,7 @@ globalIntensityNormalization <- function(rawMatrix) {
 #' @return Normalized and log-transformed matrix
 #' @export
 #' @examples
-#' data(example_data_only_values)
+#' data(example_data_only_values_small)
 #' normMatrix <- medianNormalization(example_data_only_values)
 medianNormalization <- function(rawMatrix) {
 
@@ -102,7 +102,7 @@ medianNormalization <- function(rawMatrix) {
 #' @return Normalized and log-transformed matrix
 #' @export
 #' @examples
-#' data(example_data_only_values)
+#' data(example_data_only_values_small)
 #' normMatrix <- meanNormalization(example_data_only_values)
 meanNormalization <- function(rawMatrix) {
     
@@ -132,7 +132,7 @@ meanNormalization <- function(rawMatrix) {
 #' @return Normalized matrix
 #' @export
 #' @examples
-#' data(example_data_only_values)
+#' data(example_data_only_values_small)
 #' normMatrix <- performVSNNormalization(example_data_only_values)
 performVSNNormalization <- function(rawMatrix) {
     
@@ -152,7 +152,7 @@ performVSNNormalization <- function(rawMatrix) {
 #' @return Normalized matrix
 #' @export
 #' @examples
-#' data(example_data_only_values)
+#' data(example_data_only_values_small)
 #' normMatrix <- performQuantileNormalization(example_data_only_values)
 performQuantileNormalization <- function(rawMatrix) {
     
@@ -170,7 +170,7 @@ performQuantileNormalization <- function(rawMatrix) {
 #' @return Normalized matrix
 #' @export
 #' @examples
-#' data(example_data_only_values)
+#' data(example_data_only_values_small)
 #' normMatrix <- performSMADNormalization(example_data_only_values)
 performSMADNormalization <- function(rawMatrix) {
     
@@ -195,7 +195,7 @@ performSMADNormalization <- function(rawMatrix) {
 #' @return Normalized matrix
 #' @export
 #' @examples
-#' data(example_data_only_values)
+#' data(example_data_only_values_small)
 #' normMatrix <- performCyclicLoessNormalization(example_data_only_values)
 performCyclicLoessNormalization <- function(rawMatrix) {
     
@@ -215,7 +215,7 @@ performCyclicLoessNormalization <- function(rawMatrix) {
 #' @return Normalized matrix
 #' @export
 #' @examples
-#' data(example_data_only_values)
+#' data(example_data_only_values_small)
 #' normMatrix <- performGlobalRLRNormalization(example_data_only_values)
 performGlobalRLRNormalization <- function(rawMatrix) {
     
