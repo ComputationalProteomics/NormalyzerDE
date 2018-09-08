@@ -77,8 +77,8 @@ loadDesign <- function(designPath, sampleCol="sample", groupCol="group") {
 #' @return experimentObj SummarizedExperiment object loaded with the data
 #' @export
 #' @examples 
-#' data_path <- system.file(package="NormalyzerDE", "extdata", "data.tsv")
-#' design_path <- system.file(package="NormalyzerDE", "extdata", "design.tsv")
+#' data_path <- system.file(package="NormalyzerDE", "extdata", "tiny_data.tsv")
+#' design_path <- system.file(package="NormalyzerDE", "extdata", "tiny_design.tsv")
 #' df <- setupRawDataObject(data_path, design_path)
 setupRawDataObject <- function(dataPath, designPath, inputFormat="default", zeroToNA=FALSE, 
                                sampleColName="sample", groupColName="group") {
@@ -110,8 +110,8 @@ setupRawDataObject <- function(dataPath, designPath, inputFormat="default", zero
 #' @return experimentObj Prepared instance of SummarizedExperiment
 #' @export
 #' @examples 
-#' data_path <- system.file(package="NormalyzerDE", "extdata", "data.tsv")
-#' design_path <- system.file(package="NormalyzerDE", "extdata", "design.tsv")
+#' data_path <- system.file(package="NormalyzerDE", "extdata", "tiny_data.tsv")
+#' design_path <- system.file(package="NormalyzerDE", "extdata", "tiny_design.tsv")
 #' sumExpObj <- setupRawContrastObject(data_path, design_path, "sample")
 setupRawContrastObject <- function(dataPath, designPath, sampleColName) {
     

@@ -71,11 +71,11 @@ contrast
 }
 \examples{
 data_path <- system.file(package="NormalyzerDE", "extdata", "tiny_data.tsv")
-design_path <- system.file(package="NormalyzerDE", "extdata", "design.tsv")
+design_path <- system.file(package="NormalyzerDE", "extdata", "tiny_design.tsv")
 out_dir <- tempdir()
 normalyzerDE(
   jobName="my_jobname", 
-  comparisons=c("1-2", "1-4"), 
+  comparisons=c("4-5"), 
   designPath=design_path, 
   dataPath=data_path,
   outputDir=out_dir,

@@ -76,8 +76,8 @@ and the `rowData` attribute the annotation columns.
 ```{r}
 library(NormalyzerDE)
 outDir <- tempdir()
-designFp <- system.file(package="NormalyzerDE", "extdata", "design.tsv")
-dataFp <- system.file(package="NormalyzerDE", "extdata", "data.tsv")
+designFp <- system.file(package="NormalyzerDE", "extdata", "tiny_design.tsv")
+dataFp <- system.file(package="NormalyzerDE", "extdata", "tiny_data.tsv")
 normalyzer(jobName="vignette_run", designPath=designFp, dataPath=dataFp, 
            outputDir=outDir)
 ```
@@ -101,7 +101,7 @@ normalyzerDE("vignette_run",
              designFp, 
              normMatrixPath,
              outputDir=outDir, 
-             comparisons=c("1-2", "1-3"),
+             comparisons=c("4-5"),
              condCol="group")
 ```
 
@@ -279,7 +279,7 @@ Now we are ready to perform the contrasts. Contrasts are provided as a vector
 in the format `c("condA-condB", "condB-condC")`, where `condX` is the group levels.
 
 ```{r}
-comparisons <- c("1-2", "2-3")
+comparisons <- c("4-5")
 nst <- calculateContrasts(nst, comparisons, condCol="group")
 ```
 

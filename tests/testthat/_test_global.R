@@ -1,7 +1,7 @@
 context("Global test")
 
-designPath <- system.file(package="NormalyzerDE", "extdata", "design.tsv")
-dataPath <- system.file(package="NormalyzerDE", "extdata", "data.tsv")
+designPath <- system.file(package="NormalyzerDE", "extdata", "tiny_design.tsv")
+dataPath <- system.file(package="NormalyzerDE", "extdata", "tiny_data.tsv")
 # designPath <- "../../vignettes/design.tsv"
 # dataPath <- "../../vignettes/data.tsv"
 tempOut <- tempdir()
@@ -31,7 +31,7 @@ test_that("Statistics run succeeds without errors", {
             dataPath=dataPath,
             designPath=designPath,
             outputDir=tempOut,
-            comparisons=c("1-2", "2-3"),
+            comparisons=c("4-5"),
             logTrans=TRUE,
             quiet=TRUE
         )   

@@ -31,7 +31,7 @@ Prepare SummarizedExperiment object for raw data to be normalized containing
 data, design and annotation information
 }
 \examples{
-data_path <- system.file(package="NormalyzerDE", "extdata", "data.tsv")
-design_path <- system.file(package="NormalyzerDE", "extdata", "design.tsv")
+data_path <- system.file(package="NormalyzerDE", "extdata", "tiny_data.tsv")
+design_path <- system.file(package="NormalyzerDE", "extdata", "tiny_design.tsv")
 df <- setupRawDataObject(data_path, design_path)
 }
