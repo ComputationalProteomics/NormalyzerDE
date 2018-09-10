@@ -51,6 +51,7 @@ loadData <- function(dataPath, inputFormat="default", zeroToNA=FALSE) {
 #' df <- loadDesign("design.tsv")
 #' }
 loadDesign <- function(designPath, sampleCol="sample", groupCol="group") {
+    
     designMatrix <- utils::read.table(
         designPath, 
         sep="\t", 
@@ -58,6 +59,13 @@ loadDesign <- function(designPath, sampleCol="sample", groupCol="group") {
         header=TRUE, 
         comment.char=""
     )
+    
+    if (!(sampleCol %in% colnames(designMatrix)) || !(groupCol %in% colnames(designMatrix))) {
+        stop("Both sampleCol value and groupCol value must be present in the design matrix header.",
+             "\nFound sampleCol: ", sampleCol, "\nFound groupCol: ", groupCol,
+             "\nDesign matrix header: ", paste(colnames(designMatrix), collapse=", "))
+    }
+    
     designMatrix[, sampleCol] <- as.character(designMatrix[, sampleCol])
     designMatrix[, groupCol] <- as.factor(as.character(designMatrix[, groupCol]))
     designMatrix
@@ -192,7 +200,7 @@ getVerifiedNormalyzerObject <- function(
         as.character
     ), stringsAsFactors=FALSE))
 
-    verifyDesignMatrix(dataMatrix, designMatrix, sampleCol=sampleCol)
+    verifyDesignMatrix(dataMatrix, designMatrix, sampleCol, groupCol)
     verifyValidNumbers(dataMatrix, groups, quiet=quiet)
     
     repSortedRawData <- getReplicateSortedData(dataMatrix, groups)
@@ -320,7 +328,7 @@ verifyValidNumbers <- function(rawDataOnly, groups, quiet=FALSE) {
 #' 
 #' @return None
 #' @keywords internal
-verifyDesignMatrix <- function(fullMatrix, designMatrix, sampleCol="sample") {
+verifyDesignMatrix <- function(fullMatrix, designMatrix, sampleCol, groupCol) {
 
     designColnames <- designMatrix[, sampleCol]
     
