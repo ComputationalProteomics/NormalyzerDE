@@ -11,6 +11,8 @@ getVerifiedNormalyzerObject(jobName, summarizedExp, threshold = 15,
 \arguments{
 \item{jobName}{Name of ongoing run.}
 
+\item{summarizedExp}{Summarized experiment input object}
+
 \item{threshold}{Minimum number of features.}
 
 \item{omitSamples}{Automatically omit invalid samples from analysis.}
@@ -19,14 +21,6 @@ getVerifiedNormalyzerObject(jobName, summarizedExp, threshold = 15,
 condition}
 
 \item{quiet}{Don't print output messages during processing}
-
-\item{designMatrix}{Data frame containing design data.}
-
-\item{rawData}{Data frame containing raw data.}
-
-\item{sampleCol}{Name of the column containing samples in design matrix.}
-
-\item{groupCol}{Name of column containing conditions in design matrix.}
 }
 \value{
 Normalyzer data object representing verified input data.
@@ -39,7 +33,6 @@ that the data matrix contains valid numbers and that samples have enough
 values for analysis
 }
 \examples{
-data(example_data)
-data(example_design)
-normObj <- getVerifiedNormalyzerObject("job_name", example_design, example_data)
+data(example_summarized_experiment)
+normObj <- getVerifiedNormalyzerObject("job_name", example_summarized_experiment)
 }

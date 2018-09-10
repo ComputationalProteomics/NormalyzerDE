@@ -12,9 +12,8 @@
 #' @return None
 #' @export
 #' @examples
-#' data(example_data)
-#' data(example_design)
-#' normObj <- getVerifiedNormalyzerObject("job_name", example_design, example_data)
+#' data(example_summarized_experiment)
+#' normObj <- getVerifiedNormalyzerObject("job_name", example_summarized_experiment)
 #' normResults <- normMethods(normObj)
 #' normResultsWithEval <- analyzeNormalizations(normResults)
 #' outputDir <- tempdir()
@@ -52,7 +51,7 @@ writeNormalizedDatasets <- function(nr, jobdir, includePairwiseComparisons=FALSE
         if (includePairwiseComparisons) {
             
             ner <- ner(nr)
-            for (comp in names(pairwiseComps(ner))) {
+            for (comp in names(pairwiseCompsP(ner))) {
                 
                 compColP <- pairwiseCompsP(ner)[[comp]][, sampleIndex]
                 compColFdr <- pairwiseCompsFdr(ner)[[comp]][, sampleIndex]

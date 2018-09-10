@@ -8,6 +8,7 @@ R/Rplots.pdf
 *.old
 
 # Folders
+ignore
 inst/doc
 tests/testthat/output/
 

@@ -23,6 +23,8 @@
 #' @param designPath Path to file containing design matrix.
 #' @param dataPath Specify an output directory for generated files.
 #'  Defaults to current working directory.
+#' @param experimentObj SummarizedExperiment object, can be provided as input
+#'  as alternative to 'designPath' and 'dataPath'
 #' @param outputDir Directory where results folder is created.
 #' @param forceAllMethods Debugging function. Run all normalizations even if
 #'  they aren't in the recommended range of number of values
@@ -53,23 +55,27 @@
 #' @export
 #' @import MASS limma preprocessCore methods RcmdrMisc
 #' @importFrom raster cv
-#' @examples \dontrun{
+#' @examples
+#' \dontrun{
+#' data_path <- system.file(package="NormalyzerDE", "extdata", "tiny_data.tsv")
+#' design_path <- system.file(package="NormalyzerDE", "extdata", "tiny_design.tsv")
+#' out_dir <- tempdir()
 #' normalyzer(
-#'     "data.tsv", 
+#'     jobName="my_jobname", 
+#'     designPath=design_path, 
+#'     dataPath=data_path, 
+#'     outputDir=out_dir)
+#' normalyzer(
 #'     "my_jobname", 
 #'     designMatrix="design.tsv", 
-#'     outputDir="path/to/output")
-#' normalyzer(
 #'     "data.tsv", 
-#'     "my_jobname", 
-#'     designMatrix="design.tsv", 
 #'     outputDir="path/to/output", 
 #'     normalizeRetentionTime=TRUE, 
 #'     retentionTimeWindow=2)
 #' normalyzer(
-#'     "data.tsv", 
 #'     "my_jobname", 
 #'     designMatrix="design.tsv", 
+#'     "data.tsv", 
 #'     outputDir="path/to/output", 
 #'     inputFormat="maxquantprot")
 #' }
@@ -112,7 +118,6 @@ normalyzer <- function(
                                             zeroToNA, sampleColName, groupColName)
     }
     else {
-        # metadata(experimentObj) <- list(sample=sampleColName, group=groupColName)
         SummarizedExperiment::colData(experimentObj)[[sample]] <- 
             as.character(SummarizedExperiment::colData(experimentObj)[[sample]])
     }
@@ -199,6 +204,8 @@ normalyzer <- function(
 #' @param jobName Name of job
 #' @param designPath File path to design matrix
 #' @param dataPath File path to normalized matrix
+#' @param experimentObj SummarizedExperiment object, can be provided as input
+#'  as alternative to 'designPath' and 'dataPath'
 #' @param comparisons Character vector containing target contrasts. 
 #'   If comparing condA with condB, then the vector would be c("condA-condB")
 #' @param outputDir Path to output directory
@@ -216,15 +223,20 @@ normalyzer <- function(
 #' @param quiet Omit status messages printed during run
 #' @return None
 #' @export
-#' @examples \dontrun{
+#' @examples 
+#' data_path <- system.file(package="NormalyzerDE", "extdata", "tiny_data.tsv")
+#' design_path <- system.file(package="NormalyzerDE", "extdata", "tiny_design.tsv")
+#' out_dir <- tempdir()
 #' normalyzerDE(
-#'   "results/normalized.tsv", "design.tsv", "my_jobname", 
-#'   c("1-2", "1-4"),  outputDir="path/to/output")
-#' }
+#'   jobName="my_jobname", 
+#'   comparisons=c("4-5"), 
+#'   designPath=design_path, 
+#'   dataPath=data_path,
+#'   outputDir=out_dir,
+#'   condCol="group")
 #' @export
-normalyzerDE <- function(jobName, comparisons, designPath=NULL, dataPath=NULL, 
-                         experimentObj=NULL, outputDir=".", logTrans=FALSE, 
-                         type="limma", sampleCol="sample", condCol="group", 
+normalyzerDE <- function(jobName, comparisons, designPath=NULL, dataPath=NULL, experimentObj=NULL, 
+                         outputDir=".", logTrans=FALSE, type="limma", sampleCol="sample", condCol="group", 
                          batchCol=NULL, techRepCol=NULL, leastRepCount=1, quiet=FALSE) {
 
     if (is.null(experimentObj) && (is.null(designPath) || is.null(dataPath))) {
@@ -242,7 +254,6 @@ normalyzerDE <- function(jobName, comparisons, designPath=NULL, dataPath=NULL,
     nst <- NormalyzerStatistics(experimentObj, 
                                 logTrans=logTrans, 
                                 leastRepCount=leastRepCount,
-                                sampleCol=sampleCol,
                                 conditionCol=condCol)
 
     if (!is.null(techRepCol)) {
@@ -260,7 +271,7 @@ normalyzerDE <- function(jobName, comparisons, designPath=NULL, dataPath=NULL,
     
     if (!quiet) print(paste("Writing", nrow(annotDf), "annotated rows to", outPath))
     utils::write.table(annotDf, file=outPath, sep="\t", row.names = FALSE)
-    if (!quiet) print(paste("Writing statistics report"))
+    if (!quiet) print(paste("Writing statistics report"))
     generateStatsReport(nst, jobName, jobDir)
     
     endTime <- Sys.time()

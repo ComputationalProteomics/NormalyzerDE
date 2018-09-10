@@ -22,9 +22,8 @@ deviation), average variance, significance measures (ANOVA between
 condition groups) and correlation between replicates.
 }
 \examples{
-data(example_data)
-data(example_design)
-normObj <- getVerifiedNormalyzerObject("job_name", example_design, example_data)
+data(example_summarized_experiment)
+normObj <- getVerifiedNormalyzerObject("job_name", example_summarized_experiment)
 normResults <- normMethods(normObj)
 normResultsWithEval <- analyzeNormalizations(normResults)
 }

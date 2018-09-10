@@ -4,8 +4,33 @@
 \alias{NormalyzerDataset}
 \title{Represents raw input data together with basic annotation information}
 \usage{
-NormalyzerDataset(jobName, designMatrix, rawData, annotationData, sampleNameCol,
-  groupNameCol, quiet)
+NormalyzerDataset(jobName, designMatrix, rawData, annotationData,
+  sampleNameCol, groupNameCol, quiet = FALSE)
+
+NormalyzerDataset(jobName, designMatrix, rawData, annotationData,
+  sampleNameCol, groupNameCol, quiet = FALSE)
+}
+\arguments{
+\item{jobName}{Name of the NormalyzerDE processing run}
+
+\item{designMatrix}{Matrix containing sample conditions}
+
+\item{rawData}{Matrix containing raw input data}
+
+\item{annotationData}{Matrix containing annotation information for each
+input feature. Is expected to contain the same number of rows as the data
+but can contain any number of features}
+
+\item{sampleNameCol}{Name of column in design matrix containing sample
+information}
+
+\item{groupNameCol}{Name of column in design matrix containing condition
+information}
+
+\item{quiet}{If set to TRUE no information messages will be printed}
+}
+\value{
+nds Generated NormalyzerDataset instance
 }
 \description{
 Takes a job name, a data matrix, a design matrix as well as specification
@@ -41,3 +66,4 @@ removed}
 \item{\code{singleReplicateRun}}{Conditional whether run is single replicate.}
 }}
 
+\keyword{internal}

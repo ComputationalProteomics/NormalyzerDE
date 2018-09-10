@@ -16,7 +16,6 @@
 #' @slot pairwiseCompsAve List with average expression values
 #' @slot pairwiseCompsFold List with log2 fold-change values for pairwise 
 #'   comparisons
-#' @export
 NormalyzerStatistics <- setClass("NormalyzerStatistics",
                                  representation(
                                      annotMat = "matrix",
@@ -31,14 +30,23 @@ NormalyzerStatistics <- setClass("NormalyzerStatistics",
                                      pairwiseCompsFold = "list"
                                  ))
 
-setGeneric("NormalyzerStatistics", function(experimentObj, sampleCol, conditionCol, 
-                                            logTrans=FALSE, leastRepCount
-                                            ) { standardGeneric("NormalyzerStatistics") })
-setMethod("NormalyzerStatistics", 
-          definition = function(
-              experimentObj, sampleCol="sample", conditionCol="group", logTrans=FALSE, 
-              leastRepCount=2) { 
-             
+#' Constructor for NormalyzerStatistics
+#' 
+#' @param experimentObj Instance of SummarizedExperiment containing matrix
+#'   and design information as column data
+#' @param conditionCol Column in column data containing the condition information
+#'   for which contrasts will be performed
+#' @param logTrans Whether the input data should be log transformed
+#' @param leastRepCount Least replicates in each group to be retained for 
+#'   contrast calculations
+#' @return nds Generated NormalyzerStatistics instance
+#' @export
+#' @examples
+#' data(example_stat_summarized_experiment)
+#' nst <- NormalyzerStatistics(example_stat_summarized_experiment)
+NormalyzerStatistics <- function(experimentObj, conditionCol="group", logTrans=FALSE, leastRepCount=2) { 
+    
+
               dataMat <- SummarizedExperiment::assay(experimentObj)
               if (logTrans) {
                   dataMat <- log2(dataMat)
@@ -46,8 +54,7 @@ setMethod("NormalyzerStatistics",
               
               annotMat <- SummarizedExperiment::rowData(experimentObj)
               designDf <- SummarizedExperiment::colData(experimentObj)
-              designDf[[sampleCol]] <- as.character(designDf[[sampleCol]])
-              
+
               rownames(dataMat) <- seq_len(nrow(dataMat))
               dataMatNAFiltered <- filterLowRep(
                   dataMat, 
@@ -65,7 +72,7 @@ setMethod("NormalyzerStatistics",
               ) 
 
               nst
-          })
+          }
 
 setGeneric("annotMat", function(object) { standardGeneric("annotMat") })
 setMethod("annotMat", signature(object="NormalyzerStatistics"), 
@@ -74,6 +81,13 @@ setMethod("annotMat", signature(object="NormalyzerStatistics"),
 setGeneric("dataMat", function(object) { standardGeneric("dataMat") })
 setMethod("dataMat", signature(object="NormalyzerStatistics"), 
           function(object) { slot(object, "dataMat") })
+setGeneric("dataMat<-", function(object, value) { standardGeneric("dataMat<-") })
+setReplaceMethod("dataMat", signature(object="NormalyzerStatistics"), 
+                 function(object, value) { 
+                     slot(object, "dataMat") <- value
+                     validObject(object)
+                     object
+                 })
 
 setGeneric("filteredDataMat", function(object) { standardGeneric("filteredDataMat") })
 setMethod("filteredDataMat", signature(object="NormalyzerStatistics"), 
@@ -82,6 +96,13 @@ setMethod("filteredDataMat", signature(object="NormalyzerStatistics"),
 setGeneric("designDf", function(object) { standardGeneric("designDf") })
 setMethod("designDf", signature(object="NormalyzerStatistics"), 
           function(object) { slot(object, "designDf") })
+setGeneric("designDf<-", function(object, value) { standardGeneric("designDf<-") })
+setReplaceMethod("designDf", signature(object="NormalyzerStatistics"), 
+                 function(object, value) { 
+                     slot(object, "designDf") <- value
+                     validObject(object)
+                     object
+                 })
 
 setGeneric("filteringContrast", function(object) { standardGeneric("filteringContrast") })
 setMethod("filteringContrast", signature(object="NormalyzerStatistics"), 
@@ -153,9 +174,8 @@ setReplaceMethod("pairwiseCompsFold", signature(object="NormalyzerStatistics"),
 #' @rdname calculateContrasts
 #' @export
 #' @examples
-#' data("example_stat_data")
-#' data("example_design")
-#' nst <- setupStatisticsObject(example_design, example_stat_data)
+#' data(example_stat_summarized_experiment)
+#' nst <- NormalyzerStatistics(example_stat_summarized_experiment)
 #' results <- calculateContrasts(nst, c("1-2", "2-3"), "group")
 #' resultsBatch <- calculateContrasts(nst, c("1-2", "2-3"), "group", "batch")
 setGeneric(name="calculateContrasts", 
@@ -175,22 +195,8 @@ setMethod(f="calculateContrasts",
               naFilterContrast <- filteringContrast(nst)
               dataMatNAFiltered <- filteredDataMat(nst)
               
-              if (is.null(batchCol)) {
-                  Variable <- as.factor(designDf(nst)[, condCol])
-                  model <- ~0+Variable
-              }
-              else {
-                  if (type != "limma") {
-                      stop(
-                          "Batch compensation only compatible with Limma, got: ", 
-                          type
-                      )
-                  }
-                  Variable <- as.factor(designDf(nst)[, condCol])
-                  Batch <- as.factor(designDf(nst)[, batchCol])
-                  model <- ~0+Variable+Batch
-              }
-              
+              model <- setupModel(nst, condCol, batchCol=batchCol, type=type)
+
               if (type == "limma") {
                   limmaDesign <- stats::model.matrix(model)
                   limmaFit <- limma::lmFit(dataMatNAFiltered, limmaDesign)
@@ -234,6 +240,7 @@ setMethod(f="calculateContrasts",
                           c(level1, level2))
                   }
                   else if (type == "limma") {
+                      
                       statResults <- calculateLimmaContrast(
                           dataMatNAFiltered, 
                           limmaDesign, 
@@ -256,6 +263,26 @@ setMethod(f="calculateContrasts",
               pairwiseCompsFold(nst) <- compLists[["Fold"]]
               nst
           })
+
+setupModel <- function(nst, condCol, batchCol=NULL, type="limma") {
+    
+    if (is.null(batchCol)) {
+        Variable <- as.factor(designDf(nst)[, condCol])
+        model <- ~0+Variable
+    }
+    else {
+        if (type != "limma") {
+            stop(
+                "Batch compensation only compatible with Limma, got: ", 
+                type
+            )
+        }
+        Variable <- as.factor(designDf(nst)[, condCol])
+        Batch <- as.factor(designDf(nst)[, batchCol])
+        model <- ~0+Variable+Batch
+    }
+    model
+}
 
 calculateWelch <- function(dataMat, groupHeader, levels) {
     

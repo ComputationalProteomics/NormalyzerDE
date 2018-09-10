@@ -28,9 +28,8 @@ for each contrast in the NormalyzerStatistics instance and writes these
 to a PDF report.
 }
 \examples{
-data(example_stat_data)
-data(example_design)
-statObj <- setupStatisticsObject(example_design, example_stat_data)
+data(example_stat_summarized_experiment)
+statObj <- NormalyzerStatistics(example_stat_summarized_experiment)
 statObj <- calculateContrasts(statObj, comparisons=c("1-2", "2-3"), 
   condCol="group", type="limma")
 outputDir <- tempdir()

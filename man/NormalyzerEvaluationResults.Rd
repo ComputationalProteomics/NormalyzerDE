@@ -6,6 +6,14 @@
 for an an NormalyzerResults instance}
 \usage{
 NormalyzerEvaluationResults(nr)
+
+NormalyzerEvaluationResults(nr)
+}
+\arguments{
+\item{nr}{NormalyzerResults object}
+}
+\value{
+nds Generated NormalyzerEvaluationResults instance
 }
 \description{
 Contains the resulting information from the processing which subsequently
@@ -44,3 +52,9 @@ entries}
 \item{\code{repCorSpear}}{Within group Spearman correlations}
 }}
 
+\examples{
+data(example_summarized_experiment)
+normObj <- getVerifiedNormalyzerObject("job_name", example_summarized_experiment)
+normResults <- normMethods(normObj)
+normEval <- NormalyzerEvaluationResults(normResults)
+}

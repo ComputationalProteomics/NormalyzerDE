@@ -16,11 +16,11 @@
 #' @return Normalized matrix
 #' @export
 #' @examples
-#' data(example_stat_data)
-#' data(example_design)
+#' data(example_data_only_values_small)
+#' data(example_design_small)
 #' sampleNames <- as.character(example_design$sample)
-#' dataMat <- as.matrix(example_stat_data[, sampleNames])
-#' retentionTimes <- example_stat_data$Average.RT
+#' dataMat <- as.matrix(example_data_only_values[, sampleNames])
+#' retentionTimes <- example_data_only_values$Average.RT
 #' performCyclicLoessNormalization <- function(rawMatrix) {
 #'     log2Matrix <- log2(rawMatrix)
 #'     normMatrix <- limma::normalizeCyclicLoess(log2Matrix, method="fast")
@@ -28,7 +28,7 @@
 #'     normMatrix
 #' }
 #' rtNormMat <- getRTNormalizedMatrix(dataMat, retentionTimes, 
-#'   performCyclicLoessNormalization, stepSizeMinutes=1, windowMinCount=100)
+#' performCyclicLoessNormalization, stepSizeMinutes=1, windowMinCount=100)
 getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, 
                                   stepSizeMinutes=1, windowMinCount=100, 
                                   offset=0) {
@@ -221,11 +221,11 @@ getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes,
 #' @export
 #' @examples
 #' 
-#' data(example_stat_data)
-#' data(example_design)
+#' data(example_data_only_values_small)
+#' data(example_design_small)
 #' sampleNames <- as.character(example_design$sample)
-#' dataMat <- as.matrix(example_stat_data[, sampleNames])
-#' retentionTimes <- example_stat_data$Average.RT
+#' dataMat <- as.matrix(example_data_only_values[, sampleNames])
+#' retentionTimes <- example_data_only_values$Average.RT
 #' performCyclicLoessNormalization <- function(rawMatrix) {
 #'     log2Matrix <- log2(rawMatrix)
 #'     normMatrix <- limma::normalizeCyclicLoess(log2Matrix, method="fast")
@@ -234,7 +234,7 @@ getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes,
 #' }
 #' rtNormMat <- getSmoothedRTNormalizedMatrix(dataMat, retentionTimes, 
 #'     performCyclicLoessNormalization, stepSizeMinutes=1, windowMinCount=100, 
-#'     windowShifts=3, mergeMethod="median")
+#'     windowShifts=2, mergeMethod="median")
 getSmoothedRTNormalizedMatrix <- function(
     rawMatrix, retentionTimes, normMethod, stepSizeMinutes, 
     windowShifts=2, windowMinCount=100, mergeMethod="mean") {

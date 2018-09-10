@@ -6,8 +6,8 @@
 \alias{performNormalizations,NormalyzerResults-method}
 \title{Main function for executing normalizations}
 \usage{
-performNormalizations(nr, forceAll, rtNorm, rtStepSizeMinutes, rtWindowMinCount,
-  rtWindowShifts, rtWindowMergeMethod, quiet)
+performNormalizations(nr, forceAll, rtNorm, rtStepSizeMinutes,
+  rtWindowMinCount, rtWindowShifts, rtWindowMergeMethod, quiet)
 
 \S4method{performNormalizations}{NormalyzerResults}(nr, forceAll = FALSE,
   rtNorm = FALSE, rtStepSizeMinutes = 1, rtWindowMinCount = 100,

@@ -9,7 +9,6 @@
 #' Proteios format or in MaxQuant protein or peptide format
 #' @param zeroToNA Automatically convert zeroes to NA values
 #' @return rawData Raw data loaded into data frame
-#' @export
 #' @examples \dontrun{
 #' df <- loadData("data.tsv")
 #' }
@@ -48,7 +47,6 @@ loadData <- function(dataPath, inputFormat="default", zeroToNA=FALSE) {
 #' @param sampleCol Column name for column containing sample names.
 #' @param groupCol Column name for column containing condition levels.
 #' @return designMatrix Design data loaded into data frame
-#' @export
 #' @examples \dontrun{
 #' df <- loadDesign("design.tsv")
 #' }
@@ -65,20 +63,25 @@ loadDesign <- function(designPath, sampleCol="sample", groupCol="group") {
     designMatrix
 }
 
-#' Load raw design into dataframe
+#' Prepare SummarizedExperiment object for raw data to be normalized containing 
+#' data, design and annotation information
 #' 
-#' Takes a design path, loads the matrix and ensures that the sample column
-#' is in character format and that the group column is in factor format.
-#' 
+#' @param dataPath File path to data matrix.
 #' @param designPath File path to design matrix.
-#' @param sampleCol Column name for column containing sample names.
-#' @param groupCol Column name for column containing condition levels.
-#' @return designMatrix Design data loaded into data frame
+#' @param inputFormat Type of matrix for data, can be either 'default',
+#'   'proteios', 'maxquantprot' or 'maxquantpep'
+#' @param zeroToNA If TRUE zeroes in the data is automatically converted to
+#'   NA values
+#' @param sampleColName Column name for column containing sample names
+#' @param groupColName Column name for column containing condition levels
+#' @return experimentObj SummarizedExperiment object loaded with the data
 #' @export
-#' @examples \dontrun{
-#' df <- loadDesign("design.tsv")
-#' }
-setupRawDataObject <- function(dataPath, designPath, inputFormat, zeroToNA, sampleColName, groupColName) {
+#' @examples 
+#' data_path <- system.file(package="NormalyzerDE", "extdata", "tiny_data.tsv")
+#' design_path <- system.file(package="NormalyzerDE", "extdata", "tiny_design.tsv")
+#' df <- setupRawDataObject(data_path, design_path)
+setupRawDataObject <- function(dataPath, designPath, inputFormat="default", zeroToNA=FALSE, 
+                               sampleColName="sample", groupColName="group") {
     
     rawDesign <- loadDesign(designPath, sampleCol=sampleColName, groupCol=groupColName)
     rawDesign[[sampleColName]] <- as.character(rawDesign[[sampleColName]])
@@ -99,6 +102,17 @@ setupRawDataObject <- function(dataPath, designPath, inputFormat, zeroToNA, samp
     experimentObj
 }
 
+#' Prepare SummarizedExperiment object for statistics data
+#' 
+#' @param dataPath Path to raw data matrix
+#' @param designPath Path to design matrix
+#' @param sampleColName Name for column in design matrix containing sample names
+#' @return experimentObj Prepared instance of SummarizedExperiment
+#' @export
+#' @examples 
+#' data_path <- system.file(package="NormalyzerDE", "extdata", "tiny_data.tsv")
+#' design_path <- system.file(package="NormalyzerDE", "extdata", "tiny_design.tsv")
+#' sumExpObj <- setupRawContrastObject(data_path, design_path, "sample")
 setupRawContrastObject <- function(dataPath, designPath, sampleColName) {
     
     fullDf <- utils::read.csv(
@@ -141,21 +155,17 @@ setupRawContrastObject <- function(dataPath, designPath, sampleColName) {
 #' values for analysis
 #' 
 #' @param jobName Name of ongoing run.
-#' @param designMatrix Data frame containing design data.
-#' @param rawData Data frame containing raw data.
+#' @param summarizedExp Summarized experiment input object
 #' @param threshold Minimum number of features.
 #' @param omitSamples Automatically omit invalid samples from analysis.
 #' @param requireReplicates Require there to be at least to samples per
 #'        condition
-#' @param sampleCol Name of the column containing samples in design matrix.
-#' @param groupCol Name of column containing conditions in design matrix.
 #' @param quiet Don't print output messages during processing 
 #' @return Normalyzer data object representing verified input data.
 #' @export
 #' @examples
-#' data(example_data)
-#' data(example_design)
-#' normObj <- getVerifiedNormalyzerObject("job_name", example_design, example_data)
+#' data(example_summarized_experiment)
+#' normObj <- getVerifiedNormalyzerObject("job_name", example_summarized_experiment)
 getVerifiedNormalyzerObject <- function(
         jobName, 
         summarizedExp,
@@ -222,40 +232,10 @@ getVerifiedNormalyzerObject <- function(
         quiet=quiet
     )
     
-    # nds <- generateNormalyzerDataset(
-    #     jobName, 
-    #     designMatrix, 
-    #     cbind(annotationMatrix, lowCountSampleFiltered), 
-    #     sampleCol, 
-    #     groupCol, 
-    #     quiet=quiet
-    # )
     nds
 }
 
 
-
-
-#' #' Setup Normalyzer dataset from given raw data
-#' #' 
-#' #' @param jobName Name of ongoing run.
-#' #' @param designMatrix Dataframe containing condition matrix.
-#' #' @param fullRawMatrix Dataframe with unparsed input data.
-#' #' @param sampleNameCol Name of column in design matrix containing sample names.
-#' #' @param groupNameCol Name of column in design matrix contaning conditions.
-#' #' @return Data object representing loaded data.
-#' #' @keywords internal
-#' generateNormalyzerDataset <- function(jobName, designMatrix, fullRawMatrix, sampleNameCol, groupNameCol, quiet=FALSE) {
-#'     
-#'     nds <- NormalyzerDataset(
-#'         jobName=jobName, 
-#'         rawData=fullRawMatrix, 
-#'         designMatrix=designMatrix,
-#'         sampleNameCol=sampleNameCol, 
-#'         groupNameCol=groupNameCol)
-#'     nds <- setupValues(nds, quiet=quiet)
-#'     nds
-#' }
 
 
 #' Try reading raw Normalyzer matrix from provided filepath

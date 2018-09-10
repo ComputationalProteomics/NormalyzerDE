@@ -22,7 +22,7 @@ vignette: >
 
 # Installation
 
-Installation is preferably performed using BiocManager (requires R version 3.5):
+Installation is preferably performed using BiocManager (requires R version >= 3.5):
 
 ```
 install.packages("BiocManager")
@@ -60,17 +60,24 @@ s3      condB
 s4      condB
 ```
 
+Alternatively the data can be provided as an instance of a `SummarizedExperiment` S4 class.
+This class is available in the `SummarizedExperiment` Bioconductor package.
+
 ## Running NormalyzerDE evaluation
 
 The evaluation step can be performed with one command, `normalyzer`.
 This command expects a path to the data file, a name for the run-job,
 a path to a design matrix and finally a path to an output directory.
 
+Alternatively the `designPath` and `dataPath` arguments can be replaced with the `experimentObj` argument
+where the first assay should contain the data matrix of interest, the `colData` attribute the design matrix
+and the `rowData` attribute the annotation columns.
+
 ```{r}
 library(NormalyzerDE)
 outDir <- tempdir()
-designFp <- system.file(package="NormalyzerDE", "extdata", "design.tsv")
-dataFp <- system.file(package="NormalyzerDE", "extdata", "data.tsv")
+designFp <- system.file(package="NormalyzerDE", "extdata", "tiny_design.tsv")
+dataFp <- system.file(package="NormalyzerDE", "extdata", "tiny_data.tsv")
 normalyzer(jobName="vignette_run", designPath=designFp, dataPath=dataFp, 
            outputDir=outDir)
 ```
@@ -85,13 +92,17 @@ in the previous step, a job name, the path to an output directory and a list of 
 for which you want to calculate contrasts. They are provided as a character vector with conditions to
 compare separated by a dash ("-").
 
+Similarly as for the normalization step the `designPath` and `dataPath` arguments can be replaced with
+an instance of `SummarizedExperiment` sent to the `experimentObj` argument.
+
 ```{r}
 normMatrixPath <- paste(outDir, "vignette_run/CycLoess-normalized.txt", sep="/")
 normalyzerDE("vignette_run", 
              designFp, 
              normMatrixPath,
              outputDir=outDir, 
-             comparisons=c("1-2", "1-3"))
+             comparisons=c("4-5"),
+             condCol="group")
 ```
 
 # Retention time normalization
@@ -198,10 +209,14 @@ This step performs input validation of the data, and generates an object of the 
 
 ```{r}
 jobName <- "vignette_run"
-designDf <- loadDesign(designFp)
-dataDf <- loadData(dataFp)
-normObj <- getVerifiedNormalyzerObject(jobName, designDf, dataDf)
+experimentObj <- setupRawDataObject(dataFp, designFp, "default", TRUE, "sample", "group")
+normObj <- getVerifiedNormalyzerObject(jobName, experimentObj)
 ```
+
+The function `setupRawDataObject` returns a `SummarizedExperiment` object.
+This object can be prepared directly and should in that case contain the raw
+data as the default assay, the design matrix as `colData` and annotation rows
+as `rowData`.
 
 ## Step 2: Generate normalizations
 
@@ -233,7 +248,7 @@ writeNormalizedDatasets(normResultsWithEval, jobDir)
 Performance measures are used to generate evaluation figures which is written in an evaluation report.
 
 ```{r}
-generatePlots(normResultsWithEval, jobDir)
+ generatePlots(normResultsWithEval, jobDir)
 ```
 
 After this evaluation of normalizations and progression to statistics follows as described previously in this report.
@@ -248,10 +263,15 @@ the normalization step.
 
 ```{r}
 bestNormMatPath <- paste(jobDir, "RT-Loess-normalized.txt", sep="/")
-fullDf <- utils::read.csv(bestNormMatPath, sep="\t")
-designDf <- utils::read.csv(designFp, sep="\t")
-nst <- setupStatisticsObject(designDf, fullDf)
+experimentObj <- setupRawContrastObject(bestNormMatPath, designFp, "sample")
+nst <- NormalyzerStatistics(experimentObj,
+                            logTrans=FALSE,
+                            leastRepCount=2,
+                            conditionCol="group")
 ```
+
+Similarly as to for the normalization evaluation step the `experimentObj`
+above can be prepared directly as a `SummarizedExperiment` object.
 
 ## Step 2: Calculate statistics
 
@@ -259,7 +279,7 @@ Now we are ready to perform the contrasts. Contrasts are provided as a vector
 in the format `c("condA-condB", "condB-condC")`, where `condX` is the group levels.
 
 ```{r}
-comparisons <- c("1-2", "2-3")
+comparisons <- c("4-5")
 nst <- calculateContrasts(nst, comparisons, condCol="group")
 ```
 

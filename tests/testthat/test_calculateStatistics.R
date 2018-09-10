@@ -117,37 +117,10 @@ test_that("calculateWelch_data_test", {
     
     out <- calculateWelch(small_df, header, c(4,5))
     
-    expect_that(
-        all.equal(
-            expected_p,
-            round(out[["P"]], 5)
-        ),
-        is_true()
-    )
-    
-    expect_that(
-        all.equal(
-            expected_fdr,
-            round(out[["FDR"]], 5)
-        ),
-        is_true()
-    )
-    
-    expect_that(
-        all.equal(
-            expected_fold,
-            round(out[["Fold"]], 5)
-        ),
-        is_true()
-    )
-    
-    expect_that(
-        all.equal(
-            expected_ave,
-            round(out[["Ave"]], 5)
-        ),
-        is_true()
-    )
+    expect_that(all.equal(expected_p, round(out[["P"]], 5)), is_true())
+    expect_that(all.equal(expected_fdr, round(out[["FDR"]], 5)), is_true())
+    expect_that(all.equal(expected_fold, round(out[["Fold"]], 5)), is_true())
+    expect_that(all.equal(expected_ave, round(out[["Ave"]], 5)), is_true())
 })
 
 test_that("calculateWelch_limited", {
@@ -168,37 +141,10 @@ test_that("calculateWelch_limited", {
     
     out <- calculateWelch(small_df, c(1,1,1,2,2,2), c(1,2))
     
-    expect_that(
-        all.equal(
-            expected_p,
-            round(out[["P"]], 5)
-        ),
-        is_true()
-    )
-    
-    expect_that(
-        all.equal(
-            expected_fdr,
-            round(out[["FDR"]], 5)
-        ),
-        is_true()
-    )
-    
-    expect_that(
-        all.equal(
-            expected_fold,
-            round(out[["Fold"]], 5)
-        ),
-        is_true()
-    )
-    
-    expect_that(
-        all.equal(
-            expected_ave,
-            round(out[["Ave"]], 5)
-        ),
-        is_true()
-    )
+    expect_that(all.equal(expected_p, round(out[["P"]], 5)), is_true())
+    expect_that(all.equal(expected_fdr, round(out[["FDR"]], 5)), is_true())
+    expect_that(all.equal(expected_fold, round(out[["Fold"]], 5)), is_true())
+    expect_that(all.equal(expected_ave, round(out[["Ave"]], 5)), is_true())
 })
 
 test_that("calculateLimmaContrast_data_test", {
@@ -234,37 +180,10 @@ test_that("calculateLimmaContrast_data_test", {
     expected_ave <- c(26.69096, 26.48083, 28.53765, 24.8364, 26.8688, 28.51864)
     expected_fold <- c(-0.2404, 0.22268, -0.13116, 1.54437, 0.95631, 0.69079)
     
-    expect_that(
-        all.equal(
-            expected_p,
-            round(out[["P"]], 5)
-        ),
-        is_true()
-    )
-    
-    expect_that(
-        all.equal(
-            expected_fdr,
-            round(out[["FDR"]], 5)
-        ),
-        is_true()
-    )
-    
-    expect_that(
-        all.equal(
-            expected_fold,
-            round(out[["Fold"]], 5)
-        ),
-        is_true()
-    )
-    
-    expect_that(
-        all.equal(
-            expected_ave,
-            round(out[["Ave"]], 5)
-        ),
-        is_true()
-    )
+    expect_that(all.equal(expected_p, round(out[["P"]], 5)), is_true())
+    expect_that(all.equal(expected_fdr, round(out[["FDR"]], 5)), is_true())
+    expect_that(all.equal(expected_fold, round(out[["Fold"]], 5)), is_true())
+    expect_that(all.equal(expected_ave, round(out[["Ave"]], 5)), is_true())
 })
 
 test_that("calculateLimmaContrast_data_batch_test", {
@@ -302,36 +221,11 @@ test_that("calculateLimmaContrast_data_batch_test", {
     expected_ave <- c(26.69096, 26.48083, 28.53765, 24.8364, 26.8688, 28.51864)
     expected_fold <- c(-0.24587, 0.17468, -0.12881, 1.49441, 0.95415, 0.64867)
     
-    expect_that(
-        all.equal(
-            expected_p,
-            round(out[["P"]], 5)
-        ),
-        is_true()
-    )
-    
-    expect_that(
-        all.equal(
-            expected_fdr,
-            round(out[["FDR"]], 5)
-        ),
-        is_true()
-    )
-    
-    expect_that(
-        all.equal(
-            expected_fold,
-            round(out[["Fold"]], 5)
-        ),
-        is_true()
-    )
-    
-    expect_that(
-        all.equal(
-            expected_ave,
-            round(out[["Ave"]], 5)
-        ),
-        is_true()
-    )
+    expect_that(all.equal(expected_p, round(out[["P"]], 5)), is_true())
+    expect_that(all.equal(expected_fdr, round(out[["FDR"]], 5)), is_true())
+    expect_that(all.equal(expected_fold, round(out[["Fold"]], 5)), is_true())
+    expect_that(all.equal(expected_ave, round(out[["Ave"]], 5)), is_true())
 })
+
+
 

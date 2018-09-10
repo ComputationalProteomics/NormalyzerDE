@@ -7,7 +7,8 @@
 normalyzerDE(jobName, comparisons, designPath = NULL, dataPath = NULL,
   experimentObj = NULL, outputDir = ".", logTrans = FALSE,
   type = "limma", sampleCol = "sample", condCol = "group",
-  batchCol = NULL, techRepCol = NULL, leastRepCount = 1, quiet = FALSE)
+  batchCol = NULL, techRepCol = NULL, leastRepCount = 1,
+  quiet = FALSE)
 }
 \arguments{
 \item{jobName}{Name of job}
@@ -18,6 +19,9 @@ If comparing condA with condB, then the vector would be c("condA-condB")}
 \item{designPath}{File path to design matrix}
 
 \item{dataPath}{File path to normalized matrix}
+
+\item{experimentObj}{SummarizedExperiment object, can be provided as input
+as alternative to 'designPath' and 'dataPath'}
 
 \item{outputDir}{Path to output directory}
 
@@ -66,9 +70,14 @@ containing statistical key measures have been added
 contrast
 }
 \examples{
-\dontrun{
+data_path <- system.file(package="NormalyzerDE", "extdata", "tiny_data.tsv")
+design_path <- system.file(package="NormalyzerDE", "extdata", "tiny_design.tsv")
+out_dir <- tempdir()
 normalyzerDE(
-  "results/normalized.tsv", "design.tsv", "my_jobname", 
-  c("1-2", "1-4"),  outputDir="path/to/output")
-}
+  jobName="my_jobname", 
+  comparisons=c("4-5"), 
+  designPath=design_path, 
+  dataPath=data_path,
+  outputDir=out_dir,
+  condCol="group")
 }

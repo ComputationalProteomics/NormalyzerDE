@@ -2,27 +2,36 @@
 % Please edit documentation in R/inputVerification.R
 \name{setupRawDataObject}
 \alias{setupRawDataObject}
-\title{Load raw design into dataframe}
+\title{Prepare SummarizedExperiment object for raw data to be normalized containing 
+data, design and annotation information}
 \usage{
-setupRawDataObject(dataPath, designPath, inputFormat, zeroToNA, sampleColName,
-  groupColName)
+setupRawDataObject(dataPath, designPath, inputFormat = "default",
+  zeroToNA = FALSE, sampleColName = "sample", groupColName = "group")
 }
 \arguments{
+\item{dataPath}{File path to data matrix.}
+
 \item{designPath}{File path to design matrix.}
 
-\item{sampleCol}{Column name for column containing sample names.}
+\item{inputFormat}{Type of matrix for data, can be either 'default',
+'proteios', 'maxquantprot' or 'maxquantpep'}
 
-\item{groupCol}{Column name for column containing condition levels.}
+\item{zeroToNA}{If TRUE zeroes in the data is automatically converted to
+NA values}
+
+\item{sampleColName}{Column name for column containing sample names}
+
+\item{groupColName}{Column name for column containing condition levels}
 }
 \value{
-designMatrix Design data loaded into data frame
+experimentObj SummarizedExperiment object loaded with the data
 }
 \description{
-Takes a design path, loads the matrix and ensures that the sample column
-is in character format and that the group column is in factor format.
+Prepare SummarizedExperiment object for raw data to be normalized containing 
+data, design and annotation information
 }
 \examples{
-\dontrun{
-df <- loadDesign("design.tsv")
-}
+data_path <- system.file(package="NormalyzerDE", "extdata", "tiny_data.tsv")
+design_path <- system.file(package="NormalyzerDE", "extdata", "tiny_design.tsv")
+df <- setupRawDataObject(data_path, design_path)
 }

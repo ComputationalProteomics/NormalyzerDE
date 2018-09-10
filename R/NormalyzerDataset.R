@@ -17,7 +17,6 @@
 #' @slot annotationValues Annotation part of original dataframe.
 #' @slot retentionTimes Vector of retention time values.
 #' @slot singleReplicateRun Conditional whether run is single replicate.
-#' @export
 NormalyzerDataset <- setClass("NormalyzerDataset",
                               representation(
                                   
@@ -40,11 +39,22 @@ NormalyzerDataset <- setClass("NormalyzerDataset",
                                   singleReplicateRun = "logical"
                               ))
 
-setGeneric("NormalyzerDataset", function(jobName, designMatrix, rawData, annotationData,
-                                         sampleNameCol, groupNameCol, quiet
-                                         ) { standardGeneric("NormalyzerDataset") })
-setMethod("NormalyzerDataset", 
-          definition = function(jobName, designMatrix, rawData, annotationData,
+#' Constructor for NormalyzerDataset
+#' 
+#' @param jobName Name of the NormalyzerDE processing run
+#' @param designMatrix Matrix containing sample conditions
+#' @param rawData Matrix containing raw input data
+#' @param annotationData Matrix containing annotation information for each
+#'   input feature. Is expected to contain the same number of rows as the data
+#'   but can contain any number of features
+#' @param sampleNameCol Name of column in design matrix containing sample
+#'   information
+#' @param groupNameCol Name of column in design matrix containing condition
+#'   information
+#' @param quiet If set to TRUE no information messages will be printed
+#' @return nds Generated NormalyzerDataset instance
+#' @keywords internal
+NormalyzerDataset <- function(jobName, designMatrix, rawData, annotationData,
                                 sampleNameCol, groupNameCol, quiet=FALSE) {
               
               sampleReplicateGroups <- as.numeric(
@@ -78,7 +88,7 @@ setMethod("NormalyzerDataset",
               singleReplicateRun(nds) <- checkSingleReplicateRun(nds)
               
               nds
-          })
+          }
 
 setGeneric("jobName", function(object) { standardGeneric("jobName") })
 setMethod("jobName", signature(object="NormalyzerDataset"), 

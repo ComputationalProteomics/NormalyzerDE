@@ -111,9 +111,8 @@ indicate that the data doesn't support the assumptions of ANOVA, for
 instance if there are batch effects present in the data.
 }
 \examples{
-data(example_data)
-data(example_design)
-normObj <- getVerifiedNormalyzerObject("job_name", example_design, example_data)
+data(example_summarized_experiment)
+normObj <- getVerifiedNormalyzerObject("job_name", example_summarized_experiment)
 normResults <- normMethods(normObj)
 normResultsWithEval <- analyzeNormalizations(normResults)
 outputDir <- tempdir()
