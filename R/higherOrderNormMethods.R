@@ -146,7 +146,7 @@ getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes,
     }
     
     # Get single element if multiple with exactly same RT
-    startIndex <- utils::tail(which(sortedRts == min(currentRTSlice)), 1)
+    startIndex <- utils::head(which(sortedRts == min(currentRTSlice)), 1)
     endIndex <- utils::tail(which(sortedRts == max(currentRTSlice)), 1)
 
     currentCount <- length(currentRTSlice)
