@@ -1,0 +1,6 @@
+CHANGES IN VERSION 0.99.15
+----------------------------------
+
+* Corrected expected output from vapply in correlation matrix (where previous varying lengths caused crash)
+* Clearer error message when providing invalid sample/group conditions to statistics module
+* Issue where several identical RT-values caused crash in RT-slicing fixed
