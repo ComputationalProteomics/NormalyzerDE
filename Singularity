@@ -69,12 +69,6 @@ From: ubuntu:18.04
 
 # NormalyzerDE setup
 
-    # NORMALYZERDE_VERSION="0.99.5"
-    # wget https://github.com/ComputationalProteomics/NormalyzerDE/releases/download/${NORMALYZERDE_VERSION}/NormalyzerDE_${NORMALYZERDE_VERSION}.tar.gz
-    
     Rscript -e 'devtools::install_github("ComputationalProteomics/NormalyzerDE")'
-
-    # R CMD INSTALL NormalyzerDE_${NORMALYZERDE_VERSION}.tar.gz
-
     
 
