@@ -204,11 +204,19 @@ calculateSummarizedCorrelationVector <- function(
              " valid are: ", 
              paste(validCorrTypes, collapse=", "))
     }
-
+    
+    corr_combination_count <- function(allReplicateGroups) {
+        replicate_counts <- table(allReplicateGroups)
+        sum(vapply(
+            replicate_counts, 
+            function(count) { (count * (count-1)) / 2 }, 
+            0))
+    }
+    
     avgCorSum <- vapply(
         methodlist,
         calculateCorrSum,
-        rep(0, length(allReplicateGroups)),
+        rep(0, corr_combination_count(allReplicateGroups)),
         allReplicateGroups=allReplicateGroups,
         sampleGroupsWithReplicates=sampleGroupsWithReplicates,
         corrType=corrType
@@ -250,7 +258,7 @@ calculateCorrSum <- function(methodData, allReplicateGroups,
             )
         }
     }
-    
+
     corSums
 }
 
