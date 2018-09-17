@@ -118,8 +118,11 @@ normalyzer <- function(
                                             zeroToNA, sampleColName, groupColName)
     }
     else {
-        SummarizedExperiment::colData(experimentObj)[[sample]] <- 
-            as.character(SummarizedExperiment::colData(experimentObj)[[sample]])
+        SummarizedExperiment::colData(experimentObj)[[sampleColName]] <- 
+            as.character(SummarizedExperiment::colData(experimentObj)[[sampleColName]])
+        SummarizedExperiment::metadata(experimentObj) <- list(
+            sample=sampleColName, 
+            group=groupColName)
     }
 
     normObj <- getVerifiedNormalyzerObject(
