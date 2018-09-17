@@ -1,3 +1,9 @@
+CHANGES IN VERSION 0.99.16
+----------------------------------
+
+* Crash when feeding SummarizedExperiment as input is fixed
+* If full rows contains only NA values they are filtered and a warning is generated
+
 CHANGES IN VERSION 0.99.15
 ----------------------------------
 

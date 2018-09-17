@@ -183,6 +183,8 @@ getVerifiedNormalyzerObject <- function(
         quiet=FALSE
     ) {
 
+    summarizedExp <- filterOnlyNARows(summarizedExp)
+    
     # TODO: The getter seems to not be available, check later if temporary issue
     groupCol <- summarizedExp@metadata$group
     sampleCol <- summarizedExp@metadata$sample
@@ -213,7 +215,7 @@ getVerifiedNormalyzerObject <- function(
         stopIfTooFew=!omitSamples
     )
     
-    designMatrix <- designMatrix[designMatrix$sample %in% colnames(lowCountSampleFiltered), ]
+    designMatrix <- designMatrix[designMatrix[[sampleCol]] %in% colnames(lowCountSampleFiltered), ]
     
     # If no samples left after omitting, stop
     verifyMultipleSamplesPresent(
@@ -244,7 +246,20 @@ getVerifiedNormalyzerObject <- function(
 }
 
 
+filterOnlyNARows <- function(summarizedExp) {
 
+    dataMatrix <- assay(summarizedExp)
+    
+    nonFullNAContr <- rowSums(is.na(assay(summarizedExp))) != ncol(summarizedExp)
+    if (length(which(!nonFullNAContr)) > 0) {
+        warning(
+            length(which(!nonFullNAContr)), 
+            " entries with only NA values found and were omitted")
+        summarizedExp <- summarizedExp[nonFullNAContr, ]
+    }
+    
+    summarizedExp
+}
 
 #' Try reading raw Normalyzer matrix from provided filepath
 #' 
@@ -484,7 +499,7 @@ validateSampleReplication <- function(dataMatrix, groups, requireReplicates=TRUE
 #' @keywords internal
 verifyMultipleSamplesPresent <- function(dataMatrix, groups, requireReplicates=TRUE, quiet=FALSE) {
     
-    samples <- groups[as.numeric(groups) > 0]
+    samples <- groups[as.numeric(as.factor(groups)) > 0]
     distinctSamples <- unique(samples)
 
     if (length(samples) < 2) {
