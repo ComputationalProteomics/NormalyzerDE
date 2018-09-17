@@ -248,7 +248,7 @@ getVerifiedNormalyzerObject <- function(
 
 filterOnlyNARows <- function(summarizedExp) {
 
-    dataMatrix <- assay(summarizedExp)
+    dataMatrix <- SummarizedExperiment::assay(summarizedExp)
     
     nonFullNAContr <- rowSums(is.na(assay(summarizedExp))) != ncol(summarizedExp)
     if (length(which(!nonFullNAContr)) > 0) {

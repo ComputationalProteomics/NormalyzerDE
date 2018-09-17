@@ -37,3 +37,51 @@ test_that("Statistics run succeeds without errors", {
         )   
     )
 })
+
+test_that("Normalization run from SummarizedExperiment succeeds without errors", {
+    
+    rdf <- read.csv(dataPath, sep="\t")
+    ddf <- read.csv(designPath, sep="\t")
+    ddf$sample <- as.character(ddf$sample)
+    sdf <- rdf[, ddf$sample]
+    adf <- rdf[, !(colnames(rdf) %in% ddf$sample)]
+    se <- SummarizedExperiment::SummarizedExperiment(
+        assays=list(raw=as.matrix(sdf)),
+        colData=ddf,
+        rowData=adf
+    )
+    
+    expect_silent(
+        normalyzer(
+            jobName="unit_test_run_norm",
+            experimentObj=se,
+            outputDir=tempOut, 
+            quiet=TRUE
+        )
+    )
+})
+
+test_that("Statistics run from SummarizedExperiment succeeds without errors", {
+    
+    rdf <- read.csv(dataPath, sep="\t")
+    ddf <- read.csv(designPath, sep="\t")
+    ddf$sample <- as.character(ddf$sample)
+    sdf <- rdf[, ddf$sample]
+    adf <- rdf[, !(colnames(rdf) %in% ddf$sample)]
+    se <- SummarizedExperiment::SummarizedExperiment(
+        assays=list(raw=as.matrix(sdf)),
+        colData=ddf,
+        rowData=adf
+    )
+    
+    expect_silent(
+        normalyzerDE(
+            jobName="unit_test_run_stat",
+            experimentObj=se,
+            outputDir=tempOut,
+            comparisons=c("4-5"),
+            logTrans=TRUE,
+            quiet=TRUE
+        )   
+    )
+})
