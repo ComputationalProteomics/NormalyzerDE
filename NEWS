@@ -1,3 +1,8 @@
+CHANGES IN VERSION 0.99.19
+----------------------------------
+
+* Empty annotation no longer leads to crash when writing output
+
 CHANGES IN VERSION 0.99.17/0.99.18
 ----------------------------------
 

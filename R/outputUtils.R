@@ -29,6 +29,9 @@ writeNormalizedDatasets <- function(nr, jobdir, includePairwiseComparisons=FALSE
     methodlist <- normalizations(nr)
     methodnames <- names(methodlist)
     annotationColumns <- annotationValues(nds)
+    if (ncol(annotationColumns) == 0) {
+        annotationColumns <- NULL
+    }
     
     for (sampleIndex in seq_along(methodnames)) {
         
