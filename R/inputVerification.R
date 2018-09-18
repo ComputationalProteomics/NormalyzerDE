@@ -250,7 +250,7 @@ filterOnlyNARows <- function(summarizedExp) {
 
     dataMatrix <- SummarizedExperiment::assay(summarizedExp)
     
-    nonFullNAContr <- rowSums(is.na(assay(summarizedExp))) != ncol(summarizedExp)
+    nonFullNAContr <- rowSums(is.na(SummarizedExperiment::assay(summarizedExp))) != ncol(summarizedExp)
     if (length(which(!nonFullNAContr)) > 0) {
         warning(
             length(which(!nonFullNAContr)), 
