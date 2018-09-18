@@ -92,7 +92,8 @@ setMethod("performNormalizations", "NormalyzerResults",
               normResults[["median"]] <- medianNormalization(filterrawdata(nds))
               normResults[["mean"]] <- meanNormalization(filterrawdata(nds))
               normResults[["VSN"]] <- performVSNNormalization(filterrawdata(nds))
-              normResults[["SMAD"]] <- performSMADNormalization(filterrawdata(nds))
+              normResults[["Quantile"]] <- performQuantileNormalization(filterrawdata(nds))
+              # normResults[["SMAD"]] <- performSMADNormalization(filterrawdata(nds))
               normResults[["CycLoess"]] <- performCyclicLoessNormalization(filterrawdata(nds))
               normResults[["RLR"]] <- performGlobalRLRNormalization(filterrawdata(nds))
               
