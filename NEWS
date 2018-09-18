@@ -1,4 +1,4 @@
-CHANGES IN VERSION 0.99.17
+CHANGES IN VERSION 0.99.17/0.99.18
 ----------------------------------
 
 * Very minor fix where function wasn't retrieved properly from SummarizedExperiment
