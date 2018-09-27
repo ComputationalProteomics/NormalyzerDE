@@ -16,11 +16,11 @@
 #' @return Normalized matrix
 #' @export
 #' @examples
-#' data(example_data_only_values_small)
+#' data(example_data_small)
 #' data(example_design_small)
-#' sampleNames <- as.character(example_design$sample)
-#' dataMat <- as.matrix(example_data_only_values[, sampleNames])
-#' retentionTimes <- example_data_only_values$Average.RT
+#' data(example_data_only_values)
+#' dataMat <- example_data_only_values
+#' retentionTimes <- as.numeric(example_data[, "Average.RT"])
 #' performCyclicLoessNormalization <- function(rawMatrix) {
 #'     log2Matrix <- log2(rawMatrix)
 #'     normMatrix <- limma::normalizeCyclicLoess(log2Matrix, method="fast")
@@ -221,11 +221,11 @@ getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes,
 #' @export
 #' @examples
 #' 
-#' data(example_data_only_values_small)
+#' data(example_data_small)
+#' data(example_data_only_values)
 #' data(example_design_small)
-#' sampleNames <- as.character(example_design$sample)
-#' dataMat <- as.matrix(example_data_only_values[, sampleNames])
-#' retentionTimes <- example_data_only_values$Average.RT
+#' retentionTimes <- as.numeric(example_data[, "Average.RT"])
+#' dataMat <- example_data_only_values
 #' performCyclicLoessNormalization <- function(rawMatrix) {
 #'     log2Matrix <- log2(rawMatrix)
 #'     normMatrix <- limma::normalizeCyclicLoess(log2Matrix, method="fast")

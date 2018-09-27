@@ -22,6 +22,6 @@ of median of sum of intensities of all variables in all samples.
 The normalized data is then log2-transformed.
 }
 \examples{
-data(example_data_only_values)
+data(example_data_only_values_small)
 normMatrix <- medianNormalization(example_data_only_values)
 }

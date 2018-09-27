@@ -19,6 +19,6 @@ from an identical distribution. It does this by generating a reference
 distribution and then scaling the other samples accordingly.
 }
 \examples{
-data(example_data_only_values)
+data(example_data_only_values_small)
 normMatrix <- performQuantileNormalization(example_data_only_values)
 }

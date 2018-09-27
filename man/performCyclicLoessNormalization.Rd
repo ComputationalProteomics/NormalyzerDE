@@ -18,6 +18,6 @@ Log2 transformed data is normalized by Loess method using the function
 "normalizeCyclicLoess" in the Limma package.
 }
 \examples{
-data(example_data_only_values)
+data(example_data_only_values_small)
 normMatrix <- performCyclicLoessNormalization(example_data_only_values)
 }

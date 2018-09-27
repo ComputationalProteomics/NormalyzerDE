@@ -20,6 +20,6 @@ Normalization subtracts the median and divides the data by the
 median absolute deviation (MAD).
 }
 \examples{
-data(example_data_only_values)
+data(example_data_only_values_small)
 normMatrix <- performSMADNormalization(example_data_only_values)
 }

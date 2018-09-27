@@ -19,6 +19,6 @@ in such a way that the variance remains nearly constant over the intensity
 spectrum
 }
 \examples{
-data(example_data_only_values)
+data(example_data_only_values_small)
 normMatrix <- performVSNNormalization(example_data_only_values)
 }
