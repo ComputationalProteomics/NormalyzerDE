@@ -1,7 +1,7 @@
 BootStrap: docker
 From: ubuntu:18.04
 
-# Recipe date: 180918.3
+# Recipe date: 181003
 
 %post
     R_BASE_VERSION="3.5.1"
