@@ -92,11 +92,13 @@ setupRawDataObject <- function(dataPath, designPath, inputFormat="default", zero
                                sampleColName="sample", groupColName="group") {
     
     rawDesign <- loadDesign(designPath, sampleCol=sampleColName, groupCol=groupColName)
-    rawDesign[[sampleColName]] <- as.character(rawDesign[[sampleColName]])
     rawData <- loadData(dataPath, inputFormat=inputFormat, zeroToNA=zeroToNA)
-    
     rdf <- rawData[2:nrow(rawData), ]
     colnames(rdf) <- rawData[1, ]
+    
+    verifyDesignMatrix(rdf, rawDesign, sampleColName)
+        
+    rawDesign[[sampleColName]] <- as.character(rawDesign[[sampleColName]])
     
     sdf <- rdf[, as.character(rawDesign[[sampleColName]])]
     adf <- rdf[, !(colnames(rdf) %in% as.character(rawDesign[[sampleColName]]))]
@@ -140,6 +142,8 @@ setupRawContrastObject <- function(dataPath, designPath, sampleColName) {
         comment.char="",
         check.names=FALSE
     )
+    
+    verifyDesignMatrix(fullDf, designDf, sampleColName)
     
     sdf <- fullDf[, designDf[[sampleColName]]]
     adf <- fullDf[, !(colnames(fullDf) %in% as.character(designDf[[sampleColName]]))]
@@ -202,7 +206,7 @@ getVerifiedNormalyzerObject <- function(
         as.character
     ), stringsAsFactors=FALSE))
 
-    verifyDesignMatrix(dataMatrix, designMatrix, sampleCol, groupCol)
+    verifyDesignMatrix(dataMatrix, designMatrix, sampleCol)
     verifyValidNumbers(dataMatrix, groups, quiet=quiet)
     
     repSortedRawData <- getReplicateSortedData(dataMatrix, groups)
@@ -343,15 +347,17 @@ verifyValidNumbers <- function(rawDataOnly, groups, quiet=FALSE) {
 #' 
 #' @return None
 #' @keywords internal
-verifyDesignMatrix <- function(fullMatrix, designMatrix, sampleCol, groupCol) {
+verifyDesignMatrix <- function(fullMatrix, designMatrix, sampleCol) {
 
     designColnames <- designMatrix[, sampleCol]
     
     if (!all(designColnames %in% colnames(fullMatrix))) {
         errorString <- paste(
-            "Not all columns present in design matrix are present in data matrix",
-            "The following element was not found:",
-            paste(setdiff(designColnames, colnames(fullMatrix)), collapse=" ")
+            "Not all columns present in design matrix are present in data matrix. \n",
+            " The following elements were not found in the data matrix header: \n\n",
+            paste(setdiff(designColnames, colnames(fullMatrix)), collapse=" ", " \n",
+            "\n Please carefully check that the column names in your data matrix", 
+            "matches the sample column in the design matrix")
         )
         stop(errorString)
     }

@@ -35,11 +35,11 @@ within individual windows.
 }
 \examples{
 
-data(example_stat_data)
-data(example_design)
-sampleNames <- as.character(example_design$sample)
-dataMat <- as.matrix(example_stat_data[, sampleNames])
-retentionTimes <- example_stat_data$Average.RT
+data(example_data_small)
+data(example_data_only_values)
+data(example_design_small)
+retentionTimes <- as.numeric(example_data[, "Average.RT"])
+dataMat <- example_data_only_values
 performCyclicLoessNormalization <- function(rawMatrix) {
     log2Matrix <- log2(rawMatrix)
     normMatrix <- limma::normalizeCyclicLoess(log2Matrix, method="fast")
@@ -48,5 +48,5 @@ performCyclicLoessNormalization <- function(rawMatrix) {
 }
 rtNormMat <- getSmoothedRTNormalizedMatrix(dataMat, retentionTimes, 
     performCyclicLoessNormalization, stepSizeMinutes=1, windowMinCount=100, 
-    windowShifts=3, mergeMethod="median")
+    windowShifts=2, mergeMethod="median")
 }

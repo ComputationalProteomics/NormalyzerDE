@@ -1,3 +1,14 @@
+CHANGES IN VERSION 0.99.22
+----------------------------------
+
+* Input parsing corrected so that a clear error message is provided when the
+    design matrix samples doesn't match the data matrix header
+
+CHANGES IN VERSION 0.99.21
+----------------------------------
+
+* Documentation example fixes
+
 CHANGES IN VERSION 0.99.20
 ----------------------------------
 

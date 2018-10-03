@@ -32,11 +32,11 @@ normalization step. An offset can be specified which can be used to perform
 multiple RT-segmentations with partial overlapping windows.
 }
 \examples{
-data(example_stat_data)
-data(example_design)
-sampleNames <- as.character(example_design$sample)
-dataMat <- as.matrix(example_stat_data[, sampleNames])
-retentionTimes <- example_stat_data$Average.RT
+data(example_data_small)
+data(example_design_small)
+data(example_data_only_values)
+dataMat <- example_data_only_values
+retentionTimes <- as.numeric(example_data[, "Average.RT"])
 performCyclicLoessNormalization <- function(rawMatrix) {
     log2Matrix <- log2(rawMatrix)
     normMatrix <- limma::normalizeCyclicLoess(log2Matrix, method="fast")
@@ -44,5 +44,5 @@ performCyclicLoessNormalization <- function(rawMatrix) {
     normMatrix
 }
 rtNormMat <- getRTNormalizedMatrix(dataMat, retentionTimes, 
-  performCyclicLoessNormalization, stepSizeMinutes=1, windowMinCount=100)
+performCyclicLoessNormalization, stepSizeMinutes=1, windowMinCount=100)
 }

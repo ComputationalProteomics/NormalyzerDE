@@ -17,6 +17,6 @@ Log2 transformed data is normalized by robust linear regression using
 the function "rlm" from the MASS package.
 }
 \examples{
-data(example_data_only_values)
+data(example_data_only_values_small)
 normMatrix <- performGlobalRLRNormalization(example_data_only_values)
 }
