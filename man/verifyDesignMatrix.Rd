@@ -4,7 +4,7 @@
 \alias{verifyDesignMatrix}
 \title{Verify that design matrix setup matches the data matrix}
 \usage{
-verifyDesignMatrix(fullMatrix, designMatrix, sampleCol, groupCol)
+verifyDesignMatrix(fullMatrix, designMatrix, sampleCol)
 }
 \arguments{
 \item{fullMatrix}{Dataframe with input data.}
