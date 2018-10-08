@@ -18,9 +18,10 @@ install.packages("devtools")
 devtools::install_github("ComputationalProteomics/NormalyzerDE")
 ```
 
-# Publication
+# Cite NormalyzerDE
 
-Willforss, Chawade and Levander, submitted.
+Willforss, J., Chawade, A., Levander, F. 
+NormalyzerDE: Online tool for improved normalization of omics expression data and high-sensitivity differential expression analysis. *Journal of Proteome Research* **2018**, 10.1021/acs.jproteome.8b00523.
 
 # References
 
