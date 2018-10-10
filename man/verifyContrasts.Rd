@@ -14,12 +14,10 @@ verifyContrasts(designLevels, contrastString)
 \item{contrastString}{A string containing one or several (comma delimited)
 strings for which contrasts should be performed}
 }
+\value{
+None
+}
 \description{
 Mainly meant to verify strings received during server usage.
 }
-\examples{
-design <- data.frame(sample=c("s1", "s2", "s3", "s4", "s5", "s6"), 
-                     group=c("1", "1", "2", "2", "3", "3"))
-contrastString <- "1-2,1-3"
-calculateContrasts(design[["group"]], contrastString)
-}
+\keyword{internal}
