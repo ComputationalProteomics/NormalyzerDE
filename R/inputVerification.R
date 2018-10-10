@@ -349,6 +349,12 @@ verifyValidNumbers <- function(rawDataOnly, groups, quiet=FALSE) {
 #' @keywords internal
 verifyDesignMatrix <- function(fullMatrix, designMatrix, sampleCol) {
 
+    if (!(sampleCol %in% colnames(designMatrix))) {
+        stop("Design matrix header must contain sampleCol name. \n", 
+             "Provided sampleCol was: ", sampleCol, " \n", 
+             "Following header was found in the design matrix: ", paste(colnames(designMatrix), collapse=", "))
+    }
+    
     designColnames <- designMatrix[, sampleCol]
     
     if (!all(designColnames %in% colnames(fullMatrix))) {
