@@ -1,7 +1,7 @@
 BootStrap: docker
 From: ubuntu:18.04
 
-# Recipe date: 181003
+# Recipe date: 181010
 
 %post
     R_BASE_VERSION="3.5.1"
@@ -23,10 +23,17 @@ From: ubuntu:18.04
         libssl-dev \
         vim-tiny \
         libglu1-mesa-dev \
-        locales
+        locales \
+        locales-all
  
-    locale-gen en_US
-    update-locale LANG=en_US
+    locale-gen en_US.UTF-8
+    export LANG=en_US.UTF-8
+    export LANGUAGE=en_US.UTF-8
+    export LC_ALL=en_US.UTF-8
+    export LC_MONETARY=en_US.UTF-8
+    export LC_PAPER=en_US.UTF-8
+    export LC_MEASUREMENT=en_US.UTF-8
+    export LC_TIME=en_US.UTF-8
 
     # Setup R repository
     echo "deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran35/" >> /etc/apt/sources.list
