@@ -45,7 +45,6 @@ NormalyzerStatistics <- setClass("NormalyzerStatistics",
 #' data(example_stat_summarized_experiment)
 #' nst <- NormalyzerStatistics(example_stat_summarized_experiment)
 NormalyzerStatistics <- function(experimentObj, conditionCol="group", logTrans=FALSE, leastRepCount=2) { 
-    
 
               dataMat <- SummarizedExperiment::assay(experimentObj)
               if (logTrans) {
@@ -188,10 +187,13 @@ setMethod(f="calculateContrasts",
           function(nst, comparisons, condCol, batchCol=NULL, splitter="-", 
                    type="limma") {
               
+              
               sampleReplicateGroups <- designDf(nst)[, condCol]
               sampleReplicateGroupsStrings <- as.character(designDf(nst)[, condCol])
               statMeasures <- c("P", "FDR", "Ave", "Fold")
 
+              verifyContrasts(sampleReplicateGroupsStrings, comparisons)
+              
               naFilterContrast <- filteringContrast(nst)
               dataMatNAFiltered <- filteredDataMat(nst)
               
@@ -263,6 +265,45 @@ setMethod(f="calculateContrasts",
               pairwiseCompsFold(nst) <- compLists[["Fold"]]
               nst
           })
+
+
+#' Check that a given contrast string is valid given a particular design
+#' matrix. Each level tested for in the contrast should be present in the
+#' condition column for the design matrix.
+#' 
+#' Mainly meant to verify strings received during server usage.
+#'
+#' @param designMatrix
+#' @param contrastString
+#' @param condCol Column name in design matrix containing condition information.
+#' @return 
+#' @rdname verifyContrasts
+#' @export
+#' @examples
+#' design <- data.frame(sample=c("s1", "s2", "s3", "s4", "s5", "s6"), 
+#'                      group=c("1", "1", "2", "2", "3", "3"))
+#' contrastString <- "1-2,1-3"
+#' calculateContrasts(design, contrastString, "group")
+verifyContrasts <- function(designLevels, contrastString) {
+    
+    contrasts <- unlist(strsplit(contrastString, "\\,"))
+    for (contrast in contrasts) {
+        parts <- unlist(strsplit(contrast, "-"))
+        
+        if (length(parts) != 2) {
+            stop("A contrast string delimited by one dash (-) was expected. Instead following was found: ", contrast)
+        }
+        
+        if (!all(parts %in% designLevels)) {
+            stop("There were issues in your contrast. \n", 
+                 "Full contrast string: ", contrastString, "\n",
+                 "Part with issue: ", contrast, "\n", 
+                 "Not all parts was found in the design column levels. Levels present in design: \n",
+                 paste(unique(designLevels), collapse=", ")
+                 )
+        }
+    }
+}
 
 setupModel <- function(nst, condCol, batchCol=NULL, type="limma") {
     
