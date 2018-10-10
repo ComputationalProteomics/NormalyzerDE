@@ -273,17 +273,16 @@ setMethod(f="calculateContrasts",
 #' 
 #' Mainly meant to verify strings received during server usage.
 #'
-#' @param designMatrix
-#' @param contrastString
-#' @param condCol Column name in design matrix containing condition information.
-#' @return 
-#' @rdname verifyContrasts
+#' @param designLevels Vector containing condition levels present in design
+#' @param contrastString A string containing one or several (comma delimited)
+#'   strings for which contrasts should be performed
+#' @return NULL
 #' @export
 #' @examples
 #' design <- data.frame(sample=c("s1", "s2", "s3", "s4", "s5", "s6"), 
 #'                      group=c("1", "1", "2", "2", "3", "3"))
 #' contrastString <- "1-2,1-3"
-#' calculateContrasts(design, contrastString, "group")
+#' calculateContrasts(design[["group"]], contrastString)
 verifyContrasts <- function(designLevels, contrastString) {
     
     contrasts <- unlist(strsplit(contrastString, "\\,"))
