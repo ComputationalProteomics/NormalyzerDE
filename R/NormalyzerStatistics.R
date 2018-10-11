@@ -274,13 +274,12 @@ setMethod(f="calculateContrasts",
 #' Mainly meant to verify strings received during server usage.
 #'
 #' @param designLevels Vector containing condition levels present in design
-#' @param contrastString A string containing one or several (comma delimited)
+#' @param contrasts A string containing one or several (comma delimited)
 #'   strings for which contrasts should be performed
 #' @return None
 #' @keywords internal
-verifyContrasts <- function(designLevels, contrastString) {
+verifyContrasts <- function(designLevels, contrasts) {
     
-    contrasts <- unlist(strsplit(contrastString, "\\,"))
     for (contrast in contrasts) {
         parts <- unlist(strsplit(contrast, "-"))
         
@@ -290,7 +289,7 @@ verifyContrasts <- function(designLevels, contrastString) {
         
         if (!all(parts %in% designLevels)) {
             stop("There were issues in your contrast. \n", 
-                 "Full contrast string: ", contrastString, "\n",
+                 "All contrasts: ", paste(contrastString, collapse=", "), "\n",
                  "Part with issue: ", contrast, "\n", 
                  "Not all parts was found in the design column levels. Levels present in design: \n",
                  paste(unique(designLevels), collapse=", ")
