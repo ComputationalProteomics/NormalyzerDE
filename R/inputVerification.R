@@ -62,7 +62,7 @@ loadDesign <- function(designPath, sampleCol="sample", groupCol="group") {
     
     if (!(sampleCol %in% colnames(designMatrix)) || !(groupCol %in% colnames(designMatrix))) {
         stop("Both sampleCol value and groupCol value must be present in the design matrix header.",
-             "\nFound sampleCol: ", sampleCol, "\nFound groupCol: ", groupCol,
+             "\nsampleCol: ", sampleCol, "\ngroupCol: ", groupCol,
              "\nDesign matrix header: ", paste(colnames(designMatrix), collapse=", "))
     }
     
