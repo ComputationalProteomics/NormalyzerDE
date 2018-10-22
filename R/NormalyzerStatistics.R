@@ -289,7 +289,7 @@ verifyContrasts <- function(designLevels, contrasts) {
         
         if (!all(parts %in% designLevels)) {
             stop("There were issues in your contrast. \n", 
-                 "All contrasts: ", paste(contrastString, collapse=", "), "\n",
+                 "All contrasts: ", paste(contrasts, collapse=", "), "\n",
                  "Part with issue: ", contrast, "\n", 
                  "Not all parts was found in the design column levels. Levels present in design: \n",
                  paste(unique(designLevels), collapse=", ")

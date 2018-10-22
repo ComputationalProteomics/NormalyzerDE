@@ -363,7 +363,7 @@ verifyDesignMatrix <- function(fullMatrix, designMatrix, sampleCol) {
             " The following elements were not found in the data matrix header: \n\n",
             paste(setdiff(designColnames, colnames(fullMatrix)), collapse=", "), " \n",
             "\n Please carefully check that the column names in your data matrix", 
-            "matches the sample column in the design matrix")
+            "matches the sample column in the design matrix"
         )
         stop(errorString)
     }

@@ -281,8 +281,9 @@ plotFrontPage <- function(currentjob, currentFont) {
         gp=grid::gpar(fontsize=12, fontfamily=currentFont, col="black"))
     
     citationText <- paste(
-        "Citation: Willforss, J., Chawade, A. and Levander, F.",
-        "Submitted"
+        "Citation: NormalyzerDE: Online Tool for Improved Normalization of",
+        "Omics Expression Data and High-Sensitivity Differential Expression Analysis\n",
+        "Journal of Proteome Research (2018), 10.1021/acs.jproteome.8b00523"
     )
     
     grid::grid.text(

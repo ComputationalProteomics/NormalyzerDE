@@ -1,0 +1,12 @@
+citEntry(entry="article",
+         title = "NormalyzerDE: Online Tool for Improved Normalization of Omics Expression Data and High-Sensitivity Differential Expression Analysis",
+         author = personList( as.person("Jakob Willforss"),
+                              as.person("Aakash Chawade"),
+                              as.person("Fredrik Levander")),
+         year = 2018,
+         journal = "Journal of Proteome Research",
+         doi = "10.1021/acs.jproteome.8b00523",
+         textVersion = 
+         paste("Willforss, J., Chawade, A., Levander, F.", 
+               "NormalyzerDE: Online Tool for Improved Normalization of Omics Expression Data and High-Sensitivity Differential Expression Analysis",
+                "Journal of Proteome Research (2018), 10.1021/acs.jproteome.8b00523" ) )
