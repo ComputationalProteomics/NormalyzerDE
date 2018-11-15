@@ -32,7 +32,8 @@ loadData <- function(dataPath, inputFormat="default", zeroToNA=FALSE) {
     }
     
     if (zeroToNA) {
-        rawData[rawData == "0"] <- NA
+        # rawData[rawData == "0"] <- NA
+        rawData[grepl("0\\.?0*$", rawData)] <- NA
     }
     
     rawData
