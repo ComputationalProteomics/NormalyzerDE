@@ -18,6 +18,35 @@ install.packages("devtools")
 devtools::install_github("ComputationalProteomics/NormalyzerDE")
 ```
 
+# Running NormalyzerDE - Minimal example
+
+```
+library(NormalyzerDE)
+```
+
+Generate normalizations and normalization performance report.
+
+```
+normalyzer(jobName="rscript_norm", designPath="test_design.tsv", dataPath="test_data.tsv")
+```
+
+Calculate differential expression between groups 1-2 and 1-3 (defined in the design matrix).
+
+```
+normalyzerDE(jobName="rscript_de", designPath="test_design.tsv", dataPath="test_data.tsv", comparisons=c("1-2", "1-3"))
+```
+
+For more comprehensive documentation, check the [Vignette](https://bioconductor.org/packages/devel/bioc/vignettes/NormalyzerDE/inst/doc/vignette.pdf) at NormalyzerDE's [Bioconductor page](https://bioconductor.org/packages/devel/bioc/html/NormalyzerDE.html). More information about required input formats is available [here](http://quantitativeproteomics.org/normalyzerde/help).
+
+# Executing from command line
+
+If you want to run NormalyzerDE directly from the command line this is possible by executing it through the `Rscript` command.
+
+```
+Rscript -e 'NormalyzerDE::normalyzer(jobName="rscript_norm", designPath="test_design.tsv", dataPath="test_data.tsv")'
+Rscript -e 'NormalyzerDE::normalyzerDE(jobName="rscript_de", designPath="test_design.tsv", dataPath="test_data.tsv", comparisons=c("1-2", "1-3"))'
+```
+
 # Cite NormalyzerDE
 
 Willforss, J., Chawade, A., Levander, F. 
