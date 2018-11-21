@@ -240,6 +240,8 @@ performGlobalRLRNormalization <- function(rawMatrix) {
         log2Matrix=log2Matrix
     )
     
+    colnames(globalFittedRLR) <- colnames(rawMatrix)
+    
     globalFittedRLR
 }
 
