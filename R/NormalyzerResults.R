@@ -67,35 +67,44 @@ setReplaceMethod("ner", signature(object="NormalyzerResults"),
 #'   segment.
 #' @param rtWindowShifts Number of layered retention time normalized windows.
 #' @param rtWindowMergeMethod Merge approach for layered retention time windows.
+#' @param noLogTransform Prevent log-transforming input
 #' 
 #' @return nr NormalyzerDE results object
 #' @rdname performNormalizations
 #' @keywords internal
 setGeneric(name="performNormalizations",
            function(nr, forceAll, rtNorm, rtStepSizeMinutes, rtWindowMinCount, 
-                    rtWindowShifts, rtWindowMergeMethod, quiet) 
+                    rtWindowShifts, rtWindowMergeMethod, noLogTransform) 
                standardGeneric("performNormalizations"))
 #' @rdname performNormalizations
 setMethod("performNormalizations", "NormalyzerResults",
           function(nr, forceAll=FALSE, rtNorm=FALSE, rtStepSizeMinutes=1, 
                    rtWindowMinCount=100, rtWindowShifts=1, 
-                   rtWindowMergeMethod="median") {
+                   rtWindowMergeMethod="median", noLogTransform=FALSE) {
               
               nds <- nds(nr)
               
               rtColPresent <- length(retentionTimes(nds)) > 0
-
               normResults <- list()
               
-              normResults[["log2"]] <- log2(filterrawdata(nds))
-              normResults[["GI"]] <- globalIntensityNormalization(filterrawdata(nds))
-              normResults[["median"]] <- medianNormalization(filterrawdata(nds))
-              normResults[["mean"]] <- meanNormalization(filterrawdata(nds))
-              normResults[["VSN"]] <- performVSNNormalization(filterrawdata(nds))
-              normResults[["Quantile"]] <- performQuantileNormalization(filterrawdata(nds))
-              # normResults[["SMAD"]] <- performSMADNormalization(filterrawdata(nds))
-              normResults[["CycLoess"]] <- performCyclicLoessNormalization(filterrawdata(nds))
-              normResults[["RLR"]] <- performGlobalRLRNormalization(filterrawdata(nds))
+              if (!noLogTransform) {
+                  normResults[["log2"]] <- log2(filterrawdata(nds))
+                  normResults[["VSN"]] <- performVSNNormalization(filterrawdata(nds))
+              }
+              else {
+                  normResults[["log2"]] <- filterrawdata(nds)
+                  message("VSN normalization assumes non log-transformed data, as the option ",
+                          "noLogTransform is specified it is assumed to not need log2-transformation ",
+                          "and thus the VSN normalization is skipped")
+              }
+              
+              normResults[["GI"]] <- globalIntensityNormalization(filterrawdata(nds), noLogTransform=noLogTransform)
+              normResults[["median"]] <- medianNormalization(filterrawdata(nds), noLogTransform=noLogTransform)
+              normResults[["mean"]] <- meanNormalization(filterrawdata(nds), noLogTransform=noLogTransform)
+              normResults[["Quantile"]] <- performQuantileNormalization(filterrawdata(nds), noLogTransform=noLogTransform)
+              # normResults[["SMAD"]] <- performSMADNormalization(filterrawdata(nds), noLogTransform=noLogTransform)
+              normResults[["CycLoess"]] <- performCyclicLoessNormalization(filterrawdata(nds), noLogTransform=noLogTransform)
+              normResults[["RLR"]] <- performGlobalRLRNormalization(filterrawdata(nds), noLogTransform=noLogTransform)
               
               if (rtNorm && rtColPresent) {
 
@@ -106,7 +115,8 @@ setMethod("performNormalizations", "NormalyzerResults",
                       stepSizeMinutes=rtStepSizeMinutes,
                       windowMinCount=rtWindowMinCount,
                       mergeMethod=rtWindowMergeMethod,
-                      windowShifts=rtWindowShifts
+                      windowShifts=rtWindowShifts, 
+                      noLogTransform=noLogTransform
                   )
                   
                   normResults[["RT-mean"]] <- getSmoothedRTNormalizedMatrix(
@@ -116,7 +126,8 @@ setMethod("performNormalizations", "NormalyzerResults",
                       stepSizeMinutes=rtStepSizeMinutes,
                       windowMinCount=rtWindowMinCount,
                       mergeMethod=rtWindowMergeMethod,
-                      windowShifts=rtWindowShifts
+                      windowShifts=rtWindowShifts,
+                      noLogTransform=noLogTransform
                   )
                   
                   normResults[["RT-Loess"]] <- getSmoothedRTNormalizedMatrix(
@@ -126,21 +137,28 @@ setMethod("performNormalizations", "NormalyzerResults",
                       stepSizeMinutes=rtStepSizeMinutes,
                       windowMinCount=rtWindowMinCount,
                       mergeMethod=rtWindowMergeMethod,
-                      windowShifts=rtWindowShifts
+                      windowShifts=rtWindowShifts,
+                      noLogTransform=noLogTransform
                   )
                   
-                  normResults[["RT-VSN"]] <- getSmoothedRTNormalizedMatrix(
-                      rawMatrix=filterrawdata(nds), 
-                      retentionTimes=retentionTimes(nds), 
-                      normMethod=performVSNNormalization, 
-                      stepSizeMinutes=rtStepSizeMinutes,
-                      windowMinCount=rtWindowMinCount,
-                      mergeMethod=rtWindowMergeMethod,
-                      windowShifts=rtWindowShifts
-                  )
+                  if (!noLogTransform) {
+                      normResults[["RT-VSN"]] <- getSmoothedRTNormalizedMatrix(
+                          rawMatrix=filterrawdata(nds), 
+                          retentionTimes=retentionTimes(nds), 
+                          normMethod=performVSNNormalization, 
+                          stepSizeMinutes=rtStepSizeMinutes,
+                          windowMinCount=rtWindowMinCount,
+                          mergeMethod=rtWindowMergeMethod,
+                          windowShifts=rtWindowShifts,
+                          noLogTransform=noLogTransform
+                      )
+                  }
+                  else {
+                      message("Skipping RT-VSN, only available for non log-transformed data")
+                  }
               }
               else {
-                  warning("No RT column specified (column named 'RT') or option not specified",
+                  message("No RT column specified (column named 'RT') or option not specified",
                           " Skipping RT normalization.")
               }
               

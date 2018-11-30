@@ -43,7 +43,8 @@
 #' @param groupColName Column name in design matrix containing condition IDs.
 #' @param inputFormat Type of input format.
 #' @param skipAnalysis Only perform normalization steps.
-#' @param quiet Omit status messages printed during run
+#' @param quiet Omit status messages printed during run.
+#' @param noLogTransform Don't log-transform the input.
 #' 
 #' @param rtStepSizeMinutes Retention time normalization window size.
 #' @param rtWindowMinCount Minimum number of datapoints in each retention-time
@@ -98,6 +99,7 @@ normalyzer <- function(
         inputFormat="default",
         skipAnalysis=FALSE,
         quiet=FALSE,
+        noLogTransform=FALSE,
         
         rtStepSizeMinutes=1,
         rtWindowMinCount=100,
@@ -131,7 +133,9 @@ normalyzer <- function(
         threshold=sampleAbundThres,
         omitSamples=omitLowAbundSamples,
         requireReplicates=requireReplicates,
-        quiet=quiet)
+        quiet=quiet,
+        noLogTransform=noLogTransform
+    )
         
     jobDir <- setupJobDir(jobName, outputDir)
     if (!quiet) message(
@@ -148,7 +152,9 @@ normalyzer <- function(
         rtWindowMinCount=rtWindowMinCount,
         rtWindowShifts=rtWindowShifts,
         rtWindowMergeMethod=rtWindowMergeMethod,
-        quiet=quiet)
+        quiet=quiet,
+        noLogTransform=noLogTransform
+    )
     if (!quiet) message("[Step 2/5] Done!")
     
     if (!skipAnalysis) {

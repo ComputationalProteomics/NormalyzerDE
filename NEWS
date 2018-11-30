@@ -1,3 +1,13 @@
+CHANGES IN VERSION 1.1.4
+----------------------------------
+
+* Allow processing of non log-transformed data
+
+CHANGES IN VERSION 1.1.3
+----------------------------------
+
+* Additional plots for statistical comparisons, and updated look
+
 CHANGES IN VERSION 0.99.24
 ----------------------------------
 

@@ -63,7 +63,7 @@ calculateReplicateCV <- function(methodList, sampleReplicateGroups) {
         rep(0, length(unique(sampleReplicateGroups))),
         groups=sampleReplicateGroups
     )
-        
+    
     avgCVPerNormAndReplicates
 }
 

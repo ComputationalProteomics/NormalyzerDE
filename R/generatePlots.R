@@ -281,8 +281,9 @@ plotFrontPage <- function(currentjob, currentFont) {
         gp=grid::gpar(fontsize=12, fontfamily=currentFont, col="black"))
     
     citationText <- paste(
-        "Citation: Willforss, J., Chawade, A. and Levander, F.",
-        "Submitted"
+        "Citation: NormalyzerDE: Online Tool for Improved Normalization of",
+        "Omics Expression Data and High-Sensitivity Differential Expression Analysis\n",
+        "Journal of Proteome Research (2018), 10.1021/acs.jproteome.8b00523"
     )
     
     grid::grid.text(
@@ -558,45 +559,45 @@ plotReplicateVarAndStableVariables <- function(nr, currentLayout, pageno) {
     
     if (!all(is.na(lowVarFeaturesCVsPercDiff))) {
         
-        if (min(avgcvmempdiff) < 0 || 
-            max(avgcvmempdiff) > 100 || 
-            min(lowVarFeaturesCVsPercDiff) < 0 || 
-            max(lowVarFeaturesCVsPercDiff) > 100) {
-            
-            graphics::plot(
-                avgcvmempdiff, lowVarFeaturesCVsPercDiff, pch=18, 
-                xlim=c(0, 100), ylim=c(0, 100), 
-                main="Stable variables plot", 
-                xlab="PCV (intragroup) compared to Log2", 
-                ylab="% Global CV of stable variables compared to Log2"
-            )
-            car::showLabels(
-                avgcvmempdiff, 
-                lowVarFeaturesCVsPercDiff, 
-                labels=methodnames, 
-                id.method="mahal", 
-                id.cex=0.7, 
-                id.col="black"
-            )
-        }
-        else {
-            graphics::plot(
-                avgcvmempdiff, 
-                lowVarFeaturesCVsPercDiff, 
-                pch=18, 
-                main="Stable variables plot", 
-                xlab="PCV (Intragroup) compared to Log2", 
-                ylab="% Global CV of stable variables compared to Log2"
-            )
-            car::showLabels(
-                avgcvmempdiff, 
-                lowVarFeaturesCVsPercDiff, 
-                labels=methodnames, 
-                id.method="mahal", 
-                id.cex=0.7, 
-                id.col="black"
-            )
-        }
+        # if (min(avgcvmempdiff) < 0 || 
+        #     max(avgcvmempdiff) > 100 || 
+        #     min(lowVarFeaturesCVsPercDiff) < 0 || 
+        #     max(lowVarFeaturesCVsPercDiff) > 100) {
+        #     
+        #     graphics::plot(
+        #         avgcvmempdiff, lowVarFeaturesCVsPercDiff, pch=18, 
+        #         xlim=c(0, 100), ylim=c(0, 100), 
+        #         main="Stable variables plot", 
+        #         xlab="PCV (intragroup) compared to Log2", 
+        #         ylab="% Global CV of stable variables compared to Log2"
+        #     )
+        #     car::showLabels(
+        #         avgcvmempdiff, 
+        #         lowVarFeaturesCVsPercDiff, 
+        #         labels=methodnames, 
+        #         id.method="mahal", 
+        #         id.cex=0.7, 
+        #         id.col="black"
+        #     )
+        # }
+        # else {
+        graphics::plot(
+            avgcvmempdiff, 
+            lowVarFeaturesCVsPercDiff, 
+            pch=18, 
+            main="Stable variables plot", 
+            xlab="PCV (Intragroup) compared to Log2", 
+            ylab="% Global CV of stable variables compared to Log2"
+        )
+        car::showLabels(
+            avgcvmempdiff, 
+            lowVarFeaturesCVsPercDiff, 
+            labels=methodnames, 
+            id.method="mahal", 
+            id.cex=0.7, 
+            id.col="black"
+        )
+        # }
     }
     
     grid::pushViewport(grid::viewport(layout=currentLayout))
@@ -1064,10 +1065,6 @@ plotCorrelation <- function(nr, currentLayout, pageno) {
     graphics::layout(tout)
     graphics::par(mar=c(2, 2, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)
     
-    # perdf <- data.frame(matrix(unlist(repCorPear), 
-    #                            nrow=as.numeric(max(summary(repCorPear)[1])), 
-    #                            byrow=TRUE))
-    
     perdf <- data.frame(repCorPear)
     
     abc <- graphics::boxplot(perdf, main="Pearson correlation - Intragroup", 
@@ -1083,10 +1080,6 @@ plotCorrelation <- function(nr, currentLayout, pageno) {
         add=TRUE, 
         col="darkgreen"
     )
-    
-    # spedf <- data.frame(matrix(unlist(repCorSpear), 
-    #                            nrow=as.numeric(max(summary(repCorSpear)[1])), 
-    #                            byrow=TRUE))
     
     spedf <- data.frame(repCorSpear)
     
@@ -1181,8 +1174,7 @@ plotPHist <- function(nr, currentLayout, pageno) {
         df <- data.frame(anovaPVals=anovaPVals)
         histPlots[[i]] <- ggplot2::ggplot(df) + 
             ggplot2::geom_histogram(ggplot2::aes(anovaPVals), na.rm=TRUE, binwidth=0.01) +
-            ggplot2::ggtitle(methodnames[i]) +
-            ggplot2::xlim(0,1)
+            ggplot2::ggtitle(methodnames[i])
     }
     
     grid::grid.newpage()

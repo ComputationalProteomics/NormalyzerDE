@@ -13,6 +13,7 @@
 #' @param stepSizeMinutes Size of windows to be normalized
 #' @param windowMinCount Minimum number of values for window to not be expanded.
 #' @param offset Whether time window should shifted half step size
+#' @param noLogTransform Don't log-transform the data
 #' @return Normalized matrix
 #' @export
 #' @examples
@@ -31,7 +32,7 @@
 #' performCyclicLoessNormalization, stepSizeMinutes=1, windowMinCount=100)
 getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod, 
                                   stepSizeMinutes=1, windowMinCount=100, 
-                                  offset=0) {
+                                  offset=0, noLogTransform=FALSE) {
     
     # Key variables:
     #    targetSliceIndices 
@@ -90,8 +91,8 @@ getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod,
                 retentionTimes <= normalizationEndRT
         )
         normalizationRows <- rawMatrix[normalizationSliceIndices,, drop=FALSE]
-        processedNormalizationRows <- normMethod(normalizationRows)
         
+        processedNormalizationRows <- normMethod(normalizationRows, noLogTransform=noLogTransform)
         rownames(processedNormalizationRows) <- rownames(normalizationRows)
         
         
@@ -217,6 +218,7 @@ getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes,
 #' @param windowShifts Number of frame shifts.
 #' @param windowMinCount Minimum number of features within window.
 #' @param mergeMethod Layer merging approach. Mean or median.
+#' @param noLogTransform Don't log transform the input
 #' @return Normalized matrix
 #' @export
 #' @examples
@@ -237,7 +239,7 @@ getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes,
 #'     windowShifts=2, mergeMethod="median")
 getSmoothedRTNormalizedMatrix <- function(
     rawMatrix, retentionTimes, normMethod, stepSizeMinutes, 
-    windowShifts=2, windowMinCount=100, mergeMethod="mean") {
+    windowShifts=2, windowMinCount=100, mergeMethod="mean", noLogTransform=FALSE) {
     
     matrices <- list()
     
@@ -250,7 +252,9 @@ getSmoothedRTNormalizedMatrix <- function(
             normMethod,
             stepSizeMinutes=stepSizeMinutes, 
             windowMinCount=windowMinCount, 
-            offset=fracShift)
+            offset=fracShift,
+            noLogTransform=noLogTransform
+        )
     }
 
     if (mergeMethod == "mean") {

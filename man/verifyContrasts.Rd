@@ -6,12 +6,12 @@
 matrix. Each level tested for in the contrast should be present in the
 condition column for the design matrix.}
 \usage{
-verifyContrasts(designLevels, contrastString)
+verifyContrasts(designLevels, contrasts)
 }
 \arguments{
 \item{designLevels}{Vector containing condition levels present in design}
 
-\item{contrastString}{A string containing one or several (comma delimited)
+\item{contrasts}{A string containing one or several (comma delimited)
 strings for which contrasts should be performed}
 }
 \value{

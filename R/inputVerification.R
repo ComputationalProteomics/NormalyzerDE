@@ -32,7 +32,8 @@ loadData <- function(dataPath, inputFormat="default", zeroToNA=FALSE) {
     }
     
     if (zeroToNA) {
-        rawData[rawData == "0"] <- NA
+        # rawData[rawData == "0"] <- NA
+        rawData[grepl("0\\.?0*$", rawData)] <- NA
     }
     
     rawData
@@ -62,7 +63,7 @@ loadDesign <- function(designPath, sampleCol="sample", groupCol="group") {
     
     if (!(sampleCol %in% colnames(designMatrix)) || !(groupCol %in% colnames(designMatrix))) {
         stop("Both sampleCol value and groupCol value must be present in the design matrix header.",
-             "\nFound sampleCol: ", sampleCol, "\nFound groupCol: ", groupCol,
+             "\nsampleCol: ", sampleCol, "\ngroupCol: ", groupCol,
              "\nDesign matrix header: ", paste(colnames(designMatrix), collapse=", "))
     }
     
@@ -173,6 +174,7 @@ setupRawContrastObject <- function(dataPath, designPath, sampleColName) {
 #' @param requireReplicates Require there to be at least to samples per
 #'        condition
 #' @param quiet Don't print output messages during processing 
+#' @param noLogTransform Don't log-transform the provided data
 #' @return Normalyzer data object representing verified input data.
 #' @export
 #' @examples
@@ -184,7 +186,8 @@ getVerifiedNormalyzerObject <- function(
         threshold=15, 
         omitSamples=FALSE,
         requireReplicates=TRUE,
-        quiet=FALSE
+        quiet=FALSE,
+        noLogTransform=FALSE
     ) {
 
     summarizedExp <- filterOnlyNARows(summarizedExp)
@@ -207,7 +210,7 @@ getVerifiedNormalyzerObject <- function(
     ), stringsAsFactors=FALSE))
 
     verifyDesignMatrix(dataMatrix, designMatrix, sampleCol)
-    verifyValidNumbers(dataMatrix, groups, quiet=quiet)
+    verifyValidNumbers(dataMatrix, groups, noLogTransform=noLogTransform, quiet=quiet)
     
     repSortedRawData <- getReplicateSortedData(dataMatrix, groups)
     processedRawData <- preprocessData(repSortedRawData)
@@ -303,7 +306,7 @@ loadRawDataFromFile <- function(inputPath) {
 #' @param groups Condition levels for comparisons.
 #' @return Parsed rawdata where 0 values are replaced with NA
 #' @keywords internal
-verifyValidNumbers <- function(rawDataOnly, groups, quiet=FALSE) {
+verifyValidNumbers <- function(rawDataOnly, groups, noLogTransform=FALSE, quiet=FALSE) {
     
     # Fields expected to contain numbers in decimal or scientific notation, or containing NA or null
     validPatterns <- c("\\d+(\\.\\d+)?", "NA", "\"NA\"", "null", "\\d+(\\.\\d+)?[eE]([\\+\\-])?\\d+$")
@@ -335,6 +338,21 @@ verifyValidNumbers <- function(rawDataOnly, groups, quiet=FALSE) {
         )
         stop(errorString)
     }
+    
+    if (!noLogTransform) {
+        belowOnePattern <- c("^0.\\d+$")
+        belowOneMatches <- grep(belowOnePattern, rawDataOnly, perl=TRUE)
+        if (length(belowOneMatches) > 0) {
+            errorString <- paste(
+                "Encountered below-one values in raw data. As the data is log-transformed ",
+                "during processing this will lead to negative values which in turn will ",
+                "crash processing. Consider using the 'noLogTransform' option if your data ",
+                "already is normally distributed or scaling all values if appropriate.", 
+                sep="\n"
+            )
+            stop(errorString)
+        }
+    }
 
     if (!quiet) message("Input data checked. All fields are valid.")
 }
@@ -361,9 +379,9 @@ verifyDesignMatrix <- function(fullMatrix, designMatrix, sampleCol) {
         errorString <- paste(
             "Not all columns present in design matrix are present in data matrix. \n",
             " The following elements were not found in the data matrix header: \n\n",
-            paste(setdiff(designColnames, colnames(fullMatrix)), collapse=" ", " \n",
+            paste(setdiff(designColnames, colnames(fullMatrix)), collapse=", "), " \n",
             "\n Please carefully check that the column names in your data matrix", 
-            "matches the sample column in the design matrix")
+            "matches the sample column in the design matrix"
         )
         stop(errorString)
     }
@@ -550,26 +568,4 @@ verifyMultipleSamplesPresent <- function(dataMatrix, groups, requireReplicates=T
         if (!quiet) message("Sample check: More than one sample group found")
     }
 }
-
-
-#' #' Setup Normalyzer dataset from given raw data
-#' #' 
-#' #' @param jobName Name of ongoing run.
-#' #' @param designMatrix Dataframe containing condition matrix.
-#' #' @param fullRawMatrix Dataframe with unparsed input data.
-#' #' @param sampleNameCol Name of column in design matrix containing sample names.
-#' #' @param groupNameCol Name of column in design matrix contaning conditions.
-#' #' @return Data object representing loaded data.
-#' #' @keywords internal
-#' generateNormalyzerDataset <- function(jobName, designMatrix, fullRawMatrix, sampleNameCol, groupNameCol, quiet=FALSE) {
-#'     
-#'     nds <- NormalyzerDataset(
-#'         jobName=jobName, 
-#'         rawData=fullRawMatrix, 
-#'         designMatrix=designMatrix,
-#'         sampleNameCol=sampleNameCol, 
-#'         groupNameCol=groupNameCol)
-#'     nds <- setupValues(nds, quiet=quiet)
-#'     nds
-#' }
 
