@@ -10,6 +10,7 @@
 #'   segment.
 #' @param rtWindowShifts Number of layered retention time normalized windows.
 #' @param rtWindowMergeMethod Merge approach for layered retention time windows.
+#' @param noLogTransform
 #' 
 #' @return Returns Normalyzer results object with performed analyzes assigned
 #'  as attributes
@@ -20,7 +21,7 @@
 #' normResults <- normMethods(normObj)
 normMethods <- function(nds, forceAll=FALSE, normalizeRetentionTime=TRUE, 
                         quiet=FALSE, rtStepSizeMinutes=1, rtWindowMinCount=100, 
-                        rtWindowShifts=1, rtWindowMergeMethod="mean") {
+                        rtWindowShifts=1, rtWindowMergeMethod="mean", noLogTransform=FALSE) {
     
     nr <- NormalyzerResults(nds=nds)
     # nr <- initializeResultsObject(nr)
@@ -32,7 +33,8 @@ normMethods <- function(nds, forceAll=FALSE, normalizeRetentionTime=TRUE,
         rtWindowMinCount=rtWindowMinCount, 
         rtWindowShifts=rtWindowShifts, 
         rtWindowMergeMethod=rtWindowMergeMethod, 
-        quiet=quiet)
+        noLogTransform=noLogTransform
+    )
     
     return(nr)
 }
@@ -43,12 +45,13 @@ normMethods <- function(nds, forceAll=FALSE, normalizeRetentionTime=TRUE,
 #' The normalized data is then log2-transformed.
 #' 
 #' @param rawMatrix Target matrix to be normalized
+#' @param noLogTransform Assumes no need for log transformation
 #' @return Normalized and log-transformed matrix
 #' @export
 #' @examples
 #' data(example_data_only_values_small)
 #' normMatrix <- globalIntensityNormalization(example_data_only_values)
-globalIntensityNormalization <- function(rawMatrix) {
+globalIntensityNormalization <- function(rawMatrix, noLogTransform=FALSE) {
     
     colSums <- colSums(rawMatrix, na.rm=TRUE)
     colSumsMedian <- stats::median(colSums)
@@ -59,7 +62,13 @@ globalIntensityNormalization <- function(rawMatrix) {
         normMatrix[rowIndex, ] <- vapply(seq_len(ncol(rawMatrix)), normFunc, 0)
     }
     
-    normLog2Matrix <- log2(normMatrix)
+    if (!noLogTransform) {
+        normLog2Matrix <- log2(normMatrix)
+    }
+    else {
+        normLog2Matrix <- normMatrix
+    }
+    
     colnames(normLog2Matrix) <- colnames(rawMatrix)
     normLog2Matrix
 }
@@ -70,12 +79,13 @@ globalIntensityNormalization <- function(rawMatrix) {
 #' The normalized data is then log2-transformed.
 #' 
 #' @param rawMatrix Target matrix to be normalized
+#' @param noLogTransform Assumes no need for log transformation
 #' @return Normalized and log-transformed matrix
 #' @export
 #' @examples
 #' data(example_data_only_values_small)
 #' normMatrix <- medianNormalization(example_data_only_values)
-medianNormalization <- function(rawMatrix) {
+medianNormalization <- function(rawMatrix, noLogTransform=FALSE) {
 
     colMedians <- matrixStats::colMedians(rawMatrix, na.rm=TRUE)
     meanColMedian <- mean(colMedians, na.rm=TRUE)
@@ -88,7 +98,13 @@ medianNormalization <- function(rawMatrix) {
         normMatrix[rowIndex, ] <- vapply(seq_len(ncol(rawMatrix)), normFunc, 0)
     }
     
-    normLog2Matrix <- log2(normMatrix)
+    if (!noLogTransform) {
+        normLog2Matrix <- log2(normMatrix)
+    }
+    else {
+        normLog2Matrix <- normMatrix
+    }
+    
     colnames(normLog2Matrix) <- colnames(rawMatrix)
     normLog2Matrix
 }
@@ -99,12 +115,13 @@ medianNormalization <- function(rawMatrix) {
 #' is then transformed to log2.
 #' 
 #' @param rawMatrix Target matrix to be normalized
+#' @param noLogTransform Assumes no need for log transformation
 #' @return Normalized and log-transformed matrix
 #' @export
 #' @examples
 #' data(example_data_only_values_small)
 #' normMatrix <- meanNormalization(example_data_only_values)
-meanNormalization <- function(rawMatrix) {
+meanNormalization <- function(rawMatrix, noLogTransform=FALSE) {
     
     colMeans <- colMeans(rawMatrix, na.rm=TRUE)
     avgColMean <- mean(colMeans, na.rm=TRUE)
@@ -116,7 +133,13 @@ meanNormalization <- function(rawMatrix) {
         normMatrix[rowIndex, ] <- vapply(seq_len(ncol(rawMatrix)), normFunc, 0)
     }
     
-    normLog2Matrix <- log2(normMatrix)
+    if (!noLogTransform) {
+        normLog2Matrix <- log2(normMatrix)
+    }
+    else {
+        normLog2Matrix <- normMatrix
+    }
+    
     colnames(normLog2Matrix) <- colnames(rawMatrix)
     normLog2Matrix
 }
@@ -134,9 +157,13 @@ meanNormalization <- function(rawMatrix) {
 #' @examples
 #' data(example_data_only_values_small)
 #' normMatrix <- performVSNNormalization(example_data_only_values)
-performVSNNormalization <- function(rawMatrix) {
+performVSNNormalization <- function(rawMatrix, noLogTransform=FALSE) {
     
-    normMatrix <- suppressMessages(vsn::justvsn(rawMatrix))
+    if (noLogTransform) {
+        stop("Cannot run VSN with already log-transformed data")
+    }
+    
+    normMatrix <- suppressMessages(vsn::justvsn(rawMatrix, ))
     colnames(normMatrix) <- colnames(rawMatrix)
     normMatrix
 }
@@ -149,14 +176,21 @@ performVSNNormalization <- function(rawMatrix) {
 #' distribution and then scaling the other samples accordingly.
 #' 
 #' @param rawMatrix Target matrix to be normalized
+#' @param noLogTransform Assumes no need for log transformation
 #' @return Normalized matrix
 #' @export
 #' @examples
 #' data(example_data_only_values_small)
 #' normMatrix <- performQuantileNormalization(example_data_only_values)
-performQuantileNormalization <- function(rawMatrix) {
+performQuantileNormalization <- function(rawMatrix, noLogTransform=FALSE) {
     
-    log2Matrix <- log2(rawMatrix)
+    if (!noLogTransform) {
+        log2Matrix <- log2(rawMatrix)
+    }
+    else {
+        log2Matrix <- rawMatrix
+    }
+    
     normMatrix <- preprocessCore::normalize.quantiles(log2Matrix, copy=TRUE)
     colnames(normMatrix) <- colnames(rawMatrix)
     normMatrix
@@ -167,14 +201,21 @@ performQuantileNormalization <- function(rawMatrix) {
 #' median absolute deviation (MAD).
 #' 
 #' @param rawMatrix Target matrix to be normalized
+#' @param noLogTransform Assumes no need for log transformation
 #' @return Normalized matrix
 #' @export
 #' @examples
 #' data(example_data_only_values_small)
 #' normMatrix <- performSMADNormalization(example_data_only_values)
-performSMADNormalization <- function(rawMatrix) {
+performSMADNormalization <- function(rawMatrix, noLogTransform=FALSE) {
     
-    log2Matrix <- log2(rawMatrix)
+    if (!noLogTransform) {
+        log2Matrix <- log2(rawMatrix)
+    }
+    else {
+        log2Matrix <- rawMatrix
+    }
+    
     sampleLog2Median <- matrixStats::colMedians(log2Matrix, na.rm=TRUE)
     sampleMAD <- matrixStats::colMads(log2Matrix, na.rm=TRUE)
     madMatrix <- t(apply(log2Matrix, 1, function(row) ((row - sampleLog2Median) / sampleMAD)))
@@ -192,14 +233,21 @@ performSMADNormalization <- function(rawMatrix) {
 #' "normalizeCyclicLoess" in the Limma package.
 #' 
 #' @param rawMatrix Target matrix to be normalized
+#' @param noLogTransform Assumes no need for log transformation
 #' @return Normalized matrix
 #' @export
 #' @examples
 #' data(example_data_only_values_small)
 #' normMatrix <- performCyclicLoessNormalization(example_data_only_values)
-performCyclicLoessNormalization <- function(rawMatrix) {
+performCyclicLoessNormalization <- function(rawMatrix, noLogTransform=FALSE) {
     
-    log2Matrix <- log2(rawMatrix)
+    if (!noLogTransform) {
+        log2Matrix <- log2(rawMatrix)
+    }
+    else {
+        log2Matrix <- rawMatrix
+    }
+    
     normMatrix <- limma::normalizeCyclicLoess(log2Matrix, method="fast")
     colnames(normMatrix) <- colnames(rawMatrix)
     
@@ -212,14 +260,21 @@ performCyclicLoessNormalization <- function(rawMatrix) {
 #' the function "rlm" from the MASS package. 
 #' 
 #' @param rawMatrix Target matrix to be normalized
+#' @param noLogTransform Assumes no need for log transformation
 #' @return Normalized matrix
 #' @export
 #' @examples
 #' data(example_data_only_values_small)
 #' normMatrix <- performGlobalRLRNormalization(example_data_only_values)
-performGlobalRLRNormalization <- function(rawMatrix) {
+performGlobalRLRNormalization <- function(rawMatrix, noLogTransform=FALSE) {
     
-    log2Matrix <- log2(rawMatrix)
+    if (!noLogTransform) {
+        log2Matrix <- log2(rawMatrix)
+    }
+    else {
+        log2Matrix <- rawMatrix
+    }
+    
     sampleLog2Median <- matrixStats::rowMedians(log2Matrix, na.rm=TRUE)
     
     calculateRLMForCol <- function(colIndex, sampleLog2Median, log2Matrix) {
