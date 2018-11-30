@@ -120,8 +120,8 @@ generateAnnotatedMatrix <- function(nst) {
 #' generateStatsReport(statObj, "jobName", outputDir)
 generateStatsReport <- function(nst, jobName, jobDir, plotRows=3, plotCols=4) {
     
-    nrows <- plotRows + 2
-    ncols <- plotCols + 2
+    nrows <- plotRows + 1
+    ncols <- plotCols + 1
     
     currentLayout <- grid::grid.layout(
         nrow=nrows, 
@@ -133,9 +133,16 @@ generateStatsReport <- function(nst, jobName, jobDir, plotRows=3, plotCols=4) {
     currentFont <- "Helvetica"
     setupPlotting(jobName, jobDir, "Norm-stats-report")
     plotFrontPage(jobName, currentFont)
+    
     pageNo <- 2
     plotContrastPHists(nst, jobName, currentLayout, pageNo)
     
+    pageNo <- 3
+    plotSigScatter(nst, jobName, currentLayout, pageNo, type="MA")
+
+    pageNo <- 4
+    plotSigScatter(nst, jobName, currentLayout, pageNo, type="Vulcano")
+
     grDevices::dev.off()
 }
 
@@ -157,15 +164,78 @@ plotContrastPHists <- function(nst, jobName, currentLayout, pageno) {
         contrast <- names(contrastPLists)[i]
         pVals <- contrastPLists[[contrast]]
         df <- data.frame(pVals=pVals)
-        histPlots[[i]] <- ggplot2::ggplot(df) + 
-            ggplot2::geom_histogram(
-                ggplot2::aes(pVals), na.rm=TRUE, binwidth=0.01) +
-            ggplot2::ggtitle(paste("Contrast:", contrast))
+        histPlots[[i]] <- ggplot2::ggplot(df, ggplot2::aes(pVals)) + 
+            ggplot2::theme_classic() + 
+            ggplot2::geom_histogram(na.rm=TRUE, binwidth=0.01, color="#268BD2", fill="#268BD2") +
+            ggplot2::ggtitle(paste("Contrast:", contrast)) + 
+            ggplot2::xlab("P-values") + 
+            ggplot2::ylab("Count") +
+            ggplot2::theme(
+                axis.text.x = ggplot2::element_text(angle = 90, hjust = 1, vjust=0.5), 
+                legend.position="none"
+            )
     }
     
     grid::grid.newpage()
     grid::pushViewport(grid::viewport(layout=currentLayout))
     printPlots(histPlots, "HistPlots", pageno, jobName, currentLayout)  
+}
+
+#' Takes an NormalyzerStatistics instance and generates and prints a 
+#' vulcano plot
+#' 
+#' @param nst NormalyzerDE statistics object.
+#' @param jobName Name of processing run.
+#' @param currentLayout Layout used for document.
+#' @param pageno Current page number.
+#' @param type Specify whether to plot 'Vulcano' or 'MA'.
+#' @param sigThres FDR threshold for DE coloring.
+#' @return None
+#' @keywords internal
+plotSigScatter <- function(nst, jobName, currentLayout, pageno, type="Vulcano", sigThres=0.1) {
+    
+    contrastPLists <- pairwiseCompsP(nst)
+    contrastFDRLists <- pairwiseCompsFdr(nst)
+    contrastFoldLists <- pairwiseCompsFold(nst)
+    contrastAveLists <- pairwiseCompsAve(nst)
+    plots <- list()
+    
+    for (i in seq_along(contrastPLists)) {
+        
+        contrast <- names(contrastPLists)[i]
+        pVals <- contrastPLists[[contrast]]
+        fold <- contrastFoldLists[[contrast]]
+        expression <- contrastAveLists[[contrast]]
+        sig <- contrastFDRLists[[contrast]] < sigThres
+        
+        df <- data.frame(pVals=pVals, fold=fold, sig=sig, expression=expression)
+        df <- df[complete.cases(df),]
+        
+        if (type == "Vulcano") {
+            plots[[i]] <- ggplot2::ggplot(df, ggplot2::aes(fold, -log10(pVals), color=sig)) + 
+                ggplot2::geom_point(size=1, alpha=0.5, na.rm=TRUE) +
+                ggplot2::xlab("Fold") + 
+                ggplot2::ylab("log10(Pvalue)")
+        }
+        else if (type == "MA") {
+            plots[[i]] <- ggplot2::ggplot(df, ggplot2::aes(expression, fold, color=sig)) + 
+                ggplot2::geom_point(size=1, alpha=0.5, na.rm=TRUE) +
+                ggplot2::xlab("Expression") + 
+                ggplot2::ylab("Fold")
+        }
+        else {
+            stop("Unknown plot type: ", type)
+        }
+        
+        plots[[i]] <- plots[[i]] + 
+            ggplot2::ggtitle(paste("Contrast:", contrast)) + 
+            ggplot2::theme_classic() +
+            ggplot2::labs(color=paste("FDR <", sigThres))
+    }
+    
+    grid::grid.newpage()
+    grid::pushViewport(grid::viewport(layout=currentLayout))
+    printPlots(plots, type, pageno, jobName, currentLayout)  
 }
 
 
