@@ -67,8 +67,6 @@ NormalyzerDataset <- function(jobName, designMatrix, rawData, annotationData,
               filterrawdata <- rawData[, sampleNames]
               class(filterrawdata) <- "numeric"
               
-              # browser()
-              
               nds <- new(
                   "NormalyzerDataset",
                   jobName=jobName,

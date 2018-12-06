@@ -255,7 +255,7 @@ normalyzer <- function(
 normalyzerDE <- function(jobName, comparisons, designPath=NULL, dataPath=NULL, experimentObj=NULL, 
                          outputDir=".", logTrans=FALSE, type="limma", sampleCol="sample", condCol="group", 
                          batchCol=NULL, techRepCol=NULL, leastRepCount=1, quiet=FALSE, 
-                         sigThres=0.1, sigThresType="fdr", log2FoldThres=1) {
+                         sigThres=0.1, sigThresType="fdr", log2FoldThres=0) {
 
     if (is.null(experimentObj) && (is.null(designPath) || is.null(dataPath))) {
         stop("Either options 'designPath' plus 'dataPath' or 'summarizedExp' need to be provided")
