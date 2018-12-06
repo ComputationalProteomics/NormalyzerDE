@@ -230,6 +230,14 @@ normalyzer <- function(
 #'   replicates
 #' @param leastRepCount Minimum required replicate count
 #' @param quiet Omit status messages printed during run
+#' 
+#' @param sigThres Significance threshold use for illustrating significant hits
+#'   in diagnostic plots
+#' @param sigThresType Type of significance threshold, "fdr" or "p". "fdr" is
+#'   strongly recommended (Benjamini-Hochberg corrected p-values)
+#' @param log2FoldThres Fold-size cutoff for being considered significant in
+#'   diagnostic plots
+#' 
 #' @return None
 #' @export
 #' @examples 
@@ -246,7 +254,8 @@ normalyzer <- function(
 #' @export
 normalyzerDE <- function(jobName, comparisons, designPath=NULL, dataPath=NULL, experimentObj=NULL, 
                          outputDir=".", logTrans=FALSE, type="limma", sampleCol="sample", condCol="group", 
-                         batchCol=NULL, techRepCol=NULL, leastRepCount=1, quiet=FALSE) {
+                         batchCol=NULL, techRepCol=NULL, leastRepCount=1, quiet=FALSE, 
+                         sigThres=0.1, sigThresType="fdr", log2FoldThres=1) {
 
     if (is.null(experimentObj) && (is.null(designPath) || is.null(dataPath))) {
         stop("Either options 'designPath' plus 'dataPath' or 'summarizedExp' need to be provided")
@@ -281,7 +290,7 @@ normalyzerDE <- function(jobName, comparisons, designPath=NULL, dataPath=NULL, e
     if (!quiet) print(paste("Writing", nrow(annotDf), "annotated rows to", outPath))
     utils::write.table(annotDf, file=outPath, sep="\t", row.names = FALSE)
     if (!quiet) print(paste("Writing statistics report"))
-    generateStatsReport(nst, jobName, jobDir)
+    generateStatsReport(nst, jobName, jobDir, sigThres, sigThresType, log2FoldThres)
     
     endTime <- Sys.time()
     totTime <- difftime(endTime, startTime, units="mins")
