@@ -122,7 +122,7 @@ generateAnnotatedMatrix <- function(nst) {
 #' outputDir <- tempdir()
 #' generateStatsReport(statObj, "jobName", outputDir)
 generateStatsReport <- function(nst, jobName, jobDir,
-                                sigThres, sigThresType, log2FoldThres,
+                                sigThres=0.1, sigThresType="fdr", log2FoldThres=0,
                                 plotRows=3, plotCols=4) {
     
     nrows <- plotRows + 1
