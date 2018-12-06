@@ -215,7 +215,7 @@ plotSigScatter <- function(nst, jobName, currentLayout, pageno, type="Vulcano", 
             plots[[i]] <- ggplot2::ggplot(df, ggplot2::aes(fold, -log10(pVals), color=sig)) + 
                 ggplot2::geom_point(size=1, alpha=0.5, na.rm=TRUE) +
                 ggplot2::xlab("Fold") + 
-                ggplot2::ylab("log10(Pvalue)")
+                ggplot2::ylab("-log10(Pvalue)")
         }
         else if (type == "MA") {
             plots[[i]] <- ggplot2::ggplot(df, ggplot2::aes(expression, fold, color=sig)) + 
