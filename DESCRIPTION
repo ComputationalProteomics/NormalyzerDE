@@ -34,7 +34,8 @@ Suggests:
     testthat,
     rmarkdown,
     roxygen2,
-    hexbin
+    hexbin,
+    BiocStyle
 VignetteBuilder: knitr
 biocViews:
     Normalization, MultipleComparison, Visualization, Bayesian, Proteomics, Metabolomics, DifferentialExpression
