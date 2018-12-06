@@ -7,7 +7,7 @@ Merge them using a specified method (mean or median) and return the result.}
 \usage{
 getSmoothedRTNormalizedMatrix(rawMatrix, retentionTimes, normMethod,
   stepSizeMinutes, windowShifts = 2, windowMinCount = 100,
-  mergeMethod = "mean")
+  mergeMethod = "mean", noLogTransform = FALSE)
 }
 \arguments{
 \item{rawMatrix}{Target matrix to be normalized}
@@ -23,6 +23,8 @@ getSmoothedRTNormalizedMatrix(rawMatrix, retentionTimes, normMethod,
 \item{windowMinCount}{Minimum number of features within window.}
 
 \item{mergeMethod}{Layer merging approach. Mean or median.}
+
+\item{noLogTransform}{Don't log transform the input}
 }
 \value{
 Normalized matrix

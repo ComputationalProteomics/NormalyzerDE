@@ -11,7 +11,8 @@ normalyzer(jobName, designPath = NULL, dataPath = NULL,
   plotRows = 3, plotCols = 4, zeroToNA = FALSE,
   sampleColName = "sample", groupColName = "group",
   inputFormat = "default", skipAnalysis = FALSE, quiet = FALSE,
-  rtStepSizeMinutes = 1, rtWindowMinCount = 100, rtWindowShifts = 1,
+  noLogTransform = FALSE, rtStepSizeMinutes = 1,
+  rtWindowMinCount = 100, rtWindowShifts = 1,
   rtWindowMergeMethod = "mean")
 }
 \arguments{
@@ -56,7 +57,9 @@ validation.}
 
 \item{skipAnalysis}{Only perform normalization steps.}
 
-\item{quiet}{Omit status messages printed during run}
+\item{quiet}{Omit status messages printed during run.}
+
+\item{noLogTransform}{Don't log-transform the input.}
 
 \item{rtStepSizeMinutes}{Retention time normalization window size.}
 

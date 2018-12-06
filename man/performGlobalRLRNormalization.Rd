@@ -4,10 +4,12 @@
 \alias{performGlobalRLRNormalization}
 \title{Global linear regression normalization}
 \usage{
-performGlobalRLRNormalization(rawMatrix)
+performGlobalRLRNormalization(rawMatrix, noLogTransform = FALSE)
 }
 \arguments{
 \item{rawMatrix}{Target matrix to be normalized}
+
+\item{noLogTransform}{Assumes no need for log transformation}
 }
 \value{
 Normalized matrix

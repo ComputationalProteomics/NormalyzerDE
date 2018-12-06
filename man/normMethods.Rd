@@ -6,7 +6,8 @@
 \usage{
 normMethods(nds, forceAll = FALSE, normalizeRetentionTime = TRUE,
   quiet = FALSE, rtStepSizeMinutes = 1, rtWindowMinCount = 100,
-  rtWindowShifts = 1, rtWindowMergeMethod = "mean")
+  rtWindowShifts = 1, rtWindowMergeMethod = "mean",
+  noLogTransform = FALSE)
 }
 \arguments{
 \item{nds}{Normalyzer dataset object.}
@@ -25,6 +26,9 @@ segment.}
 \item{rtWindowShifts}{Number of layered retention time normalized windows.}
 
 \item{rtWindowMergeMethod}{Merge approach for layered retention time windows.}
+
+\item{noLogTransform}{Per default NormalyzerDE performs a log-transformation
+on the input data. If not needed, specify this option}
 }
 \value{
 Returns Normalyzer results object with performed analyzes assigned

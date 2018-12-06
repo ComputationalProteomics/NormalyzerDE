@@ -6,6 +6,9 @@ dataPath <- system.file(package="NormalyzerDE", "extdata", "tiny_data.tsv")
 # dataPath <- "../../vignettes/data.tsv"
 tempOut <- tempdir()
 
+referenceNormResultsDir <- system.file(package="NormalyzerDE", "extdata", "unit_test_run_norm_reference")
+referenceStatResultsDir <- system.file(package="NormalyzerDE", "extdata", "unit_test_run_stat_reference")
+
 # Note: During testing the expect_silent uses sink() to capture all output
 # For debugging using the browser() statement while in sink - run
 # closeAllConnections()
@@ -23,6 +26,19 @@ test_that("Normalization run succeeds without errors", {
     )
 })
 
+test_that("Normalization results are identical to previous", {
+    
+    currOutDir <- paste0(tempOut, "/unit_test_run_norm")
+    currFiles <- list.files(currOutDir , pattern="*.txt", full.names=TRUE)
+    refFiles <- list.files(referenceNormResultsDir, pattern="*.txt", full.names=TRUE)
+    expect_true(length(currFiles) == length(refFiles), "Number of normalized matrices should be same as reference")
+    
+    currMd5 <- tools::md5sum(currFiles)
+    refMd5 <- tools::md5sum(refFiles)
+    
+    expect_true(all(currMd5 == refMd5), "MD5-sums for normalized matrices should be equal")
+})
+
 test_that("Statistics run succeeds without errors", {
     
     expect_silent(
@@ -36,6 +52,19 @@ test_that("Statistics run succeeds without errors", {
             quiet=TRUE
         )   
     )
+})
+
+test_that("Statistics results are identical to previous", {
+    
+    currOutDir <- paste0(tempOut, "/unit_test_run_stat")
+    currStatFiles <- list.files(currOutDir , pattern="*.tsv", full.names=TRUE)
+    refStatFiles <- list.files(referenceStatResultsDir, pattern="*.tsv", full.names=TRUE)
+    expect_true(length(currStatFiles) == length(refStatFiles), "Number of normalized matrices should be same as reference")
+    
+    currStatMd5 <- tools::md5sum(currStatFiles)
+    refStatMd5 <- tools::md5sum(refStatFiles)
+    
+    expect_true(all(currStatMd5 == refStatMd5), "MD5-sums for stat matrices should be equal")
 })
 
 test_that("Normalization run from SummarizedExperiment succeeds without errors", {

@@ -6,10 +6,12 @@
 Normalization subtracts the median and divides the data by the
 median absolute deviation (MAD).}
 \usage{
-performSMADNormalization(rawMatrix)
+performSMADNormalization(rawMatrix, noLogTransform = FALSE)
 }
 \arguments{
 \item{rawMatrix}{Target matrix to be normalized}
+
+\item{noLogTransform}{Assumes no need for log transformation}
 }
 \value{
 Normalized matrix

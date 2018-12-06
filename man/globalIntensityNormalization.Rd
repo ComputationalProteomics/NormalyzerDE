@@ -7,10 +7,12 @@ with the sum of intensities of all variables in the sample and multiplies
 with the median of sum of intensities of all variables in all samples.
 The normalized data is then log2-transformed.}
 \usage{
-globalIntensityNormalization(rawMatrix)
+globalIntensityNormalization(rawMatrix, noLogTransform = FALSE)
 }
 \arguments{
 \item{rawMatrix}{Target matrix to be normalized}
+
+\item{noLogTransform}{Assumes no need for log transformation}
 }
 \value{
 Normalized and log-transformed matrix

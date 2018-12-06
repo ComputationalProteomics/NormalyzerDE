@@ -30,13 +30,13 @@ test_that("Parsed input data is same as raw input", {
         inputFormat="default"
     )
     
-    expect_true(all(design == data.frame(colData(se))), "colData should be identical to data frame")
+    expect_true(all(design == data.frame(SummarizedExperiment::colData(se))), "colData should be identical to data frame")
 
-    se_data <- assay(se)
+    se_data <- SummarizedExperiment::assay(se)
     class(se_data) <- "numeric"
     
     expect_true(all(colSums(se_data, na.rm=TRUE) == colSums(sdf, na.rm=TRUE)), "Sum of data should be same")
     expect_true(all(colnames(se_data) == colnames(sdf)), "Column names should be the same")
-    expect_true(all(adf == data.frame(rowData(se))), "Annotation information should be the same")
+    expect_true(all(adf == data.frame(SummarizedExperiment::rowData(se))), "Annotation information should be the same")
 })
 

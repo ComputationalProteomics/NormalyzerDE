@@ -17,10 +17,12 @@ NormalyzerResults <- setClass("NormalyzerResults",
                                   nds = "NormalyzerDataset",
                                   ner = "NormalyzerEvaluationResults",
                                   normalizations = "list"
-                              ),
-                              prototype=prototype(
-                                  nds=NULL))
+                              ))
 
+NormalyzerResults <- function(nds) {
+    nr <- new("NormalyzerResults", nds=nds)
+    nr
+}
 
 setGeneric("normalizations", function(object) { standardGeneric("normalizations") })
 setMethod("normalizations", signature(object="NormalyzerResults"), 

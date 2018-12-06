@@ -6,7 +6,8 @@
  NormalyzerDE data object from that input data}
 \usage{
 getVerifiedNormalyzerObject(jobName, summarizedExp, threshold = 15,
-  omitSamples = FALSE, requireReplicates = TRUE, quiet = FALSE)
+  omitSamples = FALSE, requireReplicates = TRUE, quiet = FALSE,
+  noLogTransform = FALSE)
 }
 \arguments{
 \item{jobName}{Name of ongoing run.}
@@ -21,6 +22,8 @@ getVerifiedNormalyzerObject(jobName, summarizedExp, threshold = 15,
 condition}
 
 \item{quiet}{Don't print output messages during processing}
+
+\item{noLogTransform}{Don't log-transform the provided data}
 }
 \value{
 Normalyzer data object representing verified input data.

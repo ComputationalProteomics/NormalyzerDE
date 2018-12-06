@@ -98,9 +98,9 @@ setupRawDataObject <- function(dataPath, designPath, inputFormat="default", zero
     sdf <- rdf[, as.character(rawDesign[[sampleColName]])]
     adf <- rdf[, !(colnames(rdf) %in% as.character(rawDesign[[sampleColName]])), drop=FALSE]
     
-    if (zeroToNA) {
-        sdf[grepl("^0\\.?0*$", sdf)] <- NA
-    }
+    # if (zeroToNA) {
+    #     sdf[grepl("^0\\.?0*$", sdf)] <- NA
+    # }
     
     experimentObj <- SummarizedExperiment::SummarizedExperiment(
         assays=list(raw=as.matrix(sdf)),
@@ -205,7 +205,7 @@ getVerifiedNormalyzerObject <- function(
     annotationMatrix <- as.matrix(data.frame(lapply(
         SummarizedExperiment::rowData(summarizedExp),
         as.character
-    ), stringsAsFactors=FALSE))
+    ), stringsAsFactors=FALSE, check.names=FALSE))
 
     verifyDesignMatrix(dataMatrix, designMatrix, sampleCol)
     verifyValidNumbers(dataMatrix, groups, noLogTransform=noLogTransform, quiet=quiet)
