@@ -54,6 +54,24 @@ test_that("Statistics run succeeds without errors", {
     )
 })
 
+test_that("Statistics with custom thresholding", {
+    
+    expect_silent(
+        normalyzerDE(
+            jobName="unit_test_run_stat_custom_thres",
+            dataPath=dataPath,
+            designPath=designPath,
+            outputDir=tempOut,
+            comparisons=c("4-5"),
+            logTrans=TRUE,
+            quiet=TRUE,
+            sigThres=0.05,
+            sigThresType="p",
+            log2FoldThres="1"
+        )   
+    )
+})
+
 test_that("Statistics results are identical to previous", {
     
     currOutDir <- paste0(tempOut, "/unit_test_run_stat")
