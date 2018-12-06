@@ -6,7 +6,7 @@
 vulcano plot}
 \usage{
 plotSigScatter(nst, jobName, currentLayout, pageno, type = "Vulcano",
-  sigThres = 0.1)
+  sigThres = 0.1, sigThresType = "fdr", log2FoldThres = 0)
 }
 \arguments{
 \item{nst}{NormalyzerDE statistics object.}

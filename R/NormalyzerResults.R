@@ -19,6 +19,15 @@ NormalyzerResults <- setClass("NormalyzerResults",
                                   normalizations = "list"
                               ))
 
+#' Constructor for NormalyzerResults
+#' 
+#' @param nds NormalyzerDataset object
+#' @return nr Prepared NormalyzerResults object
+#' @export
+#' @examples
+#' data(example_summarized_experiment)
+#' normObj <- getVerifiedNormalyzerObject("job_name", example_summarized_experiment)
+#' emptyNormResults <- NormalyzerResults(normObj)
 NormalyzerResults <- function(nds) {
     nr <- new("NormalyzerResults", nds=nds)
     nr

@@ -5,6 +5,14 @@
 \title{Representation of the results from performing normalization over a dataset}
 \usage{
 NormalyzerResults(nds)
+
+NormalyzerResults(nds)
+}
+\arguments{
+\item{nds}{NormalyzerDataset object}
+}
+\value{
+nr Prepared NormalyzerResults object
 }
 \description{
 It is linked to a NormalyzerDataset instance representing the raw data
@@ -24,3 +32,8 @@ normalization results}
 for running extended normalizations}
 }}
 
+\examples{
+data(example_summarized_experiment)
+normObj <- getVerifiedNormalyzerObject("job_name", example_summarized_experiment)
+emptyNormResults <- NormalyzerResults(normObj)
+}

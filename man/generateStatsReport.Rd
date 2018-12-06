@@ -6,7 +6,9 @@
 for each contrast in the NormalyzerStatistics instance and writes these
 to a PDF report.}
 \usage{
-generateStatsReport(nst, jobName, jobDir, plotRows = 3, plotCols = 4)
+generateStatsReport(nst, jobName, jobDir, sigThres = 0.1,
+  sigThresType = "fdr", log2FoldThres = 0, plotRows = 3,
+  plotCols = 4)
 }
 \arguments{
 \item{nst}{NormalyzerDE statistics object.}
@@ -14,6 +16,12 @@ generateStatsReport(nst, jobName, jobDir, plotRows = 3, plotCols = 4)
 \item{jobName}{Name of processing run.}
 
 \item{jobDir}{Path to output directory.}
+
+\item{sigThres}{Significance threshold for indicating as significant}
+
+\item{sigThresType}{Type of significance threshold (FDR or p)}
+
+\item{log2FoldThres}{log2 fold-change required for being counted as significant}
 
 \item{plotRows}{Number of plot rows.}
 
