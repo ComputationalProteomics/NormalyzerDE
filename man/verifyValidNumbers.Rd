@@ -4,7 +4,8 @@
 \alias{verifyValidNumbers}
 \title{Verify that input fields conform to the expected formats}
 \usage{
-verifyValidNumbers(rawDataOnly, groups, quiet = FALSE)
+verifyValidNumbers(rawDataOnly, groups, noLogTransform = FALSE,
+  quiet = FALSE)
 }
 \arguments{
 \item{rawDataOnly}{Dataframe with input data.}

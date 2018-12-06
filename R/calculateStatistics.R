@@ -107,6 +107,9 @@ generateAnnotatedMatrix <- function(nst) {
 #' @param nst NormalyzerDE statistics object.
 #' @param jobName Name of processing run.
 #' @param jobDir Path to output directory.
+#' @param sigThres Significance threshold for indicating as significant
+#' @param sigThresType Type of significance threshold (FDR or p)
+#' @param log2FoldThres log2 fold-change required for being counted as significant
 #' @param plotRows Number of plot rows.
 #' @param plotCols Number of plot columns.
 #' @return None
@@ -118,7 +121,9 @@ generateAnnotatedMatrix <- function(nst) {
 #'   condCol="group", type="limma")
 #' outputDir <- tempdir()
 #' generateStatsReport(statObj, "jobName", outputDir)
-generateStatsReport <- function(nst, jobName, jobDir, plotRows=3, plotCols=4) {
+generateStatsReport <- function(nst, jobName, jobDir,
+                                sigThres=0.1, sigThresType="fdr", log2FoldThres=0,
+                                plotRows=3, plotCols=4) {
     
     nrows <- plotRows + 1
     ncols <- plotCols + 1
@@ -138,10 +143,16 @@ generateStatsReport <- function(nst, jobName, jobDir, plotRows=3, plotCols=4) {
     plotContrastPHists(nst, jobName, currentLayout, pageNo)
     
     pageNo <- 3
-    plotSigScatter(nst, jobName, currentLayout, pageNo, type="MA")
+    plotSigScatter(
+        nst, jobName, currentLayout, pageNo, type="MA", 
+        sigThres=sigThres, sigThresType=sigThresType, log2FoldThres=log2FoldThres
+    )
 
     pageNo <- 4
-    plotSigScatter(nst, jobName, currentLayout, pageNo, type="Vulcano")
+    plotSigScatter(
+        nst, jobName, currentLayout, pageNo, type="Vulcano",
+        sigThres=sigThres, sigThresType=sigThresType, log2FoldThres=log2FoldThres
+    )
 
     grDevices::dev.off()
 }
@@ -192,7 +203,8 @@ plotContrastPHists <- function(nst, jobName, currentLayout, pageno) {
 #' @param sigThres FDR threshold for DE coloring.
 #' @return None
 #' @keywords internal
-plotSigScatter <- function(nst, jobName, currentLayout, pageno, type="Vulcano", sigThres=0.1) {
+plotSigScatter <- function(nst, jobName, currentLayout, pageno, type="Vulcano",
+                           sigThres=0.1, sigThresType="fdr", log2FoldThres=0) {
     
     contrastPLists <- pairwiseCompsP(nst)
     contrastFDRLists <- pairwiseCompsFdr(nst)
@@ -204,24 +216,45 @@ plotSigScatter <- function(nst, jobName, currentLayout, pageno, type="Vulcano", 
         
         contrast <- names(contrastPLists)[i]
         pVals <- contrastPLists[[contrast]]
+        fdrVals <- contrastFDRLists[[contrast]]
         fold <- contrastFoldLists[[contrast]]
         expression <- contrastAveLists[[contrast]]
-        sig <- contrastFDRLists[[contrast]] < sigThres
+        
+        if (sigThresType == "fdr") {
+            stat_sig <- (fdrVals < sigThres)
+            legend_label <- paste("FDR <", sigThres)
+        }
+        else if (sigThresType == "p") {
+            stat_sig <- (pVals < sigThres)
+            legend_label <- paste("P <", sigThres)
+        }
+        else {
+            stop("Unknown significance threshold type: ", sigThresType)
+        }
+        
+        if (log2FoldThres != 0) {
+            fold_sig <- abs(fold) >= log2FoldThres
+            sig <- stat_sig & fold_sig
+            legend_label <- paste0(legend_label, "\nFold > ", log2FoldThres)
+        }
+        else {
+            sig <- stat_sig
+        }
         
         df <- data.frame(pVals=pVals, fold=fold, sig=sig, expression=expression)
-        df <- df[complete.cases(df),]
+        df <- df[stats::complete.cases(df),]
         
         if (type == "Vulcano") {
             plots[[i]] <- ggplot2::ggplot(df, ggplot2::aes(fold, -log10(pVals), color=sig)) + 
                 ggplot2::geom_point(size=1, alpha=0.5, na.rm=TRUE) +
-                ggplot2::xlab("Fold") + 
-                ggplot2::ylab("log10(Pvalue)")
+                ggplot2::xlab("Fold (log2)") + 
+                ggplot2::ylab("-log10(Pvalue)")
         }
         else if (type == "MA") {
             plots[[i]] <- ggplot2::ggplot(df, ggplot2::aes(expression, fold, color=sig)) + 
                 ggplot2::geom_point(size=1, alpha=0.5, na.rm=TRUE) +
-                ggplot2::xlab("Expression") + 
-                ggplot2::ylab("Fold")
+                ggplot2::xlab("Expression (log2)") + 
+                ggplot2::ylab("Fold (log2)")
         }
         else {
             stop("Unknown plot type: ", type)
@@ -229,8 +262,8 @@ plotSigScatter <- function(nst, jobName, currentLayout, pageno, type="Vulcano", 
         
         plots[[i]] <- plots[[i]] + 
             ggplot2::ggtitle(paste("Contrast:", contrast)) + 
-            ggplot2::theme_classic() +
-            ggplot2::labs(color=paste("FDR <", sigThres))
+            ggplot2::theme_classic() + 
+            ggplot2::labs(color=legend_label)
     }
     
     grid::grid.newpage()

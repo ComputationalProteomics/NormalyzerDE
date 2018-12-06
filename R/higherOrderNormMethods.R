@@ -92,9 +92,14 @@ getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod,
         )
         normalizationRows <- rawMatrix[normalizationSliceIndices,, drop=FALSE]
         
-        processedNormalizationRows <- normMethod(normalizationRows, noLogTransform=noLogTransform)
-        rownames(processedNormalizationRows) <- rownames(normalizationRows)
+        if (noLogTransform) {
+            processedNormalizationRows <- normMethod(normalizationRows, noLogTransform=noLogTransform)
+        }
+        else {
+            processedNormalizationRows <- normMethod(normalizationRows)
+        }
         
+        rownames(processedNormalizationRows) <- rownames(normalizationRows)
         
         if (length(targetSliceIndices) < length(normalizationSliceIndices)) {
             

@@ -6,7 +6,8 @@
 over retention-time sliced data}
 \usage{
 getRTNormalizedMatrix(rawMatrix, retentionTimes, normMethod,
-  stepSizeMinutes = 1, windowMinCount = 100, offset = 0)
+  stepSizeMinutes = 1, windowMinCount = 100, offset = 0,
+  noLogTransform = FALSE)
 }
 \arguments{
 \item{rawMatrix}{Target matrix to be normalized}
@@ -20,6 +21,8 @@ getRTNormalizedMatrix(rawMatrix, retentionTimes, normMethod,
 \item{windowMinCount}{Minimum number of values for window to not be expanded.}
 
 \item{offset}{Whether time window should shifted half step size}
+
+\item{noLogTransform}{Don't log-transform the data}
 }
 \value{
 Normalized matrix

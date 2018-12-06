@@ -7,11 +7,12 @@
 \title{Main function for executing normalizations}
 \usage{
 performNormalizations(nr, forceAll, rtNorm, rtStepSizeMinutes,
-  rtWindowMinCount, rtWindowShifts, rtWindowMergeMethod, quiet)
+  rtWindowMinCount, rtWindowShifts, rtWindowMergeMethod, noLogTransform)
 
 \S4method{performNormalizations}{NormalyzerResults}(nr, forceAll = FALSE,
   rtNorm = FALSE, rtStepSizeMinutes = 1, rtWindowMinCount = 100,
-  rtWindowShifts = 1, rtWindowMergeMethod = "median")
+  rtWindowShifts = 1, rtWindowMergeMethod = "median",
+  noLogTransform = FALSE)
 }
 \arguments{
 \item{nr}{Normalyzer results object.}
@@ -29,6 +30,8 @@ segment.}
 \item{rtWindowShifts}{Number of layered retention time normalized windows.}
 
 \item{rtWindowMergeMethod}{Merge approach for layered retention time windows.}
+
+\item{noLogTransform}{Prevent log-transforming input}
 }
 \value{
 nr NormalyzerDE results object

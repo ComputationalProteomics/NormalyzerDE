@@ -10,7 +10,8 @@
 #'   segment.
 #' @param rtWindowShifts Number of layered retention time normalized windows.
 #' @param rtWindowMergeMethod Merge approach for layered retention time windows.
-#' @param noLogTransform
+#' @param noLogTransform Per default NormalyzerDE performs a log-transformation
+#'   on the input data. If not needed, specify this option
 #' 
 #' @return Returns Normalyzer results object with performed analyzes assigned
 #'  as attributes
@@ -157,11 +158,7 @@ meanNormalization <- function(rawMatrix, noLogTransform=FALSE) {
 #' @examples
 #' data(example_data_only_values_small)
 #' normMatrix <- performVSNNormalization(example_data_only_values)
-performVSNNormalization <- function(rawMatrix, noLogTransform=FALSE) {
-    
-    if (noLogTransform) {
-        stop("Cannot run VSN with already log-transformed data")
-    }
+performVSNNormalization <- function(rawMatrix) {
     
     normMatrix <- suppressMessages(vsn::justvsn(rawMatrix, ))
     colnames(normMatrix) <- colnames(rawMatrix)

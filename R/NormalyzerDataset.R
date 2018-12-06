@@ -63,7 +63,7 @@ NormalyzerDataset <- function(jobName, designMatrix, rawData, annotationData,
                   names(table(sampleReplicateGroups)[table(sampleReplicateGroups) > 1]))
               sampleNames <- as.character(designMatrix[, sampleNameCol])
               
-              annotationValues <- rawData[, !(colnames(rawData) %in% sampleNames), drop=FALSE]
+              # annotationValues <- rawData[, !(colnames(rawData) %in% sampleNames), drop=FALSE]
               filterrawdata <- rawData[, sampleNames]
               class(filterrawdata) <- "numeric"
               
@@ -230,10 +230,8 @@ setMethod("checkSingleReplicateRun", "NormalyzerDataset",
               singleReplicateRun
           })
 
-setGeneric(name="getRTColumn", 
-           function(annotData, quiet) standardGeneric("getRTColumn"))
-setMethod("getRTColumn", "matrix", function(annotData, quiet=FALSE) {
-    rtColumns <- grep("\\bRT\\b", colnames(annotData))
+getRTColumn <- function(annotData, quiet=FALSE) {
+    rtColumns <- grep("\\bRT\\b", colnames(annotData), ignore.case = TRUE)
     
     if (length(rtColumns) > 1) {
         errorMessage <- paste(
@@ -253,5 +251,5 @@ setMethod("getRTColumn", "matrix", function(annotData, quiet=FALSE) {
         if (!quiet) message("No RT column found, skipping RT processing")
         return(NULL)
     }
-})
+}
 

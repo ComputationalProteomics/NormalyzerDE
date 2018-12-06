@@ -8,7 +8,8 @@ normalyzerDE(jobName, comparisons, designPath = NULL, dataPath = NULL,
   experimentObj = NULL, outputDir = ".", logTrans = FALSE,
   type = "limma", sampleCol = "sample", condCol = "group",
   batchCol = NULL, techRepCol = NULL, leastRepCount = 1,
-  quiet = FALSE)
+  quiet = FALSE, sigThres = 0.1, sigThresType = "fdr",
+  log2FoldThres = 0)
 }
 \arguments{
 \item{jobName}{Name of job}
@@ -44,6 +45,15 @@ replicates}
 \item{leastRepCount}{Minimum required replicate count}
 
 \item{quiet}{Omit status messages printed during run}
+
+\item{sigThres}{Significance threshold use for illustrating significant hits
+in diagnostic plots}
+
+\item{sigThresType}{Type of significance threshold, "fdr" or "p". "fdr" is
+strongly recommended (Benjamini-Hochberg corrected p-values)}
+
+\item{log2FoldThres}{Fold-size cutoff for being considered significant in
+diagnostic plots}
 }
 \value{
 None

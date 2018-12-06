@@ -4,10 +4,12 @@
 \alias{performCyclicLoessNormalization}
 \title{Cyclic Loess normalization}
 \usage{
-performCyclicLoessNormalization(rawMatrix)
+performCyclicLoessNormalization(rawMatrix, noLogTransform = FALSE)
 }
 \arguments{
 \item{rawMatrix}{Target matrix to be normalized}
+
+\item{noLogTransform}{Assumes no need for log transformation}
 }
 \value{
 Normalized matrix

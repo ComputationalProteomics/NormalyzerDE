@@ -4,15 +4,13 @@
 \alias{loadData}
 \title{Load raw data into dataframe}
 \usage{
-loadData(dataPath, inputFormat = "default", zeroToNA = FALSE)
+loadData(dataPath, inputFormat = "default")
 }
 \arguments{
 \item{dataPath}{File path to design matrix.}
 
 \item{inputFormat}{If input is given in standard NormalyzerDE format, 
 Proteios format or in MaxQuant protein or peptide format}
-
-\item{zeroToNA}{Automatically convert zeroes to NA values}
 }
 \value{
 rawData Raw data loaded into data frame

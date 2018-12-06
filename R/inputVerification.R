@@ -7,12 +7,11 @@
 #' @param dataPath File path to design matrix.
 #' @param inputFormat If input is given in standard NormalyzerDE format, 
 #' Proteios format or in MaxQuant protein or peptide format
-#' @param zeroToNA Automatically convert zeroes to NA values
 #' @return rawData Raw data loaded into data frame
 #' @examples \dontrun{
 #' df <- loadData("data.tsv")
 #' }
-loadData <- function(dataPath, inputFormat="default", zeroToNA=FALSE) {
+loadData <- function(dataPath, inputFormat="default") {
     
     if (inputFormat == "default") {
         rawData <- loadRawDataFromFile(dataPath)
@@ -29,11 +28,6 @@ loadData <- function(dataPath, inputFormat="default", zeroToNA=FALSE) {
              " valids are: ", 
              paste(valids, collapse=", ")
         )
-    }
-    
-    if (zeroToNA) {
-        # rawData[rawData == "0"] <- NA
-        rawData[grepl("0\\.?0*$", rawData)] <- NA
     }
     
     rawData
@@ -93,7 +87,7 @@ setupRawDataObject <- function(dataPath, designPath, inputFormat="default", zero
                                sampleColName="sample", groupColName="group") {
     
     rawDesign <- loadDesign(designPath, sampleCol=sampleColName, groupCol=groupColName)
-    rawData <- loadData(dataPath, inputFormat=inputFormat, zeroToNA=zeroToNA)
+    rawData <- loadData(dataPath, inputFormat=inputFormat)
     rdf <- rawData[2:nrow(rawData), ]
     colnames(rdf) <- rawData[1, ]
     
@@ -102,7 +96,11 @@ setupRawDataObject <- function(dataPath, designPath, inputFormat="default", zero
     rawDesign[[sampleColName]] <- as.character(rawDesign[[sampleColName]])
     
     sdf <- rdf[, as.character(rawDesign[[sampleColName]])]
-    adf <- rdf[, !(colnames(rdf) %in% as.character(rawDesign[[sampleColName]]))]
+    adf <- rdf[, !(colnames(rdf) %in% as.character(rawDesign[[sampleColName]])), drop=FALSE]
+    
+    # if (zeroToNA) {
+    #     sdf[grepl("^0\\.?0*$", sdf)] <- NA
+    # }
     
     experimentObj <- SummarizedExperiment::SummarizedExperiment(
         assays=list(raw=as.matrix(sdf)),
@@ -207,7 +205,7 @@ getVerifiedNormalyzerObject <- function(
     annotationMatrix <- as.matrix(data.frame(lapply(
         SummarizedExperiment::rowData(summarizedExp),
         as.character
-    ), stringsAsFactors=FALSE))
+    ), stringsAsFactors=FALSE, check.names=FALSE))
 
     verifyDesignMatrix(dataMatrix, designMatrix, sampleCol)
     verifyValidNumbers(dataMatrix, groups, noLogTransform=noLogTransform, quiet=quiet)
