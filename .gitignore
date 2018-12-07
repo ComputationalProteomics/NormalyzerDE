@@ -1,3 +1,7 @@
+# Singularity-branch specific ignores
+builds/
+tests/testthat/test_global.R
+
 # Files
 *.swp
 *.Rhistory
