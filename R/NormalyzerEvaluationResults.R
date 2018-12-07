@@ -22,7 +22,7 @@
 #' @slot repCorPear Within group Pearson correlations
 #' @slot repCorSpear Within group Spearman correlations
 NormalyzerEvaluationResults <- setClass("NormalyzerEvaluationResults",
-                                           representation(
+                                           slots=c(
                                                avgcvmem = "matrix",
                                                avgcvmempdiff = "numeric",
                                                featureCVPerMethod = "matrix",
@@ -115,21 +115,33 @@ NormalyzerEvaluationResults <- function (nr) {
                    "spearman"
                )
                
-               object <- new(
-                   "NormalyzerEvaluationResults",
-                   avgcvmem=avgcvmem,
-                   avgcvmempdiff=avgcvmempdiff,
-                   featureCVPerMethod=featureCVPerMethod,
-                   avgmadmem=avgmadmem,
-                   avgmadmempdiff=avgmadmempdiff,
-                   avgvarmem=avgvarmem,
-                   avgvarmempdiff=avgvarmempdiff,
-                   lowVarFeaturesCVs=lowVarFeaturesCVs,
-                   lowVarFeaturesCVsPercDiff=lowVarFeaturesCVsPercDiff,
-                   anovaP=anovaP,
-                   repCorPear=repCorPear,
-                   repCorSpear=repCorSpear
-               )
+               if (!singleReplicateRun) {
+                   object <- new(
+                       "NormalyzerEvaluationResults",
+                       avgcvmem=avgcvmem,
+                       avgcvmempdiff=avgcvmempdiff,
+                       featureCVPerMethod=featureCVPerMethod,
+                       avgmadmem=avgmadmem,
+                       avgmadmempdiff=avgmadmempdiff,
+                       avgvarmem=avgvarmem,
+                       avgvarmempdiff=avgvarmempdiff,
+                       lowVarFeaturesCVs=lowVarFeaturesCVs,
+                       lowVarFeaturesCVsPercDiff=lowVarFeaturesCVsPercDiff,
+                       anovaP=anovaP,
+                       repCorPear=repCorPear,
+                       repCorSpear=repCorSpear
+                   )
+               }
+               else {
+                   object <- new(
+                       "NormalyzerEvaluationResults",
+                       avgcvmem=avgcvmem,
+                       avgcvmempdiff=avgcvmempdiff,
+                       featureCVPerMethod=featureCVPerMethod,
+                       repCorPear=repCorPear,
+                       repCorSpear=repCorSpear
+                   )
+               }
                
                return (object)
            }

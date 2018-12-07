@@ -11,6 +11,7 @@ R/Rplots.pdf
 ignore
 inst/doc
 tests/testthat/output/
+builds/
 
 # Vignette output
 vignettes/my_vignette.pdf

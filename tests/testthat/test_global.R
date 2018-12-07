@@ -1,6 +1,7 @@
 context("Global test")
 
 designPath <- system.file(package="NormalyzerDE", "extdata", "tiny_design.tsv")
+designSingleRepPath <- system.file(package="NormalyzerDE", "extdata", "tiny_design_singlerep.tsv")
 dataPath <- system.file(package="NormalyzerDE", "extdata", "tiny_data.tsv")
 # designPath <- "../../vignettes/design.tsv"
 # dataPath <- "../../vignettes/data.tsv"
@@ -14,21 +15,48 @@ referenceStatResultsDir <- system.file(package="NormalyzerDE", "extdata", "unit_
 # closeAllConnections()
 
 test_that("Normalization run succeeds without errors", {
-    
+
     expect_silent(
         normalyzer(
             jobName="unit_test_run_norm",
             dataPath=dataPath,
             designPath=designPath,
-            outputDir=tempOut, 
+            outputDir=tempOut,
             quiet=TRUE
         )
     )
 })
 
 test_that("Normalization results are identical to previous", {
-    
+
     currOutDir <- paste0(tempOut, "/unit_test_run_norm")
+    currFiles <- list.files(currOutDir , pattern="*.txt", full.names=TRUE)
+    refFiles <- list.files(referenceNormResultsDir, pattern="*.txt", full.names=TRUE)
+    expect_true(length(currFiles) == length(refFiles), "Number of normalized matrices should be same as reference")
+
+    currMd5 <- tools::md5sum(currFiles)
+    refMd5 <- tools::md5sum(refFiles)
+
+    expect_true(all(currMd5 == refMd5), "MD5-sums for normalized matrices should be equal")
+})
+
+test_that("Normalization run succeeds without errors (single replicates)", {
+
+    expect_silent(
+        normalyzer(
+            jobName="unit_test_run_norm_singlerep",
+            dataPath=dataPath,
+            designPath=designSingleRepPath,
+            outputDir=tempOut,
+            quiet=TRUE,
+            requireReplicates=FALSE
+        )
+    )
+})
+
+test_that("Single-replicate run output has identical normalizations", {
+    
+    currOutDir <- paste0(tempOut, "/unit_test_run_norm_singlerep")
     currFiles <- list.files(currOutDir , pattern="*.txt", full.names=TRUE)
     refFiles <- list.files(referenceNormResultsDir, pattern="*.txt", full.names=TRUE)
     expect_true(length(currFiles) == length(refFiles), "Number of normalized matrices should be same as reference")

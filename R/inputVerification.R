@@ -497,17 +497,17 @@ validateSampleReplication <- function(dataMatrix, groups, requireReplicates=TRUE
     if (length(nonReplicatedSamples) > 0) {
         
         errorString <- paste(
-            "Following samples does not have replicates:",
+            "Following group conditions does not have replicates:",
             paste(nonReplicatedSamples, collapse=" "),
             "By default this is not allowed.",
             "You can force limited processing of non-replicated data by",
-            "specifying the \"requireReplicates\" option",
+            "setting the \"requireReplicates\" option to FALSE",
             sep="\n")
         
         if (requireReplicates) {
             stop(errorString)
         }
-        else {
+        else if (!quiet) {
             warning(errorString)
         }
     }
