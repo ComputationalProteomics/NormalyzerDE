@@ -1,3 +1,7 @@
+# Ignore global tests and related data in Bioconductor due to processing time
+inst/extdata/unit_test_run*
+tests/testthat/test_global.R
+
 # Files
 *.swp
 *.Rhistory
