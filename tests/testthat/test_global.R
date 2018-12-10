@@ -16,23 +16,55 @@ referenceStatResultsDir <- system.file(package="NormalyzerDE", "extdata", "unit_
 
 are_matrices_identical <- function(label, samples, path1, path2) {
     
+    # browser()
+    
     df1 <- read.csv(path1, sep="\t")
     df2 <- read.csv(path2, sep="\t")
     
     expect_true(
         all(dim(df1) == dim(df2)), 
         paste("Expected identical dimensions for", label, 
-        "found:", paste(dim(df1), collapse=", "), "and", paste(dim(df2), collapse=", "))
+              "found:", paste(dim(df1), collapse=", "), "and", paste(dim(df2), collapse=", "))
+    )
+    
+    expect_true(
+        all(colnames(df1) == colnames(df2)),
+        paste("Expected identical column names for", label,
+              "found:", paste(colnames(df1), collapse=", "), "and", paste(colnames(df2), collapse=", "))
     )
 
     df1colSums <- colSums(df1[, samples], na.rm=TRUE)
     df2colSums <- colSums(df2[, samples], na.rm=TRUE)
 
     expect_true(
-        all(dim(df1) == dim(df2)), 
+        all(df1colSums == df2colSums), 
         paste("Expected identical column sums for", label, 
               "found:", paste(df1colSums, collapse=", "), "and", paste(df2colSums, collapse=", "))
     )
+    
+    df1annots <- df1[, !(colnames(df1) %in% samples)]
+    df2annots <- df2[, !(colnames(df2) %in% samples)]
+    
+    expect_true(
+        all(df1annots == df2annots), 
+        paste("Expected identical column sums for", label, 
+              "found:", paste(df1colSums, collapse=", "), "and", paste(df2colSums, collapse=", "))
+    )
+}
+
+compare_output_directories <- function(label, samples, dir1, dir2) {
+    
+    currFiles <- list.files(dir1 , pattern="*.txt", full.names=TRUE)
+    refFiles <- list.files(dir2, pattern="*.txt", full.names=TRUE)
+    expect_true(length(currFiles) == length(refFiles), "Number of normalized matrices should be same as reference")
+    
+    designDf <- read.csv(designPath, sep="\t")
+    samples <- as.character(designDf$sample)
+    
+    for (i in seq_len(length(currFiles))) {
+        label <- basename(refFiles[[1]])
+        are_matrices_identical(label, samples, currFiles[[i]], refFiles[[i]])
+    }
 }
 
 test_that("Normalization run succeeds without errors", {
@@ -50,18 +82,10 @@ test_that("Normalization run succeeds without errors", {
 
 test_that("Normalization results are identical to previous", {
 
-    currOutDir <- paste0(tempOut, "/unit_test_run_norm")
-    currFiles <- list.files(currOutDir , pattern="*.txt", full.names=TRUE)
-    refFiles <- list.files(referenceNormResultsDir, pattern="*.txt", full.names=TRUE)
-    expect_true(length(currFiles) == length(refFiles), "Number of normalized matrices should be same as reference")
-
     designDf <- read.csv(designPath, sep="\t")
     samples <- as.character(designDf$sample)
-  
-    for (i in seq_len(length(currFiles))) {
-        label <- basename(refFiles[[1]])
-        are_matrices_identical(label, samples, currFiles[[i]], refFiles[[i]])
-    }
+    currOutDir <- paste0(tempOut, "/unit_test_run_norm")
+    compare_output_directories("NormalRun", samples, currOutDir, referenceNormResultsDir)
 })
 
 test_that("Normalization run succeeds without errors (single replicates)", {
@@ -80,15 +104,10 @@ test_that("Normalization run succeeds without errors (single replicates)", {
 
 test_that("Single-replicate run output has identical normalizations", {
     
+    designDf <- read.csv(designPath, sep="\t")
+    samples <- as.character(designDf$sample)
     currOutDir <- paste0(tempOut, "/unit_test_run_norm_singlerep")
-    currFiles <- list.files(currOutDir , pattern="*.txt", full.names=TRUE)
-    refFiles <- list.files(referenceNormResultsDir, pattern="*.txt", full.names=TRUE)
-    expect_true(length(currFiles) == length(refFiles), "Number of normalized matrices should be same as reference")
-    
-    currMd5 <- tools::md5sum(currFiles)
-    refMd5 <- tools::md5sum(refFiles)
-    
-    expect_true(all(currMd5 == refMd5), "MD5-sums for normalized matrices should be equal")
+    compare_output_directories("SingleRepRun", samples, currOutDir, referenceNormResultsDir)
 })
 
 test_that("Statistics run succeeds without errors", {
