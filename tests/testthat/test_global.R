@@ -33,8 +33,8 @@ are_matrices_identical <- function(label, samples, path1, path2) {
               "found:", paste(colnames(df1), collapse=", "), "and", paste(colnames(df2), collapse=", "))
     )
 
-    df1colSums <- colSums(df1[, samples], na.rm=TRUE)
-    df2colSums <- colSums(df2[, samples], na.rm=TRUE)
+    df1colSums <- round(colSums(df1[, samples], na.rm=TRUE), 4)
+    df2colSums <- round(colSums(df2[, samples], na.rm=TRUE), 4)
 
     expect_true(
         all(df1colSums == df2colSums), 
