@@ -14,6 +14,27 @@ referenceStatResultsDir <- system.file(package="NormalyzerDE", "extdata", "unit_
 # For debugging using the browser() statement while in sink - run
 # closeAllConnections()
 
+are_matrices_identical <- function(label, samples, path1, path2) {
+    
+    df1 <- read.csv(path1, sep="\t")
+    df2 <- read.csv(path2, sep="\t")
+    
+    expect_true(
+        all(dim(df1) == dim(df2)), 
+        paste("Expected identical dimensions for", label, 
+        "found:", paste(dim(df1), collapse=", "), "and", paste(dim(df2), collapse=", "))
+    )
+
+    df1colSums <- colSums(df1[, samples], na.rm=TRUE)
+    df2colSums <- colSums(df2[, samples], na.rm=TRUE)
+
+    expect_true(
+        all(dim(df1) == dim(df2)), 
+        paste("Expected identical column sums for", label, 
+              "found:", paste(df1colSums, collapse=", "), "and", paste(df2colSums, collapse=", "))
+    )
+}
+
 test_that("Normalization run succeeds without errors", {
 
     expect_silent(
@@ -27,19 +48,6 @@ test_that("Normalization run succeeds without errors", {
     )
 })
 
-# check_equal <- function(path1, path2) {
-#     df1 <- read.csv(path1, sep="\t")
-#     df2 <- read.csv(path2, sep="\t")
-#     df1colSums <- colSums(df1, na.rm=TRUE)
-#     df2colSums <- colSums(df2, na.rm=TRUE)
-#     header1 <- colnames(df1)
-#     header2 <- colnames(df2)
-#     
-#     if (!all(df1colSums == df2colSums)) {
-#         message("Different colsums:")
-#     }
-# }
-
 test_that("Normalization results are identical to previous", {
 
     currOutDir <- paste0(tempOut, "/unit_test_run_norm")
@@ -47,10 +55,13 @@ test_that("Normalization results are identical to previous", {
     refFiles <- list.files(referenceNormResultsDir, pattern="*.txt", full.names=TRUE)
     expect_true(length(currFiles) == length(refFiles), "Number of normalized matrices should be same as reference")
 
-    currMd5 <- tools::md5sum(currFiles)
-    refMd5 <- tools::md5sum(refFiles)
-
-    expect_true(all(currMd5 == refMd5), "MD5-sums for normalized matrices should be equal")
+    designDf <- read.csv(designPath, sep="\t")
+    samples <- as.character(designDf$sample)
+  
+    for (i in seq_len(length(currFiles))) {
+        label <- basename(refFiles[[1]])
+        are_matrices_identical(label, samples, currFiles[[i]], refFiles[[i]])
+    }
 })
 
 test_that("Normalization run succeeds without errors (single replicates)", {
