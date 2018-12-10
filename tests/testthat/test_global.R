@@ -27,6 +27,19 @@ test_that("Normalization run succeeds without errors", {
     )
 })
 
+# check_equal <- function(path1, path2) {
+#     df1 <- read.csv(path1, sep="\t")
+#     df2 <- read.csv(path2, sep="\t")
+#     df1colSums <- colSums(df1, na.rm=TRUE)
+#     df2colSums <- colSums(df2, na.rm=TRUE)
+#     header1 <- colnames(df1)
+#     header2 <- colnames(df2)
+#     
+#     if (!all(df1colSums == df2colSums)) {
+#         message("Different colsums:")
+#     }
+# }
+
 test_that("Normalization results are identical to previous", {
 
     currOutDir <- paste0(tempOut, "/unit_test_run_norm")

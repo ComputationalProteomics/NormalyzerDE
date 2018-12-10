@@ -117,7 +117,13 @@ setMethod("performNormalizations", "NormalyzerResults",
               normResults[["CycLoess"]] <- performCyclicLoessNormalization(filterrawdata(nds), noLogTransform=noLogTransform)
               normResults[["RLR"]] <- performGlobalRLRNormalization(filterrawdata(nds), noLogTransform=noLogTransform)
               
-              if (rtNorm && rtColPresent) {
+              enoughDataForRT <- nrow(filterrawdata(nds)) >= rtWindowMinCount
+              
+              if (!enoughDataForRT) {
+                  warning("Number of features in data matrix is smaller than minimum normalization window (set by option 'rtWindowMinCount') ",
+                          "for RT normalization - skipping RT normalizations.")
+              }
+              else if (rtNorm && rtColPresent) {
 
                   normResults[["RT-median"]] <- getSmoothedRTNormalizedMatrix(
                       rawMatrix=filterrawdata(nds), 
