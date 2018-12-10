@@ -543,17 +543,17 @@ verifyMultipleSamplesPresent <- function(dataMatrix, groups, requireReplicates=T
     if (length(distinctSamples) == 1) {
         
         errorString <- paste(
-            "Found less than two distinct samples. Following was found:",
+            "Found less than two distinct sample groups. Following was found:",
             paste(distinctSamples, collapse=" "),
-            "For full processing two samples are required",
-            "You can force limited processing by turning of the", 
-            "\"requireReplicates\" option",
+            "For full processing two or more sample groups are required",
+            "You can force limited processing for one sample group by setting the", 
+            "\"requireReplicates\" option to FALSE",
             sep="\n")
         
         if (requireReplicates) {
             stop(errorString)
         }
-        else {
+        else if (!quiet) {
             warning(errorString)
         }
     }

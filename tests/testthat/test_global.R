@@ -2,6 +2,7 @@ context("Global test")
 
 designPath <- system.file(package="NormalyzerDE", "extdata", "tiny_design.tsv")
 designSingleRepPath <- system.file(package="NormalyzerDE", "extdata", "tiny_design_singlerep.tsv")
+designSingleCondPath <- system.file(package="NormalyzerDE", "extdata", "tiny_design_singlecond.tsv")
 dataPath <- system.file(package="NormalyzerDE", "extdata", "tiny_data.tsv")
 # designPath <- "../../vignettes/design.tsv"
 # dataPath <- "../../vignettes/data.tsv"
@@ -15,8 +16,6 @@ referenceStatResultsDir <- system.file(package="NormalyzerDE", "extdata", "unit_
 # closeAllConnections()
 
 are_matrices_identical <- function(label, samples, path1, path2) {
-    
-    # browser()
     
     df1 <- read.csv(path1, sep="\t")
     df2 <- read.csv(path2, sep="\t")
@@ -103,11 +102,33 @@ test_that("Normalization run succeeds without errors (single replicates)", {
 })
 
 test_that("Single-replicate run output has identical normalizations", {
-    
-    designDf <- read.csv(designPath, sep="\t")
+
+    designDf <- read.csv(designSingleRepPath, sep="\t")
     samples <- as.character(designDf$sample)
     currOutDir <- paste0(tempOut, "/unit_test_run_norm_singlerep")
     compare_output_directories("SingleRepRun", samples, currOutDir, referenceNormResultsDir)
+})
+
+test_that("Normalization run succeeds without errors (single condition)", {
+    
+    expect_silent(
+        normalyzer(
+            jobName="unit_test_run_norm_singlecond",
+            dataPath=dataPath,
+            designPath=designSingleCondPath,
+            outputDir=tempOut,
+            quiet=TRUE,
+            requireReplicates=FALSE
+        )
+    )
+})
+
+test_that("Single-condition run output has identical normalizations", {
+    
+    designDf <- read.csv(designSingleCondPath, sep="\t")
+    samples <- as.character(designDf$sample)
+    currOutDir <- paste0(tempOut, "/unit_test_run_norm_singlecond")
+    compare_output_directories("SingleCondRun", samples, currOutDir, referenceNormResultsDir)
 })
 
 test_that("Statistics run succeeds without errors", {
