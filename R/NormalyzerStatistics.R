@@ -187,8 +187,6 @@ setMethod(f="calculateContrasts",
               dataMat <- dataMat(nst)
               designDf <- designDf(nst)
               
-              browser()
-              
               if (!is.null(batchCol)) {
                   conditionCombs <- paste(designDf[, condCol], designDf[, batchCol], sep="_")
               }

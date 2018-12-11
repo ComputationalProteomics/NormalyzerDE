@@ -286,7 +286,7 @@ normalyzerDE <- function(jobName, comparisons, designPath=NULL, dataPath=NULL, e
     )
         
     if (!quiet) print("Calculating statistical contrasts...")
-    nst <- calculateContrasts(nst, comparisons, type=type, condCol=condCol, batchCol=batchCol, leastRepCount=2)
+    nst <- calculateContrasts(nst, comparisons, type=type, condCol=condCol, batchCol=batchCol, leastRepCount=leastRepCount)
     if (!quiet) print("Contrast calculations done!")
     
     annotDf <- generateAnnotatedMatrix(nst)

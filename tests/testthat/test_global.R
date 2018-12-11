@@ -499,8 +499,6 @@ if (statisticsRunNormal) {
     
     test_that("Statistics results are identical to previous", {
         
-        browser()
-        
         designDf <- read.csv(designPath, sep="\t")
         samples <- as.character(designDf$sample)
         currOutDir <- paste0(tempOut, "/unit_test_run_stat")
