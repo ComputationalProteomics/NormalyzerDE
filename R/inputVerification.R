@@ -310,8 +310,9 @@ verifyValidNumbers <- function(rawDataOnly, groups, noLogTransform=FALSE, quiet=
     validPatterns <- c("\\d+(\\.\\d+)?", "NA", "\"NA\"", "null", "\\d+(\\.\\d+)?[eE]([\\+\\-])?\\d+$")
     
     regexPattern <- sprintf("^(%s)$", paste(validPatterns, collapse="|"))
-    matches <- grep(regexPattern, rawDataOnly, perl=TRUE, ignore.case=TRUE)
-    nonMatches <- stats::na.omit(rawDataOnly[-matches])
+    nonMatchIndices <- grep(regexPattern, rawDataOnly, perl=TRUE, ignore.case=TRUE, invert = TRUE)
+    nonMatches <- stats::na.omit(rawDataOnly[nonMatchIndices])
+    rowsWithIssues <- unique((nonMatchIndices-1) %% nrow(rawDataOnly))
     
     if (length(nonMatches) > 0) {
         errorString <- paste(
@@ -319,6 +320,8 @@ verifyValidNumbers <- function(rawDataOnly, groups, noLogTransform=FALSE, quiet=
             "Only valid data is numeric and NA- or na-fields",
             "Invalid fields: ",
             paste(unique(nonMatches), collapse=" "),
+            "These were encountered for row numbers:",
+            paste(rowsWithIssues, collapse=", "),
             "Aborting...",
             sep="\n"
         )
