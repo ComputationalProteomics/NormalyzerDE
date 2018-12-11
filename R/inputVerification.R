@@ -145,7 +145,7 @@ setupRawContrastObject <- function(dataPath, designPath, sampleColName) {
     verifyDesignMatrix(fullDf, designDf, sampleColName)
     
     sdf <- fullDf[, designDf[[sampleColName]]]
-    adf <- fullDf[, !(colnames(fullDf) %in% as.character(designDf[[sampleColName]]))]
+    adf <- fullDf[, !(colnames(fullDf) %in% as.character(designDf[[sampleColName]])), drop=FALSE]
     
     experimentObj <- SummarizedExperiment::SummarizedExperiment(
         assays=list(raw=as.matrix(sdf)),

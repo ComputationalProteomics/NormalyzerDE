@@ -95,8 +95,8 @@ generateAnnotatedMatrix <- function(nst) {
     colnames(foldMat) <- pairwiseHeadFold
     
     aveMat <- data.frame(pairwiseCompsAve(nst))
-    outDf <- cbind(annotMat(nst), pMat, fdrMat, foldMat, 
-                   featureAvg=aveMat[, 1], dataMat(nst))
+    outDf <- data.frame(cbind(annotMat(nst), pMat, fdrMat, foldMat, 
+                   featureAvg=aveMat[, 1], dataMat(nst)), check.names=FALSE)
     outDf
 }
 

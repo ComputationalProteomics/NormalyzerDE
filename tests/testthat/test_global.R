@@ -20,6 +20,7 @@ referenceStatResultsDir <- system.file(package="NormalyzerDE", "extdata", "unit_
 # For debugging using the browser() statement while in sink - run
 # closeAllConnections()
 
+# When assigned TRUE forceAll will run all tests
 forceAll <- TRUE
 
 ### Normal runs ###
@@ -35,71 +36,107 @@ singleAnnotColRun <- FALSE || forceAll
 noAnnotRun <- FALSE || forceAll
 
 ### Stats report runs ###
-statisticsRunNormal <- TRUE
-statisticsRunSingleAnnot <- FALSE
-statisticsRunNoAnnot <- FALSE
-statisticsRunCustomThreshold <- TRUE
+statisticsRunNormal <- TRUE || forceAll
+statisticsRunSingleAnnot <- TRUE || forceAll
+statisticsRunNoAnnot <- TRUE || forceAll
+statisticsRunCustomThreshold <- TRUE || forceAll
+statisticsRunWelch <- FALSE
+statisticsRunBatch <- FALSE
+statisticsRunTechRepRed <- FALSE
+statisticsLogTransform <- FALSE
 
 ### SummarizedExperiments runs ###
 summarizedExperimentsRun <- FALSE || forceAll
 
-are_matrices_identical <- function(label, samples, path1, path2, custom_annot=NULL) {
+are_matrices_identical <- function(label, samples, expected_path, found_path, custom_annot=NULL, stat_cols=NULL, decimals=5) {
     
-    df1 <- read.csv(path1, sep="\t", stringsAsFactors=FALSE)
-    df2 <- read.csv(path2, sep="\t", stringsAsFactors=FALSE)
+    exp_df <- read.csv(expected_path, sep="\t", stringsAsFactors=FALSE, check.names=FALSE)
+    found_df <- read.csv(found_path, sep="\t", stringsAsFactors=FALSE, check.names=FALSE)
     
     if (is.null(custom_annot)) {
         expect_true(
-            all(dim(df1) == dim(df2)), 
+            all(dim(exp_df) == dim(found_df)), 
             paste("Expected identical dimensions for", label, 
-                  "\nFound:", paste(dim(df1), collapse=", "), "and", paste(dim(df2), collapse=", "))
+                  "\nFound:", paste(dim(exp_df), collapse=", "), "and", paste(dim(found_df), collapse=", "))
         )
         
         expect_true(
-            all(colnames(df1) == colnames(df2)),
+            all(colnames(exp_df) == colnames(found_df)),
             paste("Expected identical column names for", label,
-                  "\nFound:\n", paste(colnames(df1), collapse=", "), "\nexpected:\n", 
-                  paste(colnames(df2), collapse=", "))
+                  "\nFound:\n", paste(colnames(exp_df), collapse=", "), "\nexpected:\n", 
+                  paste(colnames(found_df), collapse=", "))
         )
     }
     else {
+        
         expect_true(
-            nrow(df1) == nrow(df2), 
+            nrow(exp_df) == nrow(found_df), 
             paste("Expected same row count for", label, 
-                  "\nFound:", nrow(df1), "and", nrow(df2))
+                  "\nFound:", nrow(exp_df), "and", nrow(found_df))
+        )
+        
+        expect_true(
+            all(colnames(custom_annot) %in% colnames(found_df)),
+            paste("Custom annotation not present in custom file:",
+                  "\nFound: ", paste(colnames(found_df), collapse=", "),
+                  "\nCustom:", paste(colnames(custom_annot), collapse=", ")
+            )
         )
     }
 
-    df1colSums <- round(colSums(df1[, samples], na.rm=TRUE), 4)
-    df2colSums <- round(colSums(df2[, samples], na.rm=TRUE), 4)
+    expDfColSums <- round(colSums(exp_df[, samples], na.rm=TRUE), decimals)
+    foundDfColSums <- round(colSums(found_df[, samples], na.rm=TRUE), decimals)
 
     expect_true(
-        all(df1colSums == df2colSums), 
+        all(expDfColSums == foundDfColSums), 
         paste("Expected identical column sums for", label, 
-              "\nFound:\n", paste(df1colSums, collapse="\t"), "\n", paste(df2colSums, collapse="\t"))
+              "\nFound:\n", paste(expDfColSums, collapse="\t"), "\n", paste(foundDfColSums, collapse="\t"))
     )
     
-    df1annots <- df1[, !(colnames(df1) %in% samples)]
-    
+    foundAnnots <- found_df[, !(colnames(found_df) %in% c(samples, stat_cols)), drop=FALSE]
     if (is.null(custom_annot)) {
-        df2annots <- df2[, !(colnames(df2) %in% samples)]
+        expAnnots <- exp_df[, !(colnames(exp_df) %in% c(samples, stat_cols)), drop=FALSE]
     }
     else {
-        df2annots <- custom_annot
+        expAnnots <- custom_annot
     }
     
     expect_true(
-        all(df1annots == df2annots), 
+        all(expAnnots == foundAnnots), 
         paste("Expected annotations for", label, 
-              "\nFound:", paste(head(df1annots), collapse=", "), "and", paste(df2annots, collapse=", "))
-    )        
+              "\nFound:", paste(head(expAnnots), collapse=", "), "and", paste(foundAnnots, collapse=", "))
+    )
+    
+    if (!is.null(stat_cols)) {
+        
+        exp_stat_cols <- round(exp_df[, stat_cols], decimals)
+        found_stat_cols <- round(found_df[, stat_cols], decimals)
+        
+        expect_true(
+            all(exp_stat_cols == found_stat_cols, na.rm=TRUE),
+            paste("Expected identical statistics for", label, 
+                  "\nFound colsums:\n", 
+                  paste(colSums(exp_stat_cols, na.rm=TRUE), collapse="\t"), 
+                  "\nExpected colsums:\n", 
+                  paste(colSums(foundDfColSums, na.rm=TRUE), collapse="\t")
+            )
+        )
+    }
 }
 
-compare_output_directories <- function(label, samples, dir1, dir2, expected_count=NULL, ignores=c(), custom_annot=NULL) {
+compare_output_directories <- function(label, samples, dir1, dir2, expected_count=NULL, 
+                                       ignores=c(), custom_annot=NULL, stat_cols=NULL) {
     
-    currFiles <- list.files(dir1 , pattern="*.txt", full.names=TRUE)
-    refFiles <- list.files(dir2, pattern="*.txt", full.names=TRUE)
+    currFiles <- list.files(dir1 , pattern="*(.txt|.tsv)", full.names=TRUE)
+    refFiles <- list.files(dir2, pattern="*(.txt|.tsv)", full.names=TRUE)
 
+    if (isEmpty(currFiles) || isEmpty(refFiles)) {
+        stop("Expected files, found: \n",
+             paste(currFiles, collapse=", "),
+             "\nReference:\n",
+             paste(refFiles, collapse=", "))
+    }
+    
     names(currFiles) <- basename(currFiles)
     names(refFiles) <- basename(refFiles)
 
@@ -124,7 +161,8 @@ compare_output_directories <- function(label, samples, dir1, dir2, expected_coun
     targetCurrFiles <- currFiles[!(names(currFiles) %in% ignores)]
     
     for (name in names(targetCurrFiles)) {
-        are_matrices_identical(name, samples, currFiles[[name]], refFiles[[name]], custom_annot=custom_annot)
+        are_matrices_identical(name, samples, found_path=currFiles[[name]], expected_path=refFiles[[name]], 
+                               custom_annot=custom_annot, stat_cols=stat_cols)
     }
 }
 
@@ -458,22 +496,26 @@ if (statisticsRunNormal) {
     
     test_that("Statistics results are identical to previous", {
         
+        designDf <- read.csv(designPath, sep="\t")
+        samples <- as.character(designDf$sample)
         currOutDir <- paste0(tempOut, "/unit_test_run_stat")
-        currStatFiles <- list.files(currOutDir , pattern="*.tsv", full.names=TRUE)
-        refStatFiles <- list.files(referenceStatResultsDir, pattern="*.tsv", full.names=TRUE)
-        expect_true(length(currStatFiles) == length(refStatFiles), "Number of normalized matrices should be same as reference")
+        statCols <- c("4-5_PValue", "4-5_AdjPVal", "4-5_log2FoldChange", "featureAvg")
+
         
-        currStatMd5 <- tools::md5sum(currStatFiles)
-        refStatMd5 <- tools::md5sum(refStatFiles)
-        
-        expect_true(all(currStatMd5 == refStatMd5), "MD5-sums for stat matrices should be equal")
+        compare_output_directories(
+            "Stats: Normal run",
+            samples,
+            currOutDir,
+            referenceStatResultsDir,
+            stat_cols=statCols
+        )
     })
 }
 
 context("Statistics runs: Single annotation column")
 
 if (statisticsRunSingleAnnot) {
-    test_that("Statistics, single annotation column, no errors", {
+    test_that("Statistics (single annot) run succeeds without errors", {
         
         expect_silent(
             normalyzerDE(
@@ -488,28 +530,35 @@ if (statisticsRunSingleAnnot) {
         )
     })
     
-    test_that("Statistics, single annotation column, identical to previous", {
+    test_that("Statistics (single annot) results are identical to previous", {
         
+        designDf <- read.csv(designPath, sep="\t")
+        samples <- as.character(designDf$sample)
         currOutDir <- paste0(tempOut, "/unit_test_run_stat")
-        currStatFiles <- list.files(currOutDir , pattern="*.tsv", full.names=TRUE)
-        refStatFiles <- list.files(referenceStatResultsDir, pattern="*.tsv", full.names=TRUE)
-        expect_true(length(currStatFiles) == length(refStatFiles), "Number of normalized matrices should be same as reference")
+        rawDf <- read.csv(dataPathSingleAnnot, sep="\t", stringsAsFactors=FALSE, 
+                          comment.char="", quote="", header=TRUE, check.names=FALSE)
+        annotDf <- rawDf[, "Average RT", drop=FALSE]
+        statCols <- c("4-5_PValue", "4-5_AdjPVal", "4-5_log2FoldChange", "featureAvg")
         
-        currStatMd5 <- tools::md5sum(currStatFiles)
-        refStatMd5 <- tools::md5sum(refStatFiles)
-        
-        expect_true(all(currStatMd5 == refStatMd5), "MD5-sums for stat matrices should be equal")
+        compare_output_directories(
+            "Stats: Single annotation column run",
+            samples,
+            currOutDir,
+            referenceStatResultsDir,
+            custom_annot=annotDf,
+            stat_cols=statCols
+        )
     })
 }
 
 context("Statistics runs: No annotation column")
 if (statisticsRunNoAnnot) {
-    test_that("Statistics run succeeds without errors", {
+    test_that("Statistics (no annot) run succeeds without errors", {
         
         expect_silent(
             normalyzerDE(
                 jobName="unit_test_run_stat",
-                dataPath=dataPath,
+                dataPath=dataPathNoAnnot,
                 designPath=designPath,
                 outputDir=tempOut,
                 comparisons=c("4-5"),
@@ -519,17 +568,21 @@ if (statisticsRunNoAnnot) {
         )
     })
     
-    test_that("Statistics results are identical to previous", {
+    test_that("Statistics (no annot) results are identical to previous", {
         
+        designDf <- read.csv(designPath, sep="\t")
+        samples <- as.character(designDf$sample)
         currOutDir <- paste0(tempOut, "/unit_test_run_stat")
-        currStatFiles <- list.files(currOutDir , pattern="*.tsv", full.names=TRUE)
-        refStatFiles <- list.files(referenceStatResultsDir, pattern="*.tsv", full.names=TRUE)
-        expect_true(length(currStatFiles) == length(refStatFiles), "Number of normalized matrices should be same as reference")
+        statCols <- c("4-5_PValue", "4-5_AdjPVal", "4-5_log2FoldChange", "featureAvg")
         
-        currStatMd5 <- tools::md5sum(currStatFiles)
-        refStatMd5 <- tools::md5sum(refStatFiles)
-        
-        expect_true(all(currStatMd5 == refStatMd5), "MD5-sums for stat matrices should be equal")
+        compare_output_directories(
+            "Stats: No annotation column run",
+            samples,
+            currOutDir,
+            referenceStatResultsDir,
+            custom_annot=as.data.frame(matrix(ncol=0, nrow=100)),
+            stat_cols=statCols
+        )
     })
 }
 

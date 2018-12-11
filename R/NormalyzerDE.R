@@ -268,7 +268,7 @@ normalyzerDE <- function(jobName, comparisons, designPath=NULL, dataPath=NULL, e
     if (is.null(experimentObj)) {
         experimentObj <- setupRawContrastObject(dataPath, designPath, sampleCol)
     }
-
+    
     nst <- NormalyzerStatistics(experimentObj, 
                                 logTrans=logTrans, 
                                 leastRepCount=leastRepCount,
@@ -286,9 +286,9 @@ normalyzerDE <- function(jobName, comparisons, designPath=NULL, dataPath=NULL, e
     
     annotDf <- generateAnnotatedMatrix(nst)
     outPath <- paste0(jobDir, "/", jobName, "_stats.tsv")
-    
+
     if (!quiet) print(paste("Writing", nrow(annotDf), "annotated rows to", outPath))
-    utils::write.table(annotDf, file=outPath, sep="\t", row.names = FALSE)
+    utils::write.table(annotDf, file=outPath, sep="\t", row.names = FALSE, quote=FALSE)
     if (!quiet) print(paste("Writing statistics report"))
     generateStatsReport(nst, jobName, jobDir, sigThres, sigThresType, log2FoldThres)
     
