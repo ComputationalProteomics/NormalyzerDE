@@ -60,7 +60,6 @@ NormalyzerEvaluationResults <- function (nr) {
                sampleGroupsWithReplicates <- samplesGroupsWithReplicates(nds)
                singleReplicateRun <- singleReplicateRun(nds)
                
-               
                # Calculate CV related measures               
                avgCVPerNormAndReplicates <- calculateReplicateCV(methodList, sampleReplicateGroups)
                avgcvmem <- avgCVPerNormAndReplicates

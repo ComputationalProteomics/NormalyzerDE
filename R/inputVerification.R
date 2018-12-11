@@ -211,7 +211,7 @@ getVerifiedNormalyzerObject <- function(
     verifyValidNumbers(dataMatrix, groups, noLogTransform=noLogTransform, quiet=quiet)
     
     repSortedRawData <- getReplicateSortedData(dataMatrix, groups)
-    processedRawData <- preprocessData(repSortedRawData)
+    processedRawData <- preprocessData(repSortedRawData, quiet=quiet)
     
     lowCountSampleFiltered <- getLowCountSampleFiltered(
         processedRawData, 
@@ -240,7 +240,7 @@ getVerifiedNormalyzerObject <- function(
     nds <- NormalyzerDataset(
         jobName=jobName,
         designMatrix=designMatrix,
-        rawData=dataMatrix,
+        rawData=processedRawData,
         annotationData=annotationMatrix,
         sampleNameCol=sampleCol,
         groupNameCol=groupCol,
@@ -302,12 +302,12 @@ loadRawDataFromFile <- function(inputPath) {
 #' 
 #' @param rawDataOnly Dataframe with input data.
 #' @param groups Condition levels for comparisons.
-#' @return Parsed rawdata where 0 values are replaced with NA
+#' @return None
 #' @keywords internal
 verifyValidNumbers <- function(rawDataOnly, groups, noLogTransform=FALSE, quiet=FALSE) {
     
     # Fields expected to contain numbers in decimal or scientific notation, or containing NA or null
-    validPatterns <- c("\\d+(\\.\\d+)?", "NA", "\"NA\"", "null", "\\d+(\\.\\d+)?[eE]([\\+\\-])?\\d+$")
+    validPatterns <- c("\\d+(\\.\\d+)?", "NA", "\"NA\"", "null", "\\d+(\\.\\d+)?[eE]([\\+\\-])?\\d+$", "")
     
     regexPattern <- sprintf("^(%s)$", paste(validPatterns, collapse="|"))
     nonMatchIndices <- grep(regexPattern, rawDataOnly, perl=TRUE, ignore.case=TRUE, invert = TRUE)
@@ -317,7 +317,7 @@ verifyValidNumbers <- function(rawDataOnly, groups, noLogTransform=FALSE, quiet=
     if (length(nonMatches) > 0) {
         errorString <- paste(
             "Invalid values encountered in input data.",
-            "Only valid data is numeric and NA- or na-fields",
+            "Only valid data is numeric (dot-decimal, not comma) and NA- or na-fields",
             "Invalid fields: ",
             paste(unique(nonMatches), collapse=" "),
             "These were encountered for row numbers:",
@@ -329,16 +329,16 @@ verifyValidNumbers <- function(rawDataOnly, groups, noLogTransform=FALSE, quiet=
         stop(errorString)
     }
     
-    zeroRegexPattern <- c("^0$")
-    zeroMatches <- grep(zeroRegexPattern, rawDataOnly, perl=TRUE)
-    if (length(zeroMatches) > 0) {
-        errorString <- paste(
-            "Encountered zeroes in data. Must be replaced with NA before processing.",
-            "This can be done automatically setting the zeroToNA-flag option to TRUE.",
-            sep="\n"
-        )
-        stop(errorString)
-    }
+    # zeroRegexPattern <- c("^0$")
+    # zeroMatches <- grep(zeroRegexPattern, rawDataOnly, perl=TRUE)
+    # if (length(zeroMatches) > 0) {
+    #     errorString <- paste(
+    #         "Encountered zeroes in data. Must be replaced with NA before processing.",
+    #         "This can be done automatically setting the zeroToNA-flag option to TRUE.",
+    #         sep="\n"
+    #     )
+    #     stop(errorString)
+    # }
     
     if (!noLogTransform) {
         belowOnePattern <- c("^0.\\d+$")
@@ -416,14 +416,38 @@ verifyDesignMatrix <- function(fullMatrix, designMatrix, sampleCol) {
 
 
 
-#' Replace 0 values with NA in input data
+#' Replace empty values (0 or empty field) with NA in input data
 #' 
 #' @param dataMatrix Matrix with raw data.
 #' @return Parsed rawdata where 0 values are replaced with NA
 #' @keywords internal
-preprocessData <- function(dataMatrix) {
+preprocessData <- function(dataMatrix, quiet=FALSE) {
 
-    dataMatrix[dataMatrix == 0] <- NA
+    zeroFields <- length(dataMatrix[dataMatrix == 0])
+    emptyFields <- length(dataMatrix[dataMatrix == ""])
+    nullFields <- length(dataMatrix[dataMatrix == "null"])
+    
+    if (zeroFields != 0) {
+        if (!quiet) {
+            message(zeroFields, " fields with '0' were replaced by 'NA'")
+        }
+        dataMatrix[dataMatrix == 0] <- NA
+    }
+    
+    if (emptyFields != 0) {
+        if (!quiet) {
+            message(zeroFields, " empty fields were replaced by 'NA'")
+        }
+        dataMatrix[dataMatrix == ""] <- NA
+    }
+    
+    if (nullFields != 0) {
+        if (!quiet) {
+            message(nullFields, " 'null' fields were replaced by 'NA'")
+        }
+        dataMatrix[dataMatrix == "null"] <- NA
+    }
+
     dataMatrix
 }
 

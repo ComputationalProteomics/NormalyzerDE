@@ -3,7 +3,10 @@ context("Global test")
 designPath <- system.file(package="NormalyzerDE", "extdata", "tiny_design.tsv")
 designSingleRepPath <- system.file(package="NormalyzerDE", "extdata", "tiny_design_singlerep.tsv")
 designSingleCondPath <- system.file(package="NormalyzerDE", "extdata", "tiny_design_singlecond.tsv")
+
 dataPath <- system.file(package="NormalyzerDE", "extdata", "tiny_data.tsv")
+log2DataPath <- system.file(package="NormalyzerDE", "extdata", "tiny_data_log2.tsv")
+dataPathNonNA <- system.file(package="NormalyzerDE", "extdata", "tiny_data_nonna.tsv")
 # designPath <- "../../vignettes/design.tsv"
 # dataPath <- "../../vignettes/data.tsv"
 tempOut <- tempdir()
@@ -66,6 +69,7 @@ compare_output_directories <- function(label, samples, dir1, dir2) {
     }
 }
 
+# Normal run
 test_that("Normalization run succeeds without errors", {
 
     expect_silent(
@@ -87,6 +91,7 @@ test_that("Normalization results are identical to previous", {
     compare_output_directories("NormalRun", samples, currOutDir, referenceNormResultsDir)
 })
 
+# Single-replicate run
 test_that("Normalization run succeeds without errors (single replicates)", {
 
     expect_silent(
@@ -109,8 +114,9 @@ test_that("Single-replicate run output has identical normalizations", {
     compare_output_directories("SingleRepRun", samples, currOutDir, referenceNormResultsDir)
 })
 
+# Single-condition run
 test_that("Normalization run succeeds without errors (single condition)", {
-    
+
     expect_silent(
         normalyzer(
             jobName="unit_test_run_norm_singlecond",
@@ -124,13 +130,61 @@ test_that("Normalization run succeeds without errors (single condition)", {
 })
 
 test_that("Single-condition run output has identical normalizations", {
-    
+
     designDf <- read.csv(designSingleCondPath, sep="\t")
     samples <- as.character(designDf$sample)
     currOutDir <- paste0(tempOut, "/unit_test_run_norm_singlecond")
     compare_output_directories("SingleCondRun", samples, currOutDir, referenceNormResultsDir)
 })
 
+# Non-NA empty fields run
+test_that("Normalization run succeeds without errors (Non-NA)", {
+    
+    expect_silent(
+        normalyzer(
+            jobName="unit_test_run_norm_nonna",
+            dataPath=dataPathNonNA,
+            designPath=designSingleCondPath,
+            outputDir=tempOut,
+            quiet=TRUE,
+            requireReplicates=FALSE
+        )
+    )
+})
+
+test_that("Non-NA run output has identical normalizations", {
+    
+    designDf <- read.csv(designSingleCondPath, sep="\t")
+    samples <- as.character(designDf$sample)
+    currOutDir <- paste0(tempOut, "/unit_test_run_norm_nonna")
+    compare_output_directories("NonNARun", samples, currOutDir, referenceNormResultsDir)
+})
+
+# # Log-transformed run
+# test_that("Normalization run succeeds without errors (already log transformed)", {
+#     
+#     expect_silent(
+#         normalyzer(
+#             jobName="unit_test_run_norm_log_transformed",
+#             dataPath=log2DataPath,
+#             designPath=designPath,
+#             outputDir=tempOut,
+#             quiet=TRUE,
+#             requireReplicates=FALSE,
+#             noLogTransform=TRUE
+#         )
+#     )
+# })
+# 
+# test_that("Log2-run output has identical normalizations", {
+#     
+#     designDf <- read.csv(designPath, sep="\t")
+#     samples <- as.character(designDf$sample)
+#     currOutDir <- paste0(tempOut, "/unit_test_run_norm_log_transformed")
+#     compare_output_directories("SingleCondRun", samples, currOutDir, referenceNormResultsDir)
+# })
+
+# Statistics
 test_that("Statistics run succeeds without errors", {
     
     expect_silent(
