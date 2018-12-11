@@ -21,29 +21,32 @@ referenceStatResultsDir <- system.file(package="NormalyzerDE", "extdata", "unit_
 # closeAllConnections()
 
 # When assigned TRUE forceAll will run all tests
-forceAll <- TRUE
+forceAll <- FALSE
 
 ### Normal runs ###
-normalRun <- FALSE || forceAll
-singleRepRun <- FALSE || forceAll
-singleCondRun <- FALSE || forceAll
-nonNAEmptyRun <- FALSE || forceAll
-logTransformedRun <- FALSE || forceAll
-maxQuantPepRun <- FALSE || forceAll
-maxQuantProtRun <- FALSE || forceAll
-proteiosRun <- FALSE || forceAll
-singleAnnotColRun <- FALSE || forceAll
-noAnnotRun <- FALSE || forceAll
+runAllNormalization <- FALSE
+normalRun <- FALSE || runAllNormalization || forceAll
+singleRepRun <- FALSE || runAllNormalization || forceAll
+singleCondRun <- FALSE || runAllNormalization || forceAll
+nonNAEmptyRun <- FALSE || runAllNormalization || forceAll
+logTransformedRun <- FALSE || runAllNormalization || forceAll
+maxQuantPepRun <- FALSE || runAllNormalization || forceAll
+maxQuantProtRun <- FALSE || runAllNormalization || forceAll
+proteiosRun <- FALSE || runAllNormalization || forceAll
+singleAnnotColRun <- FALSE || runAllNormalization || forceAll
+noAnnotRun <- FALSE || runAllNormalization || forceAll
 
 ### Stats report runs ###
-statisticsRunNormal <- TRUE || forceAll
-statisticsRunSingleAnnot <- TRUE || forceAll
-statisticsRunNoAnnot <- TRUE || forceAll
-statisticsRunCustomThreshold <- TRUE || forceAll
-statisticsRunWelch <- FALSE
-statisticsRunBatch <- FALSE
-statisticsRunTechRepRed <- FALSE
-statisticsLogTransform <- FALSE
+runAllStats <- TRUE
+statisticsRunNormal <- TRUE || runAllStats || forceAll
+statisticsRunSingleAnnot <- TRUE || runAllStats || forceAll
+statisticsRunNoAnnot <- TRUE || runAllStats || forceAll
+statisticsRunCustomThreshold <- TRUE || runAllStats || forceAll
+statisticsRunWelch <- TRUE || runAllStats || forceAll
+statisticsRunBatch <- TRUE || runAllStats || forceAll
+statisticsRunTechRepRed <- TRUE || runAllStats || forceAll
+statisticsLogTransform <- TRUE || runAllStats || forceAll
+statisticsMultipleComparisons <- TRUE || runAllStats || forceAll
 
 ### SummarizedExperiments runs ###
 summarizedExperimentsRun <- FALSE || forceAll
@@ -130,7 +133,7 @@ compare_output_directories <- function(label, samples, dir1, dir2, expected_coun
     currFiles <- list.files(dir1 , pattern="*(.txt|.tsv)", full.names=TRUE)
     refFiles <- list.files(dir2, pattern="*(.txt|.tsv)", full.names=TRUE)
 
-    if (isEmpty(currFiles) || isEmpty(refFiles)) {
+    if (length(currFiles) == 0 || length(refFiles) == 0) {
         stop("Expected files, found: \n",
              paste(currFiles, collapse=", "),
              "\nReference:\n",
@@ -496,6 +499,8 @@ if (statisticsRunNormal) {
     
     test_that("Statistics results are identical to previous", {
         
+        browser()
+        
         designDf <- read.csv(designPath, sep="\t")
         samples <- as.character(designDf$sample)
         currOutDir <- paste0(tempOut, "/unit_test_run_stat")
@@ -607,6 +612,75 @@ if (statisticsRunCustomThreshold) {
             )   
         )
     })
+}
+
+context("Statistics runs: Welch")
+
+if (statisticsRunWelch) {
+    
+}
+
+context("Statistics runs: Batch")
+
+if (statisticsRunBatch) {
+    
+}
+
+context("Statistics runs: Technical replicate reduce")
+
+if (statisticsRunTechRepRed) {
+    
+    test_that("Statistics run succeeds without errors", {
+        
+        expect_silent(
+            normalyzerDE(
+                jobName="techrep",
+                dataPath=dataPath,
+                designPath=designPath,
+                outputDir=tempOut,
+                comparisons=c("4-5"),
+                logTrans=TRUE,
+                quiet=TRUE
+            )   
+        )
+    })
+    
+    test_that("Statistics results are identical to previous", {
+        
+        designDf <- read.csv(designPath, sep="\t")
+        samples <- c(
+            "s_125amol_1.s_125amol_2",
+            "s_125amol_3.s_125amol_4",
+            "s_12500amol_1.s_12500amol_2",
+            "s_12500amol_3.s_12500amol_4",
+            "s_25000amol_1.s_25000amol_2",
+            "s_25000amol_3.s_25000amol_4"
+        )
+
+        currOutDir <- paste0(tempOut, "/techrep")
+        statCols <- c("4-5_PValue", "4-5_AdjPVal", "4-5_log2FoldChange", "featureAvg")
+        
+        compare_output_directories(
+            "Stats: Techrep run",
+            samples,
+            currOutDir,
+            referenceStatResultsDir,
+            stat_cols=statCols
+        )
+    })
+    
+}
+
+context("Statistics runs: Without log transform")
+
+if (statisticsLogTransform) {
+    
+}
+
+context("Statistics runs: Multiple comparisons")
+
+if (statisticsMultipleComparisons) {
+    
 }
 
 context("SummarizedExperiments run")

@@ -20,17 +20,87 @@
 #'     c(7,9,7))
 #' colnames(testData) <- c("a1", "a2", "b1", "b2", "c1", "c2", "d1", "d2")
 #' statObj <- reduceTechnicalReplicates(testData, techRep)
-reduceTechnicalReplicates <- function(dataMat, techRepGroups) {
+# reduceTechnicalReplicates <- function(dataMat, techRepGroups) {
+#     
+#     uniqueGroups <- unique(techRepGroups)
+#     indices <- lapply(uniqueGroups, function(i) { which(techRepGroups %in% i) })
+#     
+#     collDataMat <- as.matrix(data.frame(lapply(
+#         indices, 
+#         function(inds) {rowMeans(dataMat[, inds], na.rm = TRUE)})))
+#     colnames(collDataMat) <- uniqueGroups
+#     collDataMat
+# }
+
+reduceTechnicalReplicates <- function(se, techRepColName, sampleColName) {
     
-    uniqueGroups <- unique(techRepGroups)
-    indices <- lapply(uniqueGroups, function(i) { which(techRepGroups %in% i) })
+    warning("LOOK OVER DOCUMENTATION HERE")
+
+    designDf <- data.frame(SummarizedExperiment::colData(se))
+    dataMat <- SummarizedExperiment::assay(se)
+        
+    # designDf <- designDf(nst)
+    # dataMat <- dataMat(nst)
     
+    techRepGroups <- as.character(designDf[[techRepColName]])
+    # uniqueGroups <- unique(techRepGroups)
+    indices <- lapply(unique(techRepGroups), function(i) { which(techRepGroups %in% i) })
+    
+    # Reduce design
+    collDesignMatList <- lapply(indices, function(inds) { designDf[inds[1],] })
+    collDesignDf <- do.call(rbind.data.frame, collDesignMatList)
+    collDesignDf <- droplevels(collDesignDf)
+    rownames(collDesignDf) <- seq_len(nrow(collDesignDf))
+    
+    collapsedNames <- unlist(lapply(indices, function(inds) { paste(designDf[[sampleColName]][inds], collapse=".") }))
+    collDesignDf[[sampleColName]] <- collapsedNames
+    
+    # Reduce data
     collDataMat <- as.matrix(data.frame(lapply(
         indices, 
         function(inds) {rowMeans(dataMat[, inds], na.rm = TRUE)})))
-    colnames(collDataMat) <- uniqueGroups
-    collDataMat
+    colnames(collDataMat) <- collapsedNames
+    
+    # designDf(nst) <- collDesignDf
+    # dataMat(nst) <- collDataMat
+    reducedSe <- SummarizedExperiment::SummarizedExperiment(
+        assay=collDataMat,
+        colData=collDesignDf,
+        rowData=SummarizedExperiment::rowData(se)
+    )
+    reducedSe
 }
+
+# reduceTechnicalReplicates <- function(nst, techRepColName, sampleColName) {
+# 
+#     warning("LOOK OVER DOCUMENTATION HERE")
+#     
+#     designDf <- designDf(nst)
+#     dataMat <- dataMat(nst)
+#     
+#     techRepGroups <- as.character(designDf[[techRepColName]])
+#     # uniqueGroups <- unique(techRepGroups)
+#     indices <- lapply(unique(techRepGroups), function(i) { which(techRepGroups %in% i) })
+#     
+#     # Reduce design
+#     collDesignMatList <- lapply(indices, function(inds) { designDf[inds[1],] })
+#     collDesignDf <- do.call(rbind.data.frame, collDesignMatList)
+#     collDesignDf <- droplevels(collDesignDf)
+#     rownames(collDesignDf) <- seq_len(nrow(collDesignDf))
+#     
+#     collapsedNames <- unlist(lapply(indices, function(inds) { paste(designDf[[sampleColName]][inds], collapse=".") }))
+#     collDesignDf[[sampleColName]] <- collapsedNames
+# 
+#     # Reduce data
+#     collDataMat <- as.matrix(data.frame(lapply(
+#         indices, 
+#         function(inds) {rowMeans(dataMat[, inds], na.rm = TRUE)})))
+#     colnames(collDataMat) <- collapsedNames
+#     
+#     designDf(nst) <- collDesignDf
+#     dataMat(nst) <- collDataMat
+#     nst
+# }
 
 #' Remove technical replicates from design matrix.
 #' 
@@ -49,14 +119,22 @@ reduceTechnicalReplicates <- function(dataMat, techRepGroups) {
 #'   techrep=c("a", "a", "b", "b", "c", "c", "d", "d")
 #' )
 #' statObj <- reduceDesignTechRep(designDf, designDf$techrep)
-reduceDesignTechRep <- function(designMat, techRepGroups) {
+reduceDesignTechRep <- function(designDf, techRepColName, sampleColName) {
+
+    warning("LOOK OVER DOCUMENTATION HERE")
+        
+    techRepGroups <- as.character(designDf[[techRepColName]])
     
     uniqueGroups <- unique(techRepGroups)
     indices <- lapply(uniqueGroups, function(i) { which(techRepGroups %in% i) })
-    collDesignMatList <- lapply(indices, function(inds) { designMat[inds[1],] })
+    
+    collDesignMatList <- lapply(indices, function(inds) { designDf[inds[1],] })
     collDesignDf <- do.call(rbind.data.frame, collDesignMatList)
     collDesignDf <- droplevels(collDesignDf)
     rownames(collDesignDf) <- seq_len(nrow(collDesignDf))
+
+    collapsedNames <- unlist(lapply(indices, function(inds) { paste(designDf[[sampleColName]][inds], collapse=".") }))
+    collDesignDf[[sampleColName]] <- collapsedNames
     collDesignDf
 }
 

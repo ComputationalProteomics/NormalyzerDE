@@ -65,9 +65,6 @@ NormalyzerEvaluationResults <- function (nr) {
                avgcvmem <- avgCVPerNormAndReplicates
                featureCVPerMethod <- calculateFeatureCV(methodList)
                
-               # if (singleReplicateRun) {
-               #     browser()
-               # }
                avgcvmempdiff <- calculatePercentageAvgDiffInMat(avgCVPerNormAndReplicates)
                
                if (!singleReplicateRun) {
