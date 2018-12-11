@@ -419,6 +419,7 @@ verifyDesignMatrix <- function(fullMatrix, designMatrix, sampleCol) {
 #' Replace empty values (0 or empty field) with NA in input data
 #' 
 #' @param dataMatrix Matrix with raw data.
+#' @param quiet Don't show diagnostic messages
 #' @return Parsed rawdata where 0 values are replaced with NA
 #' @keywords internal
 preprocessData <- function(dataMatrix, quiet=FALSE) {
