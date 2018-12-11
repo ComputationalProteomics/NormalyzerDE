@@ -329,17 +329,6 @@ verifyValidNumbers <- function(rawDataOnly, groups, noLogTransform=FALSE, quiet=
         stop(errorString)
     }
     
-    # zeroRegexPattern <- c("^0$")
-    # zeroMatches <- grep(zeroRegexPattern, rawDataOnly, perl=TRUE)
-    # if (length(zeroMatches) > 0) {
-    #     errorString <- paste(
-    #         "Encountered zeroes in data. Must be replaced with NA before processing.",
-    #         "This can be done automatically setting the zeroToNA-flag option to TRUE.",
-    #         sep="\n"
-    #     )
-    #     stop(errorString)
-    # }
-    
     if (!noLogTransform) {
         belowOnePattern <- c("^0.\\d+$")
         belowOneMatches <- grep(belowOnePattern, rawDataOnly, perl=TRUE)
