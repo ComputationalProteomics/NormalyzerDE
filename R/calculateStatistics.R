@@ -1,37 +1,3 @@
-#' Remove technical replicates from data matrix 
-#' 
-#' Collapses sample values into their average. If only one value is present
-#' due to NA-values in other technical replicates, then that value is used.
-#' 
-#' @param dataMat NormalyzerDE data matrix
-#' @param techRepGroups Technical replicates vector
-#' @return collDataMat Reduced data matrix
-#' @export
-#' @examples
-#' techRep <- c("a", "a", "b", "b", "c", "c", "d", "d")
-#' testData <- data.frame(
-#'     c(1,1,1), 
-#'     c(1,2,1), 
-#'     c(3,3,3), 
-#'     c(5,3,3), 
-#'     c(5,5,4), 
-#'     c(5,5,5), 
-#'     c(7,7,7), 
-#'     c(7,9,7))
-#' colnames(testData) <- c("a1", "a2", "b1", "b2", "c1", "c2", "d1", "d2")
-#' statObj <- reduceTechnicalReplicates(testData, techRep)
-# reduceTechnicalReplicates <- function(dataMat, techRepGroups) {
-#     
-#     uniqueGroups <- unique(techRepGroups)
-#     indices <- lapply(uniqueGroups, function(i) { which(techRepGroups %in% i) })
-#     
-#     collDataMat <- as.matrix(data.frame(lapply(
-#         indices, 
-#         function(inds) {rowMeans(dataMat[, inds], na.rm = TRUE)})))
-#     colnames(collDataMat) <- uniqueGroups
-#     collDataMat
-# }
-
 #' Remove technical replicates from data and design
 #' 
 #' Collapses sample values into their average. If only one value is present
@@ -44,8 +10,8 @@
 #' 
 #' @param se Summarized experiment where the assay contains the data to be
 #'   reduced, and the colData the data frame
-#' @param techRepGroups Technical replicates column name in colData
-#' @param techRepGroups Sample names column name in colData
+#' @param techRepColName Technical replicates column name in colData
+#' @param sampleColName Sample names column name in colData
 #' @return reducedSe Summarized experiment with reduced data
 #' @export
 #' @examples

@@ -13,12 +13,6 @@ NormalyzerStatistics(experimentObj, logTrans = FALSE)
 and design information as column data}
 
 \item{logTrans}{Whether the input data should be log transformed}
-
-\item{conditionCol}{Column in column data containing the condition information
-for which contrasts will be performed}
-
-\item{leastRepCount}{Least replicates in each group to be retained for 
-contrast calculations}
 }
 \value{
 nds Generated NormalyzerStatistics instance

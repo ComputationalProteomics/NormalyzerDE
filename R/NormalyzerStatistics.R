@@ -32,11 +32,7 @@ NormalyzerStatistics <- setClass("NormalyzerStatistics",
 #' 
 #' @param experimentObj Instance of SummarizedExperiment containing matrix
 #'   and design information as column data
-#' @param conditionCol Column in column data containing the condition information
-#'   for which contrasts will be performed
 #' @param logTrans Whether the input data should be log transformed
-#' @param leastRepCount Least replicates in each group to be retained for 
-#'   contrast calculations
 #' @return nds Generated NormalyzerStatistics instance
 #' @export
 #' @examples
@@ -166,6 +162,8 @@ setReplaceMethod("pairwiseCompsFold", signature(object="NormalyzerStatistics"),
 #' @param batchCol Column name in design matrix containing batch information.
 #' @param splitter Character dividing contrast conditions.
 #' @param type Type of statistical test (Limma or welch).
+#' @param leastRepCount Least replicates in each group to be retained for 
+#'   contrast calculations
 #' @return nst Statistics object with statistical measures calculated
 #' @rdname calculateContrasts
 #' @export
@@ -173,16 +171,16 @@ setReplaceMethod("pairwiseCompsFold", signature(object="NormalyzerStatistics"),
 #' data(example_stat_summarized_experiment)
 #' nst <- NormalyzerStatistics(example_stat_summarized_experiment)
 #' results <- calculateContrasts(nst, c("1-2", "2-3"), "group")
-#' resultsBatch <- calculateContrasts(nst, c("1-2", "2-3"), "group", "batch")
+#' resultsBatch <- calculateContrasts(nst, c("1-2", "2-3"), "group", batchCol="batch")
 setGeneric(name="calculateContrasts", 
-           function(nst, comparisons, condCol, splitter="-", 
-                    type="limma", batchCol=NULL, leastRepCount=2) standardGeneric("calculateContrasts"))
+           function(nst, comparisons, condCol, batchCol=NULL, splitter="-", 
+                    type="limma", leastRepCount=1) standardGeneric("calculateContrasts"))
 
 #' @rdname calculateContrasts
 setMethod(f="calculateContrasts", 
           signature=c("NormalyzerStatistics"),
-          function(nst, comparisons, condCol, splitter="-", 
-                   type="limma", batchCol=NULL, leastRepCount=2) {
+          function(nst, comparisons, condCol, batchCol=NULL, splitter="-", 
+                   type="limma", leastRepCount=1) {
               
               dataMat <- dataMat(nst)
               designDf <- designDf(nst)
@@ -200,19 +198,22 @@ setMethod(f="calculateContrasts",
                   conditionCombs, 
                   leastRep=leastRepCount
               )
+              
+              if (nrow(dataMatNAFiltered) == 0) {
+                  stop("No rows remained after NA-filtering for condition: '", 
+                       condCol, 
+                       "' and batchCol: '", batchCol, "' (if empty then batchCol is not specified)\n",
+                       "Consider whether you can reduce the 'leastRepCount' setting which sets the lower limit ",
+                       "of number of NA values in each condition-level combination ",
+                       "You could also try running without batchCol and see if there is enough data per condition then"
+                       )
+              }
+              
               naFilterContrast <- rownames(dataMat) %in% rownames(dataMatNAFiltered)
-              
-              
-              
-              
               sampleReplicateGroupsStrings <- as.character(designDf(nst)[, condCol])
-              # sampleReplicateGroupsStrings <- as.character(designDf(nst)[, condCol])
               statMeasures <- c("P", "FDR", "Ave", "Fold")
-
-              verifyContrasts(sampleReplicateGroupsStrings, comparisons)
               
-              # naFilterContrast <- filteringContrast(nst)
-              # dataMatNAFiltered <- filteredDataMat(nst)
+              verifyContrasts(sampleReplicateGroupsStrings, comparisons)
               
               model <- setupModel(nst, condCol, batchCol=batchCol, type=type)
 

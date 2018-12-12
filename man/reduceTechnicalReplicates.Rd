@@ -2,7 +2,7 @@
 % Please edit documentation in R/calculateStatistics.R
 \name{reduceTechnicalReplicates}
 \alias{reduceTechnicalReplicates}
-\title{Remove technical replicates from data matrix}
+\title{Remove technical replicates from data and design}
 \usage{
 reduceTechnicalReplicates(se, techRepColName, sampleColName)
 }
@@ -10,41 +10,24 @@ reduceTechnicalReplicates(se, techRepColName, sampleColName)
 \item{se}{Summarized experiment where the assay contains the data to be
 reduced, and the colData the data frame}
 
-\item{dataMat}{NormalyzerDE data matrix}
+\item{techRepColName}{Technical replicates column name in colData}
 
-\item{techRepGroups}{Technical replicates vector}
-
-\item{techRepGroups}{Technical replicates column name in colData}
-
-\item{techRepGroups}{Sample names column name in colData}
+\item{sampleColName}{Sample names column name in colData}
 }
 \value{
-collDataMat Reduced data matrix
-
 reducedSe Summarized experiment with reduced data
 }
 \description{
 Collapses sample values into their average. If only one value is present
 due to NA-values in other technical replicates, then that value is used.
 }
+\details{
+Takes a SummarizedExperiment where the data is present as the assay
+and the colData contains the design conditions. In the design conditions
+there should be one column with the technical replicate groups and one
+column containing the sample names
+}
 \examples{
-techRep <- c("a", "a", "b", "b", "c", "c", "d", "d")
-testData <- data.frame(
-    c(1,1,1), 
-    c(1,2,1), 
-    c(3,3,3), 
-    c(5,3,3), 
-    c(5,5,4), 
-    c(5,5,5), 
-    c(7,7,7), 
-    c(7,9,7))
-colnames(testData) <- c("a1", "a2", "b1", "b2", "c1", "c2", "d1", "d2")
-statObj <- reduceTechnicalReplicates(testData, techRep)
-Remove technical replicates from data matrix 
-
-Collapses sample values into their average. If only one value is present
-due to NA-values in other technical replicates, then that value is used.
-
 testData <- as.matrix(data.frame(
     c(1,1,1), 
     c(1,2,1), 
