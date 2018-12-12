@@ -16,7 +16,8 @@ fourColDataPath <- system.file(package="NormalyzerDE", "extdata", "four_col_data
 tempOut <- tempdir()
 
 referenceNormResultsDir <- system.file(package="NormalyzerDE", "extdata", "unit_test_run_norm_reference")
-referenceStatResultsDir <- system.file(package="NormalyzerDE", "extdata", "techrep")
+referenceStatResultsDir <- system.file(package="NormalyzerDE", "extdata", "unit_test_run_stat_reference")
+referenceStatTechrepResultsDir <- system.file(package="NormalyzerDE", "extdata", "techrep")
 
 # Note: During testing the expect_silent uses sink() to capture all output
 # For debugging using the browser() statement while in sink - run
@@ -39,14 +40,14 @@ singleAnnotColRun <- FALSE || runAllNormalization || forceAll
 noAnnotRun <- FALSE || runAllNormalization || forceAll
 
 ### Stats report runs ###
-runAllStats <- FALSE
+runAllStats <- TRUE
 statisticsRunNormal <- FALSE || runAllStats || forceAll
 statisticsRunSingleAnnot <- FALSE || runAllStats || forceAll
 statisticsRunNoAnnot <- FALSE || runAllStats || forceAll
 statisticsRunCustomThreshold <- FALSE || runAllStats || forceAll
 statisticsRunWelch <- FALSE || runAllStats || forceAll
 statisticsRunBatch <- FALSE || runAllStats || forceAll
-statisticsRunTechRepRed <- TRUE || runAllStats || forceAll
+statisticsRunTechRepRed <- FALSE || runAllStats || forceAll
 statisticsLogTransform <- FALSE || runAllStats || forceAll
 statisticsMultipleComparisons <- FALSE || runAllStats || forceAll
 
@@ -161,11 +162,7 @@ compare_output_directories <- function(label, samples, dir1, dir2, expected_coun
         )
     }
     
-    # designDf <- read.csv(designPath, sep="\t")
-    # samples <- as.character(designDf$sample)
-    
     targetCurrFiles <- currFiles[!(names(currFiles) %in% ignores)]
-    
     for (name in names(targetCurrFiles)) {
         are_matrices_identical(name, samples, found_path=currFiles[[name]], expected_path=refFiles[[name]], 
                                custom_annot=custom_annot, stat_cols=stat_cols)
@@ -175,7 +172,7 @@ compare_output_directories <- function(label, samples, dir1, dir2, expected_coun
 context("Normalization runs: Normal run")
 
 if (normalRun) {
-    test_that("Normalization run succeeds without errors", {
+    test_that("Normalization run succeeds quietly", {
         
         expect_silent(
             normalyzer(
@@ -657,7 +654,7 @@ if (statisticsRunTechRepRed) {
             "Stats: Techrep run",
             samples,
             currOutDir,
-            referenceStatResultsDir,
+            referenceStatTechrepResultsDir,
             stat_cols=statCols
         )
     })
