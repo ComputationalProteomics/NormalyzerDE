@@ -32,18 +32,43 @@
 #     collDataMat
 # }
 
+#' Remove technical replicates from data and design
+#' 
+#' Collapses sample values into their average. If only one value is present
+#' due to NA-values in other technical replicates, then that value is used.
+#' 
+#' Takes a SummarizedExperiment where the data is present as the assay
+#' and the colData contains the design conditions. In the design conditions
+#' there should be one column with the technical replicate groups and one
+#' column containing the sample names
+#' 
+#' @param se Summarized experiment where the assay contains the data to be
+#'   reduced, and the colData the data frame
+#' @param techRepGroups Technical replicates column name in colData
+#' @param techRepGroups Sample names column name in colData
+#' @return reducedSe Summarized experiment with reduced data
+#' @export
+#' @examples
+#' testData <- as.matrix(data.frame(
+#'     c(1,1,1), 
+#'     c(1,2,1), 
+#'     c(7,7,7), 
+#'     c(7,9,7)))
+#' colnames(testData) <- c("a1", "a2", "b1", "b2")
+#' designDf <- data.frame(
+#'     sample=c("a1", "a2", "b1", "b2"), 
+#'     techrep=c("a", "a", "b", "b"))
+#' se <- SummarizedExperiment::SummarizedExperiment(
+#'     assay=testData,
+#'     colData=designDf
+#' )
+#' statObj <- reduceTechnicalReplicates(se, "techrep", "sample")
 reduceTechnicalReplicates <- function(se, techRepColName, sampleColName) {
     
-    warning("LOOK OVER DOCUMENTATION HERE")
-
     designDf <- data.frame(SummarizedExperiment::colData(se))
     dataMat <- SummarizedExperiment::assay(se)
         
-    # designDf <- designDf(nst)
-    # dataMat <- dataMat(nst)
-    
     techRepGroups <- as.character(designDf[[techRepColName]])
-    # uniqueGroups <- unique(techRepGroups)
     indices <- lapply(unique(techRepGroups), function(i) { which(techRepGroups %in% i) })
     
     # Reduce design
@@ -58,84 +83,15 @@ reduceTechnicalReplicates <- function(se, techRepColName, sampleColName) {
     # Reduce data
     collDataMat <- as.matrix(data.frame(lapply(
         indices, 
-        function(inds) {rowMeans(dataMat[, inds], na.rm = TRUE)})))
+        function(inds) {rowMeans(dataMat[, inds, drop=FALSE], na.rm = TRUE)})))
     colnames(collDataMat) <- collapsedNames
     
-    # designDf(nst) <- collDesignDf
-    # dataMat(nst) <- collDataMat
     reducedSe <- SummarizedExperiment::SummarizedExperiment(
         assay=collDataMat,
         colData=collDesignDf,
         rowData=SummarizedExperiment::rowData(se)
     )
     reducedSe
-}
-
-# reduceTechnicalReplicates <- function(nst, techRepColName, sampleColName) {
-# 
-#     warning("LOOK OVER DOCUMENTATION HERE")
-#     
-#     designDf <- designDf(nst)
-#     dataMat <- dataMat(nst)
-#     
-#     techRepGroups <- as.character(designDf[[techRepColName]])
-#     # uniqueGroups <- unique(techRepGroups)
-#     indices <- lapply(unique(techRepGroups), function(i) { which(techRepGroups %in% i) })
-#     
-#     # Reduce design
-#     collDesignMatList <- lapply(indices, function(inds) { designDf[inds[1],] })
-#     collDesignDf <- do.call(rbind.data.frame, collDesignMatList)
-#     collDesignDf <- droplevels(collDesignDf)
-#     rownames(collDesignDf) <- seq_len(nrow(collDesignDf))
-#     
-#     collapsedNames <- unlist(lapply(indices, function(inds) { paste(designDf[[sampleColName]][inds], collapse=".") }))
-#     collDesignDf[[sampleColName]] <- collapsedNames
-# 
-#     # Reduce data
-#     collDataMat <- as.matrix(data.frame(lapply(
-#         indices, 
-#         function(inds) {rowMeans(dataMat[, inds], na.rm = TRUE)})))
-#     colnames(collDataMat) <- collapsedNames
-#     
-#     designDf(nst) <- collDesignDf
-#     dataMat(nst) <- collDataMat
-#     nst
-# }
-
-#' Remove technical replicates from design matrix.
-#' 
-#' Technical replicates are specified as duplicate strings.
-#' The first sample name corresponding for each technical replicate group
-#' is retained.
-#' 
-#' @param designMat NormalyzerDE design matrix
-#' @param techRepGroups Technical replicates vector
-#' @return collDesignDf Reduced design matrix
-#' @export
-#' @examples
-#' designDf <- data.frame(
-#'   sample=c("a1", "a2", "b1", "b2", "c1", "c2", "d1", "d2"),
-#'   group=c(rep("A", 4), rep("B", 4)),
-#'   techrep=c("a", "a", "b", "b", "c", "c", "d", "d")
-#' )
-#' statObj <- reduceDesignTechRep(designDf, designDf$techrep)
-reduceDesignTechRep <- function(designDf, techRepColName, sampleColName) {
-
-    warning("LOOK OVER DOCUMENTATION HERE")
-        
-    techRepGroups <- as.character(designDf[[techRepColName]])
-    
-    uniqueGroups <- unique(techRepGroups)
-    indices <- lapply(uniqueGroups, function(i) { which(techRepGroups %in% i) })
-    
-    collDesignMatList <- lapply(indices, function(inds) { designDf[inds[1],] })
-    collDesignDf <- do.call(rbind.data.frame, collDesignMatList)
-    collDesignDf <- droplevels(collDesignDf)
-    rownames(collDesignDf) <- seq_len(nrow(collDesignDf))
-
-    collapsedNames <- unlist(lapply(indices, function(inds) { paste(designDf[[sampleColName]][inds], collapse=".") }))
-    collDesignDf[[sampleColName]] <- collapsedNames
-    collDesignDf
 }
 
 #' Generate an annotated data frame from statistics object

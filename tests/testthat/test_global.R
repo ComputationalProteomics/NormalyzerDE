@@ -1,4 +1,5 @@
 designPath <- system.file(package="NormalyzerDE", "extdata", "tiny_design.tsv")
+fourColDesignPath <- system.file(package="NormalyzerDE", "extdata", "four_col_design.tsv")
 designSingleRepPath <- system.file(package="NormalyzerDE", "extdata", "tiny_design_singlerep.tsv")
 designSingleCondPath <- system.file(package="NormalyzerDE", "extdata", "tiny_design_singlecond.tsv")
 
@@ -10,18 +11,19 @@ dataPathMaxQuantProt <- system.file(package="NormalyzerDE", "extdata", "mq_prote
 dataPathProteios <- system.file(package="NormalyzerDE", "extdata", "tiny_data_proteios.tsv")
 dataPathSingleAnnot <- system.file(package="NormalyzerDE", "extdata", "tiny_data_single_annot.tsv")
 dataPathNoAnnot <- system.file(package="NormalyzerDE", "extdata", "tiny_data_no_annot.tsv")
+fourColDataPath <- system.file(package="NormalyzerDE", "extdata", "four_col_data.tsv")
 
 tempOut <- tempdir()
 
 referenceNormResultsDir <- system.file(package="NormalyzerDE", "extdata", "unit_test_run_norm_reference")
-referenceStatResultsDir <- system.file(package="NormalyzerDE", "extdata", "unit_test_run_stat_reference")
+referenceStatResultsDir <- system.file(package="NormalyzerDE", "extdata", "techrep")
 
 # Note: During testing the expect_silent uses sink() to capture all output
 # For debugging using the browser() statement while in sink - run
 # closeAllConnections()
 
 # When assigned TRUE forceAll will run all tests
-forceAll <- FALSE
+forceAll <- TRUE
 
 ### Normal runs ###
 runAllNormalization <- FALSE
@@ -37,16 +39,16 @@ singleAnnotColRun <- FALSE || runAllNormalization || forceAll
 noAnnotRun <- FALSE || runAllNormalization || forceAll
 
 ### Stats report runs ###
-runAllStats <- TRUE
-statisticsRunNormal <- TRUE || runAllStats || forceAll
-statisticsRunSingleAnnot <- TRUE || runAllStats || forceAll
-statisticsRunNoAnnot <- TRUE || runAllStats || forceAll
-statisticsRunCustomThreshold <- TRUE || runAllStats || forceAll
-statisticsRunWelch <- TRUE || runAllStats || forceAll
-statisticsRunBatch <- TRUE || runAllStats || forceAll
+runAllStats <- FALSE
+statisticsRunNormal <- FALSE || runAllStats || forceAll
+statisticsRunSingleAnnot <- FALSE || runAllStats || forceAll
+statisticsRunNoAnnot <- FALSE || runAllStats || forceAll
+statisticsRunCustomThreshold <- FALSE || runAllStats || forceAll
+statisticsRunWelch <- FALSE || runAllStats || forceAll
+statisticsRunBatch <- FALSE || runAllStats || forceAll
 statisticsRunTechRepRed <- TRUE || runAllStats || forceAll
-statisticsLogTransform <- TRUE || runAllStats || forceAll
-statisticsMultipleComparisons <- TRUE || runAllStats || forceAll
+statisticsLogTransform <- FALSE || runAllStats || forceAll
+statisticsMultipleComparisons <- FALSE || runAllStats || forceAll
 
 ### SummarizedExperiments runs ###
 summarizedExperimentsRun <- FALSE || forceAll
@@ -66,8 +68,9 @@ are_matrices_identical <- function(label, samples, expected_path, found_path, cu
         expect_true(
             all(colnames(exp_df) == colnames(found_df)),
             paste("Expected identical column names for", label,
-                  "\nFound:\n", paste(colnames(exp_df), collapse=", "), "\nexpected:\n", 
-                  paste(colnames(found_df), collapse=", "))
+                  "\nFound:\n", paste(colnames(found_df), collapse=", "), 
+                  "\nexpected:\n", 
+                  paste(colnames(expected_df), collapse=", "))
         )
     }
     else {
@@ -129,7 +132,7 @@ are_matrices_identical <- function(label, samples, expected_path, found_path, cu
 
 compare_output_directories <- function(label, samples, dir1, dir2, expected_count=NULL, 
                                        ignores=c(), custom_annot=NULL, stat_cols=NULL) {
-    
+
     currFiles <- list.files(dir1 , pattern="*(.txt|.tsv)", full.names=TRUE)
     refFiles <- list.files(dir2, pattern="*(.txt|.tsv)", full.names=TRUE)
 
@@ -158,8 +161,8 @@ compare_output_directories <- function(label, samples, dir1, dir2, expected_coun
         )
     }
     
-    designDf <- read.csv(designPath, sep="\t")
-    samples <- as.character(designDf$sample)
+    # designDf <- read.csv(designPath, sep="\t")
+    # samples <- as.character(designDf$sample)
     
     targetCurrFiles <- currFiles[!(names(currFiles) %in% ignores)]
     
@@ -306,7 +309,6 @@ if (logTransformedRun) {
 }
 
 context("Normalization runs: MaxQuant peptide")
-
 if (maxQuantPepRun) {
     
     test_that("Normalization run succeeds without errors (MaxQuant pep)", {
@@ -344,7 +346,6 @@ if (maxQuantPepRun) {
 }
 
 context("Normalization runs: MaxQuant protein")
-
 if (maxQuantProtRun) {
     test_that("Normalization run succeeds without errors (MaxQuant prot)", {
         expect_silent(
@@ -381,7 +382,6 @@ if (maxQuantProtRun) {
 }
 
 context("Normalization runs: Proteios")
-
 if (proteiosRun) {
     test_that("Normalization run succeeds without errors (Proteios)", {
         
@@ -413,7 +413,6 @@ if (proteiosRun) {
 }
 
 context("Normalization runs: Single annotation column")
-
 if (singleAnnotColRun) {
     
     test_that("Normalization run succeeds without errors (Single annotation column)", {
@@ -448,7 +447,6 @@ if (singleAnnotColRun) {
 }
 
 context("Normalization runs: No annotation column")
-
 if (noAnnotRun) {
     test_that("Normalization run succeeds without errors (no annotation column)", {
         
@@ -516,7 +514,6 @@ if (statisticsRunNormal) {
 }
 
 context("Statistics runs: Single annotation column")
-
 if (statisticsRunSingleAnnot) {
     test_that("Statistics (single annot) run succeeds without errors", {
         
@@ -590,7 +587,6 @@ if (statisticsRunNoAnnot) {
 }
 
 context("Statistics runs: Custom threshold (no identity check)")
-
 if (statisticsRunCustomThreshold) {
     
     test_that("Statistics with custom thresholding", {
@@ -613,38 +609,37 @@ if (statisticsRunCustomThreshold) {
 }
 
 context("Statistics runs: Welch")
-
 if (statisticsRunWelch) {
     
 }
 
 context("Statistics runs: Batch")
-
 if (statisticsRunBatch) {
     
 }
 
 context("Statistics runs: Technical replicate reduce")
-
 if (statisticsRunTechRepRed) {
     
     test_that("Statistics run succeeds without errors", {
-        
         expect_silent(
             normalyzerDE(
                 jobName="techrep",
-                dataPath=dataPath,
-                designPath=designPath,
+                dataPath=fourColDataPath,
+                designPath=fourColDesignPath,
                 outputDir=tempOut,
                 comparisons=c("4-5"),
                 logTrans=TRUE,
-                quiet=TRUE
+                quiet=TRUE,
+                techRepCol="techrep",
+                sampleCol="sample",
+                condCol="group",
+                leastRepCount=2
             )   
         )
     })
     
     test_that("Statistics results are identical to previous", {
-        
         designDf <- read.csv(designPath, sep="\t")
         samples <- c(
             "s_125amol_1.s_125amol_2",

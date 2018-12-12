@@ -11,11 +11,12 @@ columns in the design matrix that is used for deciding the sample groups.
 The comparisons vector specifies which pairwise comparisons between
 condition levels that are to be calculated.}
 \usage{
-calculateContrasts(nst, comparisons, condCol, batchCol = NULL,
-  splitter = "-", type = "limma")
+calculateContrasts(nst, comparisons, condCol, splitter = "-",
+  type = "limma", batchCol = NULL, leastRepCount = 2)
 
 \S4method{calculateContrasts}{NormalyzerStatistics}(nst, comparisons,
-  condCol, batchCol = NULL, splitter = "-", type = "limma")
+  condCol, splitter = "-", type = "limma", batchCol = NULL,
+  leastRepCount = 2)
 }
 \arguments{
 \item{nst}{Results evaluation object.}
@@ -24,11 +25,11 @@ calculateContrasts(nst, comparisons, condCol, batchCol = NULL,
 
 \item{condCol}{Column name in design matrix containing condition information.}
 
-\item{batchCol}{Column name in design matrix containing batch information.}
-
 \item{splitter}{Character dividing contrast conditions.}
 
 \item{type}{Type of statistical test (Limma or welch).}
+
+\item{batchCol}{Column name in design matrix containing batch information.}
 }
 \value{
 nst Statistics object with statistical measures calculated

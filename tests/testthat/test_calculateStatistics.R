@@ -34,61 +34,136 @@ test_that("filterLowRep", {
     )
 })
 
+# test_that("reduceTechnicalReplicates", {
+#     
+#     tech_rep <- c("a", "a", "b", "b", "c", "c", "d", "d")
+#     test_data <- data.frame(
+#         c(1,1,1), 
+#         c(1,2,1), 
+#         c(3,3,3), 
+#         c(5,3,3), 
+#         c(5,5,4), 
+#         c(5,5,5), 
+#         c(7,7,7), 
+#         c(7,9,7))
+#     colnames(test_data) <- c("a1", "a2", "b1", "b2", "c1", "c2", "d1", "d2")
+#     
+#     expect_out_data <- as.matrix(data.frame(
+#         "a"=c(1,1.5,1), 
+#         "b"=c(4,3,3), 
+#         "c"=c(5,5,4.5), 
+#         "d"=c(7,8,7)))
+#     
+#     out <- reduceTechnicalReplicates(test_data, tech_rep)
+#     
+#     expect_that(
+#         all.equal(
+#             expect_out_data,
+#             out
+#         ),
+#         is_true()
+#     )
+# })
+# 
+# test_that("reduceDesignTechRep", {
+#     
+#     test_df <- data.frame(
+#         sample=c("a1", "a2", "a3", "b1", "b2", "c1", "c2", "d1"),
+#         group=c(rep("A", 5), rep("B", 3)),
+#         techrep=c("a", "a", "a", "b", "b", "c", "c", "d")
+#     )
+#     
+#     expected_out_df <- data.frame(
+#         sample=c("a1", "b1", "c1", "d1"),
+#         group=c(rep("A", 2), rep("B", 2)),
+#         techrep=c("a", "b", "c", "d")
+#     )
+#     
+#     out <- reduceDesignTechRep(test_df, test_df$techrep)
+#     
+#     expect_that(
+#         all.equal(
+#             expected_out_df,
+#             out
+#         ),
+#         is_true()
+#     )
+# })
+
 test_that("reduceTechnicalReplicates", {
     
-    tech_rep <- c("a", "a", "b", "b", "c", "c", "d", "d")
     test_data <- data.frame(
         c(1,1,1), 
-        c(1,2,1), 
-        c(3,3,3), 
-        c(5,3,3), 
-        c(5,5,4), 
-        c(5,5,5), 
-        c(7,7,7), 
-        c(7,9,7))
-    colnames(test_data) <- c("a1", "a2", "b1", "b2", "c1", "c2", "d1", "d2")
-    
-    expect_out_data <- as.matrix(data.frame(
-        "a"=c(1,1.5,1), 
-        "b"=c(4,3,3), 
-        "c"=c(5,5,4.5), 
-        "d"=c(7,8,7)))
-    
-    out <- reduceTechnicalReplicates(test_data, tech_rep)
-    
-    expect_that(
-        all.equal(
-            expect_out_data,
-            out
-        ),
-        is_true()
-    )
-})
-
-test_that("reduceDesignTechRep", {
+        c(1,1.5,NA), 
+        c(4,2,3), 
+        c(3,2.5,3), 
+        c(5,3.5,3), 
+        c(4,3,4), 
+        c(6,7,5), 
+        c(7,9,NA))
+    colnames(test_data) <- c("a1", "a2", "a3", "b1", "b2", "c1", "c2", "d1")
     
     test_df <- data.frame(
         sample=c("a1", "a2", "a3", "b1", "b2", "c1", "c2", "d1"),
         group=c(rep("A", 5), rep("B", 3)),
         techrep=c("a", "a", "a", "b", "b", "c", "c", "d")
     )
+
+    se <- SummarizedExperiment::SummarizedExperiment(
+        assay=as.matrix(test_data),
+        colData=test_df,
+        rowData=data.frame(annot=paste0("Pep", seq_len(3)))
+    )
+        
+    expect_out_data <- as.matrix(data.frame(
+        "a1.a2.a3"=c(2,1.5,2), 
+        "b1.b2"=c(4,3,3), 
+        "c1.c2"=c(5,5,4.5), 
+        "d1"=c(7,9,NA)))
     
-    expected_out_df <- data.frame(
-        sample=c("a1", "b1", "c1", "d1"),
+    expect_out_design <- data.frame(
+        sample=c("a1.a2.a3", "b1.b2", "c1.c2", "d1"),
         group=c(rep("A", 2), rep("B", 2)),
         techrep=c("a", "b", "c", "d")
     )
+    expect_out_design$sample <- as.character(expect_out_design$sample)
+    rownames(expect_out_design) <- expect_out_design$sample
     
-    out <- reduceDesignTechRep(test_df, test_df$techrep)
+    expect_out_annot <- data.frame(
+        annot=paste0("Pep", seq_len(3))
+    )
+    
+    out_se <- reduceTechnicalReplicates(se, "techrep", "sample")
     
     expect_that(
         all.equal(
-            expected_out_df,
-            out
+            expect_out_data,
+            SummarizedExperiment::assay(out_se)
         ),
-        is_true()
+        is_true(),
+        "Reduced data check"
+    )
+    
+    expect_that(
+        all.equal(
+            expect_out_design,
+            data.frame(SummarizedExperiment::colData(out_se))
+        ),
+        is_true(),
+        "Reduced design check"
+    )
+    
+    expect_that(
+        all.equal(
+            expect_out_annot,
+            data.frame(SummarizedExperiment::rowData(out_se))
+        ),
+        is_true(),
+        "Annotation remains identical"
     )
 })
+
+
 
 # Statistics
 test_that("calculateWelch_data_test", {
