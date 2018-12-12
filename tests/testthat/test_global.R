@@ -16,8 +16,13 @@ fourColDataPath <- system.file(package="NormalyzerDE", "extdata", "four_col_data
 tempOut <- tempdir()
 
 referenceNormResultsDir <- system.file(package="NormalyzerDE", "extdata", "unit_test_run_norm_reference")
-referenceStatResultsDir <- system.file(package="NormalyzerDE", "extdata", "unit_test_run_stat_reference")
-referenceStatTechrepResultsDir <- system.file(package="NormalyzerDE", "extdata", "techrep")
+
+statResultsDirNormal <- system.file(package="NormalyzerDE", "extdata", "stat_runs/normal")
+statResultsTechRep <- system.file(package="NormalyzerDE", "extdata", "stat_runs/techrep")
+statResultsDirBatch <- system.file(package="NormalyzerDE", "extdata", "stat_runs/batch")
+statResultsDirLog2 <- system.file(package="NormalyzerDE", "extdata", "stat_runs/log2")
+statResultsDirMultipleComps <- system.file(package="NormalyzerDE", "extdata", "stat_runs/multiple_comps")
+statResultsDirWelch <- system.file(package="NormalyzerDE", "extdata", "stat_runs/welch")
 
 # Note: During testing the expect_silent uses sink() to capture all output
 # For debugging using the browser() statement while in sink - run
@@ -41,14 +46,14 @@ noAnnotRun <- FALSE || runAllNormalization || forceAll
 
 ### Stats report runs ###
 runAllStats <- TRUE
-statisticsRunNormal <- FALSE || runAllStats || forceAll
-statisticsRunSingleAnnot <- FALSE || runAllStats || forceAll
-statisticsRunNoAnnot <- FALSE || runAllStats || forceAll
+statisticsRunNormal <- TRUE || runAllStats || forceAll
+statisticsRunSingleAnnot <- TRUE || runAllStats || forceAll
+statisticsRunNoAnnot <- TRUE || runAllStats || forceAll
 statisticsRunCustomThreshold <- FALSE || runAllStats || forceAll
 statisticsRunWelch <- FALSE || runAllStats || forceAll
 statisticsRunBatch <- FALSE || runAllStats || forceAll
 statisticsRunTechRepRed <- FALSE || runAllStats || forceAll
-statisticsLogTransform <- FALSE || runAllStats || forceAll
+statisticsLogTransform <- TRUE || runAllStats || forceAll
 statisticsMultipleComparisons <- FALSE || runAllStats || forceAll
 
 ### SummarizedExperiments runs ###
@@ -71,7 +76,7 @@ are_matrices_identical <- function(label, samples, expected_path, found_path, cu
             paste("Expected identical column names for", label,
                   "\nFound:\n", paste(colnames(found_df), collapse=", "), 
                   "\nexpected:\n", 
-                  paste(colnames(expected_df), collapse=", "))
+                  paste(colnames(exp_df), collapse=", "))
         )
     }
     else {
@@ -137,8 +142,8 @@ compare_output_directories <- function(label, samples, dir1, dir2, expected_coun
     currFiles <- list.files(dir1 , pattern="*(.txt|.tsv)", full.names=TRUE)
     refFiles <- list.files(dir2, pattern="*(.txt|.tsv)", full.names=TRUE)
 
-    if (length(currFiles) == 0 || length(refFiles) == 0) {
-        stop("Expected files, found: \n",
+    if (length(which(basename(currFiles) %in% basename(refFiles))) == 0) {
+        stop("Expected observed files also present in reference, found: \n",
              paste(currFiles, collapse=", "),
              "\nReference:\n",
              paste(refFiles, collapse=", "))
@@ -170,7 +175,6 @@ compare_output_directories <- function(label, samples, dir1, dir2, expected_coun
 }
 
 context("Normalization runs: Normal run")
-
 if (normalRun) {
     test_that("Normalization run succeeds quietly", {
         
@@ -195,7 +199,6 @@ if (normalRun) {
 }
 
 context("Normalization runs: Single replicate run")
-
 if (singleRepRun) {
     test_that("Normalization run succeeds without errors (single replicates)", {
         
@@ -221,7 +224,6 @@ if (singleRepRun) {
 }
 
 context("Normalization runs: Single condition run")
-
 if (singleCondRun) {
     test_that("Normalization run succeeds without errors (single condition)", {
         
@@ -248,7 +250,6 @@ if (singleCondRun) {
 }
 
 context("Normalization runs: Zeroes and empty cells instead of NAs")
-
 if (nonNAEmptyRun) {
     test_that("Normalization run succeeds without errors (Non-NA)", {
         
@@ -274,7 +275,6 @@ if (nonNAEmptyRun) {
 }
 
 context("Normalization runs: Log2-transformed input")
-
 if (logTransformedRun) {
     test_that("Normalization run succeeds without errors (already log transformed)", {
         expect_silent(
@@ -477,13 +477,24 @@ if (noAnnotRun) {
 
 context("Statistics runs: Normal")
 if (statisticsRunNormal) {
+    
+    currName <- "normal"
+    currDesignPath <- designPath
+    currDataPath <- dataPath
+    currRefDir <- statResultsDirNormal
+    
+    designDf <- read.csv(currDesignPath, sep="\t")
+    samples <- as.character(designDf$sample)
+    currOutDir <- paste0(tempOut, "/", currName)
+    statCols <- c("4-5_PValue", "4-5_AdjPVal", "4-5_log2FoldChange", "featureAvg")
+    
     test_that("Statistics run succeeds without errors", {
-        
+
         expect_silent(
             normalyzerDE(
-                jobName="unit_test_run_stat",
-                dataPath=dataPath,
-                designPath=designPath,
+                jobName=currName,
+                dataPath=currDataPath,
+                designPath=currDesignPath,
                 outputDir=tempOut,
                 comparisons=c("4-5"),
                 logTrans=TRUE,
@@ -494,17 +505,11 @@ if (statisticsRunNormal) {
     
     test_that("Statistics results are identical to previous", {
         
-        designDf <- read.csv(designPath, sep="\t")
-        samples <- as.character(designDf$sample)
-        currOutDir <- paste0(tempOut, "/unit_test_run_stat")
-        statCols <- c("4-5_PValue", "4-5_AdjPVal", "4-5_log2FoldChange", "featureAvg")
-
-        
         compare_output_directories(
             "Stats: Normal run",
             samples,
             currOutDir,
-            referenceStatResultsDir,
+            currRefDir,
             stat_cols=statCols
         )
     })
@@ -512,13 +517,29 @@ if (statisticsRunNormal) {
 
 context("Statistics runs: Single annotation column")
 if (statisticsRunSingleAnnot) {
+    
+    currName <- "normal"
+    currDesignPath <- designPath
+    currDataPath <- dataPathSingleAnnot
+    currRefDir <- statResultsDirNormal
+    
+    designDf <- read.csv(currDesignPath, sep="\t")
+    samples <- as.character(designDf$sample)
+    currOutDir <- paste0(tempOut, "/", currName)
+    statCols <- c("4-5_PValue", "4-5_AdjPVal", "4-5_log2FoldChange", "featureAvg")
+    
+    rawDf <- read.csv(currDataPath, sep="\t", stringsAsFactors=FALSE, 
+                      comment.char="", quote="", header=TRUE, check.names=FALSE)
+    annotDf <- rawDf[, "Average RT", drop=FALSE]
+    statCols <- c("4-5_PValue", "4-5_AdjPVal", "4-5_log2FoldChange", "featureAvg")
+    
     test_that("Statistics (single annot) run succeeds without errors", {
         
         expect_silent(
             normalyzerDE(
-                jobName="unit_test_run_stat",
-                dataPath=dataPathSingleAnnot,
-                designPath=designPath,
+                jobName=currName,
+                dataPath=currDataPath,
+                designPath=currDesignPath,
                 outputDir=tempOut,
                 comparisons=c("4-5"),
                 logTrans=TRUE,
@@ -529,19 +550,11 @@ if (statisticsRunSingleAnnot) {
     
     test_that("Statistics (single annot) results are identical to previous", {
         
-        designDf <- read.csv(designPath, sep="\t")
-        samples <- as.character(designDf$sample)
-        currOutDir <- paste0(tempOut, "/unit_test_run_stat")
-        rawDf <- read.csv(dataPathSingleAnnot, sep="\t", stringsAsFactors=FALSE, 
-                          comment.char="", quote="", header=TRUE, check.names=FALSE)
-        annotDf <- rawDf[, "Average RT", drop=FALSE]
-        statCols <- c("4-5_PValue", "4-5_AdjPVal", "4-5_log2FoldChange", "featureAvg")
-        
         compare_output_directories(
             "Stats: Single annotation column run",
             samples,
             currOutDir,
-            referenceStatResultsDir,
+            currRefDir,
             custom_annot=annotDf,
             stat_cols=statCols
         )
@@ -550,13 +563,24 @@ if (statisticsRunSingleAnnot) {
 
 context("Statistics runs: No annotation column")
 if (statisticsRunNoAnnot) {
+    
+    currName <- "normal"
+    currDesignPath <- designPath
+    currDataPath <- dataPathNoAnnot
+    currRefDir <- statResultsDirNormal
+    
+    designDf <- read.csv(currDesignPath, sep="\t")
+    samples <- as.character(designDf$sample)
+    currOutDir <- paste0(tempOut, "/", currName)
+    statCols <- c("4-5_PValue", "4-5_AdjPVal", "4-5_log2FoldChange", "featureAvg")
+    
     test_that("Statistics (no annot) run succeeds without errors", {
         
         expect_silent(
             normalyzerDE(
-                jobName="unit_test_run_stat",
-                dataPath=dataPathNoAnnot,
-                designPath=designPath,
+                jobName=currName,
+                dataPath=currDataPath,
+                designPath=currDesignPath,
                 outputDir=tempOut,
                 comparisons=c("4-5"),
                 logTrans=TRUE,
@@ -567,16 +591,11 @@ if (statisticsRunNoAnnot) {
     
     test_that("Statistics (no annot) results are identical to previous", {
         
-        designDf <- read.csv(designPath, sep="\t")
-        samples <- as.character(designDf$sample)
-        currOutDir <- paste0(tempOut, "/unit_test_run_stat")
-        statCols <- c("4-5_PValue", "4-5_AdjPVal", "4-5_log2FoldChange", "featureAvg")
-        
         compare_output_directories(
             "Stats: No annotation column run",
             samples,
             currOutDir,
-            referenceStatResultsDir,
+            statResultsDirNormal,
             custom_annot=as.data.frame(matrix(ncol=0, nrow=100)),
             stat_cols=statCols
         )
@@ -608,22 +627,118 @@ if (statisticsRunCustomThreshold) {
 context("Statistics runs: Welch")
 if (statisticsRunWelch) {
     
+    currName <- "welch"
+    currDesignPath <- designPath
+    currDataPath <- dataPath
+    currRefDir <- statResultsDirNormal
+    
+    designDf <- read.csv(currDesignPath, sep="\t")
+    samples <- as.character(designDf$sample)
+    currOutDir <- paste0(tempOut, "/", currName)
+    statCols <- c("4-5_PValue", "4-5_AdjPVal", "4-5_log2FoldChange", "featureAvg")
+    
+    test_that("Statistics run succeeds without errors", {
+        expect_silent(
+            normalyzerDE(
+                jobName=currName, 
+                designPath=currDesignPath, 
+                dataPath=currDataPath, 
+                outputDir=tempOut, 
+                logTrans=TRUE, 
+                comparisons=c("4-5"), 
+                leastRepCount=2, 
+                sampleCol="sample", 
+                condCol="group", 
+                type="welch",
+                quiet=TRUE
+            )
+        )
+    })
+    
+    test_that("Statistics (welch) results are identical to previous", {
+        
+        compare_output_directories(
+            "Stats: No annotation column run",
+            samples,
+            currOutDir,
+            statResultsDirWelch,
+            stat_cols=statCols
+        )
+    })
 }
 
 context("Statistics runs: Batch")
 if (statisticsRunBatch) {
     
+    currName <- "batch"
+    currDesignPath <- designPath
+    currDataPath <- dataPath
+    currRefDir <- statResultsDirBatch
+    
+    designDf <- read.csv(currDesignPath, sep="\t")
+    samples <- as.character(designDf$sample)
+    currOutDir <- paste0(tempOut, "/", currName)
+    statCols <- c("4-5_PValue", "4-5_AdjPVal", "4-5_log2FoldChange", "featureAvg")
+    
+    test_that("Statistics run succeeds without errors", {
+        expect_silent(
+            normalyzerDE(
+                jobName=currName, 
+                designPath=currDesignPath, 
+                dataPath=currDataPath, 
+                outputDir=tempOut, 
+                logTrans=TRUE, 
+                comparisons=c("4-5"), 
+                leastRepCount=1, 
+                sampleCol="sample", 
+                condCol="group", 
+                type="limma",
+                batchCol="batch",
+                quiet=TRUE
+            )
+        )
+    })
+    
+    test_that("Statistics (batch) results are identical to previous", {
+        
+        compare_output_directories(
+            "Stats: Batch",
+            samples,
+            currOutDir,
+            currRefDir,
+            stat_cols=statCols
+        )
+    })
 }
 
 context("Statistics runs: Technical replicate reduce")
 if (statisticsRunTechRepRed) {
     
+    currName <- "techrep"
+    currDesignPath <- fourColDesignPath
+    currDataPath <- fourColDataPath
+    currRefDir <- statResultsTechRep
+    
+    designDf <- read.csv(currDesignPath, sep="\t")
+    currOutDir <- paste0(tempOut, "/", currName)
+    statCols <- c("4-5_PValue", "4-5_AdjPVal", "4-5_log2FoldChange", "featureAvg")
+    
+    designDf <- read.csv(designPath, sep="\t")
+    samples <- c(
+        "s_125amol_1.s_125amol_2",
+        "s_125amol_3.s_125amol_4",
+        "s_12500amol_1.s_12500amol_2",
+        "s_12500amol_3.s_12500amol_4",
+        "s_25000amol_1.s_25000amol_2",
+        "s_25000amol_3.s_25000amol_4"
+    )
+    
     test_that("Statistics run succeeds without errors", {
         expect_silent(
             normalyzerDE(
                 jobName="techrep",
-                dataPath=fourColDataPath,
-                designPath=fourColDesignPath,
+                designPath=currDesignPath,
+                dataPath=currDataPath,
                 outputDir=tempOut,
                 comparisons=c("4-5"),
                 logTrans=TRUE,
@@ -637,40 +752,107 @@ if (statisticsRunTechRepRed) {
     })
     
     test_that("Statistics results are identical to previous", {
-        designDf <- read.csv(designPath, sep="\t")
-        samples <- c(
-            "s_125amol_1.s_125amol_2",
-            "s_125amol_3.s_125amol_4",
-            "s_12500amol_1.s_12500amol_2",
-            "s_12500amol_3.s_12500amol_4",
-            "s_25000amol_1.s_25000amol_2",
-            "s_25000amol_3.s_25000amol_4"
-        )
-
-        currOutDir <- paste0(tempOut, "/techrep")
-        statCols <- c("4-5_PValue", "4-5_AdjPVal", "4-5_log2FoldChange", "featureAvg")
-        
         compare_output_directories(
             "Stats: Techrep run",
             samples,
             currOutDir,
-            referenceStatTechrepResultsDir,
+            currRefDir,
             stat_cols=statCols
         )
     })
     
 }
 
-context("Statistics runs: Without log transform")
-
+context("Statistics runs: Log transformed")
 if (statisticsLogTransform) {
     
+    currName <- "normal"
+    currDesignPath <- designPath
+    currDataPath <- dataPathlog2
+    currRefDir <- statResultsDirNormal
+    
+    designDf <- read.csv(designPath, sep="\t")
+    samples <- as.character(designDf$sample)
+    currOutDir <- paste0(tempOut, "/", currName)
+    statCols <- c("4-5_PValue", "4-5_AdjPVal", "4-5_log2FoldChange", "featureAvg")
+    
+    test_that("Statistics run succeeds without errors", {
+        expect_silent(
+            normalyzerDE(
+                jobName=currName, 
+                designPath=currDesignPath, 
+                dataPath=currDataPath, 
+                outputDir=tempOut, 
+                logTrans=FALSE, 
+                comparisons=c("4-5"), 
+                leastRepCount=1,
+                sampleCol="sample", 
+                condCol="group", 
+                type="limma",
+                quiet=TRUE
+            )
+        )
+    })
+    
+    test_that("Statistics (log2) results are identical to previous", {
+        
+        compare_output_directories(
+            "Stats: Log2 transformed input",
+            samples,
+            currOutDir,
+            currRefDir,
+            stat_cols=statCols
+        )
+    })
 }
 
 context("Statistics runs: Multiple comparisons")
-
 if (statisticsMultipleComparisons) {
     
+    currName <- "multiple_comps"
+    currDesignPath <- fourColDesignPath
+    currDataPath <- fourColDataPath
+    currRefDir <- statResultsDirMultipleComps
+    
+    designDf <- read.csv(currDesignPath, sep="\t")
+    samples <- as.character(designDf$sample)
+    currOutDir <- paste0(tempOut, "/", currName)
+    statCols <- c(
+        "4-5_PValue", "4-6_PValue", "5-6_PValue", 
+        "4-5_AdjPVal", "4-6_AdjPVal", "5-6_AdjPVal", 
+        "4-5_log2FoldChange", "4-6_log2FoldChange", "5-6_log2FoldChange", 
+        "featureAvg")
+    
+    test_that("Statistics run succeeds without errors", {
+        expect_silent(
+            normalyzerDE(
+                jobName=currName, 
+                designPath=currDesignPath, 
+                dataPath=currDataPath, 
+                outputDir=tempOut, 
+                logTrans=FALSE, 
+                comparisons=c("4-5", "4-6", "5-6"), 
+                leastRepCount=1, 
+                sampleCol="sample", 
+                condCol="group", 
+                type="limma",
+                quiet=TRUE
+            )
+        )
+    })
+    
+    test_that("Statistics (multiple comparisons) results are identical to previous", {
+        
+        # browser()
+        
+        compare_output_directories(
+            "Stats: Multiple comparisons",
+            samples,
+            currOutDir,
+            currRefDir,
+            stat_cols=statCols
+        )
+    })
 }
 
 context("SummarizedExperiments run")
