@@ -45,16 +45,16 @@ singleAnnotColRun <- FALSE || runAllNormalization || forceAll
 noAnnotRun <- FALSE || runAllNormalization || forceAll
 
 ### Stats report runs ###
-runAllStats <- TRUE
-statisticsRunNormal <- TRUE || runAllStats || forceAll
-statisticsRunSingleAnnot <- TRUE || runAllStats || forceAll
-statisticsRunNoAnnot <- TRUE || runAllStats || forceAll
+runAllStats <- FALSE
+statisticsRunNormal <- FALSE || runAllStats || forceAll
+statisticsRunSingleAnnot <- FALSE || runAllStats || forceAll
+statisticsRunNoAnnot <- FALSE || runAllStats || forceAll
 statisticsRunCustomThreshold <- FALSE || runAllStats || forceAll
 statisticsRunWelch <- FALSE || runAllStats || forceAll
 statisticsRunBatch <- FALSE || runAllStats || forceAll
 statisticsRunTechRepRed <- FALSE || runAllStats || forceAll
-statisticsLogTransform <- TRUE || runAllStats || forceAll
-statisticsMultipleComparisons <- FALSE || runAllStats || forceAll
+statisticsLogTransform <- FALSE || runAllStats || forceAll
+statisticsMultipleComparisons <- TRUE || runAllStats || forceAll
 
 ### SummarizedExperiments runs ###
 summarizedExperimentsRun <- FALSE || forceAll

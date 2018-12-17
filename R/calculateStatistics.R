@@ -153,8 +153,99 @@ generateStatsReport <- function(nst, jobName, jobDir,
         nst, jobName, currentLayout, pageNo, type="Vulcano",
         sigThres=sigThres, sigThresType=sigThresType, log2FoldThres=log2FoldThres
     )
+    
+    pageNo <- 5
+    plotContrastPCA(
+        nst, jobName, currentLayout, pageNo, pcs=c(1,2)
+    )
 
+    pageNo <- 6
+    plotContrastPCA(
+        nst, jobName, currentLayout, pageNo, pcs=c(3,4)
+    )
+    
     grDevices::dev.off()
+}
+
+
+
+#' Show in a PCA plot what samples are compared in statistical contrast
+#' This is useful to understand what conditions are compared and for checking
+#' for outliers in the contrast
+#' 
+#' @param nst NormalyzerDE statistics object.
+#' @param jobName Name of processing run.
+#' @param currentLayout Layout used for document.
+#' @param pageno Current page number.
+#' @param type Specify whether to plot 'Vulcano' or 'MA'.
+#' @return None
+#' @keywords internal
+plotContrastPCA <- function(nst, jobName, currentLayout, pageno, pcs=c(1,2)) {
+    
+    activeLevelsFactor <- function(fullFactor, activeLevelsList) {
+        
+        activeIndsList <- list()
+        for (levelName in names(activeLevelsList)) {
+            activeLevel <- activeLevelsList[[levelName]]
+            activeInds <- which(fullFactor %in% activeLevel)
+            for (ind in activeInds) {
+                activeIndsList[[as.character(ind)]] <- levelName
+            }
+        }
+        getLevel <- function(index, activeIndsList) {
+            if (index %in% names(activeIndsList)) {
+                activeIndsList[[as.character(index)]]
+            }
+            else {
+                "other"
+            }
+        }
+        subLevel <- vapply(seq_len(length(fullFactor)), getLevel, 
+                           "", activeIndsList = activeIndsList)
+        subLevel
+    }
+    
+    contrasts <- contrasts(nst)
+    dataDf <- dataMat(nst)
+    dfPCA <- stats::prcomp(t(dataDf[complete.cases(dataDf), ]), scale=TRUE, center=TRUE)
+    dfOut <- as.data.frame(dfPCA$x)
+    percentage <- round(dfPCA$sdev / sum(dfPCA$sdev) * 100, 2)
+    percentage <- paste0(colnames(dfOut), " (", paste0(as.character(percentage), "%)"))
+    groups <- condCol(nst)
+    dfOut$sample <- colnames(dataDf)
+    
+    pc1 <- paste0("PC", pcs[1])
+    pc2 <- paste0("PC", pcs[2])
+    
+    plots <- list()
+    
+    for (contrast in contrasts) {
+        
+        contrastLevels <- unlist(strsplit(contrast, "-"))
+        
+        dfOut$group <- activeLevelsFactor(
+            condCol(nst), 
+            list(high=contrastLevels[1], low=contrastLevels[2])
+        )
+        
+        plt <- ggplot2::ggplot(
+            dfOut, 
+            ggplot2::aes_string(x=pc1, y=pc2, color="group", label="sample")) + 
+            ggplot2::geom_text() + 
+            ggplot2::theme_classic() +
+            ggplot2::scale_color_manual(values=c("#00AAAA", "#AA0000", "#BBBBBB")) +
+            ggplot2::ggtitle(paste(contrastLevels, collapse=" vs. ")) +
+            ggplot2::xlab(percentage[pcs[1]]) +
+            ggplot2::ylab(percentage[pcs[2]])  
+                
+        plots[[contrast]] <- plt
+    }
+    
+    
+    grid::grid.newpage()
+    grid::pushViewport(grid::viewport(layout=currentLayout))
+    title <- paste("PCA, contrast colored (factors", pcs[1], " and ", pcs[2], ")")
+    printPlots(plots, title, pageno, jobName, currentLayout)  
 }
 
 #' Takes an NormalyzerStatistics instance and generates and prints a p-value

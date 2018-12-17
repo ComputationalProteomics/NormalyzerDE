@@ -45,6 +45,12 @@ information as well as a graphical report of the comparisons.
 
 \item{\code{pairwiseCompsFold}}{List with log2 fold-change values for pairwise 
 comparisons}
+
+\item{\code{contrasts}}{Spot for saving vector of last used contrasts}
+
+\item{\code{condCol}}{Column containing last used conditions}
+
+\item{\code{batchCol}}{Column containing last used batch conditions}
 }}
 
 \examples{

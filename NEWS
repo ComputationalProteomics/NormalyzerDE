@@ -1,3 +1,9 @@
+CHANGES IN VERSION 1.1.10
+----------------------------------
+
+* Add PCA visualizations showing which samples are included in each performed
+    contrast
+
 CHANGES IN VERSION 1.1.9
 ----------------------------------
 

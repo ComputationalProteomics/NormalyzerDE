@@ -16,6 +16,9 @@
 #' @slot pairwiseCompsAve List with average expression values
 #' @slot pairwiseCompsFold List with log2 fold-change values for pairwise 
 #'   comparisons
+#' @slot contrasts Spot for saving vector of last used contrasts
+#' @slot condCol Column containing last used conditions
+#' @slot batchCol Column containing last used batch conditions
 NormalyzerStatistics <- setClass("NormalyzerStatistics",
                                  slots = c(
                                      annotMat = "matrix",
@@ -25,7 +28,11 @@ NormalyzerStatistics <- setClass("NormalyzerStatistics",
                                      pairwiseCompsP = "list",
                                      pairwiseCompsFdr = "list",
                                      pairwiseCompsAve = "list",
-                                     pairwiseCompsFold = "list"
+                                     pairwiseCompsFold = "list",
+                                     
+                                     contrasts = "character",
+                                     condCol = "character",
+                                     batchCol = "numeric"
                                  ))
 
 #' Constructor for NormalyzerStatistics
@@ -60,10 +67,35 @@ NormalyzerStatistics <- function(experimentObj, logTrans=FALSE) {
 setGeneric("condCol", function(object) { standardGeneric("condCol") })
 setMethod("condCol", signature(object="NormalyzerStatistics"), 
           function(object) { slot(object, "condCol") })
+setGeneric("condCol<-", function(object, value) { standardGeneric("condCol<-") })
+setReplaceMethod("condCol", signature(object="NormalyzerStatistics"), 
+                 function(object, value) { 
+                     slot(object, "condCol") <- value
+                     validObject(object)
+                     object
+                 })
 
 setGeneric("batchCol", function(object) { standardGeneric("batchCol") })
 setMethod("batchCol", signature(object="NormalyzerStatistics"), 
           function(object) { slot(object, "batchCol") })
+setGeneric("batchCol<-", function(object, value) { standardGeneric("batchCol<-") })
+setReplaceMethod("batchCol", signature(object="NormalyzerStatistics"), 
+                 function(object, value) { 
+                     slot(object, "batchCol") <- value
+                     validObject(object)
+                     object
+                 })
+
+setGeneric("contrasts", function(object) { standardGeneric("contrasts") })
+setMethod("contrasts", signature(object="NormalyzerStatistics"), 
+          function(object) { slot(object, "contrasts") })
+setGeneric("contrasts<-", function(object, value) { standardGeneric("contrasts<-") })
+setReplaceMethod("contrasts", signature(object="NormalyzerStatistics"), 
+                 function(object, value) { 
+                     slot(object, "contrasts") <- value
+                     validObject(object)
+                     object
+                 })
 
 setGeneric("annotMat", function(object) { standardGeneric("annotMat") })
 setMethod("annotMat", signature(object="NormalyzerStatistics"), 
@@ -184,12 +216,17 @@ setMethod(f="calculateContrasts",
               
               dataMat <- dataMat(nst)
               designDf <- designDf(nst)
-              
+
+              contrasts(nst) <- comparisons
+              condCol(nst) <- as.character(designDf[, condCol])
+
               if (!is.null(batchCol)) {
                   conditionCombs <- paste(designDf[, condCol], designDf[, batchCol], sep="_")
+                  batchCol(nst) <- as.factor(designDf[, batchCol])
               }
               else {
                   conditionCombs <- designDf[, condCol]
+                  batchCol(nst) <- numeric()
               }
               
               rownames(dataMat) <- seq_len(nrow(dataMat))
