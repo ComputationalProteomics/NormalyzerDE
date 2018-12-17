@@ -106,6 +106,8 @@ normalyzer <- function(
         rtWindowShifts=1,
         rtWindowMergeMethod="mean"
     ) {
+    
+    if (!quiet) message("You are running version ", utils::packageVersion("NormalyzerDE"), " of NormalyzerDE")
 
     if (is.null(experimentObj) && (is.null(designPath) || is.null(dataPath))) {
         stop("Either options 'designPath' plus 'dataPath' or 'summarizedExp' need to be provided")

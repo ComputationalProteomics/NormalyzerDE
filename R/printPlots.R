@@ -40,8 +40,7 @@ printPlots <- function(plotlist, plotname, pageno, jobname, currentLayout) {
     for (i in seq_along(plotlist)) {
         
         if (gridSize == 1 || (i != 1 && i %% gridSize == 1)) {
-            print(paste("New page, row:", row, "col:", col))
-            grid::grid.newpage()
+             grid::grid.newpage()
             grid::pushViewport(grid::viewport(layout=currentLayout))
             
             grid::grid.rect(vp=grid::viewport(layout.pos.row=row, layout.pos.col=col), gp=gpfill)
