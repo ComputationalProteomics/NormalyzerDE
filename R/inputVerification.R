@@ -188,6 +188,7 @@ getVerifiedNormalyzerObject <- function(
         noLogTransform=FALSE
     ) {
 
+    SummarizedExperiment::assay(summarizedExp) <- preprocessData(SummarizedExperiment::assay(summarizedExp), quiet=quiet)
     summarizedExp <- filterOnlyNARows(summarizedExp)
     
     # TODO: The getter seems to not be available, check later if temporary issue
@@ -210,8 +211,9 @@ getVerifiedNormalyzerObject <- function(
     verifyDesignMatrix(dataMatrix, designMatrix, sampleCol)
     verifyValidNumbers(dataMatrix, groups, noLogTransform=noLogTransform, quiet=quiet)
     
-    repSortedRawData <- getReplicateSortedData(dataMatrix, groups)
-    processedRawData <- preprocessData(repSortedRawData, quiet=quiet)
+    processedRawData <- getReplicateSortedData(dataMatrix, groups)
+    # repSortedRawData <- getReplicateSortedData(dataMatrix, groups)
+    # processedRawData <- preprocessData(repSortedRawData, quiet=quiet)
     
     lowCountSampleFiltered <- getLowCountSampleFiltered(
         processedRawData, 
