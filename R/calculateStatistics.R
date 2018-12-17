@@ -205,7 +205,7 @@ plotContrastPCA <- function(nst, jobName, currentLayout, pageno, pcs=c(1,2)) {
         subLevel
     }
     
-    contrasts <- contrasts(nst)
+    contrasts <- comparisons(nst)
     dataDf <- dataMat(nst)
     dfPCA <- stats::prcomp(t(dataDf[complete.cases(dataDf), ]), scale=TRUE, center=TRUE)
     dfOut <- as.data.frame(dfPCA$x)

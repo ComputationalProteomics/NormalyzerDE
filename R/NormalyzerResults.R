@@ -108,7 +108,7 @@ setMethod("performNormalizations", "NormalyzerResults",
                   if (!quiet) {
                       message("VSN normalization assumes non log-transformed data, as the option ",
                               "noLogTransform is specified it is assumed to not need log2-transformation ",
-                              "and thus the VSN normalization is skipped")
+                              "and thus the VSN normalization is skipped\n")
                   }
               }
               
@@ -124,7 +124,7 @@ setMethod("performNormalizations", "NormalyzerResults",
               
               if (!enoughDataForRT) {
                   warning("Number of features in data matrix is smaller than minimum normalization window (set by option 'rtWindowMinCount') ",
-                          "for RT normalization - skipping RT normalizations.")
+                          "for RT normalization - skipping RT normalizations.\n")
               }
               else if (rtNorm && rtColPresent) {
 
@@ -175,14 +175,14 @@ setMethod("performNormalizations", "NormalyzerResults",
                   }
                   else {
                       if (!quiet) {
-                          message("Skipping RT-VSN, only available for non log-transformed data")
+                          message("Skipping RT-VSN, only available for non log-transformed data\n")
                       }
                   }
               }
               else {
                   if (!quiet) {
                       message("No RT column specified (column named 'RT') or option not specified",
-                              " Skipping RT normalization.")
+                              " Skipping RT normalization.\n")
                   }
               }
               

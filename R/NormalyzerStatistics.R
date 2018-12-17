@@ -30,7 +30,7 @@ NormalyzerStatistics <- setClass("NormalyzerStatistics",
                                      pairwiseCompsAve = "list",
                                      pairwiseCompsFold = "list",
                                      
-                                     contrasts = "character",
+                                     comparisons = "character",
                                      condCol = "character",
                                      batchCol = "numeric"
                                  ))
@@ -86,13 +86,13 @@ setReplaceMethod("batchCol", signature(object="NormalyzerStatistics"),
                      object
                  })
 
-setGeneric("contrasts", function(object) { standardGeneric("contrasts") })
-setMethod("contrasts", signature(object="NormalyzerStatistics"), 
-          function(object) { slot(object, "contrasts") })
-setGeneric("contrasts<-", function(object, value) { standardGeneric("contrasts<-") })
-setReplaceMethod("contrasts", signature(object="NormalyzerStatistics"), 
+setGeneric("comparisons", function(object) { standardGeneric("comparisons") })
+setMethod("comparisons", signature(object="NormalyzerStatistics"), 
+          function(object) { slot(object, "comparisons") })
+setGeneric("comparisons<-", function(object, value) { standardGeneric("comparisons<-") })
+setReplaceMethod("comparisons", signature(object="NormalyzerStatistics"), 
                  function(object, value) { 
-                     slot(object, "contrasts") <- value
+                     slot(object, "comparisons") <- value
                      validObject(object)
                      object
                  })
@@ -217,7 +217,7 @@ setMethod(f="calculateContrasts",
               dataMat <- dataMat(nst)
               designDf <- designDf(nst)
 
-              contrasts(nst) <- comparisons
+              comparisons(nst) <- comparisons
               condCol(nst) <- as.character(designDf[, condCol])
 
               if (!is.null(batchCol)) {

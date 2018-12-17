@@ -259,9 +259,7 @@ filterOnlyNARows <- function(summarizedExp) {
     
     nonFullNAContr <- rowSums(is.na(SummarizedExperiment::assay(summarizedExp))) != ncol(summarizedExp)
     if (length(which(!nonFullNAContr)) > 0) {
-        warning(
-            length(which(!nonFullNAContr)), 
-            " entries with only NA values found and were omitted")
+        message(length(which(!nonFullNAContr)), " entries with only NA values omitted")
         summarizedExp <- summarizedExp[nonFullNAContr, ]
     }
     
@@ -284,7 +282,7 @@ loadRawDataFromFile <- function(inputPath) {
                                                comment.char="")),
         error=function(e) {
             message("Error encountered for input file:", inputPath, ", error: ", e)
-            stop("Please provide a valid input file.")
+            stop("Please provide a valid input file.\n")
         },
         
         warning=function(w) {
@@ -292,7 +290,7 @@ loadRawDataFromFile <- function(inputPath) {
                     inputPath,
                     "Warning:",
                     w)
-            stop("Please investigate the warning and provide a valid input file.")
+            stop("Please investigate the warning and provide a valid input file.\n")
         }
     )
     

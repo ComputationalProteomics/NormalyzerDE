@@ -175,7 +175,7 @@ setMethod("detectSingleReplicate", "NormalyzerDataset",
                   if (!quiet) {
                       message("Non replicated samples in dataset: ",
                               paste(nonReplicatedSamples, collapse=" "),
-                              " performing limited single-replicate run")
+                              " performing limited single-replicate run\n")
                   }
               }
               else {
@@ -209,11 +209,11 @@ setMethod("detectSingletonSample", "NormalyzerDataset",
                   if (!quiet) {
                       message("Only one replicate group present. ",
                               paste("Group: ", distinctSamples[1]),
-                              " Proceeding with limited processing")
+                              " Proceeding with limited processing\n")
                   }
               }
               else if (length(distinctSamples) == 0) {
-                  stop("No sample replicate groups found - Aborting.")
+                  stop("No sample replicate groups found - Aborting.\n")
               }
               
               singletonSamplePresent
@@ -243,7 +243,7 @@ getRTColumn <- function(annotData, quiet=FALSE) {
     if (length(rtColumns) > 1) {
         errorMessage <- paste(
             "Only able to handle single RT column (name containing RT standing by itself) ",
-            "Please change name or remove unwanted RT columns")
+            "Please change name or remove unwanted RT columns\n")
         stop(errorMessage)
     }
     else if (length(rtColumns) == 1) {
@@ -255,7 +255,7 @@ getRTColumn <- function(annotData, quiet=FALSE) {
         return(retentionTimes)
     }
     else {
-        if (!quiet) message("No RT column found, skipping RT processing")
+        if (!quiet) message("No RT column found, skipping RT processing\n")
         return(NULL)
     }
 }
