@@ -564,7 +564,7 @@ verifyMultipleSamplesPresent <- function(dataMatrix, groups, requireReplicates=T
             paste(distinctSamples, collapse=" "),
             "For full processing two or more sample groups are required",
             "You can force limited processing for one sample group by setting the", 
-            "\"requireReplicates\" option to FALSE",
+            "\"requireReplicates\" option to FALSE\n",
             sep="\n")
         
         if (requireReplicates) {

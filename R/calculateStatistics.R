@@ -209,8 +209,8 @@ plotContrastPCA <- function(nst, jobName, currentLayout, pageno, pcs=c(1,2)) {
     dataDf <- dataMat(nst)
     dfPCA <- stats::prcomp(t(dataDf[complete.cases(dataDf), ]), scale=TRUE, center=TRUE)
     dfOut <- as.data.frame(dfPCA$x)
-    percentage <- round(dfPCA$sdev / sum(dfPCA$sdev) * 100, 2)
-    percentage <- paste0(colnames(dfOut), " (", paste0(as.character(percentage), "%)"))
+    percentageVar <- round(dfPCA$sdev^2 / sum(dfPCA$sdev^2) * 100, 2)
+    percentageVar <- paste0(colnames(dfOut), " (", paste0(as.character(percentageVar), "%)"))
     groups <- condCol(nst)
     dfOut$sample <- colnames(dataDf)
     
@@ -235,8 +235,8 @@ plotContrastPCA <- function(nst, jobName, currentLayout, pageno, pcs=c(1,2)) {
             ggplot2::theme_classic() +
             ggplot2::scale_color_manual(values=c("#00AAAA", "#AA0000", "#BBBBBB")) +
             ggplot2::ggtitle(paste(contrastLevels, collapse=" vs. ")) +
-            ggplot2::xlab(percentage[pcs[1]]) +
-            ggplot2::ylab(percentage[pcs[2]])  
+            ggplot2::xlab(percentageVar[pcs[1]]) +
+            ggplot2::ylab(percentageVar[pcs[2]])  
                 
         plots[[contrast]] <- plt
     }

@@ -20,6 +20,9 @@ vignettes/testoutstat/
 vignettes/vignette_run/
 vignettes/data/
 
+# Dev. test file
+tests/testthat/*devtest.R
+
 hidden_file_ext = (
     ".renviron", ".rprofile", ".rproj", ".rproj.user", ".rhistory",
     ".rapp.history", ".o", ".sl", ".so", ".dylib", ".a", ".dll",
