@@ -142,111 +142,139 @@ generateStatsReport <- function(nst, jobName, jobDir,
     pageNo <- 2
     plotContrastPHists(nst, jobName, currentLayout, pageNo)
     
-    pageNo <- 3
+    pageNo <- pageNo + 1
     plotSigScatter(
         nst, jobName, currentLayout, pageNo, type="MA", 
         sigThres=sigThres, sigThresType=sigThresType, log2FoldThres=log2FoldThres
     )
 
-    pageNo <- 4
+    pageNo <- pageNo + 1
     plotSigScatter(
         nst, jobName, currentLayout, pageNo, type="Vulcano",
         sigThres=sigThres, sigThresType=sigThresType, log2FoldThres=log2FoldThres
     )
     
-    pageNo <- 5
+    pageNo <- pageNo + 1
     plotContrastPCA(
         nst, jobName, currentLayout, pageNo, pcs=c(1,2)
     )
 
-    pageNo <- 6
+    pageNo <- pageNo + 1
     plotContrastPCA(
         nst, jobName, currentLayout, pageNo, pcs=c(3,4)
     )
     
+    if (length(comparisons(nst)) > 1) {
+        pageNo <- pageNo + 1
+        plotComparisonVenns(
+            nst, jobName, currentLayout, pageNo,
+            sigThres=sigThres, sigThresType=sigThresType, log2FoldThres=log2FoldThres
+        )
+    }
+    
     grDevices::dev.off()
 }
 
+getSigs <- function(nst, sigThresType, sigThres, log2FoldThres) {
 
+    contrastPLists <- pairwiseCompsP(nst)
+    contrastFDRLists <- pairwiseCompsFdr(nst)
+    contrastFoldLists <- pairwiseCompsFold(nst)
 
-#' Show in a PCA plot what samples are compared in statistical contrast
-#' This is useful to understand what conditions are compared and for checking
-#' for outliers in the contrast
+    sigLists <- list()
+    
+    getSigList <- function(contrast, contrastPLists, contrastFDRLists, contrastFoldLists) {
+        
+        pVals <- contrastPLists[[contrast]]
+        fdrVals <- contrastFDRLists[[contrast]]
+        fold <- contrastFoldLists[[contrast]]
+        
+        if (sigThresType == "fdr") {
+            statSig <- (fdrVals < sigThres)
+        }
+        else if (sigThresType == "p") {
+            statSig <- (pVals < sigThres)
+        }
+        else {
+            stop("Unknown significance threshold type: ", sigThresType)
+        }
+        
+        if (log2FoldThres != 0) {
+            foldSig <- abs(fold) >= log2FoldThres
+            sig <- statSig & foldSig
+        }
+        else {
+            sig <- statSig
+        }
+        
+        sig
+    }
+
+    sigLists <- lapply(names(contrastPLists), getSigList, 
+           contrastPLists=contrastPLists,
+           contrastFDRLists=contrastFDRLists,
+           contrastFoldLists=contrastFoldLists
+    )
+
+    sigLists
+}
+
+#' If multiple comparisons - Show overlap in Venn diagrams
 #' 
 #' @param nst NormalyzerDE statistics object.
 #' @param jobName Name of processing run.
 #' @param currentLayout Layout used for document.
 #' @param pageno Current page number.
-#' @param type Specify whether to plot 'Vulcano' or 'MA'.
 #' @return None
 #' @keywords internal
-plotContrastPCA <- function(nst, jobName, currentLayout, pageno, pcs=c(1,2)) {
+plotComparisonVenns <- function(nst, jobName, currentLayout, pageno,
+                                sigThres=0.1, sigThresType="fdr", 
+                                log2FoldThres=0, maxContrasts=4) {
     
-    activeLevelsFactor <- function(fullFactor, activeLevelsList) {
-        
-        activeIndsList <- list()
-        for (levelName in names(activeLevelsList)) {
-            activeLevel <- activeLevelsList[[levelName]]
-            activeInds <- which(fullFactor %in% activeLevel)
-            for (ind in activeInds) {
-                activeIndsList[[as.character(ind)]] <- levelName
-            }
-        }
-        getLevel <- function(index, activeIndsList) {
-            if (index %in% names(activeIndsList)) {
-                activeIndsList[[as.character(index)]]
-            }
-            else {
-                "other"
-            }
-        }
-        subLevel <- vapply(seq_len(length(fullFactor)), getLevel, 
-                           "", activeIndsList = activeIndsList)
-        subLevel
-    }
-    
+    contrastSig <- getSigs(nst, sigThresType, sigThres, log2FoldThres)
+
     contrasts <- comparisons(nst)
-    dataDf <- dataMat(nst)
-    dfPCA <- stats::prcomp(t(dataDf[complete.cases(dataDf), ]), scale=TRUE, center=TRUE)
-    dfOut <- as.data.frame(dfPCA$x)
-    percentageVar <- round(dfPCA$sdev^2 / sum(dfPCA$sdev^2) * 100, 2)
-    percentageVar <- paste0(colnames(dfOut), " (", paste0(as.character(percentageVar), "%)"))
-    groups <- condCol(nst)
-    dfOut$sample <- colnames(dataDf)
+    compCount <- min(length(contrasts), maxContrasts)
     
-    pc1 <- paste0("PC", pcs[1])
-    pc2 <- paste0("PC", pcs[2])
-    
-    plots <- list()
-    
-    for (contrast in contrasts) {
-        
-        contrastLevels <- unlist(strsplit(contrast, "-"))
-        
-        dfOut$group <- activeLevelsFactor(
-            condCol(nst), 
-            list(high=contrastLevels[1], low=contrastLevels[2])
-        )
-        
-        plt <- ggplot2::ggplot(
-            dfOut, 
-            ggplot2::aes_string(x=pc1, y=pc2, color="group", label="sample")) + 
-            ggplot2::geom_text() + 
-            ggplot2::theme_classic() +
-            ggplot2::scale_color_manual(values=c("#00AAAA", "#AA0000", "#BBBBBB")) +
-            ggplot2::ggtitle(paste(contrastLevels, collapse=" vs. ")) +
-            ggplot2::xlab(percentageVar[pcs[1]]) +
-            ggplot2::ylab(percentageVar[pcs[2]])  
-                
-        plots[[contrast]] <- plt
+    plts <- list()
+    index <- 0
+    for (indOut in seq_len(compCount-1)) {
+        for (indIn in (indOut+1):compCount) {
+
+            # Credit goes to:
+            # https://scriptsandstatistics.wordpress.com/2018/04/26/how-to-plot-venn-diagrams-using-r-ggplot2-and-ggforce/
+            
+            sigInds <- as.data.frame(contrastSig[c(indIn, indOut)])
+            vdc <- limma::vennCounts(sigInds)
+            class(vdc) <- 'matrix'
+            df.vdc <- data.frame(vdc[-1, ])
+            df.vdc$x <- c(-0.5, 0, 0.5)
+            df.vdc$y <- c(0, 0, 0)
+            
+            df.venn <- data.frame(x = c(0.5, -0.5),
+                                  y = c(0, 0),
+                                  labels = c('A', 'B'))
+            
+            plt <- ggplot(df.venn) +
+                ggforce::geom_circle(aes(x0 = x, y0 = y, r = 1.5, fill = labels), alpha = .3, size = 1, colour = 'grey') +
+                ggplot2::coord_fixed() +
+                ggplot2::theme_void() +
+                theme(legend.position = 'bottom') +
+                ggplot2::scale_fill_manual(values = c('cornflowerblue', 'firebrick',  'gold')) +
+                ggplot2::scale_colour_manual(values = c('cornflowerblue', 'firebrick', 'gold'), guide = FALSE) +
+                ggplot2::labs(fill = NULL) +
+                annotate("text", x = df.vdc$x, y = df.vdc$y, label = df.vdc$Counts, size = 5)
+            
+            index <- index + 1
+            plts[[index]] <- plt
+        }
     }
-    
     
     grid::grid.newpage()
     grid::pushViewport(grid::viewport(layout=currentLayout))
-    title <- paste("PCA, contrast colored (factors", pcs[1], " and ", pcs[2], ")")
-    printPlots(plots, title, pageno, jobName, currentLayout)  
+    printPlots(plts, "Venns", pageno, jobName, currentLayout)  
 }
+
 
 #' Takes an NormalyzerStatistics instance and generates and prints a p-value
 #' histogram for each onto the viewport
@@ -361,5 +389,85 @@ plotSigScatter <- function(nst, jobName, currentLayout, pageno, type="Vulcano",
     grid::pushViewport(grid::viewport(layout=currentLayout))
     printPlots(plots, type, pageno, jobName, currentLayout)  
 }
+
+#' Show in a PCA plot what samples are compared in statistical contrast
+#' This is useful to understand what conditions are compared and for checking
+#' for outliers in the contrast
+#' 
+#' @param nst NormalyzerDE statistics object.
+#' @param jobName Name of processing run.
+#' @param currentLayout Layout used for document.
+#' @param pageno Current page number.
+#' @param type Specify whether to plot 'Vulcano' or 'MA'.
+#' @return None
+#' @keywords internal
+plotContrastPCA <- function(nst, jobName, currentLayout, pageno, pcs=c(1,2)) {
+    
+    activeLevelsFactor <- function(fullFactor, activeLevelsList) {
+        
+        activeIndsList <- list()
+        for (levelName in names(activeLevelsList)) {
+            activeLevel <- activeLevelsList[[levelName]]
+            activeInds <- which(fullFactor %in% activeLevel)
+            for (ind in activeInds) {
+                activeIndsList[[as.character(ind)]] <- levelName
+            }
+        }
+        getLevel <- function(index, activeIndsList) {
+            if (index %in% names(activeIndsList)) {
+                activeIndsList[[as.character(index)]]
+            }
+            else {
+                "other"
+            }
+        }
+        subLevel <- vapply(seq_len(length(fullFactor)), getLevel, 
+                           "", activeIndsList = activeIndsList)
+        subLevel
+    }
+    
+    contrasts <- comparisons(nst)
+    dataDf <- dataMat(nst)
+    dfPCA <- stats::prcomp(t(dataDf[complete.cases(dataDf), ]), scale=TRUE, center=TRUE)
+    dfOut <- as.data.frame(dfPCA$x)
+    percentageVar <- round(dfPCA$sdev^2 / sum(dfPCA$sdev^2) * 100, 2)
+    percentageVar <- paste0(colnames(dfOut), " (", paste0(as.character(percentageVar), "%)"))
+    groups <- condCol(nst)
+    dfOut$sample <- colnames(dataDf)
+    
+    pc1 <- paste0("PC", pcs[1])
+    pc2 <- paste0("PC", pcs[2])
+    
+    plots <- list()
+    
+    for (contrast in contrasts) {
+        
+        contrastLevels <- unlist(strsplit(contrast, "-"))
+        
+        dfOut$group <- activeLevelsFactor(
+            condCol(nst), 
+            list(high=contrastLevels[1], low=contrastLevels[2])
+        )
+        
+        plt <- ggplot2::ggplot(
+            dfOut, 
+            ggplot2::aes_string(x=pc1, y=pc2, color="group", label="sample")) + 
+            ggplot2::geom_text() + 
+            ggplot2::theme_classic() +
+            ggplot2::scale_color_manual(values=c("#00AAAA", "#AA0000", "#BBBBBB")) +
+            ggplot2::ggtitle(paste(contrastLevels, collapse=" vs. ")) +
+            ggplot2::xlab(percentageVar[pcs[1]]) +
+            ggplot2::ylab(percentageVar[pcs[2]])  
+        
+        plots[[contrast]] <- plt
+    }
+    
+    
+    grid::grid.newpage()
+    grid::pushViewport(grid::viewport(layout=currentLayout))
+    title <- paste0("PCA, contrast colored (factors", pcs[1], " and ", pcs[2], ")")
+    printPlots(plots, title, pageno, jobName, currentLayout)  
+}
+
 
 

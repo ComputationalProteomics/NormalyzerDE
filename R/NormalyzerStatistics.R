@@ -29,6 +29,7 @@ NormalyzerStatistics <- setClass("NormalyzerStatistics",
                                      pairwiseCompsFdr = "list",
                                      pairwiseCompsAve = "list",
                                      pairwiseCompsFold = "list",
+                                     pairwiseCompsSig = "list",
                                      
                                      comparisons = "character",
                                      condCol = "character",
@@ -318,6 +319,7 @@ setMethod(f="calculateContrasts",
               pairwiseCompsFdr(nst) <- compLists[["FDR"]]
               pairwiseCompsAve(nst) <- compLists[["Ave"]]
               pairwiseCompsFold(nst) <- compLists[["Fold"]]
+              
               nst
           })
 
