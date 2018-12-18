@@ -235,6 +235,7 @@ plotComparisonVenns <- function(nst, jobName, currentLayout, pageno,
 
     contrasts <- comparisons(nst)
     compCount <- min(length(contrasts), maxContrasts)
+    folds <- pairwiseCompsFold(nst)
     
     plts <- list()
     index <- 0
@@ -245,25 +246,39 @@ plotComparisonVenns <- function(nst, jobName, currentLayout, pageno,
             # https://scriptsandstatistics.wordpress.com/2018/04/26/how-to-plot-venn-diagrams-using-r-ggplot2-and-ggforce/
             
             sigInds <- as.data.frame(contrastSig[c(indIn, indOut)])
+            
+            bothSigInds <- which(apply(sigInds, 1, all))
+            contraCount <- length(which(sign(folds[[indIn]][bothSigInds]) != sign(folds[[indOut]][bothSigInds])))
+            
             vdc <- limma::vennCounts(sigInds)
             class(vdc) <- 'matrix'
             df.vdc <- data.frame(vdc[-1, ])
-            df.vdc$x <- c(-0.5, 0, 0.5)
-            df.vdc$y <- c(0, 0, 0)
+            df.vdc <- rbind(df.vdc, c(-1, -1, contraCount))
+            df.vdc$x <- c(-1.5, 1.5, 0, 0)
+            df.vdc$y <- c(0, 0, 0, -0.3)
+            df.vdc$label <- df.vdc$Counts
+            df.vdc$label[3] <- paste0(df.vdc$label[3] - df.vdc$label[4], " same")
+            df.vdc$label[4] <- paste0(df.vdc$label[4], " contra")
             
-            df.venn <- data.frame(x = c(0.5, -0.5),
+            df.venn <- data.frame(x = c(-0.5, 0.5),
                                   y = c(0, 0),
-                                  labels = c('A', 'B'))
+                                  labels = c(contrasts[indOut], contrasts[indIn]))
+            
+            # browser()
             
             plt <- ggplot(df.venn) +
-                ggforce::geom_circle(aes(x0 = x, y0 = y, r = 1.5, fill = labels), alpha = .3, size = 1, colour = 'grey') +
+                ggforce::geom_circle(
+                    aes(x0 = x, y0 = y, r = 1.5, fill = labels), 
+                    alpha = .3, size = 0.5, colour = 'darkgray') +
                 ggplot2::coord_fixed() +
                 ggplot2::theme_void() +
                 theme(legend.position = 'bottom') +
                 ggplot2::scale_fill_manual(values = c('cornflowerblue', 'firebrick',  'gold')) +
                 ggplot2::scale_colour_manual(values = c('cornflowerblue', 'firebrick', 'gold'), guide = FALSE) +
                 ggplot2::labs(fill = NULL) +
-                annotate("text", x = df.vdc$x, y = df.vdc$y, label = df.vdc$Counts, size = 5)
+                annotate("text", x = df.vdc$x, y = df.vdc$y, label = df.vdc$label, size = 5) +
+                ggplot2::ggtitle(paste0("Features with: ", sigThresType, " < ", 
+                                        sigThres, ", |log2 fold| >= ", log2FoldThres))
             
             index <- index + 1
             plts[[index]] <- plt

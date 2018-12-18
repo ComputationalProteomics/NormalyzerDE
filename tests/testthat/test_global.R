@@ -836,14 +836,15 @@ if (statisticsMultipleComparisons) {
                 sampleCol="sample", 
                 condCol="group", 
                 type="limma",
-                quiet=TRUE
+                quiet=TRUE,
+                sigThres=0.2,
+                sigThresType="p",
+                log2FoldThres=0.5
             )
         )
     })
     
     test_that("Statistics (multiple comparisons) results are identical to previous", {
-        
-        # browser()
         
         compare_output_directories(
             "Stats: Multiple comparisons",
