@@ -225,6 +225,10 @@ getSigs <- function(nst, sigThresType, sigThres, log2FoldThres) {
 #' @param jobName Name of processing run.
 #' @param currentLayout Layout used for document.
 #' @param pageno Current page number.
+#' @param sigThres Cutoff value for significance theshold
+#' @param sigThresType Type of significance cutoff
+#' @param log2FoldThres Log2-fold based cutoff threshold
+#' @param maxContrasts Maximum contrasts to show pairwise comparisons for
 #' @return None
 #' @keywords internal
 plotComparisonVenns <- function(nst, jobName, currentLayout, pageno,
@@ -264,21 +268,20 @@ plotComparisonVenns <- function(nst, jobName, currentLayout, pageno,
                                   y = c(0, 0),
                                   labels = c(contrasts[indOut], contrasts[indIn]))
             
-            # browser()
-            
-            plt <- ggplot(df.venn) +
+            plt <- ggplot2::ggplot(data=df.venn) +
                 ggforce::geom_circle(
-                    aes(x0 = x, y0 = y, r = 1.5, fill = labels), 
+                    ggplot2::aes_string(x0 = "x", y0 = "y", r = 1.5, fill = "labels"), 
                     alpha = .3, size = 0.5, colour = 'darkgray') +
                 ggplot2::coord_fixed() +
                 ggplot2::theme_void() +
-                theme(legend.position = 'bottom') +
+                ggplot2::theme(legend.position = 'bottom') +
                 ggplot2::scale_fill_manual(values = c('cornflowerblue', 'firebrick',  'gold')) +
                 ggplot2::scale_colour_manual(values = c('cornflowerblue', 'firebrick', 'gold'), guide = FALSE) +
                 ggplot2::labs(fill = NULL) +
-                annotate("text", x = df.vdc$x, y = df.vdc$y, label = df.vdc$label, size = 5) +
-                ggplot2::ggtitle(paste0("Features with: ", sigThresType, " < ", 
-                                        sigThres, ", |log2 fold| >= ", log2FoldThres))
+                ggplot2::annotate("text", x = df.vdc$x, y = df.vdc$y, label = df.vdc$label, size = 5) +
+                ggplot2::ggtitle(
+                    paste0("Features with: ", sigThresType, " < ", sigThres, 
+                           ", |log2 fold| >= ", log2FoldThres))
             
             index <- index + 1
             plts[[index]] <- plt
@@ -413,7 +416,7 @@ plotSigScatter <- function(nst, jobName, currentLayout, pageno, type="Vulcano",
 #' @param jobName Name of processing run.
 #' @param currentLayout Layout used for document.
 #' @param pageno Current page number.
-#' @param type Specify whether to plot 'Vulcano' or 'MA'.
+#' @param pcs Principal components to show.
 #' @return None
 #' @keywords internal
 plotContrastPCA <- function(nst, jobName, currentLayout, pageno, pcs=c(1,2)) {
@@ -443,7 +446,7 @@ plotContrastPCA <- function(nst, jobName, currentLayout, pageno, pcs=c(1,2)) {
     
     contrasts <- comparisons(nst)
     dataDf <- dataMat(nst)
-    dfPCA <- stats::prcomp(t(dataDf[complete.cases(dataDf), ]), scale=TRUE, center=TRUE)
+    dfPCA <- stats::prcomp(t(dataDf[stats::complete.cases(dataDf), ]), scale=TRUE, center=TRUE)
     dfOut <- as.data.frame(dfPCA$x)
     percentageVar <- round(dfPCA$sdev^2 / sum(dfPCA$sdev^2) * 100, 2)
     percentageVar <- paste0(colnames(dfOut), " (", paste0(as.character(percentageVar), "%)"))

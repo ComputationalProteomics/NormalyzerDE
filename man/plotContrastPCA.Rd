@@ -17,7 +17,7 @@ plotContrastPCA(nst, jobName, currentLayout, pageno, pcs = c(1, 2))
 
 \item{pageno}{Current page number.}
 
-\item{type}{Specify whether to plot 'Vulcano' or 'MA'.}
+\item{pcs}{Principal components to show.}
 }
 \value{
 None
