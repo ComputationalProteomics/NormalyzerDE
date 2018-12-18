@@ -11,4 +11,5 @@ apt_packages:
     - libfftw3-dev
     - libssl-dev
     - libglu1-mesa-dev
+    - libudunits2-dev
     
