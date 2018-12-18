@@ -12,10 +12,11 @@ The comparisons vector specifies which pairwise comparisons between
 condition levels that are to be calculated.}
 \usage{
 calculateContrasts(nst, comparisons, condCol, batchCol = NULL,
-  splitter = "-", type = "limma")
+  splitter = "-", type = "limma", leastRepCount = 1)
 
 \S4method{calculateContrasts}{NormalyzerStatistics}(nst, comparisons,
-  condCol, batchCol = NULL, splitter = "-", type = "limma")
+  condCol, batchCol = NULL, splitter = "-", type = "limma",
+  leastRepCount = 1)
 }
 \arguments{
 \item{nst}{Results evaluation object.}
@@ -29,6 +30,9 @@ calculateContrasts(nst, comparisons, condCol, batchCol = NULL,
 \item{splitter}{Character dividing contrast conditions.}
 
 \item{type}{Type of statistical test (Limma or welch).}
+
+\item{leastRepCount}{Least replicates in each group to be retained for 
+contrast calculations}
 }
 \value{
 nst Statistics object with statistical measures calculated
@@ -42,5 +46,5 @@ with a Limma-based statistical analysis.
 data(example_stat_summarized_experiment)
 nst <- NormalyzerStatistics(example_stat_summarized_experiment)
 results <- calculateContrasts(nst, c("1-2", "2-3"), "group")
-resultsBatch <- calculateContrasts(nst, c("1-2", "2-3"), "group", "batch")
+resultsBatch <- calculateContrasts(nst, c("1-2", "2-3"), "group", batchCol="batch")
 }

@@ -34,7 +34,8 @@ normMethods <- function(nds, forceAll=FALSE, normalizeRetentionTime=TRUE,
         rtWindowMinCount=rtWindowMinCount, 
         rtWindowShifts=rtWindowShifts, 
         rtWindowMergeMethod=rtWindowMergeMethod, 
-        noLogTransform=noLogTransform
+        noLogTransform=noLogTransform,
+        quiet=quiet
     )
     
     return(nr)
@@ -53,7 +54,11 @@ normMethods <- function(nds, forceAll=FALSE, normalizeRetentionTime=TRUE,
 #' data(example_data_only_values_small)
 #' normMatrix <- globalIntensityNormalization(example_data_only_values)
 globalIntensityNormalization <- function(rawMatrix, noLogTransform=FALSE) {
-    
+
+    if (noLogTransform) {
+        rawMatrix <- 2 ** rawMatrix
+    }
+        
     colSums <- colSums(rawMatrix, na.rm=TRUE)
     colSumsMedian <- stats::median(colSums)
     normMatrix <- matrix(nrow=nrow(rawMatrix), ncol=ncol(rawMatrix), byrow=TRUE)
@@ -63,13 +68,7 @@ globalIntensityNormalization <- function(rawMatrix, noLogTransform=FALSE) {
         normMatrix[rowIndex, ] <- vapply(seq_len(ncol(rawMatrix)), normFunc, 0)
     }
     
-    if (!noLogTransform) {
-        normLog2Matrix <- log2(normMatrix)
-    }
-    else {
-        normLog2Matrix <- normMatrix
-    }
-    
+    normLog2Matrix <- log2(normMatrix)
     colnames(normLog2Matrix) <- colnames(rawMatrix)
     normLog2Matrix
 }
@@ -88,6 +87,10 @@ globalIntensityNormalization <- function(rawMatrix, noLogTransform=FALSE) {
 #' normMatrix <- medianNormalization(example_data_only_values)
 medianNormalization <- function(rawMatrix, noLogTransform=FALSE) {
 
+    if (noLogTransform) {
+        rawMatrix <- 2 ** rawMatrix
+    }
+    
     colMedians <- matrixStats::colMedians(rawMatrix, na.rm=TRUE)
     meanColMedian <- mean(colMedians, na.rm=TRUE)
     normMatrix <- matrix(nrow=nrow(rawMatrix), ncol=ncol(rawMatrix), byrow=TRUE)
@@ -99,13 +102,7 @@ medianNormalization <- function(rawMatrix, noLogTransform=FALSE) {
         normMatrix[rowIndex, ] <- vapply(seq_len(ncol(rawMatrix)), normFunc, 0)
     }
     
-    if (!noLogTransform) {
-        normLog2Matrix <- log2(normMatrix)
-    }
-    else {
-        normLog2Matrix <- normMatrix
-    }
-    
+    normLog2Matrix <- log2(normMatrix)
     colnames(normLog2Matrix) <- colnames(rawMatrix)
     normLog2Matrix
 }
@@ -124,6 +121,10 @@ medianNormalization <- function(rawMatrix, noLogTransform=FALSE) {
 #' normMatrix <- meanNormalization(example_data_only_values)
 meanNormalization <- function(rawMatrix, noLogTransform=FALSE) {
     
+    if (noLogTransform) {
+        rawMatrix <- 2 ** rawMatrix
+    }
+    
     colMeans <- colMeans(rawMatrix, na.rm=TRUE)
     avgColMean <- mean(colMeans, na.rm=TRUE)
     normMatrix <- matrix(nrow=nrow(rawMatrix), ncol=ncol(rawMatrix), byrow=TRUE)
@@ -134,13 +135,7 @@ meanNormalization <- function(rawMatrix, noLogTransform=FALSE) {
         normMatrix[rowIndex, ] <- vapply(seq_len(ncol(rawMatrix)), normFunc, 0)
     }
     
-    if (!noLogTransform) {
-        normLog2Matrix <- log2(normMatrix)
-    }
-    else {
-        normLog2Matrix <- normMatrix
-    }
-    
+    normLog2Matrix <- log2(normMatrix)
     colnames(normLog2Matrix) <- colnames(rawMatrix)
     normLog2Matrix
 }

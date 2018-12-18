@@ -13,7 +13,7 @@ verifyValidNumbers(rawDataOnly, groups, noLogTransform = FALSE,
 \item{groups}{Condition levels for comparisons.}
 }
 \value{
-Parsed rawdata where 0 values are replaced with NA
+None
 }
 \description{
 Verify that input fields conform to the expected formats

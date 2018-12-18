@@ -126,9 +126,10 @@ generatePlots <- function(nr, jobdir, plotRows=3, plotCols=4) {
     # TI
     pageno <- 2
     plotSampleOutlierSummary(nr, currentLayout, pageno)
-    
-    # CV
+
+    # If running with single-replicates, skip replicate dependent quality plots
     if (!isLimitedRun) {
+        # CV
         pageno <- pageno + 1
         plotReplicateVariance(nr, currentLayout, pageno)
 
@@ -139,11 +140,11 @@ generatePlots <- function(nr, jobdir, plotRows=3, plotCols=4) {
         # CVvsintensityplot
         pageno <- pageno + 1
         plotCVvsIntensity(nr, currentLayout, pageno)
+        
+        # MA plots
+        pageno <- pageno + 1
+        plotMA(nr, currentLayout, pageno)
     }
-
-    # MA plots
-    pageno <- pageno + 1
-    plotMA(nr, currentLayout, pageno)
 
     # Scatterplots
     pageno <- pageno + 1
@@ -711,7 +712,7 @@ plotMA <- function(nr, currentLayout, pageno) {
     for (i in seq_along(normalizedDataList)) {
         
         methodData <- as.matrix(normalizedDataList[[i]])
-        methodDataFirstCond <- methodData[, sampleReplicateGroups == min(sampleReplicateGroups)]
+        methodDataFirstCond <- methodData[, sampleReplicateGroups == min(sampleReplicateGroups), drop=FALSE]
         firstColWoNA <- methodDataFirstCond[!is.na(methodDataFirstCond[, 1]), ]
         avgExpr <- rowMeans(firstColWoNA)
         fold <- apply(cbind(firstColWoNA[, 1], avgExpr), 1, function(x) x[1] - x[2])

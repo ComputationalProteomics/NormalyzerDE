@@ -85,7 +85,7 @@ NormalyzerDataset <- function(jobName, designMatrix, rawData, annotationData,
                   retentionTimes(nds) <- rtColumn
               }
               
-              singleReplicateRun(nds) <- checkSingleReplicateRun(nds)
+              singleReplicateRun(nds) <- checkSingleReplicateRun(nds, quiet=quiet)
               
               nds
           }
@@ -155,24 +155,28 @@ setReplaceMethod("singleReplicateRun", signature(object="NormalyzerDataset"),
 #' Detect single replicate, and assign related logical
 #'
 #' @param nds Normalyzer dataset
+#' @param quiet Don't give non-error output
 #' @return bool on whether sample contains only one sample group
 #' @rdname detectSingleReplicate
 #' @keywords internal
 setGeneric(name="detectSingleReplicate", 
-           function(nds) standardGeneric("detectSingleReplicate"))
+           function(nds, quiet) standardGeneric("detectSingleReplicate"))
 
 #' @rdname detectSingleReplicate
 setMethod("detectSingleReplicate", "NormalyzerDataset",
-          function(nds) {
+          function(nds, quiet=FALSE) {
               
               headerCounts <- table(sampleReplicateGroups(nds))
               nonReplicatedSamples <- names(headerCounts[headerCounts == 1])
               
               if (length(nonReplicatedSamples) > 0) {
                   singleReplicateRun <- TRUE
-                  message("Non replicated samples in dataset: ",
-                          paste(nonReplicatedSamples, collapse=" "),
-                          " performing limited single-replicate run")
+                  
+                  if (!quiet) {
+                      message("Non replicated samples in dataset: ",
+                              paste(nonReplicatedSamples, collapse=" "),
+                              " performing limited single-replicate run\n")
+                  }
               }
               else {
                   singleReplicateRun <- FALSE
@@ -185,15 +189,16 @@ setMethod("detectSingleReplicate", "NormalyzerDataset",
 #' Detect single sample group 
 #'
 #' @param nds Normalyzer dataset.
+#' @param quiet Only print error messages
 #' @return None
 #' @rdname detectSingletonSample
 #' @keywords internal
 setGeneric(name="detectSingletonSample", 
-           function(nds) standardGeneric("detectSingletonSample"))
+           function(nds, quiet) standardGeneric("detectSingletonSample"))
 
 #' @rdname detectSingletonSample
 setMethod("detectSingletonSample", "NormalyzerDataset",
-          function(nds) {
+          function(nds, quiet=FALSE) {
               
               groups <- sampleReplicateGroups(nds)
               distinctSamples <- unique(groups)
@@ -201,12 +206,14 @@ setMethod("detectSingletonSample", "NormalyzerDataset",
               
               if (length(distinctSamples) == 1) {
                   singletonSamplePresent <- TRUE
-                  message("Only one replicate group present. ",
-                          paste("Group: ", distinctSamples[1]),
-                          " Proceeding with limited processing")
+                  if (!quiet) {
+                      message("Only one replicate group present. ",
+                              paste("Group: ", distinctSamples[1]),
+                              " Proceeding with limited processing\n")
+                  }
               }
               else if (length(distinctSamples) == 0) {
-                  stop("No sample replicate groups found - Aborting.")
+                  stop("No sample replicate groups found - Aborting.\n")
               }
               
               singletonSamplePresent
@@ -214,12 +221,12 @@ setMethod("detectSingletonSample", "NormalyzerDataset",
 )
 
 setGeneric(name="checkSingleReplicateRun", 
-           function(nds) standardGeneric("checkSingleReplicateRun"))
+           function(nds, quiet) standardGeneric("checkSingleReplicateRun"))
 setMethod("checkSingleReplicateRun", "NormalyzerDataset",
-          function(nds) {
+          function(nds, quiet=FALSE) {
               
-              singleReplicateRun <- detectSingleReplicate(nds)
-              singletonSamplePresent <- detectSingletonSample(nds)
+              singleReplicateRun <- detectSingleReplicate(nds, quiet=quiet)
+              singletonSamplePresent <- detectSingletonSample(nds, quiet=quiet)
               
               if (singleReplicateRun || singletonSamplePresent) {
                   singleReplicateRun <- TRUE
@@ -236,7 +243,7 @@ getRTColumn <- function(annotData, quiet=FALSE) {
     if (length(rtColumns) > 1) {
         errorMessage <- paste(
             "Only able to handle single RT column (name containing RT standing by itself) ",
-            "Please change name or remove unwanted RT columns")
+            "Please change name or remove unwanted RT columns\n")
         stop(errorMessage)
     }
     else if (length(rtColumns) == 1) {
@@ -248,7 +255,7 @@ getRTColumn <- function(annotData, quiet=FALSE) {
         return(retentionTimes)
     }
     else {
-        if (!quiet) message("No RT column found, skipping RT processing")
+        if (!quiet) message("No RT column found, skipping RT processing\n")
         return(NULL)
     }
 }

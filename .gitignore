@@ -15,6 +15,7 @@ R/Rplots.pdf
 ignore
 inst/doc
 tests/testthat/output/
+builds/
 
 # Vignette output
 vignettes/my_vignette.pdf
@@ -22,6 +23,9 @@ vignettes/testout/
 vignettes/testoutstat/
 vignettes/vignette_run/
 vignettes/data/
+
+# Dev. test file
+tests/testthat/*devtest.R
 
 hidden_file_ext = (
     ".renviron", ".rprofile", ".rproj", ".rproj.user", ".rhistory",

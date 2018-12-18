@@ -6,12 +6,14 @@
 \alias{detectSingleReplicate,NormalyzerDataset-method}
 \title{Detect single replicate, and assign related logical}
 \usage{
-detectSingleReplicate(nds)
+detectSingleReplicate(nds, quiet)
 
-\S4method{detectSingleReplicate}{NormalyzerDataset}(nds)
+\S4method{detectSingleReplicate}{NormalyzerDataset}(nds, quiet = FALSE)
 }
 \arguments{
 \item{nds}{Normalyzer dataset}
+
+\item{quiet}{Don't give non-error output}
 }
 \value{
 bool on whether sample contains only one sample group
