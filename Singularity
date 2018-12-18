@@ -24,7 +24,8 @@ From: ubuntu:18.04
         vim-tiny \
         libglu1-mesa-dev \
         locales \
-        locales-all
+        locales-all \
+        libudunits2-dev
  
     locale-gen en_US.UTF-8
     export LANG=en_US.UTF-8
