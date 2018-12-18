@@ -236,13 +236,12 @@ plotComparisonVenns <- function(nst, jobName, currentLayout, pageno,
                                 log2FoldThres=0, maxContrasts=4) {
     
     contrastSig <- getSigs(nst, sigThresType, sigThres, log2FoldThres)
-
     contrasts <- comparisons(nst)
     compCount <- min(length(contrasts), maxContrasts)
     folds <- pairwiseCompsFold(nst)
-    
     plts <- list()
     index <- 0
+    
     for (indOut in seq_len(compCount-1)) {
         for (indIn in (indOut+1):compCount) {
 
@@ -274,13 +273,12 @@ plotComparisonVenns <- function(nst, jobName, currentLayout, pageno,
                     alpha = .3, size = 0.5, colour = 'darkgray') +
                 ggplot2::coord_fixed() +
                 ggplot2::theme_void() +
-                ggplot2::theme(legend.position = 'bottom') +
+                ggplot2::theme(legend.position = 'bottom', legend.direction='vertical') +
                 ggplot2::scale_fill_manual(values = c('cornflowerblue', 'firebrick',  'gold')) +
                 ggplot2::scale_colour_manual(values = c('cornflowerblue', 'firebrick', 'gold'), guide = FALSE) +
                 ggplot2::labs(fill = NULL) +
                 ggplot2::annotate("text", x = df.vdc$x, y = df.vdc$y, label = df.vdc$label, size = 5) +
-                ggplot2::ggtitle(
-                    paste0("Features with: ", sigThresType, " < ", sigThres, 
+                ggplot2::ggtitle(paste0(sigThresType, " < ", sigThres, 
                            ", |log2 fold| >= ", log2FoldThres))
             
             index <- index + 1
