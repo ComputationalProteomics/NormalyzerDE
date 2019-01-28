@@ -1,3 +1,9 @@
+CHANGES IN VERSION 1.1.13
+----------------------------------
+
+* Running in reduced mode for small datasets (to avoid crashing on for instance
+  VSN normalization and instead omitting it)
+
 CHANGES IN VERSION 1.1.12
 ----------------------------------
 

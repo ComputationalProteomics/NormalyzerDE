@@ -173,6 +173,8 @@ setupRawContrastObject <- function(dataPath, designPath, sampleColName) {
 #'        condition
 #' @param quiet Don't print output messages during processing 
 #' @param noLogTransform Don't log-transform the provided data
+#' @param tinyRunThres If less features in run, a limited run is performed
+#' 
 #' @return Normalyzer data object representing verified input data.
 #' @export
 #' @examples
@@ -185,7 +187,8 @@ getVerifiedNormalyzerObject <- function(
         omitSamples=FALSE,
         requireReplicates=TRUE,
         quiet=FALSE,
-        noLogTransform=FALSE
+        noLogTransform=FALSE,
+        tinyRunThres=50
     ) {
 
     SummarizedExperiment::assay(summarizedExp) <- preprocessData(SummarizedExperiment::assay(summarizedExp), quiet=quiet)
@@ -246,6 +249,7 @@ getVerifiedNormalyzerObject <- function(
         annotationData=annotationMatrix,
         sampleNameCol=sampleCol,
         groupNameCol=groupCol,
+        tinyRunThres=tinyRunThres,
         quiet=quiet
     )
     

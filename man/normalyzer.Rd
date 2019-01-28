@@ -6,10 +6,10 @@
 \usage{
 normalyzer(jobName, designPath = NULL, dataPath = NULL,
   experimentObj = NULL, outputDir = ".", forceAllMethods = FALSE,
-  omitLowAbundSamples = FALSE, sampleAbundThres = 15,
-  requireReplicates = TRUE, normalizeRetentionTime = TRUE,
-  plotRows = 3, plotCols = 4, zeroToNA = FALSE,
-  sampleColName = "sample", groupColName = "group",
+  omitLowAbundSamples = FALSE, sampleAbundThres = 5,
+  tinyRunThres = 50, requireReplicates = TRUE,
+  normalizeRetentionTime = TRUE, plotRows = 3, plotCols = 4,
+  zeroToNA = FALSE, sampleColName = "sample", groupColName = "group",
   inputFormat = "default", skipAnalysis = FALSE, quiet = FALSE,
   noLogTransform = FALSE, rtStepSizeMinutes = 1,
   rtWindowMinCount = 100, rtWindowShifts = 1,
@@ -37,6 +37,9 @@ Will otherwise stop with error message if such sample is encountered.}
 
 \item{sampleAbundThres}{Threshold for omitting low-abundant
 samples. Is by default set to 15.}
+
+\item{tinyRunThres}{If total number of features is less than this, a limited
+run is performed.}
 
 \item{requireReplicates}{Require multiple samples per condition to pass input 
 validation.}
