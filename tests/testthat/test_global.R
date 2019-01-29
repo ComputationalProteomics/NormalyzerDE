@@ -4,6 +4,7 @@ designSingleRepPath <- system.file(package="NormalyzerDE", "extdata", "tiny_desi
 designSingleCondPath <- system.file(package="NormalyzerDE", "extdata", "tiny_design_singlecond.tsv")
 
 dataPath <- system.file(package="NormalyzerDE", "extdata", "tiny_data.tsv")
+dataPath20Rows <- system.file(package="NormalyzerDE", "extdata", "tiny_data_20rows.tsv")
 dataPathlog2 <- system.file(package="NormalyzerDE", "extdata", "tiny_data_log2.tsv")
 dataPathNonNA <- system.file(package="NormalyzerDE", "extdata", "tiny_data_nonna.tsv")
 dataPathMaxQuantPep <- system.file(package="NormalyzerDE", "extdata", "mq_peptides_100.txt")
@@ -34,6 +35,7 @@ forceAll <- TRUE
 ### Normal runs ###
 runAllNormalization <- FALSE
 normalRun <- FALSE || runAllNormalization || forceAll
+tinyRun <- TRUE || runAllNormalization || forceAll
 singleRepRun <- FALSE || runAllNormalization || forceAll
 singleCondRun <- FALSE || runAllNormalization || forceAll
 nonNAEmptyRun <- FALSE || runAllNormalization || forceAll
@@ -54,7 +56,7 @@ statisticsRunWelch <- FALSE || runAllStats || forceAll
 statisticsRunBatch <- FALSE || runAllStats || forceAll
 statisticsRunTechRepRed <- FALSE || runAllStats || forceAll
 statisticsLogTransform <- FALSE || runAllStats || forceAll
-statisticsMultipleComparisons <- TRUE || runAllStats || forceAll
+statisticsMultipleComparisons <- FALSE || runAllStats || forceAll
 
 ### SummarizedExperiments runs ###
 summarizedExperimentsRun <- FALSE || forceAll
@@ -195,6 +197,22 @@ if (normalRun) {
         samples <- as.character(designDf$sample)
         currOutDir <- paste0(tempOut, "/unit_test_run_norm")
         compare_output_directories("NormalRun", samples, currOutDir, referenceNormResultsDir)
+    })
+}
+
+context("Tiny dataset runs: 20 rows")
+if (tinyRun) {
+    test_that("Normalization run succeeds quietly", {
+        
+        expect_silent(
+            normalyzer(
+                jobName="unit_test_run_norm",
+                dataPath=dataPath20Rows,
+                designPath=designPath,
+                outputDir=tempOut,
+                quiet=TRUE
+            )
+        )
     })
 }
 

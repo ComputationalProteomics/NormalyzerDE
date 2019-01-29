@@ -6,9 +6,10 @@
 \alias{performNormalizations,NormalyzerResults-method}
 \title{Main function for executing normalizations}
 \usage{
-performNormalizations(nr, forceAll, rtNorm, rtStepSizeMinutes,
-  rtWindowMinCount, rtWindowShifts, rtWindowMergeMethod, noLogTransform,
-  quiet)
+performNormalizations(nr, forceAll = FALSE, rtNorm = FALSE,
+  rtStepSizeMinutes = 1, rtWindowMinCount = 100, rtWindowShifts = 1,
+  rtWindowMergeMethod = "median", noLogTransform = FALSE,
+  quiet = FALSE)
 
 \S4method{performNormalizations}{NormalyzerResults}(nr, forceAll = FALSE,
   rtNorm = FALSE, rtStepSizeMinutes = 1, rtWindowMinCount = 100,

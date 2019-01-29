@@ -7,7 +7,7 @@
 \usage{
 getVerifiedNormalyzerObject(jobName, summarizedExp, threshold = 15,
   omitSamples = FALSE, requireReplicates = TRUE, quiet = FALSE,
-  noLogTransform = FALSE)
+  noLogTransform = FALSE, tinyRunThres = 50)
 }
 \arguments{
 \item{jobName}{Name of ongoing run.}
@@ -24,6 +24,8 @@ condition}
 \item{quiet}{Don't print output messages during processing}
 
 \item{noLogTransform}{Don't log-transform the provided data}
+
+\item{tinyRunThres}{If less features in run, a limited run is performed}
 }
 \value{
 Normalyzer data object representing verified input data.

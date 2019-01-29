@@ -33,6 +33,8 @@
 #'  Will otherwise stop with error message if such sample is encountered.
 #' @param sampleAbundThres Threshold for omitting low-abundant
 #'  samples. Is by default set to 15.
+#' @param tinyRunThres If total number of features is less than this, a limited
+#'  run is performed.
 #' @param requireReplicates Require multiple samples per condition to pass input 
 #'  validation.
 #' @param normalizeRetentionTime Perform normalizations over retention time.
@@ -88,7 +90,8 @@ normalyzer <- function(
         outputDir=".",
         forceAllMethods=FALSE,
         omitLowAbundSamples=FALSE,
-        sampleAbundThres=15,
+        sampleAbundThres=5,
+        tinyRunThres=50,
         requireReplicates=TRUE,
         normalizeRetentionTime=TRUE,
         plotRows=3,
@@ -136,7 +139,8 @@ normalyzer <- function(
         omitSamples=omitLowAbundSamples,
         requireReplicates=requireReplicates,
         quiet=quiet,
-        noLogTransform=noLogTransform
+        noLogTransform=noLogTransform,
+        tinyRunThres=tinyRunThres
     )
         
     jobDir <- setupJobDir(jobName, outputDir)

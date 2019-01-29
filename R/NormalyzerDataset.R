@@ -35,7 +35,8 @@ NormalyzerDataset <- setClass("NormalyzerDataset",
                                   
                                   annotationValues = "matrix",
                                   retentionTimes = "numeric",
-                                                                    
+                                  
+                                  isTinyRun = "logical",
                                   singleReplicateRun = "logical"
                               ))
 
@@ -51,11 +52,14 @@ NormalyzerDataset <- setClass("NormalyzerDataset",
 #'   information
 #' @param groupNameCol Name of column in design matrix containing condition
 #'   information
+#' @param tinyRunThres If fewer features than this is present in the input
+#'   a limited run will be performed to avoid some steps requiring a more
+#'   extensive number of features.
 #' @param quiet If set to TRUE no information messages will be printed
 #' @return nds Generated NormalyzerDataset instance
 #' @keywords internal
 NormalyzerDataset <- function(jobName, designMatrix, rawData, annotationData,
-                                sampleNameCol, groupNameCol, quiet=FALSE) {
+                                sampleNameCol, groupNameCol, tinyRunThres=50, quiet=FALSE) {
               
               sampleReplicateGroups <- as.numeric(
                   as.factor(designMatrix[, groupNameCol]))
@@ -67,6 +71,19 @@ NormalyzerDataset <- function(jobName, designMatrix, rawData, annotationData,
               filterrawdata <- rawData[, sampleNames]
               class(filterrawdata) <- "numeric"
               
+              if (nrow(filterrawdata) < tinyRunThres) {
+                  isTinyRun <- TRUE
+                  if (!quiet) {
+                      message("Number of features (", nrow(filterrawdata), 
+                              ") is less than the theshold for normal run (", 
+                              tinyRunThres, "), a limited run is performed ",
+                              "\nExact settings can be adjusted using the 'tinyRunThreshold' setting")
+                  }
+              }
+              else {
+                  isTinyRun <- FALSE
+              }
+              
               nds <- new(
                   "NormalyzerDataset",
                   jobName=jobName,
@@ -77,7 +94,8 @@ NormalyzerDataset <- function(jobName, designMatrix, rawData, annotationData,
                   filterrawdata=filterrawdata,
                   sampleReplicateGroups=sampleReplicateGroups,
                   samplesGroupsWithReplicates=samplesGroupsWithReplicates,
-                  annotationValues=annotationData
+                  annotationValues=annotationData,
+                  isTinyRun=isTinyRun
               )
               
               rtColumn <- getRTColumn(annotationData, quiet=quiet)
@@ -140,6 +158,10 @@ setReplaceMethod("retentionTimes", signature(object="NormalyzerDataset"),
                      validObject(object)
                      object
                  })
+
+setGeneric("isTinyRun", function(object) { standardGeneric("isTinyRun") })
+setMethod("isTinyRun", signature(object="NormalyzerDataset"), 
+          function(object) { slot(object, "isTinyRun") })
 
 setGeneric("singleReplicateRun", function(object) { standardGeneric("singleReplicateRun") })
 setMethod("singleReplicateRun", signature(object="NormalyzerDataset"), 

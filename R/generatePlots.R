@@ -121,8 +121,8 @@ generatePlots <- function(nr, jobdir, plotRows=3, plotCols=4) {
     currentFont <- "Helvetica"
     setupPlotting(currentjob, jobdir, "Norm-report")
     plotFrontPage(currentjob, currentFont)
-    isLimitedRun <- singleReplicateRun(nds)
-    
+    isLimitedRun <- singleReplicateRun(nds) || isTinyRun(nds)
+
     # TI
     pageno <- 2
     plotSampleOutlierSummary(nr, currentLayout, pageno)

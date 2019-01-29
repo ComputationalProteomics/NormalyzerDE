@@ -85,8 +85,9 @@ setReplaceMethod("ner", signature(object="NormalyzerResults"),
 #' @rdname performNormalizations
 #' @keywords internal
 setGeneric(name="performNormalizations",
-           function(nr, forceAll, rtNorm, rtStepSizeMinutes, rtWindowMinCount, 
-                    rtWindowShifts, rtWindowMergeMethod, noLogTransform, quiet) 
+           function(nr, forceAll=FALSE, rtNorm=FALSE, rtStepSizeMinutes=1, 
+                    rtWindowMinCount=100, rtWindowShifts=1, 
+                    rtWindowMergeMethod="median", noLogTransform=FALSE, quiet=FALSE) 
                standardGeneric("performNormalizations"))
 #' @rdname performNormalizations
 setMethod("performNormalizations", "NormalyzerResults",
@@ -95,13 +96,23 @@ setMethod("performNormalizations", "NormalyzerResults",
                    rtWindowMergeMethod="median", noLogTransform=FALSE, quiet=FALSE) {
               
               nds <- nds(nr)
-              
               rtColPresent <- length(retentionTimes(nds)) > 0
               normResults <- list()
               
               if (!noLogTransform) {
                   normResults[["log2"]] <- log2(filterrawdata(nds))
-                  normResults[["VSN"]] <- performVSNNormalization(filterrawdata(nds))
+                  
+                  if (!isTinyRun(nds)) {
+                      normResults[["VSN"]] <- performVSNNormalization(filterrawdata(nds))
+                  }
+                  else {
+                      if (!quiet) {
+                          message(
+                              "Skipping VSN normalization due to small number of features, ",
+                              nrow(filterrawdata(nds)), " features found"
+                          )
+                      }
+                  }
               }
               else {
                   normResults[["log2"]] <- filterrawdata(nds)
@@ -123,8 +134,10 @@ setMethod("performNormalizations", "NormalyzerResults",
               enoughDataForRT <- nrow(filterrawdata(nds)) >= rtWindowMinCount
               
               if (!enoughDataForRT) {
-                  warning("Number of features in data matrix is smaller than minimum normalization window (set by option 'rtWindowMinCount') ",
-                          "for RT normalization - skipping RT normalizations.\n")
+                  if (!quiet) {
+                      warning("Number of features in data matrix is smaller than minimum normalization window (set by option 'rtWindowMinCount') ",
+                              "for RT normalization - skipping RT normalizations.\n")
+                  }
               }
               else if (rtNorm && rtColPresent) {
 
