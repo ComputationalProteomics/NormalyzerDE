@@ -1,6 +1,6 @@
 Package: NormalyzerDE
 Title: Evaluation of normalization methods and calculation of differential expression analysis statistics
-Version: 1.1.6
+Version: 1.1.13
 Maintainer: Jakob Willforss <jakob.willforss@immun.lth.se>
 Author: Jakob Willforss
 Authors@R: c(
@@ -35,7 +35,8 @@ Suggests:
     rmarkdown,
     roxygen2,
     hexbin,
-    BiocStyle
+    BiocStyle,
+    ggforce
 VignetteBuilder: knitr
 biocViews:
     Normalization, MultipleComparison, Visualization, Bayesian, Proteomics, Metabolomics, DifferentialExpression

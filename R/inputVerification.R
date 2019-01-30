@@ -145,7 +145,7 @@ setupRawContrastObject <- function(dataPath, designPath, sampleColName) {
     verifyDesignMatrix(fullDf, designDf, sampleColName)
     
     sdf <- fullDf[, designDf[[sampleColName]]]
-    adf <- fullDf[, !(colnames(fullDf) %in% as.character(designDf[[sampleColName]]))]
+    adf <- fullDf[, !(colnames(fullDf) %in% as.character(designDf[[sampleColName]])), drop=FALSE]
     
     experimentObj <- SummarizedExperiment::SummarizedExperiment(
         assays=list(raw=as.matrix(sdf)),
@@ -173,6 +173,8 @@ setupRawContrastObject <- function(dataPath, designPath, sampleColName) {
 #'        condition
 #' @param quiet Don't print output messages during processing 
 #' @param noLogTransform Don't log-transform the provided data
+#' @param tinyRunThres If less features in run, a limited run is performed
+#' 
 #' @return Normalyzer data object representing verified input data.
 #' @export
 #' @examples
@@ -185,9 +187,11 @@ getVerifiedNormalyzerObject <- function(
         omitSamples=FALSE,
         requireReplicates=TRUE,
         quiet=FALSE,
-        noLogTransform=FALSE
+        noLogTransform=FALSE,
+        tinyRunThres=50
     ) {
 
+    SummarizedExperiment::assay(summarizedExp) <- preprocessData(SummarizedExperiment::assay(summarizedExp), quiet=quiet)
     summarizedExp <- filterOnlyNARows(summarizedExp)
     
     # TODO: The getter seems to not be available, check later if temporary issue
@@ -210,8 +214,9 @@ getVerifiedNormalyzerObject <- function(
     verifyDesignMatrix(dataMatrix, designMatrix, sampleCol)
     verifyValidNumbers(dataMatrix, groups, noLogTransform=noLogTransform, quiet=quiet)
     
-    repSortedRawData <- getReplicateSortedData(dataMatrix, groups)
-    processedRawData <- preprocessData(repSortedRawData)
+    processedRawData <- getReplicateSortedData(dataMatrix, groups)
+    # repSortedRawData <- getReplicateSortedData(dataMatrix, groups)
+    # processedRawData <- preprocessData(repSortedRawData, quiet=quiet)
     
     lowCountSampleFiltered <- getLowCountSampleFiltered(
         processedRawData, 
@@ -240,10 +245,11 @@ getVerifiedNormalyzerObject <- function(
     nds <- NormalyzerDataset(
         jobName=jobName,
         designMatrix=designMatrix,
-        rawData=dataMatrix,
+        rawData=processedRawData,
         annotationData=annotationMatrix,
         sampleNameCol=sampleCol,
         groupNameCol=groupCol,
+        tinyRunThres=tinyRunThres,
         quiet=quiet
     )
     
@@ -257,9 +263,7 @@ filterOnlyNARows <- function(summarizedExp) {
     
     nonFullNAContr <- rowSums(is.na(SummarizedExperiment::assay(summarizedExp))) != ncol(summarizedExp)
     if (length(which(!nonFullNAContr)) > 0) {
-        warning(
-            length(which(!nonFullNAContr)), 
-            " entries with only NA values found and were omitted")
+        message(length(which(!nonFullNAContr)), " entries with only NA values omitted")
         summarizedExp <- summarizedExp[nonFullNAContr, ]
     }
     
@@ -282,7 +286,7 @@ loadRawDataFromFile <- function(inputPath) {
                                                comment.char="")),
         error=function(e) {
             message("Error encountered for input file:", inputPath, ", error: ", e)
-            stop("Please provide a valid input file.")
+            stop("Please provide a valid input file.\n")
         },
         
         warning=function(w) {
@@ -290,7 +294,7 @@ loadRawDataFromFile <- function(inputPath) {
                     inputPath,
                     "Warning:",
                     w)
-            stop("Please investigate the warning and provide a valid input file.")
+            stop("Please investigate the warning and provide a valid input file.\n")
         }
     )
     
@@ -302,38 +306,30 @@ loadRawDataFromFile <- function(inputPath) {
 #' 
 #' @param rawDataOnly Dataframe with input data.
 #' @param groups Condition levels for comparisons.
-#' @return Parsed rawdata where 0 values are replaced with NA
+#' @return None
 #' @keywords internal
 verifyValidNumbers <- function(rawDataOnly, groups, noLogTransform=FALSE, quiet=FALSE) {
     
     # Fields expected to contain numbers in decimal or scientific notation, or containing NA or null
-    validPatterns <- c("\\d+(\\.\\d+)?", "NA", "\"NA\"", "null", "\\d+(\\.\\d+)?[eE]([\\+\\-])?\\d+$")
+    validPatterns <- c("\\d+(\\.\\d+)?", "NA", "\"NA\"", "null", "\\d+(\\.\\d+)?[eE]([\\+\\-])?\\d+$", "")
     
     regexPattern <- sprintf("^(%s)$", paste(validPatterns, collapse="|"))
-    matches <- grep(regexPattern, rawDataOnly, perl=TRUE, ignore.case=TRUE)
-    nonMatches <- stats::na.omit(rawDataOnly[-matches])
+    nonMatchIndices <- grep(regexPattern, rawDataOnly, perl=TRUE, ignore.case=TRUE, invert = TRUE)
+    nonMatches <- stats::na.omit(rawDataOnly[nonMatchIndices])
+    rowsWithIssues <- unique((nonMatchIndices-1) %% nrow(rawDataOnly))
     
     if (length(nonMatches) > 0) {
         errorString <- paste(
             "Invalid values encountered in input data.",
-            "Only valid data is numeric and NA- or na-fields",
+            "Only valid data is numeric (dot-decimal, not comma) and NA- or na-fields",
             "Invalid fields: ",
             paste(unique(nonMatches), collapse=" "),
+            "These were encountered for row numbers:",
+            paste(rowsWithIssues, collapse=", "),
             "Aborting...",
             sep="\n"
         )
         
-        stop(errorString)
-    }
-    
-    zeroRegexPattern <- c("^0$")
-    zeroMatches <- grep(zeroRegexPattern, rawDataOnly, perl=TRUE)
-    if (length(zeroMatches) > 0) {
-        errorString <- paste(
-            "Encountered zeroes in data. Must be replaced with NA before processing.",
-            "This can be done automatically setting the zeroToNA-flag option to TRUE.",
-            sep="\n"
-        )
         stop(errorString)
     }
     
@@ -413,14 +409,39 @@ verifyDesignMatrix <- function(fullMatrix, designMatrix, sampleCol) {
 
 
 
-#' Replace 0 values with NA in input data
+#' Replace empty values (0 or empty field) with NA in input data
 #' 
 #' @param dataMatrix Matrix with raw data.
+#' @param quiet Don't show diagnostic messages
 #' @return Parsed rawdata where 0 values are replaced with NA
 #' @keywords internal
-preprocessData <- function(dataMatrix) {
+preprocessData <- function(dataMatrix, quiet=FALSE) {
 
-    dataMatrix[dataMatrix == 0] <- NA
+    zeroFields <- length(dataMatrix[dataMatrix == 0])
+    emptyFields <- length(dataMatrix[dataMatrix == ""])
+    nullFields <- length(dataMatrix[dataMatrix == "null"])
+    
+    if (zeroFields != 0) {
+        if (!quiet) {
+            message(zeroFields, " fields with '0' were replaced by 'NA'")
+        }
+        dataMatrix[dataMatrix == 0] <- NA
+    }
+    
+    if (emptyFields != 0) {
+        if (!quiet) {
+            message(zeroFields, " empty fields were replaced by 'NA'")
+        }
+        dataMatrix[dataMatrix == ""] <- NA
+    }
+    
+    if (nullFields != 0) {
+        if (!quiet) {
+            message(nullFields, " 'null' fields were replaced by 'NA'")
+        }
+        dataMatrix[dataMatrix == "null"] <- NA
+    }
+
     dataMatrix
 }
 
@@ -543,17 +564,17 @@ verifyMultipleSamplesPresent <- function(dataMatrix, groups, requireReplicates=T
     if (length(distinctSamples) == 1) {
         
         errorString <- paste(
-            "Found less than two distinct samples. Following was found:",
+            "Found less than two distinct sample groups. Following was found:",
             paste(distinctSamples, collapse=" "),
-            "For full processing two samples are required",
-            "You can force limited processing by turning of the", 
-            "\"requireReplicates\" option",
+            "For full processing two or more sample groups are required",
+            "You can force limited processing for one sample group by setting the", 
+            "\"requireReplicates\" option to FALSE\n",
             sep="\n")
         
         if (requireReplicates) {
             stop(errorString)
         }
-        else {
+        else if (!quiet) {
             warning(errorString)
         }
     }

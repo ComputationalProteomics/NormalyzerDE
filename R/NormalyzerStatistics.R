@@ -16,35 +16,37 @@
 #' @slot pairwiseCompsAve List with average expression values
 #' @slot pairwiseCompsFold List with log2 fold-change values for pairwise 
 #'   comparisons
+#' @slot contrasts Spot for saving vector of last used contrasts
+#' @slot condCol Column containing last used conditions
+#' @slot batchCol Column containing last used batch conditions
 NormalyzerStatistics <- setClass("NormalyzerStatistics",
-                                 representation(
+                                 slots = c(
                                      annotMat = "matrix",
                                      dataMat = "matrix",
-                                     filteredDataMat = "matrix",
                                      designDf = "data.frame",
-                                     filteringContrast = "vector",
-                                     
+
                                      pairwiseCompsP = "list",
                                      pairwiseCompsFdr = "list",
                                      pairwiseCompsAve = "list",
-                                     pairwiseCompsFold = "list"
+                                     pairwiseCompsFold = "list",
+                                     pairwiseCompsSig = "list",
+                                     
+                                     comparisons = "character",
+                                     condCol = "character",
+                                     batchCol = "numeric"
                                  ))
 
 #' Constructor for NormalyzerStatistics
 #' 
 #' @param experimentObj Instance of SummarizedExperiment containing matrix
 #'   and design information as column data
-#' @param conditionCol Column in column data containing the condition information
-#'   for which contrasts will be performed
 #' @param logTrans Whether the input data should be log transformed
-#' @param leastRepCount Least replicates in each group to be retained for 
-#'   contrast calculations
 #' @return nds Generated NormalyzerStatistics instance
 #' @export
 #' @examples
 #' data(example_stat_summarized_experiment)
 #' nst <- NormalyzerStatistics(example_stat_summarized_experiment)
-NormalyzerStatistics <- function(experimentObj, conditionCol="group", logTrans=FALSE, leastRepCount=2) { 
+NormalyzerStatistics <- function(experimentObj, logTrans=FALSE) { 
 
               dataMat <- SummarizedExperiment::assay(experimentObj)
               if (logTrans) {
@@ -54,24 +56,47 @@ NormalyzerStatistics <- function(experimentObj, conditionCol="group", logTrans=F
               annotMat <- SummarizedExperiment::rowData(experimentObj)
               designDf <- SummarizedExperiment::colData(experimentObj)
 
-              rownames(dataMat) <- seq_len(nrow(dataMat))
-              dataMatNAFiltered <- filterLowRep(
-                  dataMat, 
-                  designDf[, conditionCol], 
-                  leastRep=leastRepCount
-              )
-              naFilterContrast <- rownames(dataMat) %in% rownames(dataMatNAFiltered)
-              
               nst <- new("NormalyzerStatistics",
-                  annotMat=as.matrix(annotMat), 
-                  dataMat=as.matrix(dataMat), 
-                  designDf=as.data.frame(designDf), 
-                  filteredDataMat=dataMatNAFiltered,
-                  filteringContrast=naFilterContrast
-              ) 
+                         annotMat=as.matrix(annotMat), 
+                         dataMat=as.matrix(dataMat), 
+                         designDf=as.data.frame(designDf)
+              )
 
               nst
           }
+
+setGeneric("condCol", function(object) { standardGeneric("condCol") })
+setMethod("condCol", signature(object="NormalyzerStatistics"), 
+          function(object) { slot(object, "condCol") })
+setGeneric("condCol<-", function(object, value) { standardGeneric("condCol<-") })
+setReplaceMethod("condCol", signature(object="NormalyzerStatistics"), 
+                 function(object, value) { 
+                     slot(object, "condCol") <- value
+                     validObject(object)
+                     object
+                 })
+
+setGeneric("batchCol", function(object) { standardGeneric("batchCol") })
+setMethod("batchCol", signature(object="NormalyzerStatistics"), 
+          function(object) { slot(object, "batchCol") })
+setGeneric("batchCol<-", function(object, value) { standardGeneric("batchCol<-") })
+setReplaceMethod("batchCol", signature(object="NormalyzerStatistics"), 
+                 function(object, value) { 
+                     slot(object, "batchCol") <- value
+                     validObject(object)
+                     object
+                 })
+
+setGeneric("comparisons", function(object) { standardGeneric("comparisons") })
+setMethod("comparisons", signature(object="NormalyzerStatistics"), 
+          function(object) { slot(object, "comparisons") })
+setGeneric("comparisons<-", function(object, value) { standardGeneric("comparisons<-") })
+setReplaceMethod("comparisons", signature(object="NormalyzerStatistics"), 
+                 function(object, value) { 
+                     slot(object, "comparisons") <- value
+                     validObject(object)
+                     object
+                 })
 
 setGeneric("annotMat", function(object) { standardGeneric("annotMat") })
 setMethod("annotMat", signature(object="NormalyzerStatistics"), 
@@ -83,6 +108,7 @@ setMethod("dataMat", signature(object="NormalyzerStatistics"),
 setGeneric("dataMat<-", function(object, value) { standardGeneric("dataMat<-") })
 setReplaceMethod("dataMat", signature(object="NormalyzerStatistics"), 
                  function(object, value) { 
+                     
                      slot(object, "dataMat") <- value
                      validObject(object)
                      object
@@ -169,6 +195,8 @@ setReplaceMethod("pairwiseCompsFold", signature(object="NormalyzerStatistics"),
 #' @param batchCol Column name in design matrix containing batch information.
 #' @param splitter Character dividing contrast conditions.
 #' @param type Type of statistical test (Limma or welch).
+#' @param leastRepCount Least replicates in each group to be retained for 
+#'   contrast calculations
 #' @return nst Statistics object with statistical measures calculated
 #' @rdname calculateContrasts
 #' @export
@@ -176,26 +204,54 @@ setReplaceMethod("pairwiseCompsFold", signature(object="NormalyzerStatistics"),
 #' data(example_stat_summarized_experiment)
 #' nst <- NormalyzerStatistics(example_stat_summarized_experiment)
 #' results <- calculateContrasts(nst, c("1-2", "2-3"), "group")
-#' resultsBatch <- calculateContrasts(nst, c("1-2", "2-3"), "group", "batch")
+#' resultsBatch <- calculateContrasts(nst, c("1-2", "2-3"), "group", batchCol="batch")
 setGeneric(name="calculateContrasts", 
            function(nst, comparisons, condCol, batchCol=NULL, splitter="-", 
-                    type="limma") standardGeneric("calculateContrasts"))
+                    type="limma", leastRepCount=1) standardGeneric("calculateContrasts"))
 
 #' @rdname calculateContrasts
 setMethod(f="calculateContrasts", 
           signature=c("NormalyzerStatistics"),
           function(nst, comparisons, condCol, batchCol=NULL, splitter="-", 
-                   type="limma") {
+                   type="limma", leastRepCount=1) {
               
+              dataMat <- dataMat(nst)
+              designDf <- designDf(nst)
+
+              comparisons(nst) <- comparisons
+              condCol(nst) <- as.character(designDf[, condCol])
+
+              if (!is.null(batchCol)) {
+                  conditionCombs <- paste(designDf[, condCol], designDf[, batchCol], sep="_")
+                  batchCol(nst) <- as.factor(designDf[, batchCol])
+              }
+              else {
+                  conditionCombs <- designDf[, condCol]
+                  batchCol(nst) <- numeric()
+              }
               
-              sampleReplicateGroups <- designDf(nst)[, condCol]
+              rownames(dataMat) <- seq_len(nrow(dataMat))
+              dataMatNAFiltered <- filterLowRep(
+                  dataMat, 
+                  conditionCombs, 
+                  leastRep=leastRepCount
+              )
+              
+              if (nrow(dataMatNAFiltered) == 0) {
+                  stop("No rows remained after NA-filtering for condition: '", 
+                       condCol, 
+                       "' and batchCol: '", batchCol, "' (if empty then batchCol is not specified)\n",
+                       "Consider whether you can reduce the 'leastRepCount' setting which sets the lower limit ",
+                       "of number of NA values in each condition-level combination ",
+                       "You could also try running without batchCol and see if there is enough data per condition then"
+                       )
+              }
+              
+              naFilterContrast <- rownames(dataMat) %in% rownames(dataMatNAFiltered)
               sampleReplicateGroupsStrings <- as.character(designDf(nst)[, condCol])
               statMeasures <- c("P", "FDR", "Ave", "Fold")
-
-              verifyContrasts(sampleReplicateGroupsStrings, comparisons)
               
-              naFilterContrast <- filteringContrast(nst)
-              dataMatNAFiltered <- filteredDataMat(nst)
+              verifyContrasts(sampleReplicateGroupsStrings, comparisons)
               
               model <- setupModel(nst, condCol, batchCol=batchCol, type=type)
 
@@ -263,6 +319,7 @@ setMethod(f="calculateContrasts",
               pairwiseCompsFdr(nst) <- compLists[["FDR"]]
               pairwiseCompsAve(nst) <- compLists[["Ave"]]
               pairwiseCompsFold(nst) <- compLists[["Fold"]]
+              
               nst
           })
 

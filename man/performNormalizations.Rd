@@ -6,13 +6,15 @@
 \alias{performNormalizations,NormalyzerResults-method}
 \title{Main function for executing normalizations}
 \usage{
-performNormalizations(nr, forceAll, rtNorm, rtStepSizeMinutes,
-  rtWindowMinCount, rtWindowShifts, rtWindowMergeMethod, noLogTransform)
+performNormalizations(nr, forceAll = FALSE, rtNorm = FALSE,
+  rtStepSizeMinutes = 1, rtWindowMinCount = 100, rtWindowShifts = 1,
+  rtWindowMergeMethod = "median", noLogTransform = FALSE,
+  quiet = FALSE)
 
 \S4method{performNormalizations}{NormalyzerResults}(nr, forceAll = FALSE,
   rtNorm = FALSE, rtStepSizeMinutes = 1, rtWindowMinCount = 100,
   rtWindowShifts = 1, rtWindowMergeMethod = "median",
-  noLogTransform = FALSE)
+  noLogTransform = FALSE, quiet = FALSE)
 }
 \arguments{
 \item{nr}{Normalyzer results object.}
@@ -32,6 +34,8 @@ segment.}
 \item{rtWindowMergeMethod}{Merge approach for layered retention time windows.}
 
 \item{noLogTransform}{Prevent log-transforming input}
+
+\item{quiet}{Don't show regular output messages}
 }
 \value{
 nr NormalyzerDE results object

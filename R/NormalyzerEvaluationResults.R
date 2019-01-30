@@ -59,14 +59,16 @@ NormalyzerEvaluationResults <- function (nr) {
                methodList <- normalizations(nr)
                sampleGroupsWithReplicates <- samplesGroupsWithReplicates(nds)
                singleReplicateRun <- singleReplicateRun(nds)
+               tinyRun <- isTinyRun(nds)
                
                # Calculate CV related measures               
                avgCVPerNormAndReplicates <- calculateReplicateCV(methodList, sampleReplicateGroups)
                avgcvmem <- avgCVPerNormAndReplicates
                featureCVPerMethod <- calculateFeatureCV(methodList)
+               
                avgcvmempdiff <- calculatePercentageAvgDiffInMat(avgCVPerNormAndReplicates)
                
-               if (!singleReplicateRun) {
+               if (!singleReplicateRun && !tinyRun) {
 
                    # MAD
                    avgmadmem <- calculateAvgMadMem(methodList, sampleReplicateGroups)
@@ -99,7 +101,7 @@ NormalyzerEvaluationResults <- function (nr) {
                    lowVarFeaturesCVs <- lowVarFeaturesCVs
                    lowVarFeaturesCVsPercDiff <- lowVarFeaturesCVsPercDiff
                }
-               
+
                # Correlation measures
                repCorPear <- calculateSummarizedCorrelationVector(
                    methodList,
@@ -115,7 +117,7 @@ NormalyzerEvaluationResults <- function (nr) {
                    "spearman"
                )
                
-               if (!singleReplicateRun) {
+               if (!singleReplicateRun && !tinyRun) {
                    object <- new(
                        "NormalyzerEvaluationResults",
                        avgcvmem=avgcvmem,

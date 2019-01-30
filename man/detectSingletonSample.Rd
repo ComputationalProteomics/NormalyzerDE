@@ -6,12 +6,14 @@
 \alias{detectSingletonSample,NormalyzerDataset-method}
 \title{Detect single sample group}
 \usage{
-detectSingletonSample(nds)
+detectSingletonSample(nds, quiet)
 
-\S4method{detectSingletonSample}{NormalyzerDataset}(nds)
+\S4method{detectSingletonSample}{NormalyzerDataset}(nds, quiet = FALSE)
 }
 \arguments{
 \item{nds}{Normalyzer dataset.}
+
+\item{quiet}{Only print error messages}
 }
 \value{
 None

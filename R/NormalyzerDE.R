@@ -33,6 +33,8 @@
 #'  Will otherwise stop with error message if such sample is encountered.
 #' @param sampleAbundThres Threshold for omitting low-abundant
 #'  samples. Is by default set to 15.
+#' @param tinyRunThres If total number of features is less than this, a limited
+#'  run is performed.
 #' @param requireReplicates Require multiple samples per condition to pass input 
 #'  validation.
 #' @param normalizeRetentionTime Perform normalizations over retention time.
@@ -88,7 +90,8 @@ normalyzer <- function(
         outputDir=".",
         forceAllMethods=FALSE,
         omitLowAbundSamples=FALSE,
-        sampleAbundThres=15,
+        sampleAbundThres=5,
+        tinyRunThres=50,
         requireReplicates=TRUE,
         normalizeRetentionTime=TRUE,
         plotRows=3,
@@ -106,6 +109,8 @@ normalyzer <- function(
         rtWindowShifts=1,
         rtWindowMergeMethod="mean"
     ) {
+    
+    if (!quiet) message("You are running version ", utils::packageVersion("NormalyzerDE"), " of NormalyzerDE")
 
     if (is.null(experimentObj) && (is.null(designPath) || is.null(dataPath))) {
         stop("Either options 'designPath' plus 'dataPath' or 'summarizedExp' need to be provided")
@@ -134,7 +139,8 @@ normalyzer <- function(
         omitSamples=omitLowAbundSamples,
         requireReplicates=requireReplicates,
         quiet=quiet,
-        noLogTransform=noLogTransform
+        noLogTransform=noLogTransform,
+        tinyRunThres=tinyRunThres
     )
         
     jobDir <- setupJobDir(jobName, outputDir)
@@ -261,6 +267,12 @@ normalyzerDE <- function(jobName, comparisons, designPath=NULL, dataPath=NULL, e
         stop("Either options 'designPath' plus 'dataPath' or 'summarizedExp' need to be provided")
     }
     
+    if (is.null(comparisons)) {
+        stop("Argument 'comparisons' must be provided. Specify one or more comparisons as a vector.\n",
+             "Example, one comparison between group 1 and 2: c('1-2')\n",
+             "Example, two comparisons between groups 1 and 2, and groups 2 and 3: c('1-2', '2-3')")
+    }
+    
     startTime <- Sys.time()
     jobDir <- setupJobDir(jobName, outputDir)
 
@@ -268,27 +280,26 @@ normalyzerDE <- function(jobName, comparisons, designPath=NULL, dataPath=NULL, e
     if (is.null(experimentObj)) {
         experimentObj <- setupRawContrastObject(dataPath, designPath, sampleCol)
     }
-
-    nst <- NormalyzerStatistics(experimentObj, 
-                                logTrans=logTrans, 
-                                leastRepCount=leastRepCount,
-                                conditionCol=condCol)
-
+    
     if (!is.null(techRepCol)) {
         if (!quiet) print("Reducing technical replicates")
-        dataMat(nst) <- reduceTechnicalReplicates(dataMat(nst), designDf(nst)[, techRepCol])
-        designDf(nst) <- reduceDesignTechRep(designDf(nst), designDf(nst)[, techRepCol])
+        experimentObj <- reduceTechnicalReplicates(experimentObj, techRepCol, sampleCol)
     }
-    
+
+    nst <- NormalyzerStatistics(
+        experimentObj, 
+        logTrans=logTrans
+    )
+        
     if (!quiet) print("Calculating statistical contrasts...")
-    nst <- calculateContrasts(nst, comparisons, condCol=condCol, type=type, batchCol=batchCol)
+    nst <- calculateContrasts(nst, comparisons, type=type, condCol=condCol, batchCol=batchCol, leastRepCount=leastRepCount)
     if (!quiet) print("Contrast calculations done!")
     
     annotDf <- generateAnnotatedMatrix(nst)
     outPath <- paste0(jobDir, "/", jobName, "_stats.tsv")
-    
+
     if (!quiet) print(paste("Writing", nrow(annotDf), "annotated rows to", outPath))
-    utils::write.table(annotDf, file=outPath, sep="\t", row.names = FALSE)
+    utils::write.table(annotDf, file=outPath, sep="\t", row.names = FALSE, quote=FALSE)
     if (!quiet) print(paste("Writing statistics report"))
     generateStatsReport(nst, jobName, jobDir, sigThres, sigThresType, log2FoldThres)
     

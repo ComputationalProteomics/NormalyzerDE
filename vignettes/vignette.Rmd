@@ -264,10 +264,7 @@ the normalization step.
 ```{r}
 bestNormMatPath <- paste(jobDir, "RT-Loess-normalized.txt", sep="/")
 experimentObj <- setupRawContrastObject(bestNormMatPath, designFp, "sample")
-nst <- NormalyzerStatistics(experimentObj,
-                            logTrans=FALSE,
-                            leastRepCount=2,
-                            conditionCol="group")
+nst <- NormalyzerStatistics(experimentObj, logTrans=FALSE)
 ```
 
 Similarly as to for the normalization evaluation step the `experimentObj`
@@ -280,7 +277,7 @@ in the format `c("condA-condB", "condB-condC")`, where `condX` is the group leve
 
 ```{r}
 comparisons <- c("4-5")
-nst <- calculateContrasts(nst, comparisons, condCol="group")
+nst <- calculateContrasts(nst, comparisons, condCol="group", leastRepCount=2)
 ```
 
 ## Step 3: Generate final matrix and output

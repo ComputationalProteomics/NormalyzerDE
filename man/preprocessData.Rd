@@ -2,17 +2,19 @@
 % Please edit documentation in R/inputVerification.R
 \name{preprocessData}
 \alias{preprocessData}
-\title{Replace 0 values with NA in input data}
+\title{Replace empty values (0 or empty field) with NA in input data}
 \usage{
-preprocessData(dataMatrix)
+preprocessData(dataMatrix, quiet = FALSE)
 }
 \arguments{
 \item{dataMatrix}{Matrix with raw data.}
+
+\item{quiet}{Don't show diagnostic messages}
 }
 \value{
 Parsed rawdata where 0 values are replaced with NA
 }
 \description{
-Replace 0 values with NA in input data
+Replace empty values (0 or empty field) with NA in input data
 }
 \keyword{internal}

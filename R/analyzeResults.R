@@ -40,17 +40,31 @@ calculateReplicateCV <- function(methodList, sampleReplicateGroups) {
             feature,
             statistics=c("cv"),
             groups=groups)
+        
         featureCVs$table
     }
     
     calculateMethodReplicateCVs <- function(methodData, groups) {
         
-        featureCondCVs <- t(apply(
+        cvPerFeatureAndGroup <- apply(
             methodData,
             1,
             calculateFeatureCVs,
             groups=sampleReplicateGroups
-        ))
+        )
+        
+        if (length(unique(groups)) > 1) {
+            # Transpose to get groups as column heads
+            featureCondCVs <- t(cvPerFeatureAndGroup)
+        }
+        else if (length(unique(groups)) == 1) {
+            # For one feature the CVs are dropped to a vector
+            featureCondCVs <- data.frame(cvPerFeatureAndGroup)
+            colnames(featureCondCVs) <- groups[1]
+        }
+        else {
+            stop("Unknown state encountered for groups:", paste(groups, collapse=", "))
+        }
         
         # Calculate mean CV for all features for each condition
         summedCondCVs <- colMeans(featureCondCVs, na.rm=TRUE)
@@ -64,6 +78,11 @@ calculateReplicateCV <- function(methodList, sampleReplicateGroups) {
         groups=sampleReplicateGroups
     )
     
+    # If only one group, this is needed to get data in correct shape and format
+    if (length(unique(sampleReplicateGroups)) == 1) {
+        avgCVPerNormAndReplicates <- t(as.matrix(avgCVPerNormAndReplicates))
+    }
+
     avgCVPerNormAndReplicates
 }
 

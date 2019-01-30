@@ -5,10 +5,10 @@
 \title{Represents raw input data together with basic annotation information}
 \usage{
 NormalyzerDataset(jobName, designMatrix, rawData, annotationData,
-  sampleNameCol, groupNameCol, quiet = FALSE)
+  sampleNameCol, groupNameCol, tinyRunThres = 50, quiet = FALSE)
 
 NormalyzerDataset(jobName, designMatrix, rawData, annotationData,
-  sampleNameCol, groupNameCol, quiet = FALSE)
+  sampleNameCol, groupNameCol, tinyRunThres = 50, quiet = FALSE)
 }
 \arguments{
 \item{jobName}{Name of the NormalyzerDE processing run}
@@ -26,6 +26,10 @@ information}
 
 \item{groupNameCol}{Name of column in design matrix containing condition
 information}
+
+\item{tinyRunThres}{If fewer features than this is present in the input
+a limited run will be performed to avoid some steps requiring a more
+extensive number of features.}
 
 \item{quiet}{If set to TRUE no information messages will be printed}
 }
