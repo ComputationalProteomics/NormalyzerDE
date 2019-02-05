@@ -68,6 +68,7 @@ From: ubuntu:18.04
     Rscript -e 'install.packages("hexbin", dependencies=TRUE)'
     Rscript -e 'install.packages("htmlTable", dependencies=TRUE)'
     Rscript -e 'install.packages("stringi", dependencies=TRUE)'
+    Rscript -e 'install.packages("ggforce", dependencies=TRUE)'
 
     # Bioconductor
     Rscript -e 'BiocManager::install("vsn", dependencies=TRUE)'
