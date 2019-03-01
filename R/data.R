@@ -25,11 +25,11 @@
 #' @keywords internal
 "example_stat_data"
 
-#' NormalyzerDE results object used internally for testing
-#' 
-#' @format An instance of the class NormalyzerResults
-#' @keywords internal
-"regression_test_nr"
+# #' NormalyzerDE results object used internally for testing
+# #' 
+# #' @format An instance of the class NormalyzerResults
+# #' @keywords internal
+# "regression_test_nr"
 
 #' SummarizedExperiment object prepared with design-matrix, data-matrix
 #' and annotation columns loaded for raw data
