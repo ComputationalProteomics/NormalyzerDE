@@ -430,7 +430,7 @@ preprocessData <- function(dataMatrix, quiet=FALSE) {
     
     if (emptyFields != 0) {
         if (!quiet) {
-            message(zeroFields, " empty fields were replaced by 'NA'")
+            message(emptyFields, " empty fields were replaced by 'NA'")
         }
         dataMatrix[dataMatrix == ""] <- NA
     }

@@ -29,13 +29,13 @@ Imports:
     stats,
     SummarizedExperiment,
     matrixStats,
-    hexbin,
     ggforce
 Suggests:
     knitr,
     testthat,
     rmarkdown,
     roxygen2,
+    hexbin,
     BiocStyle
 VignetteBuilder: knitr
 biocViews:

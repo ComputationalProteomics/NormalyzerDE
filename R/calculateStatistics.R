@@ -234,7 +234,7 @@ getSigs <- function(nst, sigThresType, sigThres, log2FoldThres) {
 plotComparisonVenns <- function(nst, jobName, currentLayout, pageno,
                                 sigThres=0.1, sigThresType="fdr", 
                                 log2FoldThres=0, maxContrasts=4) {
-    
+
     contrastSig <- getSigs(nst, sigThresType, sigThres, log2FoldThres)
     contrasts <- comparisons(nst)
     compCount <- min(length(contrasts), maxContrasts)
