@@ -1,6 +1,8 @@
 # Ignore global tests and related data in Bioconductor due to processing time
 inst/extdata/unit_test_run*
 tests/testthat/test_global.R
+# Ignore analyze results as it induced a circular dependency on Bioconductor's building server
+tests/testthat/test_analyzeResults.R
 
 # Files
 *.swp
