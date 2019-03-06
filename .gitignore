@@ -37,3 +37,4 @@ hidden_file_ext = (
     ".gitattributes", ".gitmodules", ".hgtags", ".project", ".seed",
     ".settings", ".tm_properties"
 )
+.Rproj.user
