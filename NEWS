@@ -1,6 +1,6 @@
 CHANGES IN VERSION 1.1.14/15
 
-* Loading itself as required to load 
+* Updating tests to avoid cyclic dependency on the NormalyzerDE package
 
 CHANGES IN VERSION 1.1.13
 ----------------------------------

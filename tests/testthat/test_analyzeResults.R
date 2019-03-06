@@ -7,15 +7,40 @@ test_data <- example_data_only_values[, as.character(test_design$sample)]
 group_header <- test_design$group
 unique_groups <- unique(group_header)
 
-data("regression_test_nr")
-regression_test_ner <- ner(regression_test_nr)
-nds <- nds(regression_test_nr)
+# Setup equivalent to regression_test_nr
+data("example_wide_data")
+data("example_wide_design")
+sdf <- example_wide_data[, example_wide_design$sample]
+adf <- example_wide_data[, !colnames(example_wide_data) %in% example_wide_design$sample]
+se <- SummarizedExperiment::SummarizedExperiment(
+    assays = list(raw=as.matrix(sdf)),
+    colData=example_wide_design,
+    rowData=adf
+)
+SummarizedExperiment::metadata(se) <- list(
+    sample="sample",
+    group="group"
+)
+
+nds <- NormalyzerDE::getVerifiedNormalyzerObject(
+    "unit_test_run_norm",
+    summarizedExp = se
+)
+regression_test_nr <- NormalyzerDE::normMethods(nds)
+regression_test_nr <- NormalyzerDE::analyzeNormalizations(regression_test_nr)
+regression_test_ner <- regression_test_nr@ner
+
+#data("regression_test_nr")
+#regression_test_ner <- ner(regression_test_nr)
+#nds <- nds(regression_test_nr)
+
+# browser()
 
 sampleReplicateGroups <- sampleReplicateGroups(nds)
 normMatrices <- normalizations(regression_test_nr)
 anova_pvalues <- calculateANOVAPValues(
-    normMatrices, 
-    sampleReplicateGroups, 
+    normMatrices,
+    sampleReplicateGroups,
     categoricalANOVA=FALSE)
 
 test_that("calculateCorrSum gives same Pearson output", {
@@ -56,18 +81,19 @@ test_that("calculateCorrSum gives same Spearman output", {
 
 test_that("calculateSummarizedCorrelationVector_Spearman", {
     
-    expected_out <- repCorSpear(regression_test_ner)
+    # expected_out <- repCorSpear(regression_test_ner)
+    expected_out <- read.csv(system.file(package="NormalyzerDE", "testdata", "calculateSummarizedCorrelationVector_spearman.csv"), check.names = FALSE)
     out <- calculateSummarizedCorrelationVector(
         normMatrices, 
         sampleReplicateGroups,
         unique(sampleReplicateGroups),
         "spearman"
     )
-
+    
     expect_that(
         all.equal(
-            expected_out,
-            out
+            round(as.matrix(expected_out), 5),
+            round(out, 5)
         ),
         is_true()
     )
@@ -75,7 +101,8 @@ test_that("calculateSummarizedCorrelationVector_Spearman", {
 
 test_that("calculateSummarizedCorrelationVector_Pearson", {
     
-    expected_out <- repCorPear(regression_test_ner)
+    #expected_out <- repCorPear(regression_test_ner)
+    expected_out <- read.csv(system.file(package="NormalyzerDE", "testdata", "calculateSummarizedCorrelationVector_pearson.csv"), check.names = FALSE)
     out <- as.matrix(unlist(calculateSummarizedCorrelationVector(
         normMatrices, 
         sampleReplicateGroups,
@@ -85,8 +112,8 @@ test_that("calculateSummarizedCorrelationVector_Pearson", {
 
     expect_that(
         all.equal(
-            expected_out,
-            out
+            round(as.matrix(expected_out), 5),
+            round(out, 5)
         ),
         is_true()
     )
@@ -151,13 +178,14 @@ test_that("calculateAvgReplicateVariation", {
 
 test_that("calculateANOVAPValues", {
     
-    expected_out <- anovaP(regression_test_ner)
+    # expected_out <- anovaP(regression_test_ner)
+    expected_out <- read.csv(system.file(package="NormalyzerDE", "testdata", "anova.csv"), check.names = FALSE)
     anova_pvalues_copy <- anova_pvalues
 
     expect_that(
         all.equal(
-            expected_out,
-            anova_pvalues_copy
+            round(as.matrix(expected_out), 4),
+            round(anova_pvalues_copy, 4)
         ),
         is_true()
     )
@@ -165,7 +193,21 @@ test_that("calculateANOVAPValues", {
 
 test_that("findLowlyVariableFeaturesCVs", {
     
-    expected_out <- lowVarFeaturesCVs(regression_test_ner)
+    # expected_out <- lowVarFeaturesCVs(regression_test_ner)
+    expected_out <- c(
+        "log2" = 1.153562, 
+        "VSN" = 1.089077, 
+        "GI" = 1.159375, 
+        "median" = 1.320822, 
+        "mean" = 1.163794, 
+        "Quantile" = 1.120080, 
+        "CycLoess" = 1.032822, 
+        "RLR" = 1.048589,
+        "RT-median" = 1.320822, 
+        "RT-mean" = 1.163794, 
+        "RT-Loess" = 1.032822, 
+        "RT-VSN" = 1.089077
+    )
     
     anova_pvalues_contrast_nonna <- !is.na(anova_pvalues[, 1])
     log2AnovaFDR <- rep(NA, length(anova_pvalues_contrast_nonna))
@@ -177,8 +219,8 @@ test_that("findLowlyVariableFeaturesCVs", {
 
     expect_that(
         all.equal(
-            expected_out,
-            out
+            round(expected_out, 6),
+            round(out, 6)
         ),
         is_true()
     )
