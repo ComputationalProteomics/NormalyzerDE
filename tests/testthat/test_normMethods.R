@@ -23,19 +23,17 @@ test_that("globalIntensityNormalization", {
     out_dim <- dim(out)
     out_colsum <- round(colSums(out, na.rm=TRUE), 5)
     
-    expect_that(
+    expect_true(
         all.equal(
             expect_dim,
             out_dim
-        ),
-        is_true()
+        )
     )
     
-    expect_that(
+    expect_true(
         all(
             expect_colsum == out_colsum
-        ),
-        is_true()
+        )
     )
 })
 
@@ -52,19 +50,17 @@ test_that("medianNormalization", {
     out_dim <- dim(out)
     out_colsum <- round(colSums(out, na.rm=TRUE), 5)
     
-    expect_that(
+    expect_true(
         all.equal(
             expect_dim,
             out_dim
-        ),
-        is_true()
+        )
     )
     
-    expect_that(
+    expect_true(
         all(
             expect_colsum == out_colsum
-        ),
-        is_true()
+        )
     )
 })
 
@@ -81,19 +77,17 @@ test_that("meanNormalization", {
     out_dim <- dim(out)
     out_colsum <- round(colSums(out, na.rm=TRUE), 5)
     
-    expect_that(
+    expect_true(
         all.equal(
             expect_dim,
             out_dim
-        ),
-        is_true()
+        )
     )
     
-    expect_that(
+    expect_true(
         all(
             expect_colsum == out_colsum
-        ),
-        is_true()
+        )
     )
 })
 
@@ -110,19 +104,17 @@ test_that("performVSNNormalization", {
     out_dim <- dim(out)
     out_colsum <- round(colSums(out, na.rm=TRUE), 5)
     
-    expect_that(
+    expect_true(
         all.equal(
             expect_dim,
             out_dim
-        ),
-        is_true()
+        )
     )
     
-    expect_that(
+    expect_true(
         all(
             expect_colsum == out_colsum
-        ),
-        is_true()
+        )
     )
 })
 
@@ -139,19 +131,17 @@ test_that("performQuantileNormalization", {
     out_dim <- dim(out)
     out_colsum <- round(colSums(out, na.rm=TRUE), 5)
     
-    expect_that(
+    expect_true(
         all.equal(
             expect_dim,
             out_dim
-        ),
-        is_true()
+        )
     )
     
-    expect_that(
+    expect_true(
         all(
             expect_colsum == out_colsum
-        ),
-        is_true()
+        )
     )
 })
 
@@ -168,19 +158,17 @@ test_that("performSMADNormalization", {
     out_dim <- dim(out)
     out_colsum <- round(colSums(out, na.rm=TRUE), 5)
     
-    expect_that(
+    expect_true(
         all.equal(
             expect_dim,
             out_dim
-        ),
-        is_true()
+        )
     )
     
-    expect_that(
+    expect_true(
         all(
             expect_colsum == out_colsum
-        ),
-        is_true()
+        )
     )
 })
 
@@ -197,19 +185,17 @@ test_that("performCyclicLoessNormalization", {
     out_dim <- dim(out)
     out_colsum <- round(colSums(out, na.rm=TRUE), 5)
     
-    expect_that(
+    expect_true(
         all.equal(
             expect_dim,
             out_dim
-        ),
-        is_true()
+        )
     )
     
-    expect_that(
+    expect_true(
         all(
             expect_colsum == out_colsum
-        ),
-        is_true()
+        )
     )
 })
 
@@ -226,19 +212,17 @@ test_that("performGlobalRLRNormalization", {
     out_dim <- dim(out)
     out_colsum <- round(colSums(out, na.rm=TRUE), 5)
     
-    expect_that(
+    expect_true(
         all.equal(
             expect_dim,
             out_dim
-        ),
-        is_true()
+        )
     )
     
-    expect_that(
+    expect_true(
         all(
             expect_colsum == out_colsum
-        ),
-        is_true()
+        )
    )
 })
 
@@ -255,18 +239,16 @@ test_that("performNoNormalization", {
     out_dim <- dim(out)
     out_colsum <- round(colSums(out, na.rm=TRUE), 5)
     
-    expect_that(
+    expect_true(
         all.equal(
             expect_dim,
             out_dim
-        ),
-        is_true()
+        )
     )
     
-    expect_that(
+    expect_true(
         all(
             expect_colsum == out_colsum
-        ),
-        is_true()
+        )
     )
 })

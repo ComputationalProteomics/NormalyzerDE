@@ -25,12 +25,11 @@ test_that("filterLowRep", {
     
     out <- filterLowRep(test_data, groups, leastRep=2)
     
-    expect_that(
+    expect_true(
         all.equal(
             expected_out_data,
             out
-        ),
-        is_true()
+        )
     )
 })
 
@@ -135,30 +134,27 @@ test_that("reduceTechnicalReplicates", {
     
     out_se <- reduceTechnicalReplicates(se, "techrep", "sample")
     
-    expect_that(
+    expect_true(
         all.equal(
             expect_out_data,
             SummarizedExperiment::assay(out_se)
         ),
-        is_true(),
         "Reduced data check"
     )
     
-    expect_that(
+    expect_true(
         all.equal(
             expect_out_design,
             data.frame(SummarizedExperiment::colData(out_se))
         ),
-        is_true(),
         "Reduced design check"
     )
     
-    expect_that(
+    expect_true(
         all.equal(
             expect_out_annot,
             data.frame(SummarizedExperiment::rowData(out_se))
         ),
-        is_true(),
         "Annotation remains identical"
     )
 })
@@ -192,10 +188,10 @@ test_that("calculateWelch_data_test", {
     
     out <- calculateWelch(small_df, header, c(4,5))
     
-    expect_that(all.equal(expected_p, round(out[["P"]], 5)), is_true())
-    expect_that(all.equal(expected_fdr, round(out[["FDR"]], 5)), is_true())
-    expect_that(all.equal(expected_fold, round(out[["Fold"]], 5)), is_true())
-    expect_that(all.equal(expected_ave, round(out[["Ave"]], 5)), is_true())
+    expect_true(all.equal(expected_p, round(out[["P"]], 5)))
+    expect_true(all.equal(expected_fdr, round(out[["FDR"]], 5)))
+    expect_true(all.equal(expected_fold, round(out[["Fold"]], 5)))
+    expect_true(all.equal(expected_ave, round(out[["Ave"]], 5)))
 })
 
 test_that("calculateWelch_limited", {
@@ -216,10 +212,10 @@ test_that("calculateWelch_limited", {
     
     out <- calculateWelch(small_df, c(1,1,1,2,2,2), c(1,2))
     
-    expect_that(all.equal(expected_p, round(out[["P"]], 5)), is_true())
-    expect_that(all.equal(expected_fdr, round(out[["FDR"]], 5)), is_true())
-    expect_that(all.equal(expected_fold, round(out[["Fold"]], 5)), is_true())
-    expect_that(all.equal(expected_ave, round(out[["Ave"]], 5)), is_true())
+    expect_true(all.equal(expected_p, round(out[["P"]], 5)))
+    expect_true(all.equal(expected_fdr, round(out[["FDR"]], 5)))
+    expect_true(all.equal(expected_fold, round(out[["Fold"]], 5)))
+    expect_true(all.equal(expected_ave, round(out[["Ave"]], 5)))
 })
 
 test_that("calculateLimmaContrast_data_test", {
@@ -255,10 +251,10 @@ test_that("calculateLimmaContrast_data_test", {
     expected_ave <- c(26.69096, 26.48083, 28.53765, 24.8364, 26.8688, 28.51864)
     expected_fold <- c(-0.2404, 0.22268, -0.13116, 1.54437, 0.95631, 0.69079)
     
-    expect_that(all.equal(expected_p, round(out[["P"]], 5)), is_true())
-    expect_that(all.equal(expected_fdr, round(out[["FDR"]], 5)), is_true())
-    expect_that(all.equal(expected_fold, round(out[["Fold"]], 5)), is_true())
-    expect_that(all.equal(expected_ave, round(out[["Ave"]], 5)), is_true())
+    expect_true(all.equal(expected_p, round(out[["P"]], 5)))
+    expect_true(all.equal(expected_fdr, round(out[["FDR"]], 5)))
+    expect_true(all.equal(expected_fold, round(out[["Fold"]], 5)))
+    expect_true(all.equal(expected_ave, round(out[["Ave"]], 5)))
 })
 
 test_that("calculateLimmaContrast_data_batch_test", {
@@ -296,10 +292,10 @@ test_that("calculateLimmaContrast_data_batch_test", {
     expected_ave <- c(26.69096, 26.48083, 28.53765, 24.8364, 26.8688, 28.51864)
     expected_fold <- c(-0.24587, 0.17468, -0.12881, 1.49441, 0.95415, 0.64867)
     
-    expect_that(all.equal(expected_p, round(out[["P"]], 5)), is_true())
-    expect_that(all.equal(expected_fdr, round(out[["FDR"]], 5)), is_true())
-    expect_that(all.equal(expected_fold, round(out[["Fold"]], 5)), is_true())
-    expect_that(all.equal(expected_ave, round(out[["Ave"]], 5)), is_true())
+    expect_true(all.equal(expected_p, round(out[["P"]], 5)))
+    expect_true(all.equal(expected_fdr, round(out[["FDR"]], 5)))
+    expect_true(all.equal(expected_fold, round(out[["Fold"]], 5)))
+    expect_true(all.equal(expected_ave, round(out[["Ave"]], 5)))
 })
 
 

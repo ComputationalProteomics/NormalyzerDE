@@ -52,12 +52,11 @@ test_that("calculateCorrSum gives same Pearson output", {
     )
     
     pear_out <- calculateCorrSum(test_data, group_header, unique_groups, "pearson")
-    expect_that(
+    expect_true(
         all.equal(
             expected_group_pearson,
             round(pear_out, 7)
-        ),
-        is_true()
+        )
     )
 })
 
@@ -70,12 +69,11 @@ test_that("calculateCorrSum gives same Spearman output", {
     )
     
     spear_out <- calculateCorrSum(test_data, group_header, unique_groups, "spearman")
-    expect_that(
+    expect_true(
         all.equal(
             expected_group_spearman,
             round(spear_out, 7)
-        ),
-        is_true()
+        )
     )
 })
 
@@ -90,12 +88,11 @@ test_that("calculateSummarizedCorrelationVector_Spearman", {
         "spearman"
     )
     
-    expect_that(
+    expect_true(
         all.equal(
             round(as.matrix(expected_out), 5),
             round(out, 5)
-        ),
-        is_true()
+        )
     )
 })
 
@@ -110,12 +107,11 @@ test_that("calculateSummarizedCorrelationVector_Pearson", {
         "pearson"
     )))
 
-    expect_that(
+    expect_true(
         all.equal(
             round(as.matrix(expected_out), 5),
             round(out, 5)
-        ),
-        is_true()
+        )
     )
 })
 
@@ -124,12 +120,11 @@ test_that("calculateReplicateCV", {
     expected_out <- avgcvmem(regression_test_ner)
     out <- calculateReplicateCV(normMatrices, sampleReplicateGroups)
 
-    expect_that(
+    expect_true(
         all.equal(
             expected_out,
             out
-        ),
-        is_true()
+        )
     )
 })
 
@@ -138,12 +133,11 @@ test_that("calculateFeatureCV", {
     expected_out <- featureCVPerMethod(regression_test_ner)
     out <- calculateFeatureCV(normMatrices)
     
-    expect_that(
+    expect_true(
         all.equal(
             expected_out,
             out
-        ),
-        is_true()
+        )
     )
 })
 
@@ -152,12 +146,11 @@ test_that("calculateAvgMadMem", {
     expected_out <- avgmadmem(regression_test_ner)
     out <- calculateAvgMadMem(normMatrices, sampleReplicateGroups)
 
-    expect_that(
+    expect_true(
         all.equal(
             expected_out,
             out
-        ),
-        is_true()
+        )
     )
 })
 
@@ -166,12 +159,11 @@ test_that("calculateAvgReplicateVariation", {
     expected_out <- avgvarmem(regression_test_ner)
     out <- calculateAvgReplicateVariation(normMatrices, sampleReplicateGroups)
 
-    expect_that(
+    expect_true(
         all.equal(
             expected_out,
             out
-        ),
-        is_true()
+        )
     )
 })
 
@@ -182,12 +174,11 @@ test_that("calculateANOVAPValues", {
     expected_out <- read.csv(system.file(package="NormalyzerDE", "testdata", "anova.csv"), check.names = FALSE)
     anova_pvalues_copy <- anova_pvalues
 
-    expect_that(
+    expect_true(
         all.equal(
             round(as.matrix(expected_out), 4),
             round(anova_pvalues_copy, 4)
-        ),
-        is_true()
+        )
     )
 })
 
@@ -217,12 +208,11 @@ test_that("findLowlyVariableFeaturesCVs", {
     
     out <- findLowlyVariableFeaturesCVs(log2AnovaFDR, normMatrices)
 
-    expect_that(
+    expect_true(
         all.equal(
             round(expected_out, 6),
             round(out, 6)
-        ),
-        is_true()
+        )
     )
 })
 
@@ -232,12 +222,11 @@ test_that("calculatePercentageAvgDiffInMat_small_test", {
     expect_out <- c(100, 150, 200)
     out <- calculatePercentageAvgDiffInMat(test_mat)
     
-    expect_that(
+    expect_true(
         all.equal(
             out,
             expect_out
-        ),
-        is_true()
+        )
     )
 })
 
@@ -247,12 +236,11 @@ test_that("calculatePercentageAvgDiffInMat_MAD", {
     avgMadMemMat <- calculateAvgMadMem(normMatrices, sampleReplicateGroups)
     out <- calculatePercentageAvgDiffInMat(avgMadMemMat)
     
-    expect_that(
+    expect_true(
         all.equal(
             expected_out,
             out
-        ),
-        is_true()
+        )
     )
 })
 
@@ -262,12 +250,11 @@ test_that("calculatePercentageAvgDiffInMat_CV", {
     avgCVMat <- calculateReplicateCV(normMatrices, sampleReplicateGroups)
     out <- calculatePercentageAvgDiffInMat(avgCVMat)
     
-    expect_that(
+    expect_true(
         all.equal(
             expected_out,
             out
-        ),
-        is_true()
+        )
     )
 })
 
