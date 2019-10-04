@@ -427,9 +427,9 @@ verifyDesignMatrix <- function(fullMatrix, designMatrix, sampleCol) {
 #' @keywords internal
 preprocessData <- function(dataMatrix, quiet=FALSE) {
 
-    zeroFields <- length(dataMatrix[dataMatrix == 0])
-    emptyFields <- length(dataMatrix[dataMatrix == ""])
-    nullFields <- length(dataMatrix[dataMatrix == "null"])
+    zeroFields <- length(dataMatrix[!is.na(dataMatrix) & dataMatrix == 0])
+    emptyFields <- length(dataMatrix[!is.na(dataMatrix) & dataMatrix == ""])
+    nullFields <- length(dataMatrix[!is.na(dataMatrix) & dataMatrix == "null"])
     
     if (zeroFields != 0) {
         if (!quiet) {

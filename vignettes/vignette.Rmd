@@ -340,3 +340,9 @@ When a normalized matrix is selected the analysis proceeds to the statistical an
 * Code in the `calculateStatistics.R` script is used to calculate the statistical contrasts. The results are attached to the `NormalyzerStatistics` object.
 * The resulting statistics are used to generate a report and an annotated output matrix where key statistical measures are attached to the original matrix.
 
+# Used packages
+
+```{r}
+sessionInfo()
+```
+

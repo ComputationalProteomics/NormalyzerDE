@@ -38,3 +38,5 @@ hidden_file_ext = (
     ".settings", ".tm_properties"
 )
 .Rproj.user
+doc
+Meta
