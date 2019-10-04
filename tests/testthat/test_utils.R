@@ -3,10 +3,10 @@ context("utils.R")
 test_that("getIndexList", {
     
     out <- getIndexList(c(1,2,3))
-    expect_that(all.equal(out, list("1"=1, "2"=2, "3"=3)), is_true())
+    expect_true(all.equal(out, list("1"=1, "2"=2, "3"=3)))
     
     out <- getIndexList(c(1,2,1,2,3))
-    expect_that(all.equal(out, list("1"=c(1, 3), "2"=c(2, 4), "3"=5)), is_true())
+    expect_true(all.equal(out, list("1"=c(1, 3), "2"=c(2, 4), "3"=5)))
 })
 
 test_that("getRowNAFilterContrast", {
@@ -15,11 +15,10 @@ test_that("getRowNAFilterContrast", {
     data("example_design")
     levels <- example_design$group
     out <- getRowNAFilterContrast(head(example_stat_data), levels, minCount=3)
-    expect_that(
+    expect_true(
         all.equal(
             out,
-            c("1"=TRUE, "2"=TRUE, "3"=FALSE, "4"=FALSE, "5"=TRUE, "6"=TRUE)),
-        is_true()
+            c("1"=TRUE, "2"=TRUE, "3"=FALSE, "4"=FALSE, "5"=TRUE, "6"=TRUE))
     )
 })
 
@@ -35,11 +34,10 @@ test_that("getReplicateSortedData_constant", {
     groups <- c("A", "A", "B", "B")
     sortedMat <- getReplicateSortedData(rawMat, groups)
             
-    expect_that(
+    expect_true(
         all.equal(
             rawMat,
-            sortedMat),
-        is_true()
+            sortedMat)
     )
 })
 
@@ -62,10 +60,9 @@ test_that("getReplicateSortedData_reordering", {
     groups <- c("B", "A", "B", "A")
     sortedMat <- getReplicateSortedData(rawMat, groups)
     
-    expect_that(
+    expect_true(
         all.equal(
             sortedMat,
-            expectedMat),
-        is_true()
+            expectedMat)
     )
 })

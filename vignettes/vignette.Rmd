@@ -61,7 +61,6 @@ s4      condB
 ```
 
 Alternatively the data can be provided as an instance of a `SummarizedExperiment` S4 class.
-This class is available in the `SummarizedExperiment` Bioconductor package.
 
 ## Running NormalyzerDE evaluation
 
@@ -103,6 +102,28 @@ normalyzerDE("vignette_run",
              outputDir=outDir, 
              comparisons=c("4-5"),
              condCol="group")
+```
+
+## Running NormalyzerDE using a SummarizedExperiment object as input
+
+A benefit of using a SummarizedExperiment object as input is that it allows executing NormalyzerDE using variables as input instead of loading from file.
+
+The conversion of `designMatrix$sample` is required if using `read.table` as it otherwise is interpreted as a factor. For more intuitive behaviour you can use `read_tsv` from the `readr` package instead of `read.table`.
+
+```{r}
+dataMatrix <- read.table(dataFp, sep="\t", header = TRUE)
+designMatrix <- read.table(designFp, sep="\t", header = TRUE)
+designMatrix$sample <- as.character(designMatrix$sample)
+dataOnly <- dataMatrix[, designMatrix$sample]
+annotOnly <- dataMatrix[, !(colnames(dataMatrix) %in% designMatrix$sample)]
+
+sumExpObj <- SummarizedExperiment::SummarizedExperiment(
+    as.matrix(dataOnly),
+    colData=designMatrix,
+    rowData=annotOnly
+)
+
+normalyzer(jobName="sumExpRun", experimentObj = sumExpObj, outputDir=outDir)
 ```
 
 # Retention time normalization
@@ -318,4 +339,10 @@ When a normalized matrix is selected the analysis proceeds to the statistical an
 * An instance of `NormalyzerStatistics` is prepared containing the input data.
 * Code in the `calculateStatistics.R` script is used to calculate the statistical contrasts. The results are attached to the `NormalyzerStatistics` object.
 * The resulting statistics are used to generate a report and an annotated output matrix where key statistical measures are attached to the original matrix.
+
+# Used packages
+
+```{r}
+sessionInfo()
+```
 

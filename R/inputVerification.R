@@ -315,17 +315,20 @@ verifyValidNumbers <- function(rawDataOnly, groups, noLogTransform=FALSE, quiet=
     
     regexPattern <- sprintf("^(%s)$", paste(validPatterns, collapse="|"))
     nonMatchIndices <- grep(regexPattern, rawDataOnly, perl=TRUE, ignore.case=TRUE, invert = TRUE)
-    nonMatches <- stats::na.omit(rawDataOnly[nonMatchIndices])
-    rowsWithIssues <- unique((nonMatchIndices-1) %% nrow(rawDataOnly))
+    naIndices <- which(is.na(rawDataOnly))
+    invalidNonNAIndices <- nonMatchIndices[!nonMatchIndices %in% naIndices]
+    rowsWithIssues <- unique((invalidNonNAIndices-1) %% nrow(rawDataOnly) + 1)
     
-    if (length(nonMatches) > 0) {
+    if (length(invalidNonNAIndices) > 0) {
         errorString <- paste(
             "Invalid values encountered in input data.",
             "Only valid data is numeric (dot-decimal, not comma) and NA- or na-fields",
             "Invalid fields: ",
-            paste(unique(nonMatches), collapse=" "),
-            "These were encountered for row numbers:",
-            paste(rowsWithIssues, collapse=", "),
+            paste(rawDataOnly[unique(invalidNonNAIndices)], collapse=" "),
+            "These were encountered for row numbers (showing max 10 first):",
+            paste(utils::head(rowsWithIssues, 10), collapse=", "),
+            "Content of the first row with issues: ",
+            paste(rawDataOnly[rowsWithIssues[1], ], collapse=", "),
             "Aborting...",
             sep="\n"
         )
@@ -336,12 +339,19 @@ verifyValidNumbers <- function(rawDataOnly, groups, noLogTransform=FALSE, quiet=
     if (!noLogTransform) {
         belowOnePattern <- c("^0.\\d+$")
         belowOneMatches <- grep(belowOnePattern, rawDataOnly, perl=TRUE)
+        rowsWithIssues <- unique((belowOneMatches-1) %% nrow(rawDataOnly) + 1)
+        firstIssueRow <- rawDataOnly[rowsWithIssues[1], ]
+
         if (length(belowOneMatches) > 0) {
             errorString <- paste(
                 "Encountered below-one values in raw data. As the data is log-transformed ",
                 "during processing this will lead to negative values which in turn will ",
                 "crash processing. Consider using the 'noLogTransform' option if your data ",
                 "already is normally distributed or scaling all values if appropriate.", 
+                "First ten row numbers where this issue was encountered, excluding header row: ",
+                paste(utils::head(rowsWithIssues, 10), collapse=", "),
+                paste0("Content of first row (row ", rowsWithIssues[1], ") with issues: "),
+                paste(firstIssueRow, collapse=", "),
                 sep="\n"
             )
             stop(errorString)
@@ -417,9 +427,9 @@ verifyDesignMatrix <- function(fullMatrix, designMatrix, sampleCol) {
 #' @keywords internal
 preprocessData <- function(dataMatrix, quiet=FALSE) {
 
-    zeroFields <- length(dataMatrix[dataMatrix == 0])
-    emptyFields <- length(dataMatrix[dataMatrix == ""])
-    nullFields <- length(dataMatrix[dataMatrix == "null"])
+    zeroFields <- length(dataMatrix[!is.na(dataMatrix) & dataMatrix == 0])
+    emptyFields <- length(dataMatrix[!is.na(dataMatrix) & dataMatrix == ""])
+    nullFields <- length(dataMatrix[!is.na(dataMatrix) & dataMatrix == "null"])
     
     if (zeroFields != 0) {
         if (!quiet) {
@@ -430,7 +440,7 @@ preprocessData <- function(dataMatrix, quiet=FALSE) {
     
     if (emptyFields != 0) {
         if (!quiet) {
-            message(zeroFields, " empty fields were replaced by 'NA'")
+            message(emptyFields, " empty fields were replaced by 'NA'")
         }
         dataMatrix[dataMatrix == ""] <- NA
     }

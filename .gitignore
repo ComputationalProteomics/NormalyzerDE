@@ -1,6 +1,10 @@
 # Singularity-branch specific ignores
 builds/
 tests/testthat/test_global.R
+# Ignore global tests and related data in Bioconductor due to processing time
+inst/extdata/unit_test_run*
+# Ignore analyze results as it induced a circular dependency on Bioconductor's building server
+tests/testthat/test_analyzeResults.R
 
 # Files
 *.swp
@@ -35,3 +39,6 @@ hidden_file_ext = (
     ".gitattributes", ".gitmodules", ".hgtags", ".project", ".seed",
     ".settings", ".tm_properties"
 )
+.Rproj.user
+doc
+Meta

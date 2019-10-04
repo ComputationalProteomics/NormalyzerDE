@@ -25,12 +25,6 @@
 #' @keywords internal
 "example_stat_data"
 
-#' NormalyzerDE results object used internally for testing
-#' 
-#' @format An instance of the class NormalyzerResults
-#' @keywords internal
-"regression_test_nr"
-
 #' SummarizedExperiment object prepared with design-matrix, data-matrix
 #' and annotation columns loaded for raw data
 #' 
@@ -44,3 +38,17 @@
 #' @format An instance of the class SummarizedExperiment with stats data
 #' @keywords internal
 "example_stat_summarized_experiment"
+
+#' Full raw NormalyzerDE matrix used for internal testing
+#' 
+#' @format A data table ready for analysis in NormalyzerDE
+#' @keywords internal
+"example_wide_data"
+
+#' Design matrix belonging together with example_wide_data. Used for
+#' internal testing.
+#' 
+#' @format A design table ready for analysis in NormalyzerDE
+#' @keywords internal
+"example_wide_design"
+
