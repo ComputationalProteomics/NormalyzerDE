@@ -4,6 +4,7 @@ designPath <- system.file(package="NormalyzerDE", "extdata", "tiny_design.tsv")
 designPathWord <- system.file(package="NormalyzerDE", "extdata", "tiny_design_word.tsv")
 designSingleRepPath <- system.file(package="NormalyzerDE", "extdata", "tiny_design_singlerep.tsv")
 dataPath <- system.file(package="NormalyzerDE", "extdata", "tiny_data.tsv")
+mqDataPath <- system.file(package="NormalyzerDE", "extdata", "mq_peptides_100.txt")
 # designPath <- "../../vignettes/design.tsv"
 # dataPath <- "../../vignettes/data.tsv"
 tempOut <- tempdir()
@@ -24,6 +25,19 @@ test_that("Normalization run succeeds without errors", {
             designPath=designPath,
             outputDir=tempOut,
             quiet=TRUE
+        )
+    )
+})
+
+test_that("MaxQuant normalization runs without errors", {
+    expect_silent(
+        normalyzer(
+            jobName="mq_run_norm",
+            dataPath=mqDataPath,
+            designPath=designPath,
+            outputDir=tempOut,
+            quiet=TRUE, 
+            inputFormat = "maxquantpep"
         )
     )
 })
