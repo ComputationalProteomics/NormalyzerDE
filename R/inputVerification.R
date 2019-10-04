@@ -326,7 +326,7 @@ verifyValidNumbers <- function(rawDataOnly, groups, noLogTransform=FALSE, quiet=
             "Invalid fields: ",
             paste(rawDataOnly[unique(invalidNonNAIndices)], collapse=" "),
             "These were encountered for row numbers (showing max 10 first):",
-            paste(head(rowsWithIssues, 10), collapse=", "),
+            paste(utils::head(rowsWithIssues, 10), collapse=", "),
             "Content of the first row with issues: ",
             paste(rawDataOnly[rowsWithIssues[1], ], collapse=", "),
             "Aborting...",
@@ -349,7 +349,7 @@ verifyValidNumbers <- function(rawDataOnly, groups, noLogTransform=FALSE, quiet=
                 "crash processing. Consider using the 'noLogTransform' option if your data ",
                 "already is normally distributed or scaling all values if appropriate.", 
                 "First ten row numbers where this issue was encountered, excluding header row: ",
-                paste(head(rowsWithIssues, 10), collapse=", "),
+                paste(utils::head(rowsWithIssues, 10), collapse=", "),
                 paste0("Content of first row (row ", rowsWithIssues[1], ") with issues: "),
                 paste(firstIssueRow, collapse=", "),
                 sep="\n"
