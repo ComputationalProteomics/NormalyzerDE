@@ -97,10 +97,10 @@ an instance of `SummarizedExperiment` sent to the `experimentObj` argument.
 ```{r}
 normMatrixPath <- paste(outDir, "vignette_run/CycLoess-normalized.txt", sep="/")
 normalyzerDE("vignette_run", 
-             designFp, 
-             normMatrixPath,
-             outputDir=outDir, 
              comparisons=c("4-5"),
+             designPath=designFp, 
+             dataPath=normMatrixPath,
+             outputDir=outDir, 
              condCol="group")
 ```
 
