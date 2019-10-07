@@ -357,6 +357,32 @@ verifyValidNumbers <- function(rawDataOnly, groups, noLogTransform=FALSE, quiet=
     if (!quiet) message("Input data checked. All fields are valid.")
 }
 
+
+#' Verify that design matrix setup matches the data matrix
+#' 
+#' @param fullMatrix Dataframe with input data.
+#' @param designMatrix Dataframe with design setup.
+#' @param sampleCol Column in design matrix containing sample IDs.
+#' 
+#' @return None
+#' @keywords internal
+verifySummarizedExperiment <- function(summarizedExp, sampleCol) {
+    
+    fullMatrix <- cbind(
+        data.frame(SummarizedExperiment::rowData(summarizedExp)),
+        SummarizedExperiment::assay(summarizedExp)
+    )
+    
+    designMatrix <- data.frame(SummarizedExperiment::colData(summarizedExp))
+    
+    verifyDesignMatrix(
+        fullMatrix,
+        designMatrix,
+        sampleCol
+    )
+}
+
+
 #' Verify that design matrix setup matches the data matrix
 #' 
 #' @param fullMatrix Dataframe with input data.
