@@ -282,6 +282,9 @@ normalyzerDE <- function(jobName, comparisons, designPath=NULL, dataPath=NULL, e
     if (is.null(experimentObj)) {
         experimentObj <- setupRawContrastObject(dataPath, designPath, sampleCol)
     }
+    else {
+        verifyDesignMatrix(data.frame(rowData(experimentObj)), data.frame(colData(experimentObj)), sampleCol)
+    }
     
     if (!is.null(techRepCol)) {
         if (!quiet) print("Reducing technical replicates")

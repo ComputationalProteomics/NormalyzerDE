@@ -3,9 +3,9 @@
 \name{plotSigScatter}
 \alias{plotSigScatter}
 \title{Takes an NormalyzerStatistics instance and generates and prints a 
-vulcano plot}
+volcano plot}
 \usage{
-plotSigScatter(nst, jobName, currentLayout, pageno, type = "Vulcano",
+plotSigScatter(nst, jobName, currentLayout, pageno, type = "Volcano",
   sigThres = 0.1, sigThresType = "fdr", log2FoldThres = 0)
 }
 \arguments{
@@ -17,7 +17,7 @@ plotSigScatter(nst, jobName, currentLayout, pageno, type = "Vulcano",
 
 \item{pageno}{Current page number.}
 
-\item{type}{Specify whether to plot 'Vulcano' or 'MA'.}
+\item{type}{Specify whether to plot 'Volcano' or 'MA'.}
 
 \item{sigThres}{FDR threshold for DE coloring.}
 }
@@ -26,6 +26,6 @@ None
 }
 \description{
 Takes an NormalyzerStatistics instance and generates and prints a 
-vulcano plot
+volcano plot
 }
 \keyword{internal}
