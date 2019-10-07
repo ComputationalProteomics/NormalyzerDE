@@ -263,6 +263,8 @@ normalyzerDE <- function(jobName, comparisons, designPath=NULL, dataPath=NULL, e
                          batchCol=NULL, techRepCol=NULL, leastRepCount=1, quiet=FALSE, 
                          sigThres=0.1, sigThresType="fdr", log2FoldThres=0) {
 
+    if (!quiet) message("You are running version ", utils::packageVersion("NormalyzerDE"), " of NormalyzerDE")
+    
     if (is.null(experimentObj) && (is.null(designPath) || is.null(dataPath))) {
         stop("Either options 'designPath' plus 'dataPath' or 'summarizedExp' need to be provided")
     }
