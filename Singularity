@@ -1,10 +1,11 @@
 BootStrap: docker
 From: ubuntu:18.04
 
-# Last build date: 190129
+# Last build date: 191007
+# Test build locally with singularity build test_out.simg Singularity
 
 %post
-    R_BASE_VERSION="3.5.1"
+    R_BASE_VERSION="3.6.1"
 
     # Setup system packages
     apt-get -qq update
@@ -38,7 +39,8 @@ From: ubuntu:18.04
 
     # Setup R repository
     echo "deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran35/" >> /etc/apt/sources.list
-    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E084DAB9
+    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 51716619E084DAB9 
+    # apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E084DAB9
     apt-get -qq update
     apt-get upgrade -y
 
