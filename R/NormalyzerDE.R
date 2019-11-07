@@ -125,6 +125,7 @@ normalyzer <- function(
                                             zeroToNA, sampleColName, groupColName)
     }
     else {
+        verifySummarizedExperiment(experimentObj, sampleColName)
         SummarizedExperiment::colData(experimentObj)[[sampleColName]] <- 
             as.character(SummarizedExperiment::colData(experimentObj)[[sampleColName]])
         SummarizedExperiment::metadata(experimentObj) <- list(
@@ -263,6 +264,8 @@ normalyzerDE <- function(jobName, comparisons, designPath=NULL, dataPath=NULL, e
                          batchCol=NULL, techRepCol=NULL, leastRepCount=1, quiet=FALSE, 
                          sigThres=0.1, sigThresType="fdr", log2FoldThres=0) {
 
+    if (!quiet) message("You are running version ", utils::packageVersion("NormalyzerDE"), " of NormalyzerDE")
+    
     if (is.null(experimentObj) && (is.null(designPath) || is.null(dataPath))) {
         stop("Either options 'designPath' plus 'dataPath' or 'summarizedExp' need to be provided")
     }
@@ -279,6 +282,9 @@ normalyzerDE <- function(jobName, comparisons, designPath=NULL, dataPath=NULL, e
     if (!quiet) print("Setting up statistics object")
     if (is.null(experimentObj)) {
         experimentObj <- setupRawContrastObject(dataPath, designPath, sampleCol)
+    }
+    else {
+        verifySummarizedExperiment(experimentObj, sampleCol)
     }
     
     if (!is.null(techRepCol)) {

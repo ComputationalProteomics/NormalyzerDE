@@ -150,7 +150,7 @@ generateStatsReport <- function(nst, jobName, jobDir,
 
     pageNo <- pageNo + 1
     plotSigScatter(
-        nst, jobName, currentLayout, pageNo, type="Vulcano",
+        nst, jobName, currentLayout, pageNo, type="Volcano",
         sigThres=sigThres, sigThresType=sigThresType, log2FoldThres=log2FoldThres
     )
     
@@ -328,17 +328,17 @@ plotContrastPHists <- function(nst, jobName, currentLayout, pageno) {
 }
 
 #' Takes an NormalyzerStatistics instance and generates and prints a 
-#' vulcano plot
+#' volcano plot
 #' 
 #' @param nst NormalyzerDE statistics object.
 #' @param jobName Name of processing run.
 #' @param currentLayout Layout used for document.
 #' @param pageno Current page number.
-#' @param type Specify whether to plot 'Vulcano' or 'MA'.
+#' @param type Specify whether to plot 'Volcano' or 'MA'.
 #' @param sigThres FDR threshold for DE coloring.
 #' @return None
 #' @keywords internal
-plotSigScatter <- function(nst, jobName, currentLayout, pageno, type="Vulcano",
+plotSigScatter <- function(nst, jobName, currentLayout, pageno, type="Volcano",
                            sigThres=0.1, sigThresType="fdr", log2FoldThres=0) {
     
     contrastPLists <- pairwiseCompsP(nst)
@@ -379,7 +379,7 @@ plotSigScatter <- function(nst, jobName, currentLayout, pageno, type="Vulcano",
         df <- data.frame(pVals=pVals, fold=fold, sig=sig, expression=expression)
         df <- df[stats::complete.cases(df),]
         
-        if (type == "Vulcano") {
+        if (type == "Volcano") {
             plots[[i]] <- ggplot2::ggplot(df, ggplot2::aes(fold, -log10(pVals), color=sig)) + 
                 ggplot2::geom_point(size=1, alpha=0.5, na.rm=TRUE) +
                 ggplot2::xlab("Fold (log2)") + 

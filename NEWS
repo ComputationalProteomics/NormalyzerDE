@@ -1,12 +1,32 @@
+CHANGES IN VERSION 1.3.4
+----------------------------------
+
+* Certain datasets with fixed imputed values caused large difference in CV and MAD
+  for RLR normalization, which in turn lead to a crash in the plotting functions.
+  This update makes sure that the plotting can be carried out despite extreme values.
+
+CHANGES IN VERSION 1.3.3
+----------------------------------
+
+* Extended input validation when executing NormalyzerDE using experimentObj
+
+CHANGES IN VERSION 1.3.2
+----------------------------------
+
+* Correctly showing the number of values replaced with NA in status text
+
 CHANGES IN VERSION 1.3.0
+----------------------------------
 
 * Sync with Bioconductor changes
 
 CHANGES IN VERSION 1.1.16
+----------------------------------
 
 * Clearer input verification error for both incorrect fields and when values < 1 are encountered
 
 CHANGES IN VERSION 1.1.14/15
+----------------------------------
 
 * Updating tests to avoid cyclic dependency on the NormalyzerDE package
 
