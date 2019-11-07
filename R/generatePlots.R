@@ -473,6 +473,8 @@ plotReplicateVariance <- function(nr, currentLayout, pageno) {
 #' @keywords internal
 plotReplicateVarAndStableVariables <- function(nr, currentLayout, pageno) {
     
+    # browser()
+    
     nds <- nds(nr)
     methodnames <- names(normalizations(nr))
     currentjob <- jobName(nds)
@@ -483,6 +485,9 @@ plotReplicateVarAndStableVariables <- function(nr, currentLayout, pageno) {
     avgmadmempdiff <- avgmadmempdiff(ner)
     avgvarmempdiff <- avgvarmempdiff(ner)
     
+    lowBound <- min(c(avgcvmempdiff, avgmadmempdiff, avgvarmempdiff)) - 10
+    highBound <- max(c(avgcvmempdiff, avgmadmempdiff, avgvarmempdiff)) + 5
+    
     tout <- rbind(c(1, 2, 3), c(4, 5, 5))
     graphics::layout(tout)
     graphics::par(mar=c(6, 6, 3, 1), oma=c(2, 3, 3, 2), xpd=NA)
@@ -492,8 +497,9 @@ plotReplicateVarAndStableVariables <- function(nr, currentLayout, pageno) {
         main="PCV compared to log2 ", 
         names.arg=c(methodnames), 
         border="red", 
-        ylim=c(min(avgcvmempdiff) - 10, 
-               max(avgmadmempdiff) + 5), 
+        ylim=c(lowBound, highBound),
+        # ylim=c(min(avgcvmempdiff) - 10, 
+        #        max(avgmadmempdiff) + 5), 
         density=20, 
         cex=0.9, 
         cex.axis=0.7, 
@@ -511,8 +517,9 @@ plotReplicateVarAndStableVariables <- function(nr, currentLayout, pageno) {
         main="PMAD compared to log2", 
         names.arg=c(methodnames), 
         border="red", 
-        ylim=c(min(avgmadmempdiff) - 10, 
-               max(avgmadmempdiff) + 5), 
+        ylim=c(lowBound, highBound),
+        # ylim=c(min(avgmadmempdiff) - 10, 
+        #        max(avgmadmempdiff) + 5), 
         density=20, 
         cex=0.9, 
         cex.axis=0.7, 
@@ -530,13 +537,15 @@ plotReplicateVarAndStableVariables <- function(nr, currentLayout, pageno) {
         las=2
     )
     
+    # browser()
     abc <- graphics::barplot(
         avgvarmempdiff, 
         main="%PEV - compared to log2", 
         names.arg=c(methodnames), 
         border="red", 
-        ylim=c(min(avgvarmempdiff) - 10, 
-               max(avgmadmempdiff) + 5),
+        ylim=c(lowBound, highBound),
+        # ylim=c(min(avgvarmempdiff) - 10, 
+        #        max(avgmadmempdiff) + 5),
         density=20, 
         cex=0.9, 
         cex.axis=0.7, 
