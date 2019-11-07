@@ -1,7 +1,7 @@
 BootStrap: docker
 From: ubuntu:18.04
 
-# Last build date: 191007
+# Last build date: 191107
 # Test build locally with singularity build test_out.simg Singularity
 
 %post
