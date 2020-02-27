@@ -213,38 +213,37 @@ test_that("getWidenedRTRange_real_numbers", {
     
     expect_true(
         all.equal(
-            getWidenedRTRange(34.49672, 45.08198, 20, real_rt_vals),
-            c(30.93696, 45.33467)
+            getWidenedRTRange(34.497, 45.081, 20, round(real_rt_vals, 3)),
+            c(30.937, 45.335)
         )
     )
     
     expect_true(
         all.equal(
-            getWidenedRTRange(34.49672, 45.08198, 30, real_rt_vals),
-            c(28.21106, 48.11109)
+            getWidenedRTRange(34.497, 45.082, 30, round(real_rt_vals, 3)),
+            c(28.211, 48.111)
         )
     )
     
     expect_true(
         all.equal(
-            getWidenedRTRange(34.49672, 45.08198, 98, real_rt_vals),
-            c(9.02435, 128.70183)
+            getWidenedRTRange(34.49672, 45.08198, 98, round(real_rt_vals, 3)),
+            c(9.024, 128.702)
         )
     )
     
     expect_error(
-        getWidenedRTRange(34.49672, 45.08198, 100, real_rt_vals)
+        getWidenedRTRange(34.49672, 45.08198, 100, round(real_rt_vals, 3))
     )
     
     expect_error(
-        getWidenedRTRange(34.49672, 45.08198, 10, real_rt_vals)
+        getWidenedRTRange(34.49672, 45.08198, 10, round(real_rt_vals, 3))
     )
     
     expect_true(
         all.equal(
-            getWidenedRTRange(
-                34.49672, 45.08198, 10, real_rt_vals, allowTooWideData=TRUE),
-            c(34.49672, 45.08198)
+            getWidenedRTRange(34.497, 45.082, 10, round(real_rt_vals, 3), allowTooWideData=TRUE),
+            c(34.497, 45.082)
         )
     )
 })
