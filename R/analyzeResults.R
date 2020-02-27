@@ -297,7 +297,7 @@ calculateANOVAPValues <- function(methodList,
                                   categoricalANOVA) {
     
     calculateANOVAsForMethod <- function(methodData, sampleReplicateGroups) {
-        
+
         naFilterContrast <- getRowNAFilterContrast(
             methodData,
             sampleReplicateGroups,

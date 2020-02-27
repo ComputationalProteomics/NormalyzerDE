@@ -473,8 +473,6 @@ plotReplicateVariance <- function(nr, currentLayout, pageno) {
 #' @keywords internal
 plotReplicateVarAndStableVariables <- function(nr, currentLayout, pageno) {
     
-    # browser()
-    
     nds <- nds(nr)
     methodnames <- names(normalizations(nr))
     currentjob <- jobName(nds)
@@ -537,7 +535,6 @@ plotReplicateVarAndStableVariables <- function(nr, currentLayout, pageno) {
         las=2
     )
     
-    # browser()
     abc <- graphics::barplot(
         avgvarmempdiff, 
         main="%PEV - compared to log2", 
