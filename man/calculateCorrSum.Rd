@@ -6,8 +6,12 @@
 samples and returns a vector with correlation values corresponding to each
 condition}
 \usage{
-calculateCorrSum(methodData, allReplicateGroups,
-  sampleGroupsWithReplicates, corrType)
+calculateCorrSum(
+  methodData,
+  allReplicateGroups,
+  sampleGroupsWithReplicates,
+  corrType
+)
 }
 \arguments{
 \item{methodData}{Expression data matrix}

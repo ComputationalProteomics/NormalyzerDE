@@ -5,9 +5,16 @@
 \title{Generate multiple RT time-window normalized matrices where one is shifted.
 Merge them using a specified method (mean or median) and return the result.}
 \usage{
-getSmoothedRTNormalizedMatrix(rawMatrix, retentionTimes, normMethod,
-  stepSizeMinutes, windowShifts = 2, windowMinCount = 100,
-  mergeMethod = "mean", noLogTransform = FALSE)
+getSmoothedRTNormalizedMatrix(
+  rawMatrix,
+  retentionTimes,
+  normMethod,
+  stepSizeMinutes,
+  windowShifts = 2,
+  windowMinCount = 100,
+  mergeMethod = "mean",
+  noLogTransform = FALSE
+)
 }
 \arguments{
 \item{rawMatrix}{Target matrix to be normalized}

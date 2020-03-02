@@ -5,8 +5,12 @@
 \title{Calculates correlation values between replicates for each condition matrix.
 Finally returns a matrix containing the results for all dataset}
 \usage{
-calculateSummarizedCorrelationVector(methodlist, allReplicateGroups,
-  sampleGroupsWithReplicates, corrType)
+calculateSummarizedCorrelationVector(
+  methodlist,
+  allReplicateGroups,
+  sampleGroupsWithReplicates,
+  corrType
+)
 }
 \arguments{
 \item{methodlist}{List containing normalized matrices for each normalization

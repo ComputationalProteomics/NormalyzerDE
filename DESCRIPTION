@@ -1,6 +1,6 @@
 Package: NormalyzerDE
 Title: Evaluation of normalization methods and calculation of differential expression analysis statistics
-Version: 1.5.1
+Version: 1.5.2
 Author: Jakob Willforss
 Authors@R: c(
     person("Jakob", "Willforss", email="jakob.willforss@immun.lth.se", role=c("aut", "cre")),
@@ -41,6 +41,6 @@ biocViews:
     Normalization, MultipleComparison, Visualization, Bayesian, Proteomics, Metabolomics, DifferentialExpression
 License: Artistic-2.0
 Encoding: UTF-8
-RoxygenNote: 6.1.1
+RoxygenNote: 7.0.2
 URL: https://github.com/ComputationalProteomics/NormalyzerDE
 Depends: R (>= 3.6)

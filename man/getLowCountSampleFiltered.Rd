@@ -4,8 +4,12 @@
 \alias{getLowCountSampleFiltered}
 \title{Verify that samples contain at least a lowest number of values}
 \usage{
-getLowCountSampleFiltered(dataMatrix, groups, threshold = 15,
-  stopIfTooFew = TRUE)
+getLowCountSampleFiltered(
+  dataMatrix,
+  groups,
+  threshold = 15,
+  stopIfTooFew = TRUE
+)
 }
 \arguments{
 \item{dataMatrix}{Dataframe with processed input data.}

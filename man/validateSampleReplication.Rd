@@ -4,8 +4,12 @@
 \alias{validateSampleReplication}
 \title{Check whether all samples have replicates}
 \usage{
-validateSampleReplication(dataMatrix, groups, requireReplicates = TRUE,
-  quiet = FALSE)
+validateSampleReplication(
+  dataMatrix,
+  groups,
+  requireReplicates = TRUE,
+  quiet = FALSE
+)
 }
 \arguments{
 \item{dataMatrix}{Prepared matrix containing expression data.}

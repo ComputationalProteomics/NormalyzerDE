@@ -5,8 +5,14 @@
 \title{Prepare SummarizedExperiment object for raw data to be normalized containing 
 data, design and annotation information}
 \usage{
-setupRawDataObject(dataPath, designPath, inputFormat = "default",
-  zeroToNA = FALSE, sampleColName = "sample", groupColName = "group")
+setupRawDataObject(
+  dataPath,
+  designPath,
+  inputFormat = "default",
+  zeroToNA = FALSE,
+  sampleColName = "sample",
+  groupColName = "group"
+)
 }
 \arguments{
 \item{dataPath}{File path to data matrix.}

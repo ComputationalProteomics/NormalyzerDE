@@ -4,8 +4,16 @@
 \alias{plotComparisonVenns}
 \title{If multiple comparisons - Show overlap in Venn diagrams}
 \usage{
-plotComparisonVenns(nst, jobName, currentLayout, pageno, sigThres = 0.1,
-  sigThresType = "fdr", log2FoldThres = 0, maxContrasts = 4)
+plotComparisonVenns(
+  nst,
+  jobName,
+  currentLayout,
+  pageno,
+  sigThres = 0.1,
+  sigThresType = "fdr",
+  log2FoldThres = 0,
+  maxContrasts = 4
+)
 }
 \arguments{
 \item{nst}{NormalyzerDE statistics object.}

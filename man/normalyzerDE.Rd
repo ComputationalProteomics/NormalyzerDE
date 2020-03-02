@@ -4,12 +4,25 @@
 \alias{normalyzerDE}
 \title{NormalyzerDE differential expression}
 \usage{
-normalyzerDE(jobName, comparisons, designPath = NULL, dataPath = NULL,
-  experimentObj = NULL, outputDir = ".", logTrans = FALSE,
-  type = "limma", sampleCol = "sample", condCol = "group",
-  batchCol = NULL, techRepCol = NULL, leastRepCount = 1,
-  quiet = FALSE, sigThres = 0.1, sigThresType = "fdr",
-  log2FoldThres = 0)
+normalyzerDE(
+  jobName,
+  comparisons,
+  designPath = NULL,
+  dataPath = NULL,
+  experimentObj = NULL,
+  outputDir = ".",
+  logTrans = FALSE,
+  type = "limma",
+  sampleCol = "sample",
+  condCol = "group",
+  batchCol = NULL,
+  techRepCol = NULL,
+  leastRepCount = 1,
+  quiet = FALSE,
+  sigThres = 0.1,
+  sigThresType = "fdr",
+  log2FoldThres = 0
+)
 }
 \arguments{
 \item{jobName}{Name of job}

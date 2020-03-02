@@ -4,8 +4,7 @@
 \alias{setupTestData}
 \title{Generate a random test dataset with features, sample values and retention times}
 \usage{
-setupTestData(nSamples, nFeatures, rtMin = 40, rtMax = 80, mean = 20,
-  sd = 4)
+setupTestData(nSamples, nFeatures, rtMin = 40, rtMax = 80, mean = 20, sd = 4)
 }
 \arguments{
 \item{nSamples}{Number of samples}

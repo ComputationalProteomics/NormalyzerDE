@@ -4,11 +4,27 @@
 \alias{NormalyzerDataset}
 \title{Represents raw input data together with basic annotation information}
 \usage{
-NormalyzerDataset(jobName, designMatrix, rawData, annotationData,
-  sampleNameCol, groupNameCol, tinyRunThres = 50, quiet = FALSE)
+NormalyzerDataset(
+  jobName,
+  designMatrix,
+  rawData,
+  annotationData,
+  sampleNameCol,
+  groupNameCol,
+  tinyRunThres = 50,
+  quiet = FALSE
+)
 
-NormalyzerDataset(jobName, designMatrix, rawData, annotationData,
-  sampleNameCol, groupNameCol, tinyRunThres = 50, quiet = FALSE)
+NormalyzerDataset(
+  jobName,
+  designMatrix,
+  rawData,
+  annotationData,
+  sampleNameCol,
+  groupNameCol,
+  tinyRunThres = 50,
+  quiet = FALSE
+)
 }
 \arguments{
 \item{jobName}{Name of the NormalyzerDE processing run}

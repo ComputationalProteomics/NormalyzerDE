@@ -4,8 +4,12 @@
 \alias{verifyMultipleSamplesPresent}
 \title{Check whether more than one sample is present}
 \usage{
-verifyMultipleSamplesPresent(dataMatrix, groups,
-  requireReplicates = TRUE, quiet = FALSE)
+verifyMultipleSamplesPresent(
+  dataMatrix,
+  groups,
+  requireReplicates = TRUE,
+  quiet = FALSE
+)
 }
 \arguments{
 \item{dataMatrix}{Prepared dataframe.}
