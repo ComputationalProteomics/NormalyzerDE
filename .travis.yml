@@ -2,7 +2,7 @@
 
 language: R
 r: bioc-devel
-cache: packages
+# cache: packages
 apt_packages:
     - libc6 
     - libcurl4-openssl-dev
