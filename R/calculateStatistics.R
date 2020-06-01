@@ -67,6 +67,8 @@ reduceTechnicalReplicates <- function(se, techRepColName, sampleColName) {
 #' and appends these to the annotation- and data-matrices
 #' 
 #' @param nst NormalyzerDE statistics object.
+#' @param prefixSep Character string for separating the prefix names from the statistics suffix
+#' @param compLabels Vector containing strings to use as prefix for statistical comparisons
 #' @return outDf Annotated statistics matrix
 #' @export
 #' @examples
@@ -74,23 +76,30 @@ reduceTechnicalReplicates <- function(se, techRepColName, sampleColName) {
 #' statObj <- NormalyzerStatistics(example_stat_summarized_experiment)
 #' statObj <- calculateContrasts(statObj, comparisons=c("1-2", "2-3"), condCol="group", type="limma")
 #' annotDf <- generateAnnotatedMatrix(statObj)
-generateAnnotatedMatrix <- function(nst) {
+generateAnnotatedMatrix <- function(nst, prefixSep="_", compLabels=NULL) {
     
-    pairwiseHead <- paste(
-        names(pairwiseCompsP(nst)), "PValue", sep="_"
-    )
+    if (is.null(compLabels)) {
+        contrastBase <- names(pairwiseCompsP(nst))
+    }
+    else {
+        if (length(compLabels) != length(pairwiseCompsP(nst))) {
+            stop(sprintf(
+                "Number of assigned labels compLabels (found %s) needs to be same as number of contrasts (found %s)",
+                length(compLabels), length(pairwiseCompsP(nst))
+            ))
+        }
+        contrastBase <- compLabels
+    }
+        
+    pairwiseHead <- paste(contrastBase, "PValue", sep=prefixSep)
     pMat <- data.frame(pairwiseCompsP(nst))
     colnames(pMat) <- pairwiseHead
     
-    pairwiseHeadFdr <- paste(
-        names(pairwiseCompsFdr(nst)), "AdjPVal", sep="_"
-    )
+    pairwiseHeadFdr <- paste(contrastBase, "AdjPVal", sep=prefixSep)
     fdrMat <- data.frame(pairwiseCompsFdr(nst))
     colnames(fdrMat) <- pairwiseHeadFdr
     
-    pairwiseHeadFold <- paste(
-        names(pairwiseCompsFold(nst)), "log2FoldChange", sep="_"
-    )
+    pairwiseHeadFold <- paste(contrastBase, "log2FoldChange", sep=prefixSep)
     foldMat <- data.frame(pairwiseCompsFold(nst))
     colnames(foldMat) <- pairwiseHeadFold
     

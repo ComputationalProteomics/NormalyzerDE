@@ -103,7 +103,7 @@
 #' normResultsWithEval <- analyzeNormalizations(normResults)
 #' outputDir <- tempdir()
 #' generatePlots(normResultsWithEval, outputDir)
-generatePlots <- function(nr, jobdir, plotRows=3, plotCols=4) {
+generatePlots <- function(nr, jobdir, plotRows=3, plotCols=4, writeAsPngs=FALSE) {
     
     nds <- nds(nr)
     currentjob <- jobName(nds)
@@ -117,81 +117,148 @@ generatePlots <- function(nr, jobdir, plotRows=3, plotCols=4) {
         widths=c(0.1, rep(4 / (ncols - 2), (ncols - 2)), 0.1), 
         default.units=c('null', 'null')
     )
-        
+    
     currentFont <- "Helvetica"
     setupPlotting(currentjob, jobdir, "Norm-report")
+    
+    # function(outputFunc, jobdir, pngPath=NULL, ...) {
+    
+    # pngDir <- sprintf("%s/pngs", jobdir)
+    # dir.create(pngDir)
+    
+    # writePage(plotFrontPage, jobdir, sprintf("%s/%s", pngDir, "front_page.png"), currentjob, currentFont)
     plotFrontPage(currentjob, currentFont)
+    
+    # writePage
+    # 
+    # if (!writeAsPngs) {
+    # }
+    # else {
+    #   
+    #   png(filename=sprintf("%s/pngs/1_FrontPage.png", jobdir))
+    #   plotFrontPage(currentjob, currentFont)
+    #   dev.off()
+    # }
+    
     isLimitedRun <- singleReplicateRun(nds) || isTinyRun(nds)
 
-    # TI
+    # Sample mapping
     pageno <- 2
+    # writePage(plotSampleMappingPage, jobdir, sprintf("%s/%s", pngDir, "sample_map.png"), nr, currentFont, pageno)
+    plotSampleMappingPage(nr, currentFont, currentLayout, currentjob, pageno)
+    # png(filename = "~/Desktop/A.png")
+    # dev.off()
+    
+    # TI
+    pageno <- pageno + 1
+    # png(filename = "~/Desktop/B.png")
     plotSampleOutlierSummary(nr, currentLayout, pageno)
+    # dev.off()
 
     # If running with single-replicates, skip replicate dependent quality plots
     if (!isLimitedRun) {
         # CV
         pageno <- pageno + 1
+        # png(filename = "~/Desktop/C.png")
         plotReplicateVariance(nr, currentLayout, pageno)
+        # dev.off()
 
         # Stable variables plot and CV in percent difference
         pageno <- pageno + 1
+        # png(filename = "~/Desktop/D.png")
         plotReplicateVarAndStableVariables(nr, currentLayout, pageno)
+        # dev.off()
 
         # CVvsintensityplot
         pageno <- pageno + 1
+        # png(filename = "~/Desktop/E.png")
         plotCVvsIntensity(nr, currentLayout, pageno)
+        # dev.off()
         
         # MA plots
         pageno <- pageno + 1
+        # png(filename = "~/Desktop/F.png")
         plotMA(nr, currentLayout, pageno)
+        # dev.off()
     }
 
     # Scatterplots
     pageno <- pageno + 1
+    # png(filename = "~/Desktop/G.png")
     plotScatter(nr, currentLayout, pageno)
+    # dev.off()
 
     # QQplot
     pageno <- pageno + 1
+    # png(filename = "~/Desktop/H.png")
     plotQQ(nr, currentLayout, pageno)
+    # dev.off()
 
     # Boxplot
     pageno <- pageno + 1
+    # png(filename = "~/Desktop/I.png")
     plotBoxPlot(nr, currentLayout, pageno)
+    # dev.off()
 
     # RLE plots
     pageno <- pageno + 1
+    # png(filename = "~/Desktop/J.png")
     plotRLE(nr, currentLayout, pageno)
+    # dev.off()
 
     # Density plots
     pageno <- pageno + 1
+    # png(filename = "~/Desktop/K.png")
     plotDensity(nr, currentLayout, pageno)
+    # dev.off()
     
     # MDS plot
     pageno <- pageno + 1
+    # png(filename = "~/Desktop/L.png")
     plotMDS(nr, currentLayout, pageno)
+    # dev.off()
 
     if (!isLimitedRun) {   
         
         # meanSDplot
         pageno <- pageno + 1
+        # png(filename = "~/Desktop/M.png")
         plotMeanSD(nr, currentLayout, pageno)
+        # dev.off()
         
         # Correlation
         pageno <- pageno + 1
+        # png(filename = "~/Desktop/N.png")
         plotCorrelation(nr, currentLayout, pageno)
+        # dev.off()
     }
      
     # Dendrograms
     pageno <- pageno + 1
+    # png(filename = "~/Desktop/O.png")
     plotDendrograms(nr, currentLayout, pageno)
+    # dev.off()
 
     if (!isLimitedRun) {
         # DE plots
         pageno <- pageno + 1
+        # png(filename = "~/Desktop/P.png")
         plotPHist(nr, currentLayout, pageno)
+        # dev.off()
     }
     
     grDevices::dev.off()
+}
+
+writePage <- function(outputFunc, jobdir, pngPath=NULL, ...) {
+  if (is.null(pngPath)) {
+    outputFunc(...)
+  }
+  else {
+    png(filename=pngPath, width = 11.7, height = 8.3, units="in", res=300)
+    outputFunc(...)
+    dev.off()
+  }
 }
 
 #' Setup PDF report settings by initializing the color palette, format
@@ -212,10 +279,10 @@ setupPlotting <- function(currentJob, jobDir, suffix) {
     ))
 
     grDevices::pdf(
-        file=paste(jobDir, "/", suffix, "-", currentJob, ".pdf", sep=""), 
-        paper="a4r", width=0, height=0
+      file=paste(jobDir, "/", suffix, "-", currentJob, ".pdf", sep=""),
+      paper="a4r", width=0, height=0
     )
-
+    
     themeNorm <- ggplot2::theme_set(ggplot2::theme_bw())
     themeNorm <- ggplot2::theme_update(
         panel.grid.minor=ggplot2::element_blank(), 
@@ -265,7 +332,7 @@ plotFrontPage <- function(currentjob, currentFont) {
         gp=grid::gpar(fontsize=12, fontfamily=currentFont, col="black"))
     
     grid::grid.text(
-        paste0("Normalyzer (ver ", version, " )"), 
+        paste0("NormalyzerDE (ver ", version, " )"), 
         vp=grid::viewport(layout.pos.row=4), 
         just=c("center", "center"), 
         gp=grid::gpar(
@@ -301,6 +368,63 @@ plotFrontPage <- function(currentjob, currentFont) {
         just=c("center", "center"), 
         gp=grid::gpar(fontsize=10, fontfamily=currentFont, col="black")
     )
+}
+
+
+#' Write page with sample mapping
+#' 
+#' @param nr Normalyzer results object.
+#' @param currentLayout Layout used for document.
+#' @param pageno Current page number.
+#' @return None
+#' @keywords internal
+plotSampleMappingPage <- function(nr, currentFont, currentLayout, currentjob, pageno) {
+  
+  nds <- nds(nr)
+  methodlist <- normalizations(nr)
+  filterED <- sampleReplicateGroups(nds)
+  filterrawdata <- filterrawdata(nds)
+  currentjob <- jobName(nds)
+  
+  tout <- rbind(c(1, 2), c(3, 4))
+  graphics::layout(tout)
+  graphics::par(mar=c(4, 4, 2, 1), oma=c(2, 2, 3, 2), xpd=NA)        
+  
+  grid::grid.newpage()
+  groupColName <- groupNameCol(nds)
+  groupCol <- designMatrix(nds)[[groupColName]]
+  
+  groupLevels <- levels(as.factor(groupCol))
+  condCounts <- table(groupCol)
+  
+  groupStrings <- lapply(
+    1:length(groupLevels), 
+    function(lv, groups, groupCounts) { 
+      sprintf("%s\t%s\t%s", lv, groups[[lv]], groupCounts[[lv]]) }, 
+    groups=groupLevels, groupCounts=condCounts)
+  
+  groupStringsWHead <- c("group\tlevel\tcount", "", groupStrings)
+
+  lapply(1:length(groupStringsWHead), function(i, stringsToShow) {
+    grid::grid.text(stringsToShow[[i]], x=0.01, y=0.9-i*0.02, hjust=0)
+  }, groupStringsWHead)
+  
+  grid::grid.text(
+    "Please note that the grouping only impacts evaluation measures and visuals seen here, it does not have any impact on the performed normalizations.",
+    x=0.01, y=0.1, hjust=0
+  )
+  
+
+  # 
+  # gp <- grid::gpar(fontsize=11, fontfamily="Helvetica", 
+  #                  col="black", fontface="bold")
+  grid::pushViewport(grid::viewport(layout=currentLayout))
+  printMeta(
+    "Sample setup",
+    pageno,
+    currentjob,
+    currentLayout
+  )
 }
 
 #' Write page containing sample summary of intensities, missing values and 

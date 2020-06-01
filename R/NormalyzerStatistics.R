@@ -198,7 +198,7 @@ setReplaceMethod("pairwiseCompsFold", signature(object="NormalyzerStatistics"),
 #' @param leastRepCount Least replicates in each group to be retained for 
 #'   contrast calculations
 #' @return nst Statistics object with statistical measures calculated
-#' @rdname calculateContrasts
+#' @rdname calculateContrasts 
 #' @export
 #' @examples
 #' data(example_stat_summarized_experiment)
