@@ -103,7 +103,7 @@
 #' normResultsWithEval <- analyzeNormalizations(normResults)
 #' outputDir <- tempdir()
 #' generatePlots(normResultsWithEval, outputDir)
-generatePlots <- function(nr, jobdir, plotRows=3, plotCols=4, writeAsPngs=FALSE) {
+generatePlots <- function(nr, jobdir, plotRows=3, plotCols=4, writeAsPngs=TRUE) {
     
     nds <- nds(nr)
     currentjob <- jobName(nds)
@@ -118,146 +118,65 @@ generatePlots <- function(nr, jobdir, plotRows=3, plotCols=4, writeAsPngs=FALSE)
         default.units=c('null', 'null')
     )
     
+    pageno <- 1
+    nextPageNo <- function(iter=TRUE) {
+        if (iter) {
+          pageno <<- pageno + 1
+        }
+        pageno
+    }
+    
     currentFont <- "Helvetica"
     setupPlotting(currentjob, jobdir, "Norm-report")
     
-    # function(outputFunc, jobdir, pngPath=NULL, ...) {
+    pngDir <- sprintf("%s/pngs", jobdir)
     
-    # pngDir <- sprintf("%s/pngs", jobdir)
-    # dir.create(pngDir)
+    if (writeAsPngs) {
+        dir.create(pngDir)
+    }
     
-    # writePage(plotFrontPage, jobdir, sprintf("%s/%s", pngDir, "front_page.png"), currentjob, currentFont)
-    plotFrontPage(currentjob, currentFont)
-    
-    # writePage
-    # 
-    # if (!writeAsPngs) {
-    # }
-    # else {
-    #   
-    #   png(filename=sprintf("%s/pngs/1_FrontPage.png", jobdir))
-    #   plotFrontPage(currentjob, currentFont)
-    #   dev.off()
-    # }
-    
+    writePage(plotFrontPage, jobdir, writeAsPngs, sprintf("%s/%s_%s", pngDir, nextPageNo(iter=FALSE), "front_page.png"), currentjob, currentFont)
     isLimitedRun <- singleReplicateRun(nds) || isTinyRun(nds)
-
-    # Sample mapping
-    pageno <- 2
-    # writePage(plotSampleMappingPage, jobdir, sprintf("%s/%s", pngDir, "sample_map.png"), nr, currentFont, pageno)
-    plotSampleMappingPage(nr, currentFont, currentLayout, currentjob, pageno)
-    # png(filename = "~/Desktop/A.png")
-    # dev.off()
+    writePage(plotSampleMappingPage, jobdir, writeAsPngs, sprintf("%s/%s_%s", pngDir, nextPageNo(iter=TRUE), "sample_setup.png"), nr, currentFont, currentLayout, currentjob, nextPageNo(iter=FALSE))
+    writePage(plotSampleOutlierSummary, jobdir, writeAsPngs, sprintf("%s/%s_%s", pngDir, nextPageNo(iter=TRUE), "outlier_detection.png"), nr, currentLayout, nextPageNo(iter=FALSE))
     
-    # TI
-    pageno <- pageno + 1
-    # png(filename = "~/Desktop/B.png")
-    plotSampleOutlierSummary(nr, currentLayout, pageno)
-    # dev.off()
-
     # If running with single-replicates, skip replicate dependent quality plots
     if (!isLimitedRun) {
-        # CV
-        pageno <- pageno + 1
-        # png(filename = "~/Desktop/C.png")
-        plotReplicateVariance(nr, currentLayout, pageno)
-        # dev.off()
-
-        # Stable variables plot and CV in percent difference
-        pageno <- pageno + 1
-        # png(filename = "~/Desktop/D.png")
-        plotReplicateVarAndStableVariables(nr, currentLayout, pageno)
-        # dev.off()
-
-        # CVvsintensityplot
-        pageno <- pageno + 1
-        # png(filename = "~/Desktop/E.png")
-        plotCVvsIntensity(nr, currentLayout, pageno)
-        # dev.off()
-        
-        # MA plots
-        pageno <- pageno + 1
-        # png(filename = "~/Desktop/F.png")
-        plotMA(nr, currentLayout, pageno)
-        # dev.off()
+        writePage(plotReplicateVariance, jobdir, writeAsPngs, sprintf("%s/%s_%s", pngDir, nextPageNo(iter=TRUE), "replicate_variation.png"), nr, currentLayout, nextPageNo(iter=FALSE))
+        writePage(plotReplicateVarAndStableVariables, jobdir, writeAsPngs, sprintf("%s/%s_%s", pngDir, nextPageNo(iter=TRUE), "replicate_variation_rel_to_log2.png"), nr, currentLayout, nextPageNo(iter=FALSE))
+        writePage(plotCVvsIntensity, jobdir, writeAsPngs, sprintf("%s/%s_%s", pngDir, nextPageNo(iter=TRUE), "cv_vs_raw_intensity.png"), nr, currentLayout, nextPageNo(iter=FALSE))
+        writePage(plotMA, jobdir, writeAsPngs, sprintf("%s/%s_%s", pngDir, nextPageNo(iter=TRUE), "ma.png"), nr, currentLayout, nextPageNo(iter=FALSE))
     }
 
-    # Scatterplots
-    pageno <- pageno + 1
-    # png(filename = "~/Desktop/G.png")
-    plotScatter(nr, currentLayout, pageno)
-    # dev.off()
-
-    # QQplot
-    pageno <- pageno + 1
-    # png(filename = "~/Desktop/H.png")
-    plotQQ(nr, currentLayout, pageno)
-    # dev.off()
-
-    # Boxplot
-    pageno <- pageno + 1
-    # png(filename = "~/Desktop/I.png")
-    plotBoxPlot(nr, currentLayout, pageno)
-    # dev.off()
-
-    # RLE plots
-    pageno <- pageno + 1
-    # png(filename = "~/Desktop/J.png")
-    plotRLE(nr, currentLayout, pageno)
-    # dev.off()
-
-    # Density plots
-    pageno <- pageno + 1
-    # png(filename = "~/Desktop/K.png")
-    plotDensity(nr, currentLayout, pageno)
-    # dev.off()
+    writePage(plotScatter, jobdir, writeAsPngs, sprintf("%s/%s_%s", pngDir, nextPageNo(iter=TRUE), "scatter.png"), nr, currentLayout, nextPageNo(iter=FALSE))
+    writePage(plotQQ, jobdir, writeAsPngs, sprintf("%s/%s_%s", pngDir, nextPageNo(iter=TRUE), "qqplots.png"), nr, currentLayout, nextPageNo(iter=FALSE))
+    writePage(plotBoxPlot, jobdir, writeAsPngs, sprintf("%s/%s_%s", pngDir, nextPageNo(iter=TRUE), "boxplot.png"), nr, currentLayout, nextPageNo(iter=FALSE))
+    writePage(plotRLE, jobdir, writeAsPngs, sprintf("%s/%s_%s", pngDir, nextPageNo(iter=TRUE), "rel_log_expr.png"), nr, currentLayout, nextPageNo(iter=FALSE))
+    writePage(plotDensity, jobdir, writeAsPngs, sprintf("%s/%s_%s", pngDir, nextPageNo(iter=TRUE), "density.png"), nr, currentLayout, nextPageNo(iter=FALSE))
+    writePage(plotMDS, jobdir, writeAsPngs, sprintf("%s/%s_%s", pngDir, nextPageNo(iter=TRUE), "mds.png"), nr, currentLayout, nextPageNo(iter=FALSE))
     
-    # MDS plot
-    pageno <- pageno + 1
-    # png(filename = "~/Desktop/L.png")
-    plotMDS(nr, currentLayout, pageno)
-    # dev.off()
-
     if (!isLimitedRun) {   
-        
-        # meanSDplot
-        pageno <- pageno + 1
-        # png(filename = "~/Desktop/M.png")
-        plotMeanSD(nr, currentLayout, pageno)
-        # dev.off()
-        
-        # Correlation
-        pageno <- pageno + 1
-        # png(filename = "~/Desktop/N.png")
-        plotCorrelation(nr, currentLayout, pageno)
-        # dev.off()
+        writePage(plotMeanSD, jobdir, writeAsPngs, sprintf("%s/%s_%s", pngDir, nextPageNo(iter=TRUE), "mean_sd.png"), nr, currentLayout, nextPageNo(iter=FALSE))
+        writePage(plotCorrelation, jobdir, writeAsPngs, sprintf("%s/%s_%s", pngDir, nextPageNo(iter=TRUE), "correlation.png"), nr, currentLayout, nextPageNo(iter=FALSE))
     }
      
-    # Dendrograms
-    pageno <- pageno + 1
-    # png(filename = "~/Desktop/O.png")
-    plotDendrograms(nr, currentLayout, pageno)
-    # dev.off()
-
+    writePage(plotDendrograms, jobdir, writeAsPngs, sprintf("%s/%s_%s", pngDir, nextPageNo(iter=TRUE), "dendrogram.png"), nr, currentLayout, nextPageNo(iter=FALSE))
+    
     if (!isLimitedRun) {
-        # DE plots
-        pageno <- pageno + 1
-        # png(filename = "~/Desktop/P.png")
-        plotPHist(nr, currentLayout, pageno)
-        # dev.off()
+        writePage(plotPHist, jobdir, writeAsPngs, sprintf("%s/%s_%s", pngDir, nextPageNo(iter=TRUE), "sample_setup.png"), nr, currentLayout, nextPageNo(iter=FALSE))
     }
     
     grDevices::dev.off()
 }
 
-writePage <- function(outputFunc, jobdir, pngPath=NULL, ...) {
-  if (is.null(pngPath)) {
-    outputFunc(...)
-  }
-  else {
+writePage <- function(outputFunc, jobdir, writeAsPngs, pngPath=NULL, ...) {
+  if (!is.null(pngPath) && writeAsPngs) {
     png(filename=pngPath, width = 11.7, height = 8.3, units="in", res=300)
     outputFunc(...)
     dev.off()
+  }
+  else {
+    outputFunc(...)
   }
 }
 
@@ -291,7 +210,7 @@ setupPlotting <- function(currentJob, jobDir, suffix) {
         plot.title=ggplot2::element_text(size=8), 
         plot.margin=ggplot2::unit(c(1, 1, 1, 1), "mm")
     )
-    def.par <- graphics::par(no.readonly=TRUE)
+    # def.par <- graphics::par(no.readonly=TRUE)
 }
 
 #' Generate first page in output report and write to viewport
@@ -381,9 +300,6 @@ plotFrontPage <- function(currentjob, currentFont) {
 plotSampleMappingPage <- function(nr, currentFont, currentLayout, currentjob, pageno) {
   
   nds <- nds(nr)
-  methodlist <- normalizations(nr)
-  filterED <- sampleReplicateGroups(nds)
-  filterrawdata <- filterrawdata(nds)
   currentjob <- jobName(nds)
   
   tout <- rbind(c(1, 2), c(3, 4))
@@ -397,27 +313,28 @@ plotSampleMappingPage <- function(nr, currentFont, currentLayout, currentjob, pa
   groupLevels <- levels(as.factor(groupCol))
   condCounts <- table(groupCol)
   
-  groupStrings <- lapply(
+  groupList <- lapply(
     1:length(groupLevels), 
     function(lv, groups, groupCounts) { 
-      sprintf("%s\t%s\t%s", lv, groups[[lv]], groupCounts[[lv]]) }, 
+      list(groupNbr=lv, groupString=groups[[lv]], groupCount=groupCounts[[lv]]) 
+    }, 
     groups=groupLevels, groupCounts=condCounts)
   
-  groupStringsWHead <- c("group\tlevel\tcount", "", groupStrings)
+  groupStringsWHead <- c(list(list(groupNbr="Group nbr.", groupString="Design group", groupCount="Nbr. samples in cond."), list(groupNbr="", groupString="", groupCount="")), groupList)
 
   lapply(1:length(groupStringsWHead), function(i, stringsToShow) {
-    grid::grid.text(stringsToShow[[i]], x=0.01, y=0.9-i*0.02, hjust=0)
+    yPos <- 0.9-i*0.02
+    xDelta <- 0.15
+    grid::grid.text(stringsToShow[[i]]$groupNbr, x=0.01, y=yPos, hjust=0)
+    grid::grid.text(stringsToShow[[i]]$groupString, x=0.01+xDelta, y=yPos, hjust=0)
+    grid::grid.text(stringsToShow[[i]]$groupCount, x=0.01+2*xDelta, y=yPos, hjust=0)
   }, groupStringsWHead)
   
   grid::grid.text(
-    "Please note that the grouping only impacts evaluation measures and visuals seen here, it does not have any impact on the performed normalizations.",
+    "Please note that the grouping only impacts evaluation measures and visuals seen in the report, they do not impact the performed normalizations.",
     x=0.01, y=0.1, hjust=0
   )
   
-
-  # 
-  # gp <- grid::gpar(fontsize=11, fontfamily="Helvetica", 
-  #                  col="black", fontface="bold")
   grid::pushViewport(grid::viewport(layout=currentLayout))
   printMeta(
     "Sample setup",

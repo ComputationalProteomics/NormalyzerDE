@@ -35,7 +35,7 @@ printMeta <- function(plotname, pageno, jobname, currentLayout) {
                     vp=grid::viewport(layout.pos.row=1, layout.pos.col=1), 
                     just=c("left", "center"), 
                     gp=grid::gpar(fontface="bold", fontsize=14, fontfamily="Helvetica", col="darkBlue"))
-    grid::grid.text("Normalyzer Report", 
+    grid::grid.text("NormalyzerDE Report", 
                     vp=grid::viewport(layout.pos.row=1, layout.pos.col=ncol),
                     just=c("right", "center"), gp=gp)
     grid::grid.text(paste("Page ", pageno,sep=""), 
