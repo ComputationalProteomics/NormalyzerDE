@@ -255,7 +255,7 @@ setMethod(f="calculateContrasts",
               
               model <- setupModel(nst, condCol, batchCol=batchCol, type=type)
 
-              if (type == "limma") {
+              if (type %in% c("limma", "limma_intensity")) {
                   limmaDesign <- stats::model.matrix(model)
                   limmaFit <- limma::lmFit(dataMatNAFiltered, limmaDesign)
               }
@@ -303,7 +303,17 @@ setMethod(f="calculateContrasts",
                           dataMatNAFiltered, 
                           limmaDesign, 
                           limmaFit, 
-                          c(level1, level2))
+                          c(level1, level2), 
+                          useIntensityTrend = FALSE)
+                  }
+                  else if (type == "limma_intensity") {
+                      
+                      statResults <- calculateLimmaContrast(
+                          dataMatNAFiltered, 
+                          limmaDesign, 
+                          limmaFit, 
+                          c(level1, level2), 
+                          useIntensityTrend = TRUE)
                   }
                   else {
                       stop("Unknown statistics type: ", type)
@@ -362,7 +372,7 @@ setupModel <- function(nst, condCol, batchCol=NULL, type="limma") {
         model <- ~0+Variable
     }
     else {
-        if (type != "limma") {
+        if (!(type %in% c("limma", "limma_intensity"))) {
             stop(
                 "Batch compensation only compatible with Limma, got: ", 
                 type
@@ -405,14 +415,14 @@ calculateWelch <- function(dataMat, groupHeader, levels) {
     statResults
 }
 
-calculateLimmaContrast <- function(dataMat, limmaDesign, limmaFit, levels) {
+calculateLimmaContrast <- function(dataMat, limmaDesign, limmaFit, levels, useIntensityTrend) {
 
     myContrast <- paste0("Variable", levels[1], "-", "Variable", levels[2])
     contrastMatrix <- limma::makeContrasts(
         contrasts=c(myContrast), 
         levels=limmaDesign)
     fitContrasts <- limma::contrasts.fit(limmaFit, contrastMatrix)
-    fitBayes <- limma::eBayes(fitContrasts)
+    fitBayes <- limma::eBayes(fitContrasts, trend=useIntensityTrend)
     limmaTable <- limma::topTable(fitBayes, coef=1, number=Inf, sort.by="none")
 
     statResults <- list()

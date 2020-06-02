@@ -5,7 +5,9 @@
 \alias{example_data_only_values}
 \title{Same data as in "example_data", but omitting the annotation meaning that it
 only contains the expression data.}
-\format{A data frame containing expression data}
+\format{
+A data frame containing expression data
+}
 \usage{
 example_data_only_values
 }

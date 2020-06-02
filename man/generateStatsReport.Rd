@@ -14,7 +14,8 @@ generateStatsReport(
   sigThresType = "fdr",
   log2FoldThres = 0,
   plotRows = 3,
-  plotCols = 4
+  plotCols = 4,
+  writeAsPngs = FALSE
 )
 }
 \arguments{
@@ -33,6 +34,9 @@ generateStatsReport(
 \item{plotRows}{Number of plot rows.}
 
 \item{plotCols}{Number of plot columns.}
+
+\item{writeAsPngs}{Output the report as separate PNG files instead of a 
+single PDF file}
 }
 \value{
 None

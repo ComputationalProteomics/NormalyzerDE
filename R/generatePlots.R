@@ -94,6 +94,7 @@
 #' @param jobdir Path to output directory for run.
 #' @param plotRows Number of plot rows.
 #' @param plotCols Number of plot columns.
+#' @param writeAsPngs Output the report as PNG-plots instead of a single PDF
 #' @return None
 #' @export
 #' @examples
@@ -103,7 +104,7 @@
 #' normResultsWithEval <- analyzeNormalizations(normResults)
 #' outputDir <- tempdir()
 #' generatePlots(normResultsWithEval, outputDir)
-generatePlots <- function(nr, jobdir, plotRows=3, plotCols=4, writeAsPngs=TRUE) {
+generatePlots <- function(nr, jobdir, plotRows=3, plotCols=4, writeAsPngs=FALSE) {
     
     nds <- nds(nr)
     currentjob <- jobName(nds)
@@ -129,10 +130,12 @@ generatePlots <- function(nr, jobdir, plotRows=3, plotCols=4, writeAsPngs=TRUE) 
     currentFont <- "Helvetica"
     setupPlotting(currentjob, jobdir, "Norm-report")
     
-    pngDir <- sprintf("%s/pngs", jobdir)
-    
     if (writeAsPngs) {
+        pngDir <- sprintf("%s/pngs", jobdir)
         dir.create(pngDir)
+    }
+    else {
+      pngDir <- NULL
     }
     
     writePage(plotFrontPage, jobdir, writeAsPngs, sprintf("%s/%s_%s", pngDir, nextPageNo(iter=FALSE), "front_page.png"), currentjob, currentFont)
