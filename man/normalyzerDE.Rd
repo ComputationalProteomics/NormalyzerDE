@@ -43,7 +43,9 @@ as alternative to 'designPath' and 'dataPath'}
 \item{logTrans}{Log transform the input (needed if providing non-logged 
 input)}
 
-\item{type}{Type of statistical comparison, "limma" or "welch"}
+\item{type}{Type of statistical comparison, "limma", "limma_intensity" or 
+"welch", where "limma_intensity" allows the prior to be fit according to
+intensity rather than using a flat prior}
 
 \item{sampleCol}{Design matrix column header for column containing sample IDs}
 
