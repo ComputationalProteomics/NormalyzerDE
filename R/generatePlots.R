@@ -729,7 +729,7 @@ plotMA <- function(nr, currentLayout, pageno) {
             ggplot2::labs(x=("Replicate group mean"), 
                           y=("Replicate-1 Fold Change"),
                           title=methodNames[i]) + 
-            ggplot2::stat_smooth(method="loess", se=FALSE, colour="red", na.rm=TRUE) + 
+            ggplot2::stat_smooth(method="loess", se=FALSE, colour="red", na.rm=TRUE, formula='y ~ x') + 
             ggplot2::geom_abline(intercept=0, slope=0, size=0.3)
     } 
     
