@@ -244,7 +244,8 @@ test_that("calculateLimmaContrast_data_test", {
         small_df, 
         limmaDesign, 
         limmaFit, 
-        levels)
+        levels, 
+        useIntensityTrend = FALSE)
     
     expected_p <- c(0.0169, 0.14704, 0.2116, 0.00154, 8e-05, 0.00012)
     expected_fdr <- c(0.02535, 0.17645, 0.2116, 0.00308, 0.00037, 0.00037)
@@ -285,7 +286,8 @@ test_that("calculateLimmaContrast_data_batch_test", {
         small_df, 
         limmaDesign, 
         limmaFit, 
-        levels)
+        levels, 
+        useIntensityTrend = FALSE)
     
     expected_p <- c(0.04056, 0.28436, 0.28509, 0.00571, 0.00053, 0.00047)
     expected_fdr <- c(0.06083, 0.28509, 0.28509, 0.01142, 0.00158, 0.00158)

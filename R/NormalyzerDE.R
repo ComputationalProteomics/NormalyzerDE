@@ -47,6 +47,8 @@
 #' @param skipAnalysis Only perform normalization steps.
 #' @param quiet Omit status messages printed during run.
 #' @param noLogTransform Don't log-transform the input.
+#' @param writeReportAsPngs Output the evaluation report as PNG files instead of
+#'  a single PDF
 #' 
 #' @param rtStepSizeMinutes Retention time normalization window size.
 #' @param rtWindowMinCount Minimum number of datapoints in each retention-time
@@ -103,6 +105,7 @@ normalyzer <- function(
         skipAnalysis=FALSE,
         quiet=FALSE,
         noLogTransform=FALSE,
+        writeReportAsPngs=FALSE,
         
         rtStepSizeMinutes=1,
         rtWindowMinCount=100,
@@ -181,7 +184,7 @@ normalyzer <- function(
     if (!skipAnalysis) {
         if (!quiet) message("[Step 5/5] Generating plots...")
         generatePlots(normalyzerResultsObject, jobDir, plotRows=plotRows, 
-                      plotCols=plotCols)
+                      plotCols=plotCols, writeAsPngs=writeReportAsPngs)
         if (!quiet) message("[Step 5/5] Plots successfully generated")
     }
     else {
@@ -227,7 +230,9 @@ normalyzer <- function(
 #' @param outputDir Path to output directory
 #' @param logTrans Log transform the input (needed if providing non-logged 
 #'   input)
-#' @param type Type of statistical comparison, "limma" or "welch"
+#' @param type Type of statistical comparison, "limma", "limma_intensity" or 
+#'  "welch", where "limma_intensity" allows the prior to be fit according to
+#'  intensity rather than using a flat prior
 #' @param sampleCol Design matrix column header for column containing sample IDs
 #' @param condCol Design matrix column header for column containing sample 
 #'   conditions
@@ -244,6 +249,8 @@ normalyzer <- function(
 #'   strongly recommended (Benjamini-Hochberg corrected p-values)
 #' @param log2FoldThres Fold-size cutoff for being considered significant in
 #'   diagnostic plots
+#' @param writeReportAsPngs Output report as separate PNG files instead of a
+#'   single PDF
 #' 
 #' @return None
 #' @export
@@ -262,7 +269,7 @@ normalyzer <- function(
 normalyzerDE <- function(jobName, comparisons, designPath=NULL, dataPath=NULL, experimentObj=NULL, 
                          outputDir=".", logTrans=FALSE, type="limma", sampleCol="sample", condCol="group", 
                          batchCol=NULL, techRepCol=NULL, leastRepCount=1, quiet=FALSE, 
-                         sigThres=0.1, sigThresType="fdr", log2FoldThres=0) {
+                         sigThres=0.1, sigThresType="fdr", log2FoldThres=0, writeReportAsPngs=FALSE) {
 
     if (!quiet) message("You are running version ", utils::packageVersion("NormalyzerDE"), " of NormalyzerDE")
     
@@ -307,7 +314,7 @@ normalyzerDE <- function(jobName, comparisons, designPath=NULL, dataPath=NULL, e
     if (!quiet) print(paste("Writing", nrow(annotDf), "annotated rows to", outPath))
     utils::write.table(annotDf, file=outPath, sep="\t", row.names = FALSE, quote=FALSE)
     if (!quiet) print(paste("Writing statistics report"))
-    generateStatsReport(nst, jobName, jobDir, sigThres, sigThresType, log2FoldThres)
+    generateStatsReport(nst, jobName, jobDir, sigThres, sigThresType, log2FoldThres, writeAsPngs=writeReportAsPngs)
     
     endTime <- Sys.time()
     totTime <- difftime(endTime, startTime, units="mins")

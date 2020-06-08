@@ -25,6 +25,7 @@ normalyzer(
   skipAnalysis = FALSE,
   quiet = FALSE,
   noLogTransform = FALSE,
+  writeReportAsPngs = FALSE,
   rtStepSizeMinutes = 1,
   rtWindowMinCount = 100,
   rtWindowShifts = 1,
@@ -79,6 +80,9 @@ validation.}
 \item{quiet}{Omit status messages printed during run.}
 
 \item{noLogTransform}{Don't log-transform the input.}
+
+\item{writeReportAsPngs}{Output the evaluation report as PNG files instead of
+a single PDF}
 
 \item{rtStepSizeMinutes}{Retention time normalization window size.}
 
