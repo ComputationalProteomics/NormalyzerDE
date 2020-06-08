@@ -174,9 +174,9 @@ generatePlots <- function(nr, jobdir, plotRows=3, plotCols=4, writeAsPngs=FALSE)
 
 writePage <- function(outputFunc, jobdir, writeAsPngs, pngPath=NULL, ...) {
   if (!is.null(pngPath) && writeAsPngs) {
-    png(filename=pngPath, width = 11.7, height = 8.3, units="in", res=300)
+    grDevices::png(filename=pngPath, width = 11.7, height = 8.3, units="in", res=300)
     outputFunc(...)
-    dev.off()
+    grDevices::dev.off()
   }
   else {
     outputFunc(...)
