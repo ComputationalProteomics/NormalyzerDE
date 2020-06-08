@@ -16,6 +16,8 @@ referenceStatResultsDir <- system.file(package="NormalyzerDE", "extdata", "unit_
 # For debugging using the browser() statement while in sink - run
 # closeAllConnections()
 
+set.seed(37)
+
 test_that("Normalization run succeeds without errors", {
 
     expect_silent(
