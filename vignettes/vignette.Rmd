@@ -269,7 +269,7 @@ writeNormalizedDatasets(normResultsWithEval, jobDir)
 Performance measures are used to generate evaluation figures which is written in an evaluation report.
 
 ```{r}
- generatePlots(normResultsWithEval, jobDir)
+generatePlots(normResultsWithEval, jobDir)
 ```
 
 After this evaluation of normalizations and progression to statistics follows as described previously in this report.

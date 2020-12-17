@@ -5,7 +5,9 @@
 \alias{example_data}
 \title{Small example dataset used to demonstrate code consistency in testing and
 as dummy data in the vignette.}
-\format{A data frame containing annotation and expression data}
+\format{
+A data frame containing annotation and expression data
+}
 \usage{
 example_data
 }

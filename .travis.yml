@@ -1,9 +1,8 @@
 # R for travis: see documentation at https://docs.travis-ci.com/user/languages/r
 
 language: R
-r: bioc-release
-sudo: false
-cache: packages
+r: bioc-devel
+# cache: packages
 apt_packages:
     - libc6 
     - libcurl4-openssl-dev

@@ -5,8 +5,16 @@
 \title{Takes an NormalyzerStatistics instance and generates and prints a 
 volcano plot}
 \usage{
-plotSigScatter(nst, jobName, currentLayout, pageno, type = "Volcano",
-  sigThres = 0.1, sigThresType = "fdr", log2FoldThres = 0)
+plotSigScatter(
+  nst,
+  jobName,
+  currentLayout,
+  pageno,
+  type = "Volcano",
+  sigThres = 0.1,
+  sigThresType = "fdr",
+  log2FoldThres = 0
+)
 }
 \arguments{
 \item{nst}{NormalyzerDE statistics object.}

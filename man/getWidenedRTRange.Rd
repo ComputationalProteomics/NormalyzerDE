@@ -6,8 +6,13 @@
 Expects the start and end retention times to match actual retention times
 present in the data}
 \usage{
-getWidenedRTRange(rtStart, rtEnd, minimumDatapoints, retentionTimes,
-  allowTooWideData = FALSE)
+getWidenedRTRange(
+  rtStart,
+  rtEnd,
+  minimumDatapoints,
+  retentionTimes,
+  allowTooWideData = FALSE
+)
 }
 \arguments{
 \item{rtStart}{Original retention time start point}

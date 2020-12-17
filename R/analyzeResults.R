@@ -297,13 +297,13 @@ calculateANOVAPValues <- function(methodList,
                                   categoricalANOVA) {
     
     calculateANOVAsForMethod <- function(methodData, sampleReplicateGroups) {
-        
+
         naFilterContrast <- getRowNAFilterContrast(
             methodData,
             sampleReplicateGroups,
             2)
         
-        naFilteredData <- methodData[naFilterContrast,]
+        naFilteredData <- methodData[naFilterContrast,, drop=FALSE]
         
         if (categoricalANOVA) {
             testLevels <- factor(sampleReplicateGroups)

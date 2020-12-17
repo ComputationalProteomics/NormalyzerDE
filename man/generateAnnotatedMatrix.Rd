@@ -4,10 +4,14 @@
 \alias{generateAnnotatedMatrix}
 \title{Generate an annotated data frame from statistics object}
 \usage{
-generateAnnotatedMatrix(nst)
+generateAnnotatedMatrix(nst, prefixSep = "_", compLabels = NULL)
 }
 \arguments{
 \item{nst}{NormalyzerDE statistics object.}
+
+\item{prefixSep}{Character string for separating the prefix names from the statistics suffix}
+
+\item{compLabels}{Vector containing strings to use as prefix for statistical comparisons}
 }
 \value{
 outDf Annotated statistics matrix

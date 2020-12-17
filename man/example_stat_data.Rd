@@ -5,7 +5,9 @@
 \alias{example_stat_data}
 \title{Same data as in "example_data", but normalized and ready for statistical
 processing.}
-\format{A normalized data frame ready for statistical processing}
+\format{
+A normalized data frame ready for statistical processing
+}
 \usage{
 example_stat_data
 }

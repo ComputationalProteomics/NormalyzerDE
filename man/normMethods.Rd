@@ -4,10 +4,17 @@
 \alias{normMethods}
 \title{Perform normalizations on Normalyzer dataset}
 \usage{
-normMethods(nds, forceAll = FALSE, normalizeRetentionTime = TRUE,
-  quiet = FALSE, rtStepSizeMinutes = 1, rtWindowMinCount = 100,
-  rtWindowShifts = 1, rtWindowMergeMethod = "mean",
-  noLogTransform = FALSE)
+normMethods(
+  nds,
+  forceAll = FALSE,
+  normalizeRetentionTime = TRUE,
+  quiet = FALSE,
+  rtStepSizeMinutes = 1,
+  rtWindowMinCount = 100,
+  rtWindowShifts = 1,
+  rtWindowMergeMethod = "mean",
+  noLogTransform = FALSE
+)
 }
 \arguments{
 \item{nds}{Normalyzer dataset object.}

@@ -1,3 +1,16 @@
+CHANGES IN VERSION 1.5.4
+----------------------------------
+
+* Option to write output as PNG files
+* Option to use Limma trend=TRUE for including the intensity in its prior
+* State the design groups on second page in the NormalyzerDE report
+
+CHANGES IN VERSION 1.5.2
+----------------------------------
+
+* Updated to follow Bioconductor release cycle
+* Updated to fix issues in vignette introduced by updated external packages
+
 CHANGES IN VERSION 1.3.4
 ----------------------------------
 

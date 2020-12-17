@@ -4,10 +4,15 @@
 \alias{writeNormalizedDatasets}
 \title{Write normalization matrices to file}
 \usage{
-writeNormalizedDatasets(nr, jobdir, includePairwiseComparisons = FALSE,
-  includeCvCol = FALSE, includeAnovaP = FALSE,
+writeNormalizedDatasets(
+  nr,
+  jobdir,
+  includePairwiseComparisons = FALSE,
+  includeCvCol = FALSE,
+  includeAnovaP = FALSE,
   normSuffix = "-normalized.txt",
-  rawdataName = "submitted_rawdata.txt")
+  rawdataName = "submitted_rawdata.txt"
+)
 }
 \arguments{
 \item{nr}{Results object.}

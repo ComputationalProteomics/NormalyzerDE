@@ -6,7 +6,7 @@
 for the normalized matrices. These contain both general measures and
 direct comparisons for different normalization approaches.}
 \usage{
-generatePlots(nr, jobdir, plotRows = 3, plotCols = 4)
+generatePlots(nr, jobdir, plotRows = 3, plotCols = 4, writeAsPngs = FALSE)
 }
 \arguments{
 \item{nr}{Normalyzer results object.}
@@ -16,6 +16,8 @@ generatePlots(nr, jobdir, plotRows = 3, plotCols = 4)
 \item{plotRows}{Number of plot rows.}
 
 \item{plotCols}{Number of plot columns.}
+
+\item{writeAsPngs}{Output the report as PNG-plots instead of a single PDF}
 }
 \value{
 None

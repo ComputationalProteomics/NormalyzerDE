@@ -5,9 +5,15 @@
 \title{Perform RT-segmented normalization by performing the supplied normalization
 over retention-time sliced data}
 \usage{
-getRTNormalizedMatrix(rawMatrix, retentionTimes, normMethod,
-  stepSizeMinutes = 1, windowMinCount = 100, offset = 0,
-  noLogTransform = FALSE)
+getRTNormalizedMatrix(
+  rawMatrix,
+  retentionTimes,
+  normMethod,
+  stepSizeMinutes = 1,
+  windowMinCount = 100,
+  offset = 0,
+  noLogTransform = FALSE
+)
 }
 \arguments{
 \item{rawMatrix}{Target matrix to be normalized}

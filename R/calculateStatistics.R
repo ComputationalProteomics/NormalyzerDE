@@ -67,6 +67,8 @@ reduceTechnicalReplicates <- function(se, techRepColName, sampleColName) {
 #' and appends these to the annotation- and data-matrices
 #' 
 #' @param nst NormalyzerDE statistics object.
+#' @param prefixSep Character string for separating the prefix names from the statistics suffix
+#' @param compLabels Vector containing strings to use as prefix for statistical comparisons
 #' @return outDf Annotated statistics matrix
 #' @export
 #' @examples
@@ -74,23 +76,30 @@ reduceTechnicalReplicates <- function(se, techRepColName, sampleColName) {
 #' statObj <- NormalyzerStatistics(example_stat_summarized_experiment)
 #' statObj <- calculateContrasts(statObj, comparisons=c("1-2", "2-3"), condCol="group", type="limma")
 #' annotDf <- generateAnnotatedMatrix(statObj)
-generateAnnotatedMatrix <- function(nst) {
+generateAnnotatedMatrix <- function(nst, prefixSep="_", compLabels=NULL) {
     
-    pairwiseHead <- paste(
-        names(pairwiseCompsP(nst)), "PValue", sep="_"
-    )
+    if (is.null(compLabels)) {
+        contrastBase <- names(pairwiseCompsP(nst))
+    }
+    else {
+        if (length(compLabels) != length(pairwiseCompsP(nst))) {
+            stop(sprintf(
+                "Number of assigned labels compLabels (found %s) needs to be same as number of contrasts (found %s)",
+                length(compLabels), length(pairwiseCompsP(nst))
+            ))
+        }
+        contrastBase <- compLabels
+    }
+        
+    pairwiseHead <- paste(contrastBase, "PValue", sep=prefixSep)
     pMat <- data.frame(pairwiseCompsP(nst))
     colnames(pMat) <- pairwiseHead
     
-    pairwiseHeadFdr <- paste(
-        names(pairwiseCompsFdr(nst)), "AdjPVal", sep="_"
-    )
+    pairwiseHeadFdr <- paste(contrastBase, "AdjPVal", sep=prefixSep)
     fdrMat <- data.frame(pairwiseCompsFdr(nst))
     colnames(fdrMat) <- pairwiseHeadFdr
     
-    pairwiseHeadFold <- paste(
-        names(pairwiseCompsFold(nst)), "log2FoldChange", sep="_"
-    )
+    pairwiseHeadFold <- paste(contrastBase, "log2FoldChange", sep=prefixSep)
     foldMat <- data.frame(pairwiseCompsFold(nst))
     colnames(foldMat) <- pairwiseHeadFold
     
@@ -112,6 +121,8 @@ generateAnnotatedMatrix <- function(nst) {
 #' @param log2FoldThres log2 fold-change required for being counted as significant
 #' @param plotRows Number of plot rows.
 #' @param plotCols Number of plot columns.
+#' @param writeAsPngs Output the report as separate PNG files instead of a 
+#'   single PDF file
 #' @return None
 #' @export
 #' @examples
@@ -123,7 +134,7 @@ generateAnnotatedMatrix <- function(nst) {
 #' generateStatsReport(statObj, "jobName", outputDir)
 generateStatsReport <- function(nst, jobName, jobDir,
                                 sigThres=0.1, sigThresType="fdr", log2FoldThres=0,
-                                plotRows=3, plotCols=4) {
+                                plotRows=3, plotCols=4, writeAsPngs=FALSE) {
     
     nrows <- plotRows + 1
     ncols <- plotCols + 1
@@ -137,37 +148,63 @@ generateStatsReport <- function(nst, jobName, jobDir,
     
     currentFont <- "Helvetica"
     setupPlotting(jobName, jobDir, "Norm-stats-report")
-    plotFrontPage(jobName, currentFont)
     
-    pageNo <- 2
-    plotContrastPHists(nst, jobName, currentLayout, pageNo)
+    pageNo <- 1
+    nextPageNo <- function(iter=TRUE) {
+        if (iter) {
+            pageNo <<- pageNo + 1
+        }
+        pageNo
+    }
     
-    pageNo <- pageNo + 1
-    plotSigScatter(
-        nst, jobName, currentLayout, pageNo, type="MA", 
+    if (writeAsPngs) {
+        pngDir <- sprintf("%s/de_pngs", jobDir)
+        dir.create(pngDir)
+    }
+    else {
+        pngDir <- NULL
+    }
+    
+    writePage(
+        plotFrontPage, jobDir, writeAsPngs, 
+        sprintf("%s/%s_%s", pngDir, nextPageNo(iter=FALSE), "front.png"), 
+        jobName, currentFont)
+    
+    writePage(
+        plotContrastPHists, jobDir, writeAsPngs, 
+        sprintf("%s/%s_%s", pngDir, nextPageNo(iter=TRUE), "pvalue_histograms.png"), 
+        nst, jobName, currentLayout, nextPageNo(iter=FALSE))
+    
+    writePage(
+        plotSigScatter, jobDir, writeAsPngs, 
+        sprintf("%s/%s_%s", pngDir, nextPageNo(iter=TRUE), "ma_scatter.png"), 
+        nst, jobName, currentLayout, nextPageNo(iter=FALSE), type="MA", 
         sigThres=sigThres, sigThresType=sigThresType, log2FoldThres=log2FoldThres
     )
-
-    pageNo <- pageNo + 1
-    plotSigScatter(
-        nst, jobName, currentLayout, pageNo, type="Volcano",
+    
+    writePage(
+        plotSigScatter, jobDir, writeAsPngs, 
+        sprintf("%s/%s_%s", pngDir, nextPageNo(iter=TRUE), "volcano_scatter.png"), 
+        nst, jobName, currentLayout, nextPageNo(iter=FALSE), type="Volcano",
         sigThres=sigThres, sigThresType=sigThresType, log2FoldThres=log2FoldThres
     )
     
-    pageNo <- pageNo + 1
-    plotContrastPCA(
-        nst, jobName, currentLayout, pageNo, pcs=c(1,2)
-    )
-
-    pageNo <- pageNo + 1
-    plotContrastPCA(
-        nst, jobName, currentLayout, pageNo, pcs=c(3,4)
-    )
+    writePage(
+        plotContrastPCA, jobDir, writeAsPngs, 
+        sprintf("%s/%s_%s", pngDir, nextPageNo(iter=TRUE), "contrast_pca_pc12.png"), 
+        nst, jobName, currentLayout, nextPageNo(iter=FALSE), pcs=c(1,2))
+    
+    writePage(
+        plotContrastPCA, jobDir, writeAsPngs, 
+        sprintf("%s/%s_%s", pngDir, nextPageNo(iter=TRUE), "contrast_pca_pc34.png"), 
+        nst, jobName, currentLayout, nextPageNo(iter=FALSE), pcs=c(3,4))
     
     if (length(comparisons(nst)) > 1) {
-        pageNo <- pageNo + 1
-        plotComparisonVenns(
-            nst, jobName, currentLayout, pageNo,
+        
+        writePage(
+            plotComparisonVenns, jobDir, writeAsPngs, 
+            sprintf("%s/%s_%s", pngDir, nextPageNo(iter=TRUE), "venn_comparison.png"), 
+            nst, jobName, currentLayout, nextPageNo(iter=FALSE),
             sigThres=sigThres, sigThresType=sigThresType, log2FoldThres=log2FoldThres
         )
     }

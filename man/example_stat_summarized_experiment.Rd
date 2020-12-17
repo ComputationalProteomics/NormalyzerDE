@@ -5,7 +5,9 @@
 \alias{example_stat_summarized_experiment}
 \title{SummarizedExperiment object prepared with design-matrix, data-matrix
 and annotation columns for normalized data}
-\format{An instance of the class SummarizedExperiment with stats data}
+\format{
+An instance of the class SummarizedExperiment with stats data
+}
 \usage{
 example_stat_summarized_experiment
 }

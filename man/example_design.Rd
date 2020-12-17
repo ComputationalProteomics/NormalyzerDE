@@ -4,7 +4,9 @@
 \name{example_design}
 \alias{example_design}
 \title{Design matrix corresponding to the small example datasets.}
-\format{A design matrix corresponding to the dataset "example_data"}
+\format{
+A design matrix corresponding to the dataset "example_data"
+}
 \usage{
 example_design
 }

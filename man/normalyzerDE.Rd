@@ -4,12 +4,26 @@
 \alias{normalyzerDE}
 \title{NormalyzerDE differential expression}
 \usage{
-normalyzerDE(jobName, comparisons, designPath = NULL, dataPath = NULL,
-  experimentObj = NULL, outputDir = ".", logTrans = FALSE,
-  type = "limma", sampleCol = "sample", condCol = "group",
-  batchCol = NULL, techRepCol = NULL, leastRepCount = 1,
-  quiet = FALSE, sigThres = 0.1, sigThresType = "fdr",
-  log2FoldThres = 0)
+normalyzerDE(
+  jobName,
+  comparisons,
+  designPath = NULL,
+  dataPath = NULL,
+  experimentObj = NULL,
+  outputDir = ".",
+  logTrans = FALSE,
+  type = "limma",
+  sampleCol = "sample",
+  condCol = "group",
+  batchCol = NULL,
+  techRepCol = NULL,
+  leastRepCount = 1,
+  quiet = FALSE,
+  sigThres = 0.1,
+  sigThresType = "fdr",
+  log2FoldThres = 0,
+  writeReportAsPngs = FALSE
+)
 }
 \arguments{
 \item{jobName}{Name of job}
@@ -29,7 +43,9 @@ as alternative to 'designPath' and 'dataPath'}
 \item{logTrans}{Log transform the input (needed if providing non-logged 
 input)}
 
-\item{type}{Type of statistical comparison, "limma" or "welch"}
+\item{type}{Type of statistical comparison, "limma", "limma_intensity" or 
+"welch", where "limma_intensity" allows the prior to be fit according to
+intensity rather than using a flat prior}
 
 \item{sampleCol}{Design matrix column header for column containing sample IDs}
 
@@ -54,6 +70,9 @@ strongly recommended (Benjamini-Hochberg corrected p-values)}
 
 \item{log2FoldThres}{Fold-size cutoff for being considered significant in
 diagnostic plots}
+
+\item{writeReportAsPngs}{Output report as separate PNG files instead of a
+single PDF}
 }
 \value{
 None

@@ -5,7 +5,9 @@
 \alias{example_wide_design}
 \title{Design matrix belonging together with example_wide_data. Used for
 internal testing.}
-\format{A design table ready for analysis in NormalyzerDE}
+\format{
+A design table ready for analysis in NormalyzerDE
+}
 \usage{
 example_wide_design
 }

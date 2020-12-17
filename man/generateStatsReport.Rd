@@ -6,9 +6,17 @@
 for each contrast in the NormalyzerStatistics instance and writes these
 to a PDF report.}
 \usage{
-generateStatsReport(nst, jobName, jobDir, sigThres = 0.1,
-  sigThresType = "fdr", log2FoldThres = 0, plotRows = 3,
-  plotCols = 4)
+generateStatsReport(
+  nst,
+  jobName,
+  jobDir,
+  sigThres = 0.1,
+  sigThresType = "fdr",
+  log2FoldThres = 0,
+  plotRows = 3,
+  plotCols = 4,
+  writeAsPngs = FALSE
+)
 }
 \arguments{
 \item{nst}{NormalyzerDE statistics object.}
@@ -26,6 +34,9 @@ generateStatsReport(nst, jobName, jobDir, sigThres = 0.1,
 \item{plotRows}{Number of plot rows.}
 
 \item{plotCols}{Number of plot columns.}
+
+\item{writeAsPngs}{Output the report as separate PNG files instead of a 
+single PDF file}
 }
 \value{
 None

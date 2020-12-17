@@ -4,7 +4,9 @@
 \name{example_wide_data}
 \alias{example_wide_data}
 \title{Full raw NormalyzerDE matrix used for internal testing}
-\format{A data table ready for analysis in NormalyzerDE}
+\format{
+A data table ready for analysis in NormalyzerDE
+}
 \usage{
 example_wide_data
 }
