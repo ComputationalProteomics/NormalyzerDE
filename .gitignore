@@ -15,6 +15,7 @@ R/Rplots.pdf
 .RData
 *.old
 *.log
+*.simg
 
 # Folders
 ignore
