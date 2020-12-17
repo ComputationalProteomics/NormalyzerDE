@@ -1,11 +1,11 @@
 BootStrap: docker
 From: ubuntu:18.04
 
-# Last build date: 191107
+# Last build date: 202117
 # Test build locally with singularity build test_out.simg Singularity
 
 %post
-    R_BASE_VERSION="3.6.1"
+    R_BASE_VERSION="3.6.3"
 
     # Setup system packages
     apt-get -qq update
