@@ -9,6 +9,13 @@ NormalyzerDE is a software designed to ease the process of selecting an optimal 
 
 NormalyzerDE includes several normalization approaches, a empirical Bayes-based statistical approach implemented as part of Limma and a newly implemented retention-time segmented normalization approach inspired by previously outlined approaches. The emprical-based based statistics has been shown to increase sensitivity over ANOVA when detecting differentially expressed features.
 
+# Cite NormalyzerDE
+
+NormalyzerDE is published [here](https://pubs.acs.org/doi/10.1021/acs.jproteome.8b00523)
+
+Willforss, J., Chawade, A., Levander, F. 
+NormalyzerDE: Online tool for improved normalization of omics expression data and high-sensitivity differential expression analysis. *Journal of Proteome Research* **2018**, 10.1021/acs.jproteome.8b00523.
+
 # Installation
 
 Currently, the easiest way is to install directly from GitHub. It is recommended that you use
@@ -47,11 +54,6 @@ If you want to run NormalyzerDE directly from the command line this is possible 
 Rscript -e 'NormalyzerDE::normalyzer(jobName="rscript_norm", designPath="test_design.tsv", dataPath="test_data.tsv")'
 Rscript -e 'NormalyzerDE::normalyzerDE(jobName="rscript_de", designPath="test_design.tsv", dataPath="test_data.tsv", comparisons=c("1-2", "1-3"))'
 ```
-
-# Cite NormalyzerDE
-
-Willforss, J., Chawade, A., Levander, F. 
-NormalyzerDE: Online tool for improved normalization of omics expression data and high-sensitivity differential expression analysis. *Journal of Proteome Research* **2018**, 10.1021/acs.jproteome.8b00523.
 
 # References
 
