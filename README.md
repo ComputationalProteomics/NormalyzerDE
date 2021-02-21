@@ -1,5 +1,4 @@
 [![https://www.singularity-hub.org/static/img/hosted-singularity--hub-%23e32929.svg](https://www.singularity-hub.org/static/img/hosted-singularity--hub-%23e32929.svg)](https://singularity-hub.org/collections/820)
-[![Travis build status](https://travis-ci.org/ComputationalProteomics/NormalyzerDE.svg?branch=master)](https://travis-ci.org/ComputationalProteomics/NormalyzerDE)
 
 # About
 
