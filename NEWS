@@ -1,3 +1,8 @@
+CHANGES IN VERSION 1.13.2
+----------------------------------
+
+* Fixed leastRepCount setting of zero for statistics report
+
 CHANGES IN VERSION 1.9.1
 ----------------------------------
 

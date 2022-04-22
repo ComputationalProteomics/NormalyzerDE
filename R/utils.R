@@ -188,7 +188,7 @@ filterLowRep <- function(df, groups, leastRep = 2) {
     allReplicatesHaveValuesContrast <- function(row, groups, minCount) {
         names(row) <- groups
         repCounts <- table(names(stats::na.omit(row)))
-        length(repCounts) == length(unique(groups)) && min(repCounts) >= minCount
+        length(repCounts) == length(unique(groups)) && min(repCounts) >= minCount || minCount == 0
     }
     
     rowMeetThresContrast <- apply(

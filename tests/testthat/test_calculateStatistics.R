@@ -31,6 +31,16 @@ test_that("filterLowRep", {
             out
         )
     )
+    
+    out2 <- filterLowRep(test_data, groups, leastRep=0)
+        
+    expect_true(
+        all.equal(
+            test_data,
+            out2
+        )
+    )
+    
 })
 
 # test_that("reduceTechnicalReplicates", {
