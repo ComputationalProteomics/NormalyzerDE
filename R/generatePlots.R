@@ -147,6 +147,7 @@ generatePlots <- function(nr, jobdir, plotRows=3, plotCols=4, writeAsPngs=FALSE)
     if (!isLimitedRun) {
         writePage(plotReplicateVariance, jobdir, writeAsPngs, sprintf("%s/%s_%s", pngDir, nextPageNo(iter=TRUE), "replicate_variation.png"), nr, currentLayout, nextPageNo(iter=FALSE))
         writePage(plotReplicateVarAndStableVariables, jobdir, writeAsPngs, sprintf("%s/%s_%s", pngDir, nextPageNo(iter=TRUE), "replicate_variation_rel_to_log2.png"), nr, currentLayout, nextPageNo(iter=FALSE))
+        # browser()
         writePage(plotCVvsIntensity, jobdir, writeAsPngs, sprintf("%s/%s_%s", pngDir, nextPageNo(iter=TRUE), "cv_vs_raw_intensity.png"), nr, currentLayout, nextPageNo(iter=FALSE))
         writePage(plotMA, jobdir, writeAsPngs, sprintf("%s/%s_%s", pngDir, nextPageNo(iter=TRUE), "ma.png"), nr, currentLayout, nextPageNo(iter=FALSE))
     }
@@ -697,17 +698,24 @@ plotCVvsIntensity <- function(nr, currentLayout, pageno) {
 
         for (i in seq_len(nrow(log2Mat))) {
             
-            tempcv <- RcmdrMisc::numSummary(
-                log2Mat[i, ], 
-                statistics=c("cv")
-            )
-            tempavg <- RcmdrMisc::numSummary(
-                filterrawdata[i, ], 
-                statistics=c("mean")
-            )
+            # browser()
+            # tempcv <- RcmdrMisc::numSummary(
+            #     log2Mat[i, ], 
+            #     statistics="CV"
+            # )
+            tempcv <- sd(log2Mat[i, ]) / mean(log2Mat[i, ])
+            # tempavg <- RcmdrMisc::numSummary(
+            #     filterrawdata[i, ], 
+            #     statistics=c("mean")
+            # )
+            tempavg <- mean(filterrawdata[i, ])
             
-            tempcvmat1[i, j] <- 100 * tempcv$table
-            tempavgmat1[i, j] <- tempavg$table 
+            # browser()
+            # tempcvmat1[i, j] <- 100 * tempcv$table
+            # tempavgmat1[i, j] <- tempavg$table 
+            
+            tempcvmat1[i, j] <- 100 * tempcv
+            tempavgmat1[i, j] <- tempavg 
         }
         
         if (maxtempcv < max(tempcvmat1, na.rm=TRUE)) {
@@ -774,7 +782,7 @@ plotMA <- function(nr, currentLayout, pageno) {
                           y=("Replicate-1 Fold Change"),
                           title=methodNames[i]) + 
             ggplot2::stat_smooth(method="loess", se=FALSE, colour="red", na.rm=TRUE, formula='y ~ x') + 
-            ggplot2::geom_abline(intercept=0, slope=0, size=0.3)
+            ggplot2::geom_abline(intercept=0, slope=0, linewidth=0.3)
     } 
     
     grid::grid.newpage()
@@ -850,8 +858,15 @@ plotQQ <- function(nr, currentLayout, pageno) {
     for (i in seq_along(methodlist)) {  
         methodData <- methodlist[[i]]
         tempcolname <- colnames(methodData)
-        qqlist[[i]] <- ggplot2::qplot(sample=methodData[, 1], na.rm=TRUE) + 
-            ggplot2::labs(x="", y="", title=methodnames[i])
+        browser()
+        qqlist[[i]] <- ggplot2::ggplot(
+            data.frame(sample=methodData[, 1]), 
+            ggplot2::aes(sample=sample)) + ggplot2::stat_qq(na.rm=TRUE) + ggplot2::stat_qq_line(na.rm=TRUE)
+        # qqlist[[i]] <- ggplot2::ggplot(data.frame(x=1:length(methodData[, 1]), y=methodData[, 1]), ggplot2::aes(x, y)) + 
+        #     ggplot2::geom_point(na.rm=TRUE) +
+        #     ggplot2::labs(x="", y="", title=methodnames[i]) 
+        # qqlist[[i]] <- ggplot2::qplot(sample=methodData[, 1], na.rm=TRUE) + 
+        #     ggplot2::labs(x="", y="", title=methodnames[i])
     }
     
     grid::grid.newpage()

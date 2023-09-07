@@ -22,13 +22,13 @@ Imports:
     ggplot2,
     methods,
     Biobase,
-    RcmdrMisc,
     raster,
     utils,
     stats,
     SummarizedExperiment,
     matrixStats,
-    ggforce
+    ggforce,
+    hexbin
 Suggests:
     knitr,
     testthat,
