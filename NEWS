@@ -1,3 +1,9 @@
+CHANGES IN VERSION 1.13.2
+----------------------------------
+
+* Remove RCmdr (FIXME) as dependency, resolving a fatal crash
+* Updating code to remove deprecation warnings for ggplot2 code
+
 CHANGES IN VERSION 1.9.1
 ----------------------------------
 
