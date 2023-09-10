@@ -37,7 +37,14 @@ calculateReplicateCV <- function(methodList, sampleReplicateGroups) {
     
     calculateFeatureCVs <- function(feature, groups) {
 
-        featureCVs <- vapply(unique(groups), function(group) { stats::sd(feature[groups == group]) / mean(feature[groups == group]) }, c(1))
+        featureCVs <- vapply(
+            unique(groups), 
+            function(group) {
+                targetFeatures = feature[groups == group]
+                stats::sd(targetFeatures) / mean(targetFeatures) 
+            }, 
+            c(1)
+        )
         featureCVs
     }
     

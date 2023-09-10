@@ -1,7 +1,8 @@
-CHANGES IN VERSION 1.19.1
+CHANGES IN VERSION 1.19.2
 ----------------------------------
 
-* Remove RCmdr (FIXME) as dependency, resolving a fatal crash
+* Remove RCmdrMisc (FIXME) as dependency, resolving a fatal crash
+  caused by updated signature of RCmdrMisc CV calculation function
 * Updating code to remove deprecation warnings for ggplot2 code
 
 CHANGES IN VERSION 1.13.2

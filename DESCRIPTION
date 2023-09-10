@@ -31,8 +31,8 @@ Suggests:
     knitr,
     testthat,
     rmarkdown,
-    hexbin,
     roxygen2,
+    hexbin,
     BiocStyle
 VignetteBuilder: knitr
 biocViews:

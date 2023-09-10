@@ -147,7 +147,6 @@ generatePlots <- function(nr, jobdir, plotRows=3, plotCols=4, writeAsPngs=FALSE)
     if (!isLimitedRun) {
         writePage(plotReplicateVariance, jobdir, writeAsPngs, sprintf("%s/%s_%s", pngDir, nextPageNo(iter=TRUE), "replicate_variation.png"), nr, currentLayout, nextPageNo(iter=FALSE))
         writePage(plotReplicateVarAndStableVariables, jobdir, writeAsPngs, sprintf("%s/%s_%s", pngDir, nextPageNo(iter=TRUE), "replicate_variation_rel_to_log2.png"), nr, currentLayout, nextPageNo(iter=FALSE))
-        # browser()
         writePage(plotCVvsIntensity, jobdir, writeAsPngs, sprintf("%s/%s_%s", pngDir, nextPageNo(iter=TRUE), "cv_vs_raw_intensity.png"), nr, currentLayout, nextPageNo(iter=FALSE))
         writePage(plotMA, jobdir, writeAsPngs, sprintf("%s/%s_%s", pngDir, nextPageNo(iter=TRUE), "ma.png"), nr, currentLayout, nextPageNo(iter=FALSE))
     }
@@ -847,7 +846,9 @@ plotQQ <- function(nr, currentLayout, pageno) {
         tempcolname <- colnames(methodData)
         qqlist[[i]] <- ggplot2::ggplot(
             data.frame(sample=methodData[, 1]), 
-            ggplot2::aes(sample=sample)) + ggplot2::stat_qq(na.rm=TRUE) + ggplot2::stat_qq_line(na.rm=TRUE)
+            ggplot2::aes(sample=sample)) + 
+            ggplot2::stat_qq(na.rm=TRUE) + 
+            ggplot2::stat_qq_line(na.rm=TRUE)
     }
     
     grid::grid.newpage()
