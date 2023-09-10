@@ -59,7 +59,6 @@
 #' @return None
 #' @export
 #' @import MASS limma preprocessCore methods
-#' @importFrom cv
 #' @examples
 #' \dontrun{
 #' data_path <- system.file(package="NormalyzerDE", "extdata", "tiny_data.tsv")
