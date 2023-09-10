@@ -1,8 +1,6 @@
 Package: NormalyzerDE
 Title: Evaluation of normalization methods and calculation of differential expression analysis statistics
-Version: 1.13.2
-Author: Jakob Willforss
-Maintainer: Jakob Willforss <jakob.willforss@hotmail.com>
+Version: 1.18.1
 Authors@R: c(
     person("Jakob", "Willforss", email="jakob.willforss@hotmail.com", role=c("aut", "cre")),
     person("Aakash", "Chawade", role="aut"),
@@ -28,12 +26,12 @@ Imports:
     stats,
     SummarizedExperiment,
     matrixStats,
-    ggforce,
-    hexbin
+    ggforce
 Suggests:
     knitr,
     testthat,
     rmarkdown,
+    hexbin,
     roxygen2,
     BiocStyle
 VignetteBuilder: knitr
@@ -43,4 +41,4 @@ License: Artistic-2.0
 Encoding: UTF-8
 RoxygenNote: 7.2.3
 URL: https://github.com/ComputationalProteomics/NormalyzerDE
-Depends: R (>= 3.6)
+Depends: R (>= 4.1.0)

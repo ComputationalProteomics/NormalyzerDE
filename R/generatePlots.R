@@ -318,7 +318,7 @@ plotSampleMappingPage <- function(nr, currentFont, currentLayout, currentjob, pa
   condCounts <- table(groupCol)
   
   groupList <- lapply(
-    1:length(groupLevels), 
+    seq_len(groupLevels), 
     function(lv, groups, groupCounts) { 
       list(groupNbr=lv, groupString=groups[[lv]], groupCount=groupCounts[[lv]]) 
     }, 
@@ -326,7 +326,7 @@ plotSampleMappingPage <- function(nr, currentFont, currentLayout, currentjob, pa
   
   groupStringsWHead <- c(list(list(groupNbr="Group nbr.", groupString="Design group", groupCount="Nbr. samples in cond."), list(groupNbr="", groupString="", groupCount="")), groupList)
 
-  lapply(1:length(groupStringsWHead), function(i, stringsToShow) {
+  lapply(seq_len(groupStringsWHead), function(i, stringsToShow) {
     yPos <- 0.9-i*0.02
     xDelta <- 0.15
     grid::grid.text(stringsToShow[[i]]$groupNbr, x=0.01, y=yPos, hjust=0)
@@ -698,7 +698,7 @@ plotCVvsIntensity <- function(nr, currentLayout, pageno) {
 
         for (i in seq_len(nrow(log2Mat))) {
             
-            tempcv <- sd(log2Mat[i, ]) / mean(log2Mat[i, ])
+            tempcv <- stats::sd(log2Mat[i, ]) / mean(log2Mat[i, ])
             tempavg <- mean(filterrawdata[i, ])
             
             tempcvmat1[i, j] <- 100 * tempcv
@@ -845,15 +845,9 @@ plotQQ <- function(nr, currentLayout, pageno) {
     for (i in seq_along(methodlist)) {  
         methodData <- methodlist[[i]]
         tempcolname <- colnames(methodData)
-        browser()
         qqlist[[i]] <- ggplot2::ggplot(
             data.frame(sample=methodData[, 1]), 
             ggplot2::aes(sample=sample)) + ggplot2::stat_qq(na.rm=TRUE) + ggplot2::stat_qq_line(na.rm=TRUE)
-        # qqlist[[i]] <- ggplot2::ggplot(data.frame(x=1:length(methodData[, 1]), y=methodData[, 1]), ggplot2::aes(x, y)) + 
-        #     ggplot2::geom_point(na.rm=TRUE) +
-        #     ggplot2::labs(x="", y="", title=methodnames[i]) 
-        # qqlist[[i]] <- ggplot2::qplot(sample=methodData[, 1], na.rm=TRUE) + 
-        #     ggplot2::labs(x="", y="", title=methodnames[i])
     }
     
     grid::grid.newpage()
