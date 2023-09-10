@@ -698,21 +698,8 @@ plotCVvsIntensity <- function(nr, currentLayout, pageno) {
 
         for (i in seq_len(nrow(log2Mat))) {
             
-            # browser()
-            # tempcv <- RcmdrMisc::numSummary(
-            #     log2Mat[i, ], 
-            #     statistics="CV"
-            # )
             tempcv <- sd(log2Mat[i, ]) / mean(log2Mat[i, ])
-            # tempavg <- RcmdrMisc::numSummary(
-            #     filterrawdata[i, ], 
-            #     statistics=c("mean")
-            # )
             tempavg <- mean(filterrawdata[i, ])
-            
-            # browser()
-            # tempcvmat1[i, j] <- 100 * tempcv$table
-            # tempavgmat1[i, j] <- tempavg$table 
             
             tempcvmat1[i, j] <- 100 * tempcv
             tempavgmat1[i, j] <- tempavg 

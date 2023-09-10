@@ -36,19 +36,9 @@ analyzeNormalizations <- function(nr, categoricalAnova=FALSE) {
 calculateReplicateCV <- function(methodList, sampleReplicateGroups) {
     
     calculateFeatureCVs <- function(feature, groups) {
-        # browser()
-        # featureCVs <- RcmdrMisc::numSummary(feature, groups=groups)$table[, "CV"]
-        # featureCVs <- RcmdrMisc::numSummary(
-        #     feature,
-        #     # statistics=c("CV"),
-        #     # type="2",
-        #     # quantiles=c(0, 0.25, 0.5, 0.75, 1),
-        #     groups=groups)
-        
+
         featureCVs <- vapply(unique(groups), function(group) { sd(feature[groups == group]) / mean(feature[groups == group]) }, c(1))
-        
         featureCVs
-        # featureCVs$table
     }
     
     calculateMethodReplicateCVs <- function(methodData, groups) {

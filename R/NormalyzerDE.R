@@ -58,7 +58,7 @@
 #' 
 #' @return None
 #' @export
-#' @import MASS limma preprocessCore methods RcmdrMisc
+#' @import MASS limma preprocessCore methods
 #' @importFrom raster cv
 #' @examples
 #' \dontrun{
