@@ -21,7 +21,6 @@ Imports:
     ggplot2,
     methods,
     Biobase,
-    raster,
     utils,
     stats,
     SummarizedExperiment,
