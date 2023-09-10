@@ -317,7 +317,7 @@ plotSampleMappingPage <- function(nr, currentFont, currentLayout, currentjob, pa
   condCounts <- table(groupCol)
   
   groupList <- lapply(
-    seq_len(groupLevels), 
+    seq_len(length(groupLevels)), 
     function(lv, groups, groupCounts) { 
       list(groupNbr=lv, groupString=groups[[lv]], groupCount=groupCounts[[lv]]) 
     }, 
@@ -325,7 +325,7 @@ plotSampleMappingPage <- function(nr, currentFont, currentLayout, currentjob, pa
   
   groupStringsWHead <- c(list(list(groupNbr="Group nbr.", groupString="Design group", groupCount="Nbr. samples in cond."), list(groupNbr="", groupString="", groupCount="")), groupList)
 
-  lapply(seq_len(groupStringsWHead), function(i, stringsToShow) {
+  lapply(seq_len(length(groupStringsWHead)), function(i, stringsToShow) {
     yPos <- 0.9-i*0.02
     xDelta <- 0.15
     grid::grid.text(stringsToShow[[i]]$groupNbr, x=0.01, y=yPos, hjust=0)

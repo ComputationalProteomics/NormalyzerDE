@@ -127,7 +127,7 @@ test_that("calculateReplicateCV", {
         )
     )
 })
-
+<
 test_that("calculateReplicateCV, reversed replicate groups", {
 
     expected_out <- avgcvmem(regression_test_ner)
