@@ -1,0 +1,928 @@
+\documentclass[]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+
+
+\usepackage{longtable,booktabs}
+\usepackage{graphicx}
+% grffile has become a legacy package: https://ctan.org/pkg/grffile
+\IfFileExists{grffile.sty}{%
+\usepackage{grffile}
+}{}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{5}
+
+%%% Use protect on footnotes to avoid problems with footnotes in titles
+\let\rmarkdownfootnote\footnote%
+\def\footnote{\protect\rmarkdownfootnote}
+
+%%% Change title format to be more compact
+\usepackage{titling}
+
+% Create subtitle command for use in maketitle
+\providecommand{\subtitle}[1]{
+  \posttitle{
+    \begin{center}\large#1\end{center}
+    }
+}
+
+\setlength{\droptitle}{-2em}
+
+\RequirePackage[]{/home/jakob/R/x86_64-pc-linux-gnu-library/4.1/BiocStyle/resources/tex/Bioconductor}
+
+\bioctitle[]{Evaluation and statistics of expression data using NormalyzerDE}
+    \pretitle{\vspace{\droptitle}\centering\huge}
+  \posttitle{\par}
+\author{Jakob Willforss, Aakash Chawade and Fredrik Levander}
+    \preauthor{\centering\large\emph}
+  \postauthor{\par}
+      \predate{\centering\large\emph}
+  \postdate{\par}
+    \date{09/07/2023}
+
+% code highlighting
+\definecolor{fgcolor}{rgb}{0.251, 0.251, 0.251}
+\newcommand{\hlnum}[1]{\textcolor[rgb]{0.816,0.125,0.439}{#1}}%
+\newcommand{\hlstr}[1]{\textcolor[rgb]{0.251,0.627,0.251}{#1}}%
+\newcommand{\hlcom}[1]{\textcolor[rgb]{0.502,0.502,0.502}{\textit{#1}}}%
+\newcommand{\hlopt}[1]{\textcolor[rgb]{0,0,0}{#1}}%
+\newcommand{\hlstd}[1]{\textcolor[rgb]{0.251,0.251,0.251}{#1}}%
+\newcommand{\hlkwa}[1]{\textcolor[rgb]{0.125,0.125,0.941}{#1}}%
+\newcommand{\hlkwb}[1]{\textcolor[rgb]{0,0,0}{#1}}%
+\newcommand{\hlkwc}[1]{\textcolor[rgb]{0.251,0.251,0.251}{#1}}%
+\newcommand{\hlkwd}[1]{\textcolor[rgb]{0.878,0.439,0.125}{#1}}%
+\let\hlipl\hlkwb
+%
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+%
+\newenvironment{Shaded}{\begin{myshaded}}{\end{myshaded}}
+% set background for result chunks
+\let\oldverbatim\verbatim
+\renewenvironment{verbatim}{\color{codecolor}\begin{myshaded}\begin{oldverbatim}}{\end{oldverbatim}\end{myshaded}}
+%
+\newcommand{\KeywordTok}[1]{\hlkwd{#1}}
+\newcommand{\DataTypeTok}[1]{\hlkwc{#1}}
+\newcommand{\DecValTok}[1]{\hlnum{#1}}
+\newcommand{\BaseNTok}[1]{\hlnum{#1}}
+\newcommand{\FloatTok}[1]{\hlnum{#1}}
+\newcommand{\ConstantTok}[1]{\hlnum{#1}}
+\newcommand{\CharTok}[1]{\hlstr{#1}}
+\newcommand{\SpecialCharTok}[1]{\hlstr{#1}}
+\newcommand{\StringTok}[1]{\hlstr{#1}}
+\newcommand{\VerbatimStringTok}[1]{\hlstr{#1}}
+\newcommand{\SpecialStringTok}[1]{\hlstr{#1}}
+\newcommand{\ImportTok}[1]{{#1}}
+\newcommand{\CommentTok}[1]{\hlcom{#1}}
+\newcommand{\DocumentationTok}[1]{\hlcom{#1}}
+\newcommand{\AnnotationTok}[1]{\hlcom{#1}}
+\newcommand{\CommentVarTok}[1]{\hlcom{#1}}
+\newcommand{\OtherTok}[1]{{#1}}
+\newcommand{\FunctionTok}[1]{\hlstd{#1}}
+\newcommand{\VariableTok}[1]{\hlstd{#1}}
+\newcommand{\ControlFlowTok}[1]{\hlkwd{#1}}
+\newcommand{\OperatorTok}[1]{\hlopt{#1}}
+\newcommand{\BuiltInTok}[1]{{#1}}
+\newcommand{\ExtensionTok}[1]{{#1}}
+\newcommand{\PreprocessorTok}[1]{\textit{#1}}
+\newcommand{\AttributeTok}[1]{{#1}}
+\newcommand{\RegionMarkerTok}[1]{{#1}}
+\newcommand{\InformationTok}[1]{\textcolor{messagecolor}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor{warningcolor}{#1}}
+\newcommand{\AlertTok}[1]{\textcolor{errorcolor}{#1}}
+\newcommand{\ErrorTok}[1]{\textcolor{errorcolor}{#1}}
+\newcommand{\NormalTok}[1]{\hlstd{#1}}
+%
+\AtBeginDocument{\bibliographystyle{/home/jakob/R/x86_64-pc-linux-gnu-library/4.1/BiocStyle/resources/tex/unsrturl}}
+
+
+\begin{document}
+\maketitle
+\begin{abstract}
+Technical biases reduces the ability to see the desired biological changes when performing omics experiments. There are numerous normalization techniques available to counter the biases, but to find the optimal normalization is often a non-trivial task. Furthermore there are limited tools available to counter biases such as retention-time based biases caused by fluctuating electrospray intensities. NormalyzerDE helps this process by performing a wide range of normalization techniques including a general and openly available approach to countering retention-time based biases. More importantly it calculates and visualizes a number of performance measures to guide the users selection of normalization technique. Furthermore, NormalyzerDE provides means to easily perform differential expression statistics using either the empirical Bayes Limma approach or ANOVA. Evaluation visualizations are available for both normalization performance measures and as P-value histograms for the subsequent differential expression analysis comparisons. NormalyzerDE package version: 1.13.1
+\end{abstract}
+
+
+{
+\setcounter{tocdepth}{2}
+\tableofcontents
+\newpage
+}
+\hypertarget{installation}{%
+\section{Installation}\label{installation}}
+
+Installation is preferably performed using BiocManager (requires R version \textgreater= 3.5):
+
+\begin{verbatim}
+install.packages("BiocManager")
+BiocManager::install("NormalyzerDE")
+\end{verbatim}
+
+\hypertarget{default-use}{%
+\section{Default use}\label{default-use}}
+
+\hypertarget{citing}{%
+\subsection{Citing}\label{citing}}
+
+Willforss, J., Chawade, A., Levander, F. Submitted article.
+
+\hypertarget{input-format}{%
+\subsection{Input format}\label{input-format}}
+
+NormalyzerDE expects a raw data file. Columns can contain annotation information or sample data.
+Each column should start with a header.
+
+\begin{verbatim}
+pepseq  s1      s2      s3      s4
+ATAAGG  20.0    21.2    19.4    18.5
+AWAG    23.3    24.1    23.5    17.3
+ACATGM  22.1    22.3    22.5    23.2
+\end{verbatim}
+
+This data should be provided with a design matrix where all data samples should be represented.
+One column (default header ``sample'') should match the columns containing samples in the raw data.
+Another column (default header ``group'') should contain condition levels which could be used for group-based
+evaluations.
+
+\begin{verbatim}
+sample  group
+s1      condA
+s2      condA
+s3      condB
+s4      condB
+\end{verbatim}
+
+Alternatively the data can be provided as an instance of a \texttt{SummarizedExperiment} S4 class.
+
+\hypertarget{running-normalyzerde-evaluation}{%
+\subsection{Running NormalyzerDE evaluation}\label{running-normalyzerde-evaluation}}
+
+The evaluation step can be performed with one command, \texttt{normalyzer}.
+This command expects a path to the data file, a name for the run-job,
+a path to a design matrix and finally a path to an output directory.
+
+Alternatively the \texttt{designPath} and \texttt{dataPath} arguments can be replaced with the \texttt{experimentObj} argument
+where the first assay should contain the data matrix of interest, the \texttt{colData} attribute the design matrix
+and the \texttt{rowData} attribute the annotation columns.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(NormalyzerDE)}
+\DocumentationTok{\#\# The legacy packages maptools, rgdal, and rgeos, underpinning the sp package,}
+\DocumentationTok{\#\# which was just loaded, will retire in October 2023.}
+\DocumentationTok{\#\# Please refer to R{-}spatial evolution reports for details, especially}
+\DocumentationTok{\#\# https://r{-}spatial.org/r/2023/05/15/evolution4.html.}
+\DocumentationTok{\#\# It may be desirable to make the sf package available;}
+\DocumentationTok{\#\# package maintainers should consider adding sf to Suggests:.}
+\DocumentationTok{\#\# The sp package is now running under evolution status 2}
+\DocumentationTok{\#\#      (status 2 uses the sf package in place of rgdal)}
+\NormalTok{outDir }\OtherTok{\textless{}{-}} \FunctionTok{tempdir}\NormalTok{()}
+\NormalTok{designFp }\OtherTok{\textless{}{-}} \FunctionTok{system.file}\NormalTok{(}\AttributeTok{package=}\StringTok{"NormalyzerDE"}\NormalTok{, }\StringTok{"extdata"}\NormalTok{, }\StringTok{"tiny\_design.tsv"}\NormalTok{)}
+\NormalTok{dataFp }\OtherTok{\textless{}{-}} \FunctionTok{system.file}\NormalTok{(}\AttributeTok{package=}\StringTok{"NormalyzerDE"}\NormalTok{, }\StringTok{"extdata"}\NormalTok{, }\StringTok{"tiny\_data.tsv"}\NormalTok{)}
+\FunctionTok{normalyzer}\NormalTok{(}\AttributeTok{jobName=}\StringTok{"vignette\_run"}\NormalTok{, }\AttributeTok{designPath=}\NormalTok{designFp, }\AttributeTok{dataPath=}\NormalTok{dataFp, }
+           \AttributeTok{outputDir=}\NormalTok{outDir)}
+\DocumentationTok{\#\# You are running version 1.13.1 of NormalyzerDE}
+\DocumentationTok{\#\# [Step 1/5] Load data and verify input}
+\DocumentationTok{\#\# Input data checked. All fields are valid.}
+\DocumentationTok{\#\# Sample check: More than one sample group found}
+\DocumentationTok{\#\# Sample replication check: All samples have replicates}
+\DocumentationTok{\#\# RT annotation column found (5)}
+\DocumentationTok{\#\# [Step 1/5] Input verified, job directory prepared at:/tmp/RtmpYmdhWE/vignette\_run}
+\DocumentationTok{\#\# [Step 2/5] Performing normalizations}
+\DocumentationTok{\#\# [Step 2/5] Done!}
+\DocumentationTok{\#\# [Step 3/5] Generating evaluation measures...}
+\DocumentationTok{\#\# [Step 3/5] Done!}
+\DocumentationTok{\#\# [Step 4/5] Writing matrices to file}
+\DocumentationTok{\#\# [Step 4/5] Matrices successfully written}
+\DocumentationTok{\#\# [Step 5/5] Generating plots...}
+\DocumentationTok{\#\# Called from: outputFunc(...)}
+\DocumentationTok{\#\# debug: qqlist[[i]] \textless{}{-} ggplot2::ggplot(data.frame(sample = methodData[, }
+\DocumentationTok{\#\#     1]), ggplot2::aes(sample = sample)) + ggplot2::stat\_qq(na.rm = TRUE) + }
+\DocumentationTok{\#\#     ggplot2::stat\_qq\_line(na.rm = TRUE)}
+\DocumentationTok{\#\# debug: methodData \textless{}{-} methodlist[[i]]}
+\DocumentationTok{\#\# debug: tempcolname \textless{}{-} colnames(methodData)}
+\DocumentationTok{\#\# debug: browser()}
+\DocumentationTok{\#\# debug: qqlist[[i]] \textless{}{-} ggplot2::ggplot(data.frame(sample = methodData[, }
+\DocumentationTok{\#\#     1]), ggplot2::aes(sample = sample)) + ggplot2::stat\_qq(na.rm = TRUE) + }
+\DocumentationTok{\#\#     ggplot2::stat\_qq\_line(na.rm = TRUE)}
+\DocumentationTok{\#\# debug: methodData \textless{}{-} methodlist[[i]]}
+\DocumentationTok{\#\# debug: tempcolname \textless{}{-} colnames(methodData)}
+\DocumentationTok{\#\# debug: browser()}
+\DocumentationTok{\#\# debug: qqlist[[i]] \textless{}{-} ggplot2::ggplot(data.frame(sample = methodData[, }
+\DocumentationTok{\#\#     1]), ggplot2::aes(sample = sample)) + ggplot2::stat\_qq(na.rm = TRUE) + }
+\DocumentationTok{\#\#     ggplot2::stat\_qq\_line(na.rm = TRUE)}
+\DocumentationTok{\#\# debug: methodData \textless{}{-} methodlist[[i]]}
+\DocumentationTok{\#\# debug: tempcolname \textless{}{-} colnames(methodData)}
+\DocumentationTok{\#\# debug: browser()}
+\DocumentationTok{\#\# debug: qqlist[[i]] \textless{}{-} ggplot2::ggplot(data.frame(sample = methodData[, }
+\DocumentationTok{\#\#     1]), ggplot2::aes(sample = sample)) + ggplot2::stat\_qq(na.rm = TRUE) + }
+\DocumentationTok{\#\#     ggplot2::stat\_qq\_line(na.rm = TRUE)}
+\DocumentationTok{\#\# debug: methodData \textless{}{-} methodlist[[i]]}
+\DocumentationTok{\#\# debug: tempcolname \textless{}{-} colnames(methodData)}
+\DocumentationTok{\#\# debug: browser()}
+\DocumentationTok{\#\# debug: qqlist[[i]] \textless{}{-} ggplot2::ggplot(data.frame(sample = methodData[, }
+\DocumentationTok{\#\#     1]), ggplot2::aes(sample = sample)) + ggplot2::stat\_qq(na.rm = TRUE) + }
+\DocumentationTok{\#\#     ggplot2::stat\_qq\_line(na.rm = TRUE)}
+\DocumentationTok{\#\# debug: methodData \textless{}{-} methodlist[[i]]}
+\DocumentationTok{\#\# debug: tempcolname \textless{}{-} colnames(methodData)}
+\DocumentationTok{\#\# debug: browser()}
+\DocumentationTok{\#\# debug: qqlist[[i]] \textless{}{-} ggplot2::ggplot(data.frame(sample = methodData[, }
+\DocumentationTok{\#\#     1]), ggplot2::aes(sample = sample)) + ggplot2::stat\_qq(na.rm = TRUE) + }
+\DocumentationTok{\#\#     ggplot2::stat\_qq\_line(na.rm = TRUE)}
+\DocumentationTok{\#\# debug: methodData \textless{}{-} methodlist[[i]]}
+\DocumentationTok{\#\# debug: tempcolname \textless{}{-} colnames(methodData)}
+\DocumentationTok{\#\# debug: browser()}
+\DocumentationTok{\#\# debug: qqlist[[i]] \textless{}{-} ggplot2::ggplot(data.frame(sample = methodData[, }
+\DocumentationTok{\#\#     1]), ggplot2::aes(sample = sample)) + ggplot2::stat\_qq(na.rm = TRUE) + }
+\DocumentationTok{\#\#     ggplot2::stat\_qq\_line(na.rm = TRUE)}
+\DocumentationTok{\#\# debug: methodData \textless{}{-} methodlist[[i]]}
+\DocumentationTok{\#\# debug: tempcolname \textless{}{-} colnames(methodData)}
+\DocumentationTok{\#\# debug: browser()}
+\DocumentationTok{\#\# debug: qqlist[[i]] \textless{}{-} ggplot2::ggplot(data.frame(sample = methodData[, }
+\DocumentationTok{\#\#     1]), ggplot2::aes(sample = sample)) + ggplot2::stat\_qq(na.rm = TRUE) + }
+\DocumentationTok{\#\#     ggplot2::stat\_qq\_line(na.rm = TRUE)}
+\DocumentationTok{\#\# debug: methodData \textless{}{-} methodlist[[i]]}
+\DocumentationTok{\#\# debug: tempcolname \textless{}{-} colnames(methodData)}
+\DocumentationTok{\#\# debug: browser()}
+\DocumentationTok{\#\# debug: qqlist[[i]] \textless{}{-} ggplot2::ggplot(data.frame(sample = methodData[, }
+\DocumentationTok{\#\#     1]), ggplot2::aes(sample = sample)) + ggplot2::stat\_qq(na.rm = TRUE) + }
+\DocumentationTok{\#\#     ggplot2::stat\_qq\_line(na.rm = TRUE)}
+\DocumentationTok{\#\# debug: methodData \textless{}{-} methodlist[[i]]}
+\DocumentationTok{\#\# debug: tempcolname \textless{}{-} colnames(methodData)}
+\DocumentationTok{\#\# debug: browser()}
+\DocumentationTok{\#\# debug: qqlist[[i]] \textless{}{-} ggplot2::ggplot(data.frame(sample = methodData[, }
+\DocumentationTok{\#\#     1]), ggplot2::aes(sample = sample)) + ggplot2::stat\_qq(na.rm = TRUE) + }
+\DocumentationTok{\#\#     ggplot2::stat\_qq\_line(na.rm = TRUE)}
+\DocumentationTok{\#\# debug: methodData \textless{}{-} methodlist[[i]]}
+\DocumentationTok{\#\# debug: tempcolname \textless{}{-} colnames(methodData)}
+\DocumentationTok{\#\# debug: browser()}
+\DocumentationTok{\#\# debug: qqlist[[i]] \textless{}{-} ggplot2::ggplot(data.frame(sample = methodData[, }
+\DocumentationTok{\#\#     1]), ggplot2::aes(sample = sample)) + ggplot2::stat\_qq(na.rm = TRUE) + }
+\DocumentationTok{\#\#     ggplot2::stat\_qq\_line(na.rm = TRUE)}
+\DocumentationTok{\#\# debug: methodData \textless{}{-} methodlist[[i]]}
+\DocumentationTok{\#\# debug: tempcolname \textless{}{-} colnames(methodData)}
+\DocumentationTok{\#\# debug: browser()}
+\DocumentationTok{\#\# debug: qqlist[[i]] \textless{}{-} ggplot2::ggplot(data.frame(sample = methodData[, }
+\DocumentationTok{\#\#     1]), ggplot2::aes(sample = sample)) + ggplot2::stat\_qq(na.rm = TRUE) + }
+\DocumentationTok{\#\#     ggplot2::stat\_qq\_line(na.rm = TRUE)}
+\DocumentationTok{\#\# [Step 5/5] Plots successfully generated}
+\DocumentationTok{\#\# All done! Results are stored in: /tmp/RtmpYmdhWE/vignette\_run, processing time was 0.1 minutes}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{running-normalyzerde-statistical-comparisons}{%
+\subsection{Running NormalyzerDE statistical comparisons}\label{running-normalyzerde-statistical-comparisons}}
+
+When you after performing the evaluation and having evaluated the report have decided
+for which normalization approach seems to work best you can continue to the statistical step.
+
+Here, expected parameters are the path to the target normalization matrix, the sample design matrix as
+in the previous step, a job name, the path to an output directory and a list of the pairwise comparisons
+for which you want to calculate contrasts. They are provided as a character vector with conditions to
+compare separated by a dash (``-'').
+
+Similarly as for the normalization step the \texttt{designPath} and \texttt{dataPath} arguments can be replaced with
+an instance of \texttt{SummarizedExperiment} sent to the \texttt{experimentObj} argument.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{normMatrixPath }\OtherTok{\textless{}{-}} \FunctionTok{paste}\NormalTok{(outDir, }\StringTok{"vignette\_run/CycLoess{-}normalized.txt"}\NormalTok{, }\AttributeTok{sep=}\StringTok{"/"}\NormalTok{)}
+\FunctionTok{normalyzerDE}\NormalTok{(}\StringTok{"vignette\_run"}\NormalTok{, }
+             \AttributeTok{comparisons=}\FunctionTok{c}\NormalTok{(}\StringTok{"4{-}5"}\NormalTok{),}
+             \AttributeTok{designPath=}\NormalTok{designFp, }
+             \AttributeTok{dataPath=}\NormalTok{normMatrixPath,}
+             \AttributeTok{outputDir=}\NormalTok{outDir, }
+             \AttributeTok{condCol=}\StringTok{"group"}\NormalTok{)}
+\DocumentationTok{\#\# You are running version 1.13.1 of NormalyzerDE}
+\DocumentationTok{\#\# [1] "Setting up statistics object"}
+\DocumentationTok{\#\# [1] "Calculating statistical contrasts..."}
+\DocumentationTok{\#\# [1] "Contrast calculations done!"}
+\DocumentationTok{\#\# [1] "Writing 100 annotated rows to /tmp/RtmpYmdhWE/vignette\_run/vignette\_run\_stats.tsv"}
+\DocumentationTok{\#\# [1] "Writing statistics report"}
+\DocumentationTok{\#\# [1] "All done! Results are stored in: /tmp/RtmpYmdhWE/vignette\_run, processing time was 0 minutes"}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{running-normalyzerde-using-a-summarizedexperiment-object-as-input}{%
+\subsection{Running NormalyzerDE using a SummarizedExperiment object as input}\label{running-normalyzerde-using-a-summarizedexperiment-object-as-input}}
+
+A benefit of using a SummarizedExperiment object as input is that it allows executing NormalyzerDE using variables as input instead of loading from file.
+
+The conversion of \texttt{designMatrix\$sample} is required if using \texttt{read.table} as it otherwise is interpreted as a factor. For more intuitive behaviour you can use \texttt{read\_tsv} from the \texttt{readr} package instead of \texttt{read.table}.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{dataMatrix }\OtherTok{\textless{}{-}} \FunctionTok{read.table}\NormalTok{(dataFp, }\AttributeTok{sep=}\StringTok{"}\SpecialCharTok{\textbackslash{}t}\StringTok{"}\NormalTok{, }\AttributeTok{header =} \ConstantTok{TRUE}\NormalTok{)}
+\NormalTok{designMatrix }\OtherTok{\textless{}{-}} \FunctionTok{read.table}\NormalTok{(designFp, }\AttributeTok{sep=}\StringTok{"}\SpecialCharTok{\textbackslash{}t}\StringTok{"}\NormalTok{, }\AttributeTok{header =} \ConstantTok{TRUE}\NormalTok{)}
+\NormalTok{designMatrix}\SpecialCharTok{$}\NormalTok{sample }\OtherTok{\textless{}{-}} \FunctionTok{as.character}\NormalTok{(designMatrix}\SpecialCharTok{$}\NormalTok{sample)}
+\NormalTok{dataOnly }\OtherTok{\textless{}{-}}\NormalTok{ dataMatrix[, designMatrix}\SpecialCharTok{$}\NormalTok{sample]}
+\NormalTok{annotOnly }\OtherTok{\textless{}{-}}\NormalTok{ dataMatrix[, }\SpecialCharTok{!}\NormalTok{(}\FunctionTok{colnames}\NormalTok{(dataMatrix) }\SpecialCharTok{\%in\%}\NormalTok{ designMatrix}\SpecialCharTok{$}\NormalTok{sample)]}
+
+\NormalTok{sumExpObj }\OtherTok{\textless{}{-}}\NormalTok{ SummarizedExperiment}\SpecialCharTok{::}\FunctionTok{SummarizedExperiment}\NormalTok{(}
+    \FunctionTok{as.matrix}\NormalTok{(dataOnly),}
+    \AttributeTok{colData=}\NormalTok{designMatrix,}
+    \AttributeTok{rowData=}\NormalTok{annotOnly}
+\NormalTok{)}
+
+\FunctionTok{normalyzer}\NormalTok{(}\AttributeTok{jobName=}\StringTok{"sumExpRun"}\NormalTok{, }\AttributeTok{experimentObj =}\NormalTok{ sumExpObj, }\AttributeTok{outputDir=}\NormalTok{outDir)}
+\DocumentationTok{\#\# You are running version 1.13.1 of NormalyzerDE}
+\DocumentationTok{\#\# [Step 1/5] Load data and verify input}
+\DocumentationTok{\#\# Input data checked. All fields are valid.}
+\DocumentationTok{\#\# Sample check: More than one sample group found}
+\DocumentationTok{\#\# Sample replication check: All samples have replicates}
+\DocumentationTok{\#\# RT annotation column found (5)}
+\DocumentationTok{\#\# [Step 1/5] Input verified, job directory prepared at:/tmp/RtmpYmdhWE/sumExpRun}
+\DocumentationTok{\#\# [Step 2/5] Performing normalizations}
+\DocumentationTok{\#\# [Step 2/5] Done!}
+\DocumentationTok{\#\# [Step 3/5] Generating evaluation measures...}
+\DocumentationTok{\#\# [Step 3/5] Done!}
+\DocumentationTok{\#\# [Step 4/5] Writing matrices to file}
+\DocumentationTok{\#\# [Step 4/5] Matrices successfully written}
+\DocumentationTok{\#\# [Step 5/5] Generating plots...}
+\DocumentationTok{\#\# Called from: outputFunc(...)}
+\DocumentationTok{\#\# debug: qqlist[[i]] \textless{}{-} ggplot2::ggplot(data.frame(sample = methodData[, }
+\DocumentationTok{\#\#     1]), ggplot2::aes(sample = sample)) + ggplot2::stat\_qq(na.rm = TRUE) + }
+\DocumentationTok{\#\#     ggplot2::stat\_qq\_line(na.rm = TRUE)}
+\DocumentationTok{\#\# debug: methodData \textless{}{-} methodlist[[i]]}
+\DocumentationTok{\#\# debug: tempcolname \textless{}{-} colnames(methodData)}
+\DocumentationTok{\#\# debug: browser()}
+\DocumentationTok{\#\# debug: qqlist[[i]] \textless{}{-} ggplot2::ggplot(data.frame(sample = methodData[, }
+\DocumentationTok{\#\#     1]), ggplot2::aes(sample = sample)) + ggplot2::stat\_qq(na.rm = TRUE) + }
+\DocumentationTok{\#\#     ggplot2::stat\_qq\_line(na.rm = TRUE)}
+\DocumentationTok{\#\# debug: methodData \textless{}{-} methodlist[[i]]}
+\DocumentationTok{\#\# debug: tempcolname \textless{}{-} colnames(methodData)}
+\DocumentationTok{\#\# debug: browser()}
+\DocumentationTok{\#\# debug: qqlist[[i]] \textless{}{-} ggplot2::ggplot(data.frame(sample = methodData[, }
+\DocumentationTok{\#\#     1]), ggplot2::aes(sample = sample)) + ggplot2::stat\_qq(na.rm = TRUE) + }
+\DocumentationTok{\#\#     ggplot2::stat\_qq\_line(na.rm = TRUE)}
+\DocumentationTok{\#\# debug: methodData \textless{}{-} methodlist[[i]]}
+\DocumentationTok{\#\# debug: tempcolname \textless{}{-} colnames(methodData)}
+\DocumentationTok{\#\# debug: browser()}
+\DocumentationTok{\#\# debug: qqlist[[i]] \textless{}{-} ggplot2::ggplot(data.frame(sample = methodData[, }
+\DocumentationTok{\#\#     1]), ggplot2::aes(sample = sample)) + ggplot2::stat\_qq(na.rm = TRUE) + }
+\DocumentationTok{\#\#     ggplot2::stat\_qq\_line(na.rm = TRUE)}
+\DocumentationTok{\#\# debug: methodData \textless{}{-} methodlist[[i]]}
+\DocumentationTok{\#\# debug: tempcolname \textless{}{-} colnames(methodData)}
+\DocumentationTok{\#\# debug: browser()}
+\DocumentationTok{\#\# debug: qqlist[[i]] \textless{}{-} ggplot2::ggplot(data.frame(sample = methodData[, }
+\DocumentationTok{\#\#     1]), ggplot2::aes(sample = sample)) + ggplot2::stat\_qq(na.rm = TRUE) + }
+\DocumentationTok{\#\#     ggplot2::stat\_qq\_line(na.rm = TRUE)}
+\DocumentationTok{\#\# debug: methodData \textless{}{-} methodlist[[i]]}
+\DocumentationTok{\#\# debug: tempcolname \textless{}{-} colnames(methodData)}
+\DocumentationTok{\#\# debug: browser()}
+\DocumentationTok{\#\# debug: qqlist[[i]] \textless{}{-} ggplot2::ggplot(data.frame(sample = methodData[, }
+\DocumentationTok{\#\#     1]), ggplot2::aes(sample = sample)) + ggplot2::stat\_qq(na.rm = TRUE) + }
+\DocumentationTok{\#\#     ggplot2::stat\_qq\_line(na.rm = TRUE)}
+\DocumentationTok{\#\# debug: methodData \textless{}{-} methodlist[[i]]}
+\DocumentationTok{\#\# debug: tempcolname \textless{}{-} colnames(methodData)}
+\DocumentationTok{\#\# debug: browser()}
+\DocumentationTok{\#\# debug: qqlist[[i]] \textless{}{-} ggplot2::ggplot(data.frame(sample = methodData[, }
+\DocumentationTok{\#\#     1]), ggplot2::aes(sample = sample)) + ggplot2::stat\_qq(na.rm = TRUE) + }
+\DocumentationTok{\#\#     ggplot2::stat\_qq\_line(na.rm = TRUE)}
+\DocumentationTok{\#\# debug: methodData \textless{}{-} methodlist[[i]]}
+\DocumentationTok{\#\# debug: tempcolname \textless{}{-} colnames(methodData)}
+\DocumentationTok{\#\# debug: browser()}
+\DocumentationTok{\#\# debug: qqlist[[i]] \textless{}{-} ggplot2::ggplot(data.frame(sample = methodData[, }
+\DocumentationTok{\#\#     1]), ggplot2::aes(sample = sample)) + ggplot2::stat\_qq(na.rm = TRUE) + }
+\DocumentationTok{\#\#     ggplot2::stat\_qq\_line(na.rm = TRUE)}
+\DocumentationTok{\#\# debug: methodData \textless{}{-} methodlist[[i]]}
+\DocumentationTok{\#\# debug: tempcolname \textless{}{-} colnames(methodData)}
+\DocumentationTok{\#\# debug: browser()}
+\DocumentationTok{\#\# debug: qqlist[[i]] \textless{}{-} ggplot2::ggplot(data.frame(sample = methodData[, }
+\DocumentationTok{\#\#     1]), ggplot2::aes(sample = sample)) + ggplot2::stat\_qq(na.rm = TRUE) + }
+\DocumentationTok{\#\#     ggplot2::stat\_qq\_line(na.rm = TRUE)}
+\DocumentationTok{\#\# debug: methodData \textless{}{-} methodlist[[i]]}
+\DocumentationTok{\#\# debug: tempcolname \textless{}{-} colnames(methodData)}
+\DocumentationTok{\#\# debug: browser()}
+\DocumentationTok{\#\# debug: qqlist[[i]] \textless{}{-} ggplot2::ggplot(data.frame(sample = methodData[, }
+\DocumentationTok{\#\#     1]), ggplot2::aes(sample = sample)) + ggplot2::stat\_qq(na.rm = TRUE) + }
+\DocumentationTok{\#\#     ggplot2::stat\_qq\_line(na.rm = TRUE)}
+\DocumentationTok{\#\# debug: methodData \textless{}{-} methodlist[[i]]}
+\DocumentationTok{\#\# debug: tempcolname \textless{}{-} colnames(methodData)}
+\DocumentationTok{\#\# debug: browser()}
+\DocumentationTok{\#\# debug: qqlist[[i]] \textless{}{-} ggplot2::ggplot(data.frame(sample = methodData[, }
+\DocumentationTok{\#\#     1]), ggplot2::aes(sample = sample)) + ggplot2::stat\_qq(na.rm = TRUE) + }
+\DocumentationTok{\#\#     ggplot2::stat\_qq\_line(na.rm = TRUE)}
+\DocumentationTok{\#\# debug: methodData \textless{}{-} methodlist[[i]]}
+\DocumentationTok{\#\# debug: tempcolname \textless{}{-} colnames(methodData)}
+\DocumentationTok{\#\# debug: browser()}
+\DocumentationTok{\#\# debug: qqlist[[i]] \textless{}{-} ggplot2::ggplot(data.frame(sample = methodData[, }
+\DocumentationTok{\#\#     1]), ggplot2::aes(sample = sample)) + ggplot2::stat\_qq(na.rm = TRUE) + }
+\DocumentationTok{\#\#     ggplot2::stat\_qq\_line(na.rm = TRUE)}
+\DocumentationTok{\#\# [Step 5/5] Plots successfully generated}
+\DocumentationTok{\#\# All done! Results are stored in: /tmp/RtmpYmdhWE/sumExpRun, processing time was 0.2 minutes}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{retention-time-normalization}{%
+\section{Retention time normalization}\label{retention-time-normalization}}
+
+Retention time based normalization can be performed with an arbitrary normalization matrix.
+
+\hypertarget{basic-usage}{%
+\subsection{Basic usage}\label{basic-usage}}
+
+There are two points of access for the higher order normalization. Either by calling \texttt{getRTNormalizedMatrix} which applies the target normalization approach stepwise over the matrix based on retention times, or by calling \texttt{getSmoothedRTNormalizedMatrix} which generates multiple layered matrices and combines them. To use them you need your raw data loaded into a matrix, a list containing retention times and a normalization matrix able to take a raw matrix and return a normalized in similar format.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{fullDf }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(dataFp, }\AttributeTok{sep=}\StringTok{"}\SpecialCharTok{\textbackslash{}t}\StringTok{"}\NormalTok{)}
+\NormalTok{designDf }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(designFp, }\AttributeTok{sep=}\StringTok{"}\SpecialCharTok{\textbackslash{}t}\StringTok{"}\NormalTok{)}
+\FunctionTok{head}\NormalTok{(fullDf, }\DecValTok{1}\NormalTok{)}
+\DocumentationTok{\#\#      Cluster.ID Peptide.Sequence External.IDs Charge Average.RT Average.m.z}
+\DocumentationTok{\#\# 1 1493882053114       AAAAEINVKD       P38156      2   20.25051     501.268}
+\DocumentationTok{\#\#   s\_12500amol\_1 s\_12500amol\_2 s\_12500amol\_3 s\_125amol\_1 s\_125amol\_2 s\_125amol\_3}
+\DocumentationTok{\#\# 1     115597000     109302000     100314000    98182352    87241776    98702800}
+\FunctionTok{head}\NormalTok{(designDf, }\DecValTok{1}\NormalTok{)}
+\DocumentationTok{\#\#        sample group batch}
+\DocumentationTok{\#\# 1 s\_125amol\_1     4     2}
+\end{Highlighting}
+\end{Shaded}
+
+At this point we have loaded the full data into dataframes. Next, we use the sample names present in the design matrix to extract sample columns from the raw data. Be careful that the sample names is a character vector. If it is a factor it will extract wrong columns.
+
+Make sure that sample names extracted from design matrix are in right format. We expect it to be in `character' format.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{sampleNames }\OtherTok{\textless{}{-}} \FunctionTok{as.character}\NormalTok{(designDf}\SpecialCharTok{$}\NormalTok{sample)}
+\FunctionTok{typeof}\NormalTok{(sampleNames)}
+\DocumentationTok{\#\# [1] "character"}
+\end{Highlighting}
+\end{Shaded}
+
+Now we are ready to extract the data matrix from the full matrix. We also need to get the retention time column from the full matrix.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{dataMat }\OtherTok{\textless{}{-}} \FunctionTok{as.matrix}\NormalTok{(fullDf[, sampleNames])}
+\NormalTok{retentionTimes }\OtherTok{\textless{}{-}}\NormalTok{ fullDf}\SpecialCharTok{$}\NormalTok{Average.RT}
+
+\FunctionTok{head}\NormalTok{(dataMat, }\DecValTok{1}\NormalTok{)}
+\DocumentationTok{\#\#      s\_125amol\_1 s\_125amol\_2 s\_125amol\_3 s\_12500amol\_1 s\_12500amol\_2}
+\DocumentationTok{\#\# [1,]    98182352    87241776    98702800     115597000     109302000}
+\DocumentationTok{\#\#      s\_12500amol\_3}
+\DocumentationTok{\#\# [1,]     100314000}
+\end{Highlighting}
+\end{Shaded}
+
+If everything is fine the data matrix should be \texttt{double}, and have the same number of rows as the number of retention time values we have.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{typeof}\NormalTok{(dataMat)}
+\DocumentationTok{\#\# [1] "double"}
+
+\FunctionTok{print}\NormalTok{(}\StringTok{"Rows and columns of data"}\NormalTok{)}
+\DocumentationTok{\#\# [1] "Rows and columns of data"}
+\FunctionTok{dim}\NormalTok{(dataMat)}
+\DocumentationTok{\#\# [1] 100   6}
+
+\FunctionTok{print}\NormalTok{(}\StringTok{"Number of retention times"}\NormalTok{)}
+\DocumentationTok{\#\# [1] "Number of retention times"}
+\FunctionTok{length}\NormalTok{(retentionTimes)}
+\DocumentationTok{\#\# [1] 100}
+\end{Highlighting}
+\end{Shaded}
+
+The normalization function is expected to take a raw intensity matrix and return log transformed values. We borrow the wrapper function for Loess normalization from NormalyzerDE. It can be replaced with any custom function as long as the wrapper has the same input/output format.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{performCyclicLoessNormalization }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(rawMatrix) \{}
+\NormalTok{    log2Matrix }\OtherTok{\textless{}{-}} \FunctionTok{log2}\NormalTok{(rawMatrix)}
+\NormalTok{    normMatrix }\OtherTok{\textless{}{-}}\NormalTok{ limma}\SpecialCharTok{::}\FunctionTok{normalizeCyclicLoess}\NormalTok{(log2Matrix, }\AttributeTok{method=}\StringTok{"fast"}\NormalTok{)}
+    \FunctionTok{colnames}\NormalTok{(normMatrix) }\OtherTok{\textless{}{-}} \FunctionTok{colnames}\NormalTok{(rawMatrix)}
+\NormalTok{    normMatrix}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+We are ready to perform the normalization.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{rtNormMat }\OtherTok{\textless{}{-}} \FunctionTok{getRTNormalizedMatrix}\NormalTok{(dataMat, }
+\NormalTok{                                   retentionTimes, }
+\NormalTok{                                   performCyclicLoessNormalization, }
+                                   \AttributeTok{stepSizeMinutes=}\DecValTok{1}\NormalTok{, }
+                                   \AttributeTok{windowMinCount=}\DecValTok{100}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+Let's double check the results. We expect a matrix in the same format and shape as before. Furthermore, we expect similar but not the exact same values as if we'd applied the normalization globally.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{globalNormMat }\OtherTok{\textless{}{-}} \FunctionTok{performCyclicLoessNormalization}\NormalTok{(dataMat)}
+\FunctionTok{dim}\NormalTok{(rtNormMat)}
+\DocumentationTok{\#\# [1] 100   6}
+\FunctionTok{dim}\NormalTok{(globalNormMat)}
+\DocumentationTok{\#\# [1] 100   6}
+\FunctionTok{head}\NormalTok{(rtNormMat, }\DecValTok{1}\NormalTok{)}
+\DocumentationTok{\#\#  s\_125amol\_1 s\_125amol\_2 s\_125amol\_3 s\_12500amol\_1 s\_12500amol\_2 s\_12500amol\_3}
+\DocumentationTok{\#\#     26.54027    26.36017    26.57715       26.7771      26.70227      26.59205}
+\FunctionTok{head}\NormalTok{(globalNormMat, }\DecValTok{1}\NormalTok{)}
+\DocumentationTok{\#\#      s\_125amol\_1 s\_125amol\_2 s\_125amol\_3 s\_12500amol\_1 s\_12500amol\_2}
+\DocumentationTok{\#\# [1,]    26.54027    26.36017    26.57715       26.7771      26.70227}
+\DocumentationTok{\#\#      s\_12500amol\_3}
+\DocumentationTok{\#\# [1,]      26.59205}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{performing-layered-normalization}{%
+\subsection{Performing layered normalization}\label{performing-layered-normalization}}
+
+We have everything set up to perform the layered normalization. The result here is expected to be overall similar to the normal retention time approach.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{layeredRtNormMat }\OtherTok{\textless{}{-}} \FunctionTok{getSmoothedRTNormalizedMatrix}\NormalTok{(}
+\NormalTok{    dataMat, }
+\NormalTok{    retentionTimes, }
+\NormalTok{    performCyclicLoessNormalization, }
+    \AttributeTok{stepSizeMinutes=}\DecValTok{1}\NormalTok{, }
+    \AttributeTok{windowMinCount=}\DecValTok{100}\NormalTok{, }
+    \AttributeTok{windowShifts=}\DecValTok{3}\NormalTok{, }
+    \AttributeTok{mergeMethod=}\StringTok{"mean"}\NormalTok{)}
+
+\FunctionTok{dim}\NormalTok{(layeredRtNormMat)}
+\DocumentationTok{\#\# [1] 100   6}
+\FunctionTok{head}\NormalTok{(layeredRtNormMat, }\DecValTok{1}\NormalTok{)}
+\DocumentationTok{\#\#      s\_125amol\_1 s\_125amol\_2 s\_125amol\_3 s\_12500amol\_1 s\_12500amol\_2}
+\DocumentationTok{\#\# [1,]    26.54027    26.36017    26.57715       26.7771      26.70227}
+\DocumentationTok{\#\#      s\_12500amol\_3}
+\DocumentationTok{\#\# [1,]      26.59205}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{stepwise-processing-normalization-part}{%
+\section{Stepwise processing (normalization part)}\label{stepwise-processing-normalization-part}}
+
+NormalyzerDE consists of a set of steps. The workflow can be run as a whole, or step by step.
+
+\hypertarget{step-1-loading-data}{%
+\subsection{Step 1: Loading data}\label{step-1-loading-data}}
+
+This step performs input validation of the data, and generates an object of the class NormalyzerDataset.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{jobName }\OtherTok{\textless{}{-}} \StringTok{"vignette\_run"}
+\NormalTok{experimentObj }\OtherTok{\textless{}{-}} \FunctionTok{setupRawDataObject}\NormalTok{(dataFp, designFp, }\StringTok{"default"}\NormalTok{, }\ConstantTok{TRUE}\NormalTok{, }\StringTok{"sample"}\NormalTok{, }\StringTok{"group"}\NormalTok{)}
+\NormalTok{normObj }\OtherTok{\textless{}{-}} \FunctionTok{getVerifiedNormalyzerObject}\NormalTok{(jobName, experimentObj)}
+\DocumentationTok{\#\# Input data checked. All fields are valid.}
+\DocumentationTok{\#\# Sample check: More than one sample group found}
+\DocumentationTok{\#\# Sample replication check: All samples have replicates}
+\DocumentationTok{\#\# RT annotation column found (5)}
+\end{Highlighting}
+\end{Shaded}
+
+The function \texttt{setupRawDataObject} returns a \texttt{SummarizedExperiment} object.
+This object can be prepared directly and should in that case contain the raw
+data as the default assay, the design matrix as \texttt{colData} and annotation rows
+as \texttt{rowData}.
+
+\hypertarget{step-2-generate-normalizations}{%
+\subsection{Step 2: Generate normalizations}\label{step-2-generate-normalizations}}
+
+Here, normalizations are performed. This generates a NormalyzerResults object containing both a reference to its original dataset object, but also generated normalization matrices.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{normResults }\OtherTok{\textless{}{-}} \FunctionTok{normMethods}\NormalTok{(normObj)}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{step-3-generate-performance-measures}{%
+\subsection{Step 3: Generate performance measures}\label{step-3-generate-performance-measures}}
+
+Performance measures are calculated for normalizations. These are stored in an object NormalizationEvaluationResults. A NormalyzerResults object similar to the one sent in is returned, but with this field added.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{normResultsWithEval }\OtherTok{\textless{}{-}} \FunctionTok{analyzeNormalizations}\NormalTok{(normResults)}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{step-4-output-matrices-to-file}{%
+\subsection{Step 4: Output matrices to file}\label{step-4-output-matrices-to-file}}
+
+Generated normalization matrices are written to the provided folder.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{jobDir }\OtherTok{\textless{}{-}} \FunctionTok{setupJobDir}\NormalTok{(}\StringTok{"vignette\_run"}\NormalTok{, }\FunctionTok{tempdir}\NormalTok{())}
+\FunctionTok{writeNormalizedDatasets}\NormalTok{(normResultsWithEval, jobDir)}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{step-5-generate-evaluation-plots}{%
+\subsection{Step 5: Generate evaluation plots}\label{step-5-generate-evaluation-plots}}
+
+Performance measures are used to generate evaluation figures which is written in an evaluation report.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{generatePlots}\NormalTok{(normResultsWithEval, jobDir)}
+\DocumentationTok{\#\# Called from: outputFunc(...)}
+\DocumentationTok{\#\# debug: qqlist[[i]] \textless{}{-} ggplot2::ggplot(data.frame(sample = methodData[, }
+\DocumentationTok{\#\#     1]), ggplot2::aes(sample = sample)) + ggplot2::stat\_qq(na.rm = TRUE) + }
+\DocumentationTok{\#\#     ggplot2::stat\_qq\_line(na.rm = TRUE)}
+\DocumentationTok{\#\# debug: methodData \textless{}{-} methodlist[[i]]}
+\DocumentationTok{\#\# debug: tempcolname \textless{}{-} colnames(methodData)}
+\DocumentationTok{\#\# debug: browser()}
+\DocumentationTok{\#\# debug: qqlist[[i]] \textless{}{-} ggplot2::ggplot(data.frame(sample = methodData[, }
+\DocumentationTok{\#\#     1]), ggplot2::aes(sample = sample)) + ggplot2::stat\_qq(na.rm = TRUE) + }
+\DocumentationTok{\#\#     ggplot2::stat\_qq\_line(na.rm = TRUE)}
+\DocumentationTok{\#\# debug: methodData \textless{}{-} methodlist[[i]]}
+\DocumentationTok{\#\# debug: tempcolname \textless{}{-} colnames(methodData)}
+\DocumentationTok{\#\# debug: browser()}
+\DocumentationTok{\#\# debug: qqlist[[i]] \textless{}{-} ggplot2::ggplot(data.frame(sample = methodData[, }
+\DocumentationTok{\#\#     1]), ggplot2::aes(sample = sample)) + ggplot2::stat\_qq(na.rm = TRUE) + }
+\DocumentationTok{\#\#     ggplot2::stat\_qq\_line(na.rm = TRUE)}
+\DocumentationTok{\#\# debug: methodData \textless{}{-} methodlist[[i]]}
+\DocumentationTok{\#\# debug: tempcolname \textless{}{-} colnames(methodData)}
+\DocumentationTok{\#\# debug: browser()}
+\DocumentationTok{\#\# debug: qqlist[[i]] \textless{}{-} ggplot2::ggplot(data.frame(sample = methodData[, }
+\DocumentationTok{\#\#     1]), ggplot2::aes(sample = sample)) + ggplot2::stat\_qq(na.rm = TRUE) + }
+\DocumentationTok{\#\#     ggplot2::stat\_qq\_line(na.rm = TRUE)}
+\DocumentationTok{\#\# debug: methodData \textless{}{-} methodlist[[i]]}
+\DocumentationTok{\#\# debug: tempcolname \textless{}{-} colnames(methodData)}
+\DocumentationTok{\#\# debug: browser()}
+\DocumentationTok{\#\# debug: qqlist[[i]] \textless{}{-} ggplot2::ggplot(data.frame(sample = methodData[, }
+\DocumentationTok{\#\#     1]), ggplot2::aes(sample = sample)) + ggplot2::stat\_qq(na.rm = TRUE) + }
+\DocumentationTok{\#\#     ggplot2::stat\_qq\_line(na.rm = TRUE)}
+\DocumentationTok{\#\# debug: methodData \textless{}{-} methodlist[[i]]}
+\DocumentationTok{\#\# debug: tempcolname \textless{}{-} colnames(methodData)}
+\DocumentationTok{\#\# debug: browser()}
+\DocumentationTok{\#\# debug: qqlist[[i]] \textless{}{-} ggplot2::ggplot(data.frame(sample = methodData[, }
+\DocumentationTok{\#\#     1]), ggplot2::aes(sample = sample)) + ggplot2::stat\_qq(na.rm = TRUE) + }
+\DocumentationTok{\#\#     ggplot2::stat\_qq\_line(na.rm = TRUE)}
+\DocumentationTok{\#\# debug: methodData \textless{}{-} methodlist[[i]]}
+\DocumentationTok{\#\# debug: tempcolname \textless{}{-} colnames(methodData)}
+\DocumentationTok{\#\# debug: browser()}
+\DocumentationTok{\#\# debug: qqlist[[i]] \textless{}{-} ggplot2::ggplot(data.frame(sample = methodData[, }
+\DocumentationTok{\#\#     1]), ggplot2::aes(sample = sample)) + ggplot2::stat\_qq(na.rm = TRUE) + }
+\DocumentationTok{\#\#     ggplot2::stat\_qq\_line(na.rm = TRUE)}
+\DocumentationTok{\#\# debug: methodData \textless{}{-} methodlist[[i]]}
+\DocumentationTok{\#\# debug: tempcolname \textless{}{-} colnames(methodData)}
+\DocumentationTok{\#\# debug: browser()}
+\DocumentationTok{\#\# debug: qqlist[[i]] \textless{}{-} ggplot2::ggplot(data.frame(sample = methodData[, }
+\DocumentationTok{\#\#     1]), ggplot2::aes(sample = sample)) + ggplot2::stat\_qq(na.rm = TRUE) + }
+\DocumentationTok{\#\#     ggplot2::stat\_qq\_line(na.rm = TRUE)}
+\DocumentationTok{\#\# debug: methodData \textless{}{-} methodlist[[i]]}
+\DocumentationTok{\#\# debug: tempcolname \textless{}{-} colnames(methodData)}
+\DocumentationTok{\#\# debug: browser()}
+\DocumentationTok{\#\# debug: qqlist[[i]] \textless{}{-} ggplot2::ggplot(data.frame(sample = methodData[, }
+\DocumentationTok{\#\#     1]), ggplot2::aes(sample = sample)) + ggplot2::stat\_qq(na.rm = TRUE) + }
+\DocumentationTok{\#\#     ggplot2::stat\_qq\_line(na.rm = TRUE)}
+\DocumentationTok{\#\# debug: methodData \textless{}{-} methodlist[[i]]}
+\DocumentationTok{\#\# debug: tempcolname \textless{}{-} colnames(methodData)}
+\DocumentationTok{\#\# debug: browser()}
+\DocumentationTok{\#\# debug: qqlist[[i]] \textless{}{-} ggplot2::ggplot(data.frame(sample = methodData[, }
+\DocumentationTok{\#\#     1]), ggplot2::aes(sample = sample)) + ggplot2::stat\_qq(na.rm = TRUE) + }
+\DocumentationTok{\#\#     ggplot2::stat\_qq\_line(na.rm = TRUE)}
+\DocumentationTok{\#\# debug: methodData \textless{}{-} methodlist[[i]]}
+\DocumentationTok{\#\# debug: tempcolname \textless{}{-} colnames(methodData)}
+\DocumentationTok{\#\# debug: browser()}
+\DocumentationTok{\#\# debug: qqlist[[i]] \textless{}{-} ggplot2::ggplot(data.frame(sample = methodData[, }
+\DocumentationTok{\#\#     1]), ggplot2::aes(sample = sample)) + ggplot2::stat\_qq(na.rm = TRUE) + }
+\DocumentationTok{\#\#     ggplot2::stat\_qq\_line(na.rm = TRUE)}
+\DocumentationTok{\#\# debug: methodData \textless{}{-} methodlist[[i]]}
+\DocumentationTok{\#\# debug: tempcolname \textless{}{-} colnames(methodData)}
+\DocumentationTok{\#\# debug: browser()}
+\DocumentationTok{\#\# debug: qqlist[[i]] \textless{}{-} ggplot2::ggplot(data.frame(sample = methodData[, }
+\DocumentationTok{\#\#     1]), ggplot2::aes(sample = sample)) + ggplot2::stat\_qq(na.rm = TRUE) + }
+\DocumentationTok{\#\#     ggplot2::stat\_qq\_line(na.rm = TRUE)}
+\DocumentationTok{\#\# pdf }
+\DocumentationTok{\#\#   2}
+\end{Highlighting}
+\end{Shaded}
+
+After this evaluation of normalizations and progression to statistics follows as described previously in this report.
+
+\hypertarget{stepwise-processing-differential-expression-analysis-part}{%
+\section{Stepwise processing (differential expression analysis part)}\label{stepwise-processing-differential-expression-analysis-part}}
+
+\hypertarget{step-1-setup-folders-and-data-matrices}{%
+\subsection{Step 1: Setup folders and data matrices}\label{step-1-setup-folders-and-data-matrices}}
+
+For continued processing you select the matrix containing the normalized data
+from the best performing normalization. The design matrix is the same as for
+the normalization step.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{bestNormMatPath }\OtherTok{\textless{}{-}} \FunctionTok{paste}\NormalTok{(jobDir, }\StringTok{"RT{-}Loess{-}normalized.txt"}\NormalTok{, }\AttributeTok{sep=}\StringTok{"/"}\NormalTok{)}
+\NormalTok{experimentObj }\OtherTok{\textless{}{-}} \FunctionTok{setupRawContrastObject}\NormalTok{(bestNormMatPath, designFp, }\StringTok{"sample"}\NormalTok{)}
+\NormalTok{nst }\OtherTok{\textless{}{-}} \FunctionTok{NormalyzerStatistics}\NormalTok{(experimentObj, }\AttributeTok{logTrans=}\ConstantTok{FALSE}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+Similarly as to for the normalization evaluation step the \texttt{experimentObj}
+above can be prepared directly as a \texttt{SummarizedExperiment} object.
+
+\hypertarget{step-2-calculate-statistics}{%
+\subsection{Step 2: Calculate statistics}\label{step-2-calculate-statistics}}
+
+Now we are ready to perform the contrasts. Contrasts are provided as a vector
+in the format \texttt{c("condA-condB", "condB-condC")}, where \texttt{condX} is the group levels.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{comparisons }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\StringTok{"4{-}5"}\NormalTok{)}
+\NormalTok{nst }\OtherTok{\textless{}{-}} \FunctionTok{calculateContrasts}\NormalTok{(nst, comparisons, }\AttributeTok{condCol=}\StringTok{"group"}\NormalTok{, }\AttributeTok{leastRepCount=}\DecValTok{2}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{step-3-generate-final-matrix-and-output}{%
+\subsection{Step 3: Generate final matrix and output}\label{step-3-generate-final-matrix-and-output}}
+
+Finally we generate a table containing the statistics results for each feature
+and write it to file together with an evaluation report containing P-value histograms
+for each comparison.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{annotDf }\OtherTok{\textless{}{-}} \FunctionTok{generateAnnotatedMatrix}\NormalTok{(nst)}
+\NormalTok{utils}\SpecialCharTok{::}\FunctionTok{write.table}\NormalTok{(annotDf, }\AttributeTok{file=}\FunctionTok{paste}\NormalTok{(jobDir, }\StringTok{"stat\_table.tsv"}\NormalTok{, }\AttributeTok{sep=}\StringTok{"/"}\NormalTok{))}
+\FunctionTok{generateStatsReport}\NormalTok{(nst, }\StringTok{"Vignette stats"}\NormalTok{, jobDir)}
+\DocumentationTok{\#\# pdf }
+\DocumentationTok{\#\#   2}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{code-organization}{%
+\section{Code organization}\label{code-organization}}
+
+NormalyzerDE consists of a number of scripts and classes. They are focused around
+two separate workflows. One is for normalizing and evaluating the normalizations. The
+second is for performing differential expression analysis. Classes are contained in scripts with the same name.
+
+Code organization:
+
+\begin{figure}
+\centering
+\includegraphics{180813_normalyzerde_schematics.png}
+\caption{NormalyzerDE schematics}
+\end{figure}
+
+The standard workflow for the normalization is the following:
+
+\begin{itemize}
+\tightlist
+\item
+  The \texttt{normalyzer} function in the \texttt{NormalyzerDE.R} script is called, starting the process.
+\item
+  If applicable (that is, input is in Proteois or MaxQuant format), the dataset is preprocessed into the standard format using code in \texttt{preparsers.R}.
+\item
+  The input is verified to capture standard errors early on using code in \texttt{inputVerification.R}. This results in an instance of the \texttt{NormalyzerDataset} class.
+\item
+  The data is normalized using several normalization methods present in \texttt{normMethods.R}. This yields an instance of \texttt{NormalyzerResults} which links to the original \texttt{NormalyzerDataset} instance and also contains all the resulting normalized datasets.
+\item
+  If specified (and if a column with retention time values is present) retention-time segmented approaches are performed by applying normalizations from \texttt{normMethods.R} over retention time using functions present in \texttt{higherOrderNormMethods.R}.
+\item
+  The results are analyzed using functions present in \texttt{analyzeResults.R}. This yields an instance of \texttt{NormalyzerEvaluationResults} containing the evaluation results. This instance is attached to the \texttt{NormalyzerResults} object.
+\item
+  The final results are sent to \texttt{outputUtils.R} where the normalizations are written to an output directory, and to \texttt{generatePlots.R} which contains visualizations for the performance measures. It also uses code in \texttt{printMeta.R} and \texttt{printPlots.R} to output the results in a desired format.
+\end{itemize}
+
+When a normalized matrix is selected the analysis proceeds to the statistical analysis.
+
+\begin{itemize}
+\tightlist
+\item
+  The \texttt{normalyzerde} function in the \texttt{NormalyzerDE.R} script is called starting the differential expression analysis pipeline.
+\item
+  An instance of \texttt{NormalyzerStatistics} is prepared containing the input data.
+\item
+  Code in the \texttt{calculateStatistics.R} script is used to calculate the statistical contrasts. The results are attached to the \texttt{NormalyzerStatistics} object.
+\item
+  The resulting statistics are used to generate a report and an annotated output matrix where key statistical measures are attached to the original matrix.
+\end{itemize}
+
+\hypertarget{used-packages}{%
+\section{Used packages}\label{used-packages}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{sessionInfo}\NormalTok{()}
+\DocumentationTok{\#\# R version 4.1.2 (2021{-}11{-}01)}
+\DocumentationTok{\#\# Platform: x86\_64{-}pc{-}linux{-}gnu (64{-}bit)}
+\DocumentationTok{\#\# Running under: Ubuntu 22.04.3 LTS}
+\DocumentationTok{\#\# }
+\DocumentationTok{\#\# Matrix products: default}
+\DocumentationTok{\#\# BLAS:   /usr/lib/x86\_64{-}linux{-}gnu/blas/libblas.so.3.10.0}
+\DocumentationTok{\#\# LAPACK: /usr/lib/x86\_64{-}linux{-}gnu/lapack/liblapack.so.3.10.0}
+\DocumentationTok{\#\# }
+\DocumentationTok{\#\# locale:}
+\DocumentationTok{\#\#  [1] LC\_CTYPE=en\_US.UTF{-}8       LC\_NUMERIC=C              }
+\DocumentationTok{\#\#  [3] LC\_TIME=sv\_SE.UTF{-}8        LC\_COLLATE=en\_US.UTF{-}8    }
+\DocumentationTok{\#\#  [5] LC\_MONETARY=sv\_SE.UTF{-}8    LC\_MESSAGES=en\_US.UTF{-}8   }
+\DocumentationTok{\#\#  [7] LC\_PAPER=sv\_SE.UTF{-}8       LC\_NAME=C                 }
+\DocumentationTok{\#\#  [9] LC\_ADDRESS=C               LC\_TELEPHONE=C            }
+\DocumentationTok{\#\# [11] LC\_MEASUREMENT=sv\_SE.UTF{-}8 LC\_IDENTIFICATION=C       }
+\DocumentationTok{\#\# }
+\DocumentationTok{\#\# attached base packages:}
+\DocumentationTok{\#\# [1] stats     graphics  grDevices utils     datasets  methods   base     }
+\DocumentationTok{\#\# }
+\DocumentationTok{\#\# other attached packages:}
+\DocumentationTok{\#\# [1] NormalyzerDE\_1.13.1 BiocStyle\_2.22.0   }
+\DocumentationTok{\#\# }
+\DocumentationTok{\#\# loaded via a namespace (and not attached):}
+\DocumentationTok{\#\#   [1] nlme\_3.1{-}155                bitops\_1.0{-}7               }
+\DocumentationTok{\#\#   [3] matrixStats\_1.0.0           GenomeInfoDb\_1.30.1        }
+\DocumentationTok{\#\#   [5] tools\_4.1.2                 backports\_1.4.1            }
+\DocumentationTok{\#\#   [7] utf8\_1.2.3                  R6\_2.5.1                   }
+\DocumentationTok{\#\#   [9] affyio\_1.64.0               rpart\_4.1.16               }
+\DocumentationTok{\#\#  [11] mgcv\_1.8{-}39                 Hmisc\_5.1{-}0                }
+\DocumentationTok{\#\#  [13] nortest\_1.0{-}4               BiocGenerics\_0.40.0        }
+\DocumentationTok{\#\#  [15] colorspace\_2.1{-}0            nnet\_7.3{-}17                }
+\DocumentationTok{\#\#  [17] raster\_3.6{-}23               withr\_2.5.0                }
+\DocumentationTok{\#\#  [19] sp\_2.0{-}0                    tidyselect\_1.2.0           }
+\DocumentationTok{\#\#  [21] gridExtra\_2.3               compiler\_4.1.2             }
+\DocumentationTok{\#\#  [23] preprocessCore\_1.56.0       cli\_3.6.1                  }
+\DocumentationTok{\#\#  [25] Biobase\_2.54.0              htmlTable\_2.4.1            }
+\DocumentationTok{\#\#  [27] DelayedArray\_0.20.0         sandwich\_3.0{-}2             }
+\DocumentationTok{\#\#  [29] labeling\_0.4.3              bookdown\_0.35              }
+\DocumentationTok{\#\#  [31] scales\_1.2.1                checkmate\_2.2.0            }
+\DocumentationTok{\#\#  [33] hexbin\_1.28.3               affy\_1.72.0                }
+\DocumentationTok{\#\#  [35] proxy\_0.4{-}27                RcmdrMisc\_2.9{-}0            }
+\DocumentationTok{\#\#  [37] stringr\_1.5.0               digest\_0.6.33              }
+\DocumentationTok{\#\#  [39] foreign\_0.8{-}82              rmarkdown\_2.24             }
+\DocumentationTok{\#\#  [41] XVector\_0.34.0              base64enc\_0.1{-}3            }
+\DocumentationTok{\#\#  [43] pkgconfig\_2.0.3             htmltools\_0.5.6            }
+\DocumentationTok{\#\#  [45] MatrixGenerics\_1.6.0        fastmap\_1.1.1              }
+\DocumentationTok{\#\#  [47] limma\_3.50.3                htmlwidgets\_1.6.2          }
+\DocumentationTok{\#\#  [49] rlang\_1.1.1                 readxl\_1.4.3               }
+\DocumentationTok{\#\#  [51] rstudioapi\_0.15.0           farver\_2.1.1               }
+\DocumentationTok{\#\#  [53] generics\_0.1.3              zoo\_1.8{-}12                 }
+\DocumentationTok{\#\#  [55] dplyr\_1.1.3                 car\_3.1{-}2                  }
+\DocumentationTok{\#\#  [57] RCurl\_1.98{-}1.12             magrittr\_2.0.3             }
+\DocumentationTok{\#\#  [59] GenomeInfoDbData\_1.2.7      Formula\_1.2{-}5              }
+\DocumentationTok{\#\#  [61] Matrix\_1.6{-}1                Rcpp\_1.0.11                }
+\DocumentationTok{\#\#  [63] munsell\_0.5.0               S4Vectors\_0.32.4           }
+\DocumentationTok{\#\#  [65] fansi\_1.0.4                 ape\_5.7{-}1                  }
+\DocumentationTok{\#\#  [67] abind\_1.4{-}5                 lifecycle\_1.0.3            }
+\DocumentationTok{\#\#  [69] terra\_1.7{-}39                vsn\_3.62.0                 }
+\DocumentationTok{\#\#  [71] stringi\_1.7.12              yaml\_2.3.7                 }
+\DocumentationTok{\#\#  [73] carData\_3.0{-}5               MASS\_7.3{-}55                }
+\DocumentationTok{\#\#  [75] SummarizedExperiment\_1.24.0 zlibbioc\_1.40.0            }
+\DocumentationTok{\#\#  [77] grid\_4.1.2                  parallel\_4.1.2             }
+\DocumentationTok{\#\#  [79] forcats\_1.0.0               lattice\_0.20{-}45            }
+\DocumentationTok{\#\#  [81] splines\_4.1.2               haven\_2.5.3                }
+\DocumentationTok{\#\#  [83] hms\_1.1.3                   knitr\_1.43                 }
+\DocumentationTok{\#\#  [85] pillar\_1.9.0                GenomicRanges\_1.46.1       }
+\DocumentationTok{\#\#  [87] codetools\_0.2{-}18            stats4\_4.1.2               }
+\DocumentationTok{\#\#  [89] glue\_1.6.2                  evaluate\_0.21              }
+\DocumentationTok{\#\#  [91] data.table\_1.14.8           BiocManager\_1.30.22        }
+\DocumentationTok{\#\#  [93] vctrs\_0.6.3                 cellranger\_1.1.0           }
+\DocumentationTok{\#\#  [95] gtable\_0.3.4                ggplot2\_3.4.3              }
+\DocumentationTok{\#\#  [97] xfun\_0.40                   e1071\_1.7{-}13               }
+\DocumentationTok{\#\#  [99] class\_7.3{-}20                tibble\_3.2.1               }
+\DocumentationTok{\#\# [101] IRanges\_2.28.0              cluster\_2.1.2}
+\end{Highlighting}
+\end{Shaded}
+
+
+
+\end{document}
