@@ -1,4 +1,4 @@
-CHANGES IN VERSION 1.19.5
+CHANGES IN VERSION 1.19.6
 ----------------------------------
 
 * Remove RCmdrMisc as dependency, resolving a fatal crash

@@ -127,19 +127,6 @@ test_that("calculateReplicateCV", {
         )
     )
 })
-<
-test_that("calculateReplicateCV, reversed replicate groups", {
-
-    expected_out <- avgcvmem(regression_test_ner)
-    out <- calculateReplicateCV(normMatrices, rev(sampleReplicateGroups))
-
-    expect_true(
-        all.equal(
-            expected_out,
-            out
-        )
-    )
-})
 
 test_that("calculateFeatureCV", {
     

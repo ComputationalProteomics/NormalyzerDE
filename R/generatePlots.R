@@ -698,7 +698,7 @@ plotCVvsIntensity <- function(nr, currentLayout, pageno) {
         for (i in seq_len(nrow(log2Mat))) {
             
             tempcv <- stats::sd(log2Mat[i, ], na.rm=TRUE) / mean(log2Mat[i, ], na.rm=TRUE)
-            tempavg <- mean(filterrawdata[i, ])
+            tempavg <- mean(filterrawdata[i, ], na.rm=TRUE)
             
             tempcvmat1[i, j] <- 100 * tempcv
             tempavgmat1[i, j] <- tempavg 
@@ -848,7 +848,8 @@ plotQQ <- function(nr, currentLayout, pageno) {
             data.frame(sample=methodData[, 1]), 
             ggplot2::aes(sample=sample)) + 
             ggplot2::stat_qq(na.rm=TRUE) + 
-            ggplot2::stat_qq_line(na.rm=TRUE)
+            ggplot2::stat_qq_line(na.rm=TRUE) +
+            ggplot2::labs(x="", y="", title=methodnames[i])
     }
     
     grid::grid.newpage()
