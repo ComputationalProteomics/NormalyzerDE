@@ -41,7 +41,7 @@ calculateReplicateCV <- function(methodList, sampleReplicateGroups) {
             unique(groups), 
             function(group) {
                 targetFeatures = feature[groups == group]
-                stats::sd(targetFeatures) / mean(targetFeatures) 
+                stats::sd(targetFeatures, na.rm=TRUE) / mean(targetFeatures, na.rm=TRUE) 
             }, 
             c(1)
         )
