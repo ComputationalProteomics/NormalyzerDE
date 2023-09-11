@@ -317,7 +317,7 @@ plotSampleMappingPage <- function(nr, currentFont, currentLayout, currentjob, pa
   condCounts <- table(groupCol)
   
   groupList <- lapply(
-    1:length(groupLevels), 
+    seq_len(length(groupLevels)), 
     function(lv, groups, groupCounts) { 
       list(groupNbr=lv, groupString=groups[[lv]], groupCount=groupCounts[[lv]]) 
     }, 
@@ -325,7 +325,7 @@ plotSampleMappingPage <- function(nr, currentFont, currentLayout, currentjob, pa
   
   groupStringsWHead <- c(list(list(groupNbr="Group nbr.", groupString="Design group", groupCount="Nbr. samples in cond."), list(groupNbr="", groupString="", groupCount="")), groupList)
 
-  lapply(1:length(groupStringsWHead), function(i, stringsToShow) {
+  lapply(seq_len(length(groupStringsWHead)), function(i, stringsToShow) {
     yPos <- 0.9-i*0.02
     xDelta <- 0.15
     grid::grid.text(stringsToShow[[i]]$groupNbr, x=0.01, y=yPos, hjust=0)
@@ -697,17 +697,11 @@ plotCVvsIntensity <- function(nr, currentLayout, pageno) {
 
         for (i in seq_len(nrow(log2Mat))) {
             
-            tempcv <- RcmdrMisc::numSummary(
-                log2Mat[i, ], 
-                statistics=c("cv")
-            )
-            tempavg <- RcmdrMisc::numSummary(
-                filterrawdata[i, ], 
-                statistics=c("mean")
-            )
+            tempcv <- stats::sd(log2Mat[i, ], na.rm=TRUE) / mean(log2Mat[i, ], na.rm=TRUE)
+            tempavg <- mean(filterrawdata[i, ], na.rm=TRUE)
             
-            tempcvmat1[i, j] <- 100 * tempcv$table
-            tempavgmat1[i, j] <- tempavg$table 
+            tempcvmat1[i, j] <- 100 * tempcv
+            tempavgmat1[i, j] <- tempavg 
         }
         
         if (maxtempcv < max(tempcvmat1, na.rm=TRUE)) {
@@ -774,7 +768,7 @@ plotMA <- function(nr, currentLayout, pageno) {
                           y=("Replicate-1 Fold Change"),
                           title=methodNames[i]) + 
             ggplot2::stat_smooth(method="loess", se=FALSE, colour="red", na.rm=TRUE, formula='y ~ x') + 
-            ggplot2::geom_abline(intercept=0, slope=0, size=0.3)
+            ggplot2::geom_abline(intercept=0, slope=0, linewidth=0.3)
     } 
     
     grid::grid.newpage()
@@ -850,7 +844,11 @@ plotQQ <- function(nr, currentLayout, pageno) {
     for (i in seq_along(methodlist)) {  
         methodData <- methodlist[[i]]
         tempcolname <- colnames(methodData)
-        qqlist[[i]] <- ggplot2::qplot(sample=methodData[, 1], na.rm=TRUE) + 
+        qqlist[[i]] <- ggplot2::ggplot(
+            data.frame(sample=methodData[, 1]), 
+            ggplot2::aes(sample=sample)) + 
+            ggplot2::stat_qq(na.rm=TRUE) + 
+            ggplot2::stat_qq_line(na.rm=TRUE) +
             ggplot2::labs(x="", y="", title=methodnames[i])
     }
     

@@ -7,7 +7,10 @@ abstract: >
     Furthermore, NormalyzerDE provides means to easily perform differential expression statistics using either the empirical Bayes Limma approach or ANOVA. Evaluation visualizations are available for both normalization performance measures and as P-value histograms for the subsequent differential expression analysis comparisons. 
     NormalyzerDE package version: `r packageVersion("NormalyzerDE")`
 output: 
-  BiocStyle::pdf_document
+  rmarkdown::html_document:
+    highlight: pygments
+    toc: true
+    fig_width: 5
 vignette: >
   %\VignetteIndexEntry{Differential expression and countering technical biases using NormalyzerDE}
   %\VignetteEngine{knitr::rmarkdown}

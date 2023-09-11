@@ -58,8 +58,7 @@
 #' 
 #' @return None
 #' @export
-#' @import MASS limma preprocessCore methods RcmdrMisc
-#' @importFrom raster cv
+#' @import MASS limma preprocessCore methods
 #' @examples
 #' \dontrun{
 #' data_path <- system.file(package="NormalyzerDE", "extdata", "tiny_data.tsv")
