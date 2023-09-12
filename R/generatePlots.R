@@ -697,17 +697,11 @@ plotCVvsIntensity <- function(nr, currentLayout, pageno) {
 
         for (i in seq_len(nrow(log2Mat))) {
             
-            tempcv <- RcmdrMisc::numSummary(
-                log2Mat[i, ], 
-                statistics=c("cv")
-            )
-            tempavg <- RcmdrMisc::numSummary(
-                filterrawdata[i, ], 
-                statistics=c("mean")
-            )
+            tempcv <- stats::sd(log2Mat[i, ], na.rm=TRUE) / mean(log2Mat[i, ], na.rm=TRUE)
+            tempavg <- mean(filterrawdata[i, ], na.rm=TRUE)
             
-            tempcvmat1[i, j] <- 100 * tempcv$table
-            tempavgmat1[i, j] <- tempavg$table 
+            tempcvmat1[i, j] <- 100 * tempcv
+            tempavgmat1[i, j] <- tempavg 
         }
         
         if (maxtempcv < max(tempcvmat1, na.rm=TRUE)) {
