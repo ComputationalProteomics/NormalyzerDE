@@ -16,7 +16,7 @@
 #' normResults <- normMethods(normObj)
 #' normResultsWithEval <- analyzeNormalizations(normResults)
 analyzeNormalizations <- function(nr, categoricalAnova=FALSE) {
-
+    
     ner <- NormalyzerEvaluationResults(nr)
     ner(nr) <- ner
     
@@ -36,16 +36,12 @@ analyzeNormalizations <- function(nr, categoricalAnova=FALSE) {
 calculateReplicateCV <- function(methodList, sampleReplicateGroups) {
     
     calculateFeatureCVs <- function(feature, groups) {
-
-        featureCVs <- vapply(
-            unique(groups), 
-            function(group) {
-                targetFeatures = feature[groups == group]
-                stats::sd(targetFeatures, na.rm=TRUE) / mean(targetFeatures, na.rm=TRUE) 
-            }, 
-            c(1)
-        )
-        featureCVs
+        featureCVs <- RcmdrMisc::numSummary(
+            feature,
+            statistics=c("cv"),
+            groups=groups)
+        
+        featureCVs$table
     }
     
     calculateMethodReplicateCVs <- function(methodData, groups) {
@@ -86,7 +82,7 @@ calculateReplicateCV <- function(methodList, sampleReplicateGroups) {
     if (length(unique(sampleReplicateGroups)) == 1) {
         avgCVPerNormAndReplicates <- t(as.matrix(avgCVPerNormAndReplicates))
     }
-
+    
     avgCVPerNormAndReplicates
 }
 
@@ -103,7 +99,7 @@ calculateFeatureCV <- function(methodList) {
     
     methodCount <- length(methodList)
     numberFeatures <- nrow(methodList[[1]])
-
+    
     calculateFeatureCVVector <- function(processedDataMatrix) {
         cv <- function(row) {
             stDev <- stats::sd(row, na.rm=TRUE)
@@ -119,7 +115,7 @@ calculateFeatureCV <- function(methodList) {
         calculateFeatureCVVector,
         rep(0, numberFeatures)
     )
-
+    
     colnames(methodFeatureCVMatrix) <- names(methodList)
     methodFeatureCVMatrix
 }
@@ -134,15 +130,15 @@ calculateFeatureCV <- function(methodList) {
 calculateAvgMadMem <- function(methodList, sampleReplicateGroups) {
     
     groupIndexList <- getIndexList(sampleReplicateGroups)
-
+    
     calculateAvgFeatureMadForGroup <- function(groupIndices, methodData) {
         groupData <- methodData[, groupIndices]
         featureMAD <- matrixStats::rowMads(groupData, na.rm=TRUE)
         featureMAD
     }
-        
+    
     calculateGroupMadForMethod <- function(methodData, groups, indexList) {
-
+        
         # Extracts groups of replicates and calculate MAD for each feature
         featureMADMat <- vapply(
             indexList,
@@ -162,7 +158,7 @@ calculateAvgMadMem <- function(methodList, sampleReplicateGroups) {
         groups=sampleReplicateGroups,
         indexList=groupIndexList
     ) 
-
+    
     condAvgMadMat
 }
 
@@ -175,7 +171,7 @@ calculateAvgMadMem <- function(methodList, sampleReplicateGroups) {
 #' condition
 #' @keywords internal
 calculateAvgReplicateVariation <- function(methodList, sampleReplicateGroups) {
-
+    
     groupIndexList <- getIndexList(sampleReplicateGroups)
     
     calculateReplicateGroupVariance <- function(groupIndices, methodData) {
@@ -218,7 +214,7 @@ calculateAvgReplicateVariation <- function(methodList, sampleReplicateGroups) {
 #' approaches and rows corresponding to replicate group
 #' @keywords internal
 calculateSummarizedCorrelationVector <- function(
-    methodlist, allReplicateGroups, sampleGroupsWithReplicates, corrType) {
+        methodlist, allReplicateGroups, sampleGroupsWithReplicates, corrType) {
     
     validCorrTypes <- c("pearson", "spearman")
     if (!corrType %in% validCorrTypes) {
@@ -265,7 +261,7 @@ calculateCorrSum <- function(methodData, allReplicateGroups,
     
     corSums <- vector()
     for (groupNbr in seq_along(sampleGroupsWithReplicates)) {
-
+        
         specificReplicateVals <- as.matrix(
             methodData[, which(allReplicateGroups == sampleGroupsWithReplicates[groupNbr])])
         class(specificReplicateVals) <- "numeric"
@@ -273,7 +269,7 @@ calculateCorrSum <- function(methodData, allReplicateGroups,
             specificReplicateVals ,
             use="pairwise.complete.obs",
             method=corrType)
-
+        
         for (index in seq_len(ncol(specificReplicateVals) - 1)) {
             corSums <- c(
                 corSums,
@@ -281,7 +277,7 @@ calculateCorrSum <- function(methodData, allReplicateGroups,
             )
         }
     }
-
+    
     corSums
 }
 
@@ -301,7 +297,7 @@ calculateANOVAPValues <- function(methodList,
                                   categoricalANOVA) {
     
     calculateANOVAsForMethod <- function(methodData, sampleReplicateGroups) {
-
+        
         naFilterContrast <- getRowNAFilterContrast(
             methodData,
             sampleReplicateGroups,
@@ -323,7 +319,7 @@ calculateANOVAPValues <- function(methodList,
                 summary(stats::aov(unlist(sampleIndex)~testLevels))[[1]][[5]][1]
             } 
         )
-
+        
         anovaPValsWithNACol <- rep(NA, nrow(methodData))        
         anovaPValsWithNACol[naFilterContrast] <- anovaPValCol
         anovaPValsWithNACol
@@ -371,7 +367,7 @@ findLowlyVariableFeaturesCVs <- function(referenceFDR, methodList) {
     
     lowVarFeaturesAverageCVs <- vector()
     methodCount <- length(methodList)
-
+    
     calculateAverageCVs <- function(methodData, lowVarContrast) {
         
         lowVarFeatures <- methodData[lowVarContrast, ]
