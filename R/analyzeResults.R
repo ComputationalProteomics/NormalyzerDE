@@ -33,7 +33,6 @@ analyzeNormalizations <- function(nr, categoricalAnova=FALSE) {
 #' @return avgCVPerNormAndReplicates Matrix with group CVs as rows and
 #'   normalization technique as columns
 #' @keywords internal
-#' @export
 calculateReplicateCV <- function(methodList, sampleReplicateGroups) {
     
     calculateFeatureCVs <- function(feature, groups) {
@@ -100,7 +99,6 @@ calculateReplicateCV <- function(methodList, sampleReplicateGroups) {
 #' @return methodFeatureCVMatrix Matrix with feature as rows and normalization
 #'   method as columns
 #' @keywords internal
-#' @export
 calculateFeatureCV <- function(methodList) {
     
     methodCount <- length(methodList)
@@ -133,7 +131,6 @@ calculateFeatureCV <- function(methodList) {
 #' @param sampleReplicateGroups Condition header.
 #' @return condAvgMadMat Matrix with average MAD for each biological condition.
 #' @keywords internal
-#' @export
 calculateAvgMadMem <- function(methodList, sampleReplicateGroups) {
     
     groupIndexList <- getIndexList(sampleReplicateGroups)
@@ -177,7 +174,6 @@ calculateAvgMadMem <- function(methodList, sampleReplicateGroups) {
 #' @return avgVarianceMat Matrix with average variance for each biological
 #' condition
 #' @keywords internal
-#' @export
 calculateAvgReplicateVariation <- function(methodList, sampleReplicateGroups) {
 
     groupIndexList <- getIndexList(sampleReplicateGroups)
@@ -221,7 +217,6 @@ calculateAvgReplicateVariation <- function(methodList, sampleReplicateGroups) {
 #' @return avgCorSum Matrix with column corresponding to normalization
 #' approaches and rows corresponding to replicate group
 #' @keywords internal
-#' @export
 calculateSummarizedCorrelationVector <- function(
     methodlist, allReplicateGroups, sampleGroupsWithReplicates, corrType) {
     
@@ -265,7 +260,6 @@ calculateSummarizedCorrelationVector <- function(
 #' @param corrType Type of correlation (Pearson or Spearman)
 #' @return corSums
 #' @keywords internal
-#' @export
 calculateCorrSum <- function(methodData, allReplicateGroups, 
                              sampleGroupsWithReplicates, corrType) {
     
@@ -302,7 +296,6 @@ calculateCorrSum <- function(methodData, allReplicateGroups,
 #' @return avgVarianceMat Matrix with average variance for each biological
 #' condition
 #' @keywords internal
-#' @export
 calculateANOVAPValues <- function(methodList, 
                                   sampleReplicateGroups, 
                                   categoricalANOVA) {
