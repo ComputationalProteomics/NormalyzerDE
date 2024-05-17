@@ -936,7 +936,7 @@ plotRLE <- function(nr, currentLayout, pageno) {
     graphics::par(mar=c(2, 2, 2, 1), oma=c(3, 2, 3, 2), xpd=NA)
     
     for (i in seq_along(methodlist)) {
-        deviations = methodlist[[i]] - Biobase::rowMedians(methodlist[[i]], na.rm=TRUE)
+        deviations = methodlist[[i]] - matrixStats::rowMedians(methodlist[[i]], na.rm=TRUE)
         graphics::boxplot(
             deviations, 
             outcol="lightgray", 
