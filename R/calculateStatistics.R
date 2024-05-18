@@ -312,7 +312,7 @@ plotComparisonVenns <- function(nst, jobName, currentLayout, pageno,
                 ggplot2::theme_void() +
                 ggplot2::theme(legend.position = 'bottom', legend.direction='vertical') +
                 ggplot2::scale_fill_manual(values = c('cornflowerblue', 'firebrick',  'gold')) +
-                ggplot2::scale_colour_manual(values = c('cornflowerblue', 'firebrick', 'gold'), guide = FALSE) +
+                ggplot2::scale_colour_manual(values = c('cornflowerblue', 'firebrick', 'gold'), guide = "none") +
                 ggplot2::labs(fill = NULL) +
                 ggplot2::annotate("text", x = df.vdc$x, y = df.vdc$y, label = df.vdc$label, size = 5) +
                 ggplot2::ggtitle(paste0(sigThresType, " < ", sigThres, 
