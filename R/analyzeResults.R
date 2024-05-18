@@ -17,7 +17,7 @@
 #' normResultsWithEval <- analyzeNormalizations(normResults)
 analyzeNormalizations <- function(nr, categoricalAnova=FALSE) {
 
-    ner <- NormalyzerEvaluationResults(nr)
+    ner <- NormalyzerEvaluationResults(nr, categoricalAnova)
     ner(nr) <- ner
     
     nr

@@ -45,6 +45,7 @@ NormalyzerEvaluationResults <- setClass("NormalyzerEvaluationResults",
 #' Constructor for NormalyzerEvaluationResults
 #' 
 #' @param nr NormalyzerResults object
+#' @param categoricalAnova Should ANOVA be categorical or not
 #' @return nds Generated NormalyzerEvaluationResults instance
 #' @export
 #' @examples
@@ -52,7 +53,7 @@ NormalyzerEvaluationResults <- setClass("NormalyzerEvaluationResults",
 #' normObj <- getVerifiedNormalyzerObject("job_name", example_summarized_experiment)
 #' normResults <- normMethods(normObj)
 #' normEval <- NormalyzerEvaluationResults(normResults)
-NormalyzerEvaluationResults <- function (nr) {
+NormalyzerEvaluationResults <- function (nr, categoricalAnova=TRUE) {
 
                nds <- nds(nr)
                sampleReplicateGroups <- sampleReplicateGroups(nds) 
@@ -80,7 +81,7 @@ NormalyzerEvaluationResults <- function (nr) {
                    avgvarmempdiff <- calculatePercentageAvgDiffInMat(avgVarianceMat)
                    
                    # Significance measures
-                   anovaPValsWithNAMat <- calculateANOVAPValues(methodList, sampleReplicateGroups, categoricalANOVA=TRUE)
+                   anovaPValsWithNAMat <- calculateANOVAPValues(methodList, sampleReplicateGroups, categoricalANOVA=categoricalAnova)
                    validPValuesContrast <- !is.na(anovaPValsWithNAMat[, 1])
                    
                    log2AnovaFDR <- rep(NA, length(anovaPValsWithNAMat[, 1]))
