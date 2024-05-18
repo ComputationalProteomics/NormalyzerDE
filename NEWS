@@ -1,3 +1,9 @@
+CHANGES IN VERSION 1.23.1
+----------------------------------
+
+* Remove unnecessary dependency (Biobase) by calling rowMedians with matrixStats::rowMedians instead
+* Fix deprecation warning by using guide = "none" instead of FALSE
+
 CHANGES IN VERSION 1.19.7
 ----------------------------------
 
