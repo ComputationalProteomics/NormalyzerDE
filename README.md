@@ -1,6 +1,6 @@
-[![https://www.singularity-hub.org/static/img/hosted-singularity--hub-%23e32929.svg](https://www.singularity-hub.org/static/img/hosted-singularity--hub-%23e32929.svg)](https://singularity-hub.org/collections/820)
-
 # About
+
+An online server running NormalyzerDE can be accessed at the following link:
 
 http://quantitativeproteomics.org/normalyzerde
 
@@ -17,8 +17,7 @@ NormalyzerDE: Online tool for improved normalization of omics expression data an
 
 # Installation
 
-Currently, the easiest way is to install directly from GitHub. It is recommended that you use
-R version 3.5 or later as this makes it easier to install the Bioconductor dependencies properly
+NormalyzerDE can be installed from [Bioconductor](https://www.bioconductor.org/packages/release/bioc/html/NormalyzerDE.html), or directly from GitHub:
 
 ```
 install.packages("devtools")
