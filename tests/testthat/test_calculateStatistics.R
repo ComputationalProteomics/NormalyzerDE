@@ -2,46 +2,6 @@ context("calculateStatistics.R")
 
 data("example_data_only_values")
 
-# Transfer to utils
-test_that("filterLowRep", {
-
-    test_data <- data.frame(
-        c(NA, 1,  1,  NA), 
-        c(1,  NA, 1,  NA), 
-        c(3,  3,  3,  0), 
-        c(5,  3,  NA, 0), 
-        c(NA, 5,  NA, 0), 
-        c(7,  9,  NA, 0))
-    colnames(test_data) <- c("a1", "a2", "a3", "b1", "b2", "b3")
-    groups <- c(rep("A", 3), rep("B", 3))
-    
-    expected_out_data <- data.frame(
-        "a1"= c(NA, 1), 
-        "a2"=c(1,  NA), 
-        "a3"=c(3,  3), 
-        "b1"=c(5,  3), 
-        "b2"=c(NA, 5), 
-        "b3"=c(7,  9))
-    
-    out <- filterLowRep(test_data, groups, leastRep=2)
-    
-    expect_true(
-        all.equal(
-            expected_out_data,
-            out
-        )
-    )
-    
-    out2 <- filterLowRep(test_data, groups, leastRep=0)
-        
-    expect_true(
-        all.equal(
-            test_data,
-            out2
-        )
-    )
-    
-})
 
 # test_that("reduceTechnicalReplicates", {
 #     

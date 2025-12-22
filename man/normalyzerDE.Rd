@@ -18,6 +18,8 @@ normalyzerDE(
   batchCol = NULL,
   techRepCol = NULL,
   leastRepCount = 1,
+  impute = FALSE,
+  imputeMinFraction = 1,
   quiet = FALSE,
   sigThres = 0.1,
   sigThresType = "fdr",
@@ -59,6 +61,11 @@ variance in the model}
 replicates}
 
 \item{leastRepCount}{Minimum required replicate count}
+
+\item{impute}{Whether to impute values}
+
+\item{imputeMinFraction}{Minimum fraction non-NA values for an analyte in 
+any group to impute in other groups}
 
 \item{quiet}{Omit status messages printed during run}
 

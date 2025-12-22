@@ -184,8 +184,8 @@ calculatePercentageAvgDiffInMat <- function(targetMat) {
 #' @return collDesignDf Reduced design matrix
 #' @keywords internal
 filterLowRep <- function(df, groups, leastRep = 2) {
-    
-    allReplicatesHaveValuesContrast <- function(row, groups, minCount) {
+  
+    allReplicatesHaveValuesContrast <- function(row, groups, minCount, minVal) {
         names(row) <- groups
         repCounts <- table(names(stats::na.omit(row)))
         length(repCounts) == length(unique(groups)) && min(repCounts) >= minCount || minCount == 0
@@ -196,11 +196,51 @@ filterLowRep <- function(df, groups, leastRep = 2) {
         1,
         allReplicatesHaveValuesContrast, 
         groups = groups, 
-        minCount = leastRep)
+        minCount = leastRep,
+        minVal = minValue)
     
     filteredDf <- df[rowMeetThresContrast, ]
     filteredDf
 }
 
+#' Impute one value in groups with only NAs if any group has more than fraction non-NA values
+#' 
+#' @param df Dataframe with expression data
+#' @param groups Condition groups header
+#' @param minFraction Minimum fraction with values in one group before imputing low value in other groups
+#' @return imputedDf Imputed data frame
+#' @keywords internal
+imputeGroupValues <- function(df, groups, minFraction = 0.75) {
+  
+  minValue = min(df, na.rm = TRUE)
+  
+  imputeRow <- function(row, groups, minFraction, minVal) {
+    names(row) <- groups
+    repCounts <- table(names(stats::na.omit(row)))
+    totCounts <- table(names(row))
+    groups <- unique(names(row))
+    vals <- split(row, names(row))
+    rep2Counts <- sapply(vals, function(x) sum(!is.na(x)))
+    if (any(rep2Counts/totCounts>=minFraction) && 0 %in% rep2Counts){
+      for (i in 1:length(groups)){
+        if (rep2Counts[i] == 0){
+          row[names(row)==groups[i]][1] <- minValue
+        }
+      }
+    } 
+    return(row)
+  }
 
+  imputed <- apply(
+    df, 
+    1,
+    imputeRow, 
+    groups = groups, 
+    minFraction = minFraction,
+    minVal = minValue)
+  
+  imputedDf <- as.data.frame(t(imputed))
+  colnames(imputedDf) <- colnames(df)
+  return(imputedDf)
+}
 

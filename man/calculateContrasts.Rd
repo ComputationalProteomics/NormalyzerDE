@@ -17,7 +17,9 @@ calculateContrasts(
   batchCol = NULL,
   splitter = "-",
   type = "limma",
-  leastRepCount = 1
+  leastRepCount = 1,
+  impute = FALSE,
+  imputeMinFraction = 1
 )
 
 \S4method{calculateContrasts}{NormalyzerStatistics}(
@@ -27,7 +29,9 @@ calculateContrasts(
   batchCol = NULL,
   splitter = "-",
   type = "limma",
-  leastRepCount = 1
+  leastRepCount = 1,
+  impute = FALSE,
+  imputeMinFraction = 1
 )
 }
 \arguments{
@@ -45,6 +49,10 @@ calculateContrasts(
 
 \item{leastRepCount}{Least replicates in each group to be retained for 
 contrast calculations}
+
+\item{impute}{Whether to impute values}
+
+\item{imputeMinFraction}{Minimum fraction non-NA values for an analyte in any group to impute in other groups}
 }
 \value{
 nst Statistics object with statistical measures calculated

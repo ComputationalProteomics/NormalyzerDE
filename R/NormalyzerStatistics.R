@@ -197,6 +197,8 @@ setReplaceMethod("pairwiseCompsFold", signature(object="NormalyzerStatistics"),
 #' @param type Type of statistical test (Limma or welch).
 #' @param leastRepCount Least replicates in each group to be retained for 
 #'   contrast calculations
+#' @param impute Whether to impute values
+#' @param imputeMinFraction Minimum fraction non-NA values for an analyte in any group to impute in other groups
 #' @return nst Statistics object with statistical measures calculated
 #' @rdname calculateContrasts 
 #' @export
@@ -207,13 +209,13 @@ setReplaceMethod("pairwiseCompsFold", signature(object="NormalyzerStatistics"),
 #' resultsBatch <- calculateContrasts(nst, c("1-2", "2-3"), "group", batchCol="batch")
 setGeneric(name="calculateContrasts", 
            function(nst, comparisons, condCol, batchCol=NULL, splitter="-", 
-                    type="limma", leastRepCount=1) standardGeneric("calculateContrasts"))
+                    type="limma", leastRepCount=1, impute = FALSE, imputeMinFraction=1) standardGeneric("calculateContrasts"))
 
 #' @rdname calculateContrasts
 setMethod(f="calculateContrasts", 
           signature=c("NormalyzerStatistics"),
           function(nst, comparisons, condCol, batchCol=NULL, splitter="-", 
-                   type="limma", leastRepCount=1) {
+                   type="limma", leastRepCount=1, impute = FALSE, imputeMinFraction=1) {
               
               dataMat <- dataMat(nst)
               designDf <- designDf(nst)
@@ -236,7 +238,8 @@ setMethod(f="calculateContrasts",
                   conditionCombs, 
                   leastRep=leastRepCount
               )
-              
+
+                           
               if (nrow(dataMatNAFiltered) == 0) {
                   stop("No rows remained after NA-filtering for condition: '", 
                        condCol, 
@@ -247,7 +250,17 @@ setMethod(f="calculateContrasts",
                        )
               }
               
+             
               naFilterContrast <- rownames(dataMat) %in% rownames(dataMatNAFiltered)
+              
+              if (leastRepCount == 0 && impute) { 
+                dataMatNAFiltered <- imputeGroupValues(
+                  dataMatNAFiltered, 
+                  conditionCombs, 
+                  minFraction=imputeMinFraction
+                )
+              }
+              
               sampleReplicateGroupsStrings <- as.character(designDf(nst)[, condCol])
               statMeasures <- c("P", "FDR", "Ave", "Fold")
               

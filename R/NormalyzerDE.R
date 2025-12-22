@@ -240,6 +240,9 @@ normalyzer <- function(
 #' @param techRepCol Design matrix column header for column containing technical 
 #'   replicates
 #' @param leastRepCount Minimum required replicate count
+#' @param impute Whether to impute values
+#' @param imputeMinFraction Minimum fraction non-NA values for an analyte in 
+#'   any group to impute in other groups
 #' @param quiet Omit status messages printed during run
 #' 
 #' @param sigThres Significance threshold use for illustrating significant hits
@@ -267,7 +270,7 @@ normalyzer <- function(
 #' @export
 normalyzerDE <- function(jobName, comparisons, designPath=NULL, dataPath=NULL, experimentObj=NULL, 
                          outputDir=".", logTrans=FALSE, type="limma", sampleCol="sample", condCol="group", 
-                         batchCol=NULL, techRepCol=NULL, leastRepCount=1, quiet=FALSE, 
+                         batchCol=NULL, techRepCol=NULL, leastRepCount=1, impute=FALSE, imputeMinFraction=1, quiet=FALSE, 
                          sigThres=0.1, sigThresType="fdr", log2FoldThres=0, writeReportAsPngs=FALSE) {
 
     if (!quiet) message("You are running version ", utils::packageVersion("NormalyzerDE"), " of NormalyzerDE")
@@ -304,7 +307,7 @@ normalyzerDE <- function(jobName, comparisons, designPath=NULL, dataPath=NULL, e
     )
         
     if (!quiet) print("Calculating statistical contrasts...")
-    nst <- calculateContrasts(nst, comparisons, type=type, condCol=condCol, batchCol=batchCol, leastRepCount=leastRepCount)
+    nst <- calculateContrasts(nst, comparisons, type=type, condCol=condCol, batchCol=batchCol, leastRepCount=leastRepCount, impute=impute, imputeMinFraction=imputeMinFraction)
     if (!quiet) print("Contrast calculations done!")
     
     annotDf <- generateAnnotatedMatrix(nst)
