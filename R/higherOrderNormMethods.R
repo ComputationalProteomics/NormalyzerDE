@@ -50,17 +50,18 @@ getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod,
         )
     }
     
-    sortedRT <- sort(retentionTimes)
-    
+    sortedRetentionTimes <- sort(retentionTimes)
+
     startVal <- min(retentionTimes, na.rm=TRUE)
     endVal <- max(retentionTimes, na.rm=TRUE)
-    rowNumbers <- c()
 
     if (offset) {
         startVal <- startVal - stepSizeMinutes * offset
     }
     
-    processedRows <- matrix(, ncol=ncol(rawMatrix), nrow=0)
+    processedRowsList <- list()
+    rowNumbersList <- list()
+    sliceIndex <- 0
 
     for (windowStart in seq(startVal, endVal, stepSizeMinutes)) {
         
@@ -80,7 +81,8 @@ getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod,
                 windowStart, 
                 windowEnd, 
                 windowMinCount, 
-                retentionTimes
+                retentionTimes,
+                sortedRetentionTimes=sortedRetentionTimes
             )
             normalizationStartRT <- normalizationRange[1]
             normalizationEndRT <- normalizationRange[2]
@@ -106,18 +108,25 @@ getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod,
             indicesOfInterest <- which(
                 normalizationSliceIndices %in% targetSliceIndices
             )
-            normalizedTargetRows <- processedNormalizationRows[indicesOfInterest,]
-            # normalizedTargetRows <- processedNormalizationRows[indicesOfInterest,, drop=FALSE]
+            normalizedTargetRows <- processedNormalizationRows[indicesOfInterest,, drop=FALSE]
         }
         else {
             normalizedTargetRows <- processedNormalizationRows
         }
         
-        rowNumbers <- c(rowNumbers, targetSliceIndices)
-        processedRows <- rbind(processedRows, normalizedTargetRows)
+        sliceIndex <- sliceIndex + 1
+        rowNumbersList[[sliceIndex]] <- targetSliceIndices
+        processedRowsList[[sliceIndex]] <- normalizedTargetRows
     }
     
-    orderedProcessedRows <- processedRows[order(rowNumbers), ]
+    if (sliceIndex == 0) {
+        return(matrix(, ncol=ncol(rawMatrix), nrow=0))
+    }
+
+    rowNumbers <- unlist(rowNumbersList, use.names=FALSE)
+    processedRows <- do.call(rbind, processedRowsList)
+
+    orderedProcessedRows <- processedRows[order(rowNumbers), , drop=FALSE]
     orderedProcessedRows
 }
 
@@ -132,9 +141,14 @@ getRTNormalizedMatrix <- function(rawMatrix, retentionTimes, normMethod,
 #' @return Vector with start and end of new RT range
 #' @keywords internal
 getWidenedRTRange <- function(rtStart, rtEnd, minimumDatapoints, retentionTimes,
-                              allowTooWideData=FALSE) {
+                              sortedRetentionTimes=NULL, allowTooWideData=FALSE) {
     
-    sortedRts <- sort(retentionTimes)
+    sortedRts <- if (is.null(sortedRetentionTimes)) {
+        sort(retentionTimes)
+    }
+    else {
+        sortedRetentionTimes
+    }
     currentRTSlice <- sortedRts[sortedRts >= rtStart & sortedRts < rtEnd] 
     
     if (length(currentRTSlice) == 0) {
@@ -285,21 +299,52 @@ getSmoothedRTNormalizedMatrix <- function(
 getCombinedMatrix <- function(mList, combFunc) {
     
     matrixCount <- length(mList)
+
+    if (matrixCount == 0) {
+        stop("Expected at least one matrix to merge")
+    }
+    if (matrixCount == 1) {
+        return(mList[[1]])
+    }
+
     rows <- nrow(mList[[1]])
     cols <- ncol(mList[[1]])
-    mLength <- rows * cols
-    combinedMatrix <- matrix(0, nrow=rows, ncol=cols)
-    
-    # Iterate over each element position
-    for (i in seq_len(mLength)) {
-        elemVals <- vapply(mList, function(mat) {mat[[i]]}, 0)
-        targetVal <- combFunc(elemVals)
-        combinedMatrix[i] <- targetVal
+
+    if (any(vapply(mList, function(mat) { !all(dim(mat) == c(rows, cols)) }, logical(1)))) {
+        stop("All matrices must have the same dimensions to merge")
     }
-    
+
+    if (identical(combFunc, mean)) {
+        combinedMatrix <- Reduce("+", mList) / matrixCount
+        colnames(combinedMatrix) <- colnames(mList[[1]])
+        return(combinedMatrix)
+    }
+
+    isMedian <- identical(combFunc, stats::median) || identical(combFunc, median)
+    if (!isMedian) {
+        stop("Unknown merge function. Only mean and median are supported.")
+    }
+
+    if (matrixCount == 2) {
+        combinedMatrix <- (mList[[1]] + mList[[2]]) / 2
+        colnames(combinedMatrix) <- colnames(mList[[1]])
+        return(combinedMatrix)
+    }
+
+    if (matrixCount == 3) {
+        m1 <- mList[[1]]
+        m2 <- mList[[2]]
+        m3 <- mList[[3]]
+        combinedMatrix <- m1 + m2 + m3 - pmin(m1, m2, m3) - pmax(m1, m2, m3)
+        colnames(combinedMatrix) <- colnames(mList[[1]])
+        return(combinedMatrix)
+    }
+
+    stackedValues <- do.call(cbind, lapply(mList, as.vector))
+    medians <- matrixStats::rowMedians(stackedValues, na.rm=FALSE)
+
+    combinedMatrix <- matrix(medians, nrow=rows, ncol=cols)
     colnames(combinedMatrix) <- colnames(mList[[1]])
     combinedMatrix
 }
-
-
 

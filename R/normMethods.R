@@ -61,12 +61,7 @@ globalIntensityNormalization <- function(rawMatrix, noLogTransform=FALSE) {
         
     colSums <- colSums(rawMatrix, na.rm=TRUE)
     colSumsMedian <- stats::median(colSums)
-    normMatrix <- matrix(nrow=nrow(rawMatrix), ncol=ncol(rawMatrix), byrow=TRUE)
-    normFunc <- function(colIndex) { (rawMatrix[rowIndex, colIndex] / colSums[colIndex]) * colSumsMedian }
-    
-    for (rowIndex in seq_len(nrow(rawMatrix))) {
-        normMatrix[rowIndex, ] <- vapply(seq_len(ncol(rawMatrix)), normFunc, 0)
-    }
+    normMatrix <- sweep(rawMatrix, 2, colSums, "/") * colSumsMedian
     
     normLog2Matrix <- log2(normMatrix)
     colnames(normLog2Matrix) <- colnames(rawMatrix)
@@ -86,21 +81,14 @@ globalIntensityNormalization <- function(rawMatrix, noLogTransform=FALSE) {
 #' data(example_data_only_values_small)
 #' normMatrix <- medianNormalization(example_data_only_values)
 medianNormalization <- function(rawMatrix, noLogTransform=FALSE) {
-
+    
     if (noLogTransform) {
         rawMatrix <- 2 ** rawMatrix
     }
     
     colMedians <- matrixStats::colMedians(rawMatrix, na.rm=TRUE)
     meanColMedian <- mean(colMedians, na.rm=TRUE)
-    normMatrix <- matrix(nrow=nrow(rawMatrix), ncol=ncol(rawMatrix), byrow=TRUE)
-    normFunc <- function(colIndex) { 
-        (rawMatrix[rowIndex, colIndex] / colMedians[colIndex]) * meanColMedian 
-    }
-    
-    for (rowIndex in seq_len(nrow(rawMatrix))) {
-        normMatrix[rowIndex, ] <- vapply(seq_len(ncol(rawMatrix)), normFunc, 0)
-    }
+    normMatrix <- sweep(rawMatrix, 2, colMedians, "/") * meanColMedian
     
     normLog2Matrix <- log2(normMatrix)
     colnames(normLog2Matrix) <- colnames(rawMatrix)
@@ -127,13 +115,7 @@ meanNormalization <- function(rawMatrix, noLogTransform=FALSE) {
     
     colMeans <- colMeans(rawMatrix, na.rm=TRUE)
     avgColMean <- mean(colMeans, na.rm=TRUE)
-    normMatrix <- matrix(nrow=nrow(rawMatrix), ncol=ncol(rawMatrix), byrow=TRUE)
-    
-    normFunc <- function(colIndex) { (rawMatrix[rowIndex, colIndex] / colMeans[colIndex]) * avgColMean }
-    
-    for (rowIndex in seq_len(nrow(rawMatrix))) {
-        normMatrix[rowIndex, ] <- vapply(seq_len(ncol(rawMatrix)), normFunc, 0)
-    }
+    normMatrix <- sweep(rawMatrix, 2, colMeans, "/") * avgColMean
     
     normLog2Matrix <- log2(normMatrix)
     colnames(normLog2Matrix) <- colnames(rawMatrix)
@@ -210,7 +192,8 @@ performSMADNormalization <- function(rawMatrix, noLogTransform=FALSE) {
     
     sampleLog2Median <- matrixStats::colMedians(log2Matrix, na.rm=TRUE)
     sampleMAD <- matrixStats::colMads(log2Matrix, na.rm=TRUE)
-    madMatrix <- t(apply(log2Matrix, 1, function(row) ((row - sampleLog2Median) / sampleMAD)))
+    madMatrix <- sweep(log2Matrix, 2, sampleLog2Median, FUN="-")
+    madMatrix <- sweep(madMatrix, 2, sampleMAD, FUN="/")
     
     madPlusMedianMatrix <- madMatrix + mean(sampleLog2Median)
     colnames(madPlusMedianMatrix) <- colnames(rawMatrix)
