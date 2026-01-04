@@ -12,32 +12,39 @@ condition levels that are to be calculated.}
 \usage{
 calculateContrasts(
   nst,
-  comparisons,
+  comparisons = NULL,
   condCol,
   batchCol = NULL,
   splitter = "-",
   type = "limma",
   leastRepCount = 1,
   impute = FALSE,
-  imputeMinFraction = 1
+  imputeMinFraction = 1,
+  subsetByComparison = FALSE,
+  oneVsRest = FALSE,
+  oneVsRestGroups = NULL
 )
 
 \S4method{calculateContrasts}{NormalyzerStatistics}(
   nst,
-  comparisons,
+  comparisons = NULL,
   condCol,
   batchCol = NULL,
   splitter = "-",
   type = "limma",
   leastRepCount = 1,
   impute = FALSE,
-  imputeMinFraction = 1
+  imputeMinFraction = 1,
+  subsetByComparison = FALSE,
+  oneVsRest = FALSE,
+  oneVsRestGroups = NULL
 )
 }
 \arguments{
 \item{nst}{Results evaluation object.}
 
-\item{comparisons}{String with comparisons for contrasts.}
+\item{comparisons}{Character vector with pairwise comparisons for contrasts.
+Ignored if \code{oneVsRest=TRUE}.}
 
 \item{condCol}{Column name in design matrix containing condition information.}
 
@@ -53,6 +60,15 @@ contrast calculations}
 \item{impute}{Whether to impute values}
 
 \item{imputeMinFraction}{Minimum fraction non-NA values for an analyte in any group to impute in other groups}
+
+\item{subsetByComparison}{If TRUE, subset data and design to each comparison
+before NA-filtering, imputation and model fitting.}
+
+\item{oneVsRest}{If TRUE, compute one-vs-rest contrasts for each group in
+\code{condCol} (or the subset in \code{oneVsRestGroups}).}
+
+\item{oneVsRestGroups}{Optional character vector specifying which groups in
+\code{condCol} to compare against all other samples.}
 }
 \value{
 nst Statistics object with statistical measures calculated
@@ -67,4 +83,5 @@ data(example_stat_summarized_experiment)
 nst <- NormalyzerStatistics(example_stat_summarized_experiment)
 results <- calculateContrasts(nst, c("1-2", "2-3"), "group")
 resultsBatch <- calculateContrasts(nst, c("1-2", "2-3"), "group", batchCol="batch")
+resultsOneVsRest <- calculateContrasts(nst, condCol="group", oneVsRest=TRUE)
 }

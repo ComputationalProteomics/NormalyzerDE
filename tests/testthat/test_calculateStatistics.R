@@ -275,5 +275,258 @@ test_that("calculateLimmaContrast_data_batch_test", {
     expect_true(all.equal(expected_ave, round(out[["Ave"]], 5)))
 })
 
+test_that("calculateContrasts_impute", {
+    
+    test_data <- matrix(
+        c(
+            10, 12, 11, 9, NA, NA, NA, NA,
+            5, NA, 4, NA, NA, NA, NA, NA,
+            0, 0, 0, 0, 0, 0, 0, 0
+        ),
+        nrow=3,
+        byrow=TRUE
+    )
+    colnames(test_data) <- c("A1", "A2", "A3", "A4", "B1", "B2", "B3", "B4")
+    
+    test_df <- data.frame(
+        sample=colnames(test_data),
+        group=c(rep("A", 4), rep("B", 4))
+    )
+    rownames(test_df) <- test_df$sample
+    
+    se <- SummarizedExperiment::SummarizedExperiment(
+        assay=test_data,
+        colData=test_df,
+        rowData=data.frame(annot=paste0("Pep", seq_len(3)))
+    )
+    
+    nst_no_impute <- NormalyzerStatistics(se)
+    out_no_impute <- suppressWarnings(
+        calculateContrasts(
+            nst_no_impute,
+            comparisons=c("A-B"),
+            condCol="group",
+            leastRepCount=0,
+            impute=FALSE
+        )
+    )
+    fold_no_impute <- pairwiseCompsFold(out_no_impute)[["A-B"]]
+    
+    expect_true(is.na(fold_no_impute[1]))
+    expect_true(is.na(fold_no_impute[2]))
+    expect_true(all.equal(0, round(fold_no_impute[3], 5)))
+    
+    nst_impute1 <- NormalyzerStatistics(se)
+    out_impute1 <- suppressWarnings(
+        calculateContrasts(
+            nst_impute1,
+            comparisons=c("A-B"),
+            condCol="group",
+            leastRepCount=0,
+            impute=TRUE,
+            imputeMinFraction=1
+        )
+    )
+    fold_impute1 <- pairwiseCompsFold(out_impute1)[["A-B"]]
+    
+    expect_true(all.equal(10.5, round(fold_impute1[1], 5)))
+    expect_true(is.na(fold_impute1[2]))
+    expect_true(all.equal(0, round(fold_impute1[3], 5)))
+    
+    nst_impute05 <- NormalyzerStatistics(se)
+    out_impute05 <- suppressWarnings(
+        calculateContrasts(
+            nst_impute05,
+            comparisons=c("A-B"),
+            condCol="group",
+            leastRepCount=0,
+            impute=TRUE,
+            imputeMinFraction=0.5
+        )
+    )
+    fold_impute05 <- pairwiseCompsFold(out_impute05)[["A-B"]]
+    
+    expect_true(all.equal(10.5, round(fold_impute05[1], 5)))
+    expect_true(all.equal(4.5, round(fold_impute05[2], 5)))
+    expect_true(all.equal(0, round(fold_impute05[3], 5)))
+})
 
+test_that("calculateContrasts_subsetByComparison_impute_scope", {
+    
+    test_data <- matrix(
+        c(
+            10, 11,
+            NA, NA,
+            NA, NA
+        ),
+        nrow=1,
+        byrow=TRUE
+    )
+    colnames(test_data) <- c("A1", "A2", "B1", "B2", "C1", "C2")
+    
+    test_df <- data.frame(
+        sample=colnames(test_data),
+        group=c(rep("A", 2), rep("B", 2), rep("C", 2))
+    )
+    rownames(test_df) <- test_df$sample
+    
+    se <- SummarizedExperiment::SummarizedExperiment(
+        assay=test_data,
+        colData=test_df,
+        rowData=data.frame(annot="Pep1")
+    )
+    
+    nst_global <- NormalyzerStatistics(se)
+    out_global <- calculateContrasts(
+        nst_global,
+        comparisons=c("A-B", "B-C"),
+        condCol="group",
+        type="welch",
+        leastRepCount=0,
+        impute=TRUE,
+        imputeMinFraction=1,
+        subsetByComparison=FALSE
+    )
+    globalFolds <- pairwiseCompsFold(out_global)
+    
+    expect_true(all.equal(0.5, round(globalFolds[["A-B"]][1], 5)))
+    expect_true(all.equal(0, round(globalFolds[["B-C"]][1], 5)))
+    
+    nst_subset <- NormalyzerStatistics(se)
+    out_subset <- calculateContrasts(
+        nst_subset,
+        comparisons=c("A-B", "B-C"),
+        condCol="group",
+        type="welch",
+        leastRepCount=0,
+        impute=TRUE,
+        imputeMinFraction=1,
+        subsetByComparison=TRUE
+    )
+    subsetFolds <- pairwiseCompsFold(out_subset)
+    
+    expect_true(all.equal(0.5, round(subsetFolds[["A-B"]][1], 5)))
+    expect_true(is.na(subsetFolds[["B-C"]][1]))
+})
 
+test_that("calculateContrasts_oneVsRest_welch", {
+    
+    test_data <- matrix(
+        c(
+            1, 1, 2, 2, 3, 3,
+            0, 1, 0, 1, 1, 2
+        ),
+        nrow=2,
+        byrow=TRUE
+    )
+    colnames(test_data) <- c("A1", "A2", "B1", "B2", "C1", "C2")
+    
+    test_df <- data.frame(
+        sample=colnames(test_data),
+        group=c(rep("A", 2), rep("B", 2), rep("C", 2))
+    )
+    rownames(test_df) <- test_df$sample
+    
+    se <- SummarizedExperiment::SummarizedExperiment(
+        assay=test_data,
+        colData=test_df,
+        rowData=data.frame(annot=paste0("Pep", seq_len(2)))
+    )
+    
+    nst <- NormalyzerStatistics(se)
+    out <- calculateContrasts(
+        nst,
+        condCol="group",
+        type="welch",
+        oneVsRest=TRUE
+    )
+    
+    folds <- pairwiseCompsFold(out)
+    expect_true(all(c("A-rest", "B-rest", "C-rest") %in% names(folds)))
+    
+    expect_true(all.equal(-1.5, round(folds[["A-rest"]][1], 5)))
+    expect_true(all.equal(0, round(folds[["B-rest"]][1], 5)))
+    expect_true(all.equal(1.5, round(folds[["C-rest"]][1], 5)))
+    
+    expect_true(all.equal(-0.5, round(folds[["A-rest"]][2], 5)))
+    expect_true(all.equal(-0.5, round(folds[["B-rest"]][2], 5)))
+    expect_true(all.equal(1, round(folds[["C-rest"]][2], 5)))
+})
+
+test_that("calculateContrasts_oneVsRestGroups", {
+
+    test_data <- matrix(
+        c(
+            1, 1, 2, 2, 3, 3
+        ),
+        nrow=1,
+        byrow=TRUE
+    )
+    colnames(test_data) <- c("A1", "A2", "B1", "B2", "C1", "C2")
+    
+    test_df <- data.frame(
+        sample=colnames(test_data),
+        group=c(rep("A", 2), rep("B", 2), rep("C", 2))
+    )
+    rownames(test_df) <- test_df$sample
+    
+    se <- SummarizedExperiment::SummarizedExperiment(
+        assay=test_data,
+        colData=test_df,
+        rowData=data.frame(annot="Pep1")
+    )
+    
+    nst <- NormalyzerStatistics(se)
+    out <- calculateContrasts(
+        nst,
+        condCol="group",
+        type="welch",
+        oneVsRest=TRUE,
+        oneVsRestGroups=c("B", "C")
+    )
+    
+    folds <- pairwiseCompsFold(out)
+    expect_true(all(c("B-rest", "C-rest") %in% names(folds)))
+    expect_true(!("A-rest" %in% names(folds)))
+})
+
+test_that("calculateContrasts_oneVsRest_impute_limma", {
+    
+    test_data <- matrix(
+        c(
+            NA, NA, 1, 1, 2, 2
+        ),
+        nrow=1,
+        byrow=TRUE
+    )
+    colnames(test_data) <- c("A1", "A2", "B1", "B2", "C1", "C2")
+    
+    test_df <- data.frame(
+        sample=colnames(test_data),
+        group=c(rep("A", 2), rep("B", 2), rep("C", 2))
+    )
+    rownames(test_df) <- test_df$sample
+    
+    se <- SummarizedExperiment::SummarizedExperiment(
+        assay=test_data,
+        colData=test_df,
+        rowData=data.frame(annot="Pep1")
+    )
+    
+    nst <- NormalyzerStatistics(se)
+    out <- suppressWarnings(
+        calculateContrasts(
+            nst,
+            condCol="group",
+            type="limma",
+            leastRepCount=0,
+            impute=TRUE,
+            imputeMinFraction=1,
+            oneVsRest=TRUE,
+            oneVsRestGroups=c("A")
+        )
+    )
+    
+    folds <- pairwiseCompsFold(out)
+    expect_true(all.equal(-0.5, round(folds[["A-rest"]][1], 5)))
+})

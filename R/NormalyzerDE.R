@@ -225,7 +225,8 @@ normalyzer <- function(
 #' @param experimentObj SummarizedExperiment object, can be provided as input
 #'  as alternative to 'designPath' and 'dataPath'
 #' @param comparisons Character vector containing target contrasts. 
-#'   If comparing condA with condB, then the vector would be c("condA-condB")
+#'   If comparing condA with condB, then the vector would be c("condA-condB").
+#'   Ignored if \code{oneVsRest=TRUE}.
 #' @param outputDir Path to output directory
 #' @param logTrans Log transform the input (needed if providing non-logged 
 #'   input)
@@ -243,6 +244,12 @@ normalyzer <- function(
 #' @param impute Whether to impute values
 #' @param imputeMinFraction Minimum fraction non-NA values for an analyte in 
 #'   any group to impute in other groups
+#' @param subsetByComparison If TRUE, subset data and design to each comparison
+#'   before NA-filtering, imputation and model fitting.
+#' @param oneVsRest If TRUE, compute one-vs-rest contrasts for each group in
+#'   \code{condCol} (or the subset in \code{oneVsRestGroups}).
+#' @param oneVsRestGroups Optional character vector specifying which groups in
+#'   \code{condCol} to compare against all other samples.
 #' @param quiet Omit status messages printed during run
 #' 
 #' @param sigThres Significance threshold use for illustrating significant hits
@@ -268,9 +275,9 @@ normalyzer <- function(
 #'   outputDir=out_dir,
 #'   condCol="group")
 #' @export
-normalyzerDE <- function(jobName, comparisons, designPath=NULL, dataPath=NULL, experimentObj=NULL, 
+normalyzerDE <- function(jobName, comparisons=NULL, designPath=NULL, dataPath=NULL, experimentObj=NULL, 
                          outputDir=".", logTrans=FALSE, type="limma", sampleCol="sample", condCol="group", 
-                         batchCol=NULL, techRepCol=NULL, leastRepCount=1, impute=FALSE, imputeMinFraction=1, quiet=FALSE, 
+                         batchCol=NULL, techRepCol=NULL, leastRepCount=1, impute=FALSE, imputeMinFraction=1, subsetByComparison=FALSE, oneVsRest=FALSE, oneVsRestGroups=NULL, quiet=FALSE, 
                          sigThres=0.1, sigThresType="fdr", log2FoldThres=0, writeReportAsPngs=FALSE) {
 
     if (!quiet) message("You are running version ", utils::packageVersion("NormalyzerDE"), " of NormalyzerDE")
@@ -279,7 +286,7 @@ normalyzerDE <- function(jobName, comparisons, designPath=NULL, dataPath=NULL, e
         stop("Either options 'designPath' plus 'dataPath' or 'summarizedExp' need to be provided")
     }
     
-    if (is.null(comparisons)) {
+    if (!oneVsRest && is.null(comparisons)) {
         stop("Argument 'comparisons' must be provided. Specify one or more comparisons as a vector.\n",
              "Example, one comparison between group 1 and 2: c('1-2')\n",
              "Example, two comparisons between groups 1 and 2, and groups 2 and 3: c('1-2', '2-3')")
@@ -307,7 +314,19 @@ normalyzerDE <- function(jobName, comparisons, designPath=NULL, dataPath=NULL, e
     )
         
     if (!quiet) print("Calculating statistical contrasts...")
-    nst <- calculateContrasts(nst, comparisons, type=type, condCol=condCol, batchCol=batchCol, leastRepCount=leastRepCount, impute=impute, imputeMinFraction=imputeMinFraction)
+    nst <- calculateContrasts(
+        nst,
+        comparisons,
+        type=type,
+        condCol=condCol,
+        batchCol=batchCol,
+        leastRepCount=leastRepCount,
+        impute=impute,
+        imputeMinFraction=imputeMinFraction,
+        subsetByComparison=subsetByComparison,
+        oneVsRest=oneVsRest,
+        oneVsRestGroups=oneVsRestGroups
+    )
     if (!quiet) print("Contrast calculations done!")
     
     annotDf <- generateAnnotatedMatrix(nst)
@@ -322,4 +341,3 @@ normalyzerDE <- function(jobName, comparisons, designPath=NULL, dataPath=NULL, e
     totTime <- difftime(endTime, startTime, units="mins")
     if (!quiet) print(paste0("All done! Results are stored in: ", jobDir, ", processing time was ", round(totTime, 1), " minutes"))
 }
-

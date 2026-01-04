@@ -6,7 +6,7 @@
 \usage{
 normalyzerDE(
   jobName,
-  comparisons,
+  comparisons = NULL,
   designPath = NULL,
   dataPath = NULL,
   experimentObj = NULL,
@@ -20,6 +20,9 @@ normalyzerDE(
   leastRepCount = 1,
   impute = FALSE,
   imputeMinFraction = 1,
+  subsetByComparison = FALSE,
+  oneVsRest = FALSE,
+  oneVsRestGroups = NULL,
   quiet = FALSE,
   sigThres = 0.1,
   sigThresType = "fdr",
@@ -31,7 +34,8 @@ normalyzerDE(
 \item{jobName}{Name of job}
 
 \item{comparisons}{Character vector containing target contrasts. 
-If comparing condA with condB, then the vector would be c("condA-condB")}
+If comparing condA with condB, then the vector would be c("condA-condB").
+Ignored if \code{oneVsRest=TRUE}.}
 
 \item{designPath}{File path to design matrix}
 
@@ -66,6 +70,15 @@ replicates}
 
 \item{imputeMinFraction}{Minimum fraction non-NA values for an analyte in 
 any group to impute in other groups}
+
+\item{subsetByComparison}{If TRUE, subset data and design to each comparison
+before NA-filtering, imputation and model fitting.}
+
+\item{oneVsRest}{If TRUE, compute one-vs-rest contrasts for each group in
+\code{condCol} (or the subset in \code{oneVsRestGroups}).}
+
+\item{oneVsRestGroups}{Optional character vector specifying which groups in
+\code{condCol} to compare against all other samples.}
 
 \item{quiet}{Omit status messages printed during run}
 

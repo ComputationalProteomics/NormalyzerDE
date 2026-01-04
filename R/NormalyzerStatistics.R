@@ -190,7 +190,8 @@ setReplaceMethod("pairwiseCompsFold", signature(object="NormalyzerStatistics"),
 #' with a Limma-based statistical analysis.
 #'
 #' @param nst Results evaluation object.
-#' @param comparisons String with comparisons for contrasts.
+#' @param comparisons Character vector with pairwise comparisons for contrasts.
+#'   Ignored if \code{oneVsRest=TRUE}.
 #' @param condCol Column name in design matrix containing condition information.
 #' @param batchCol Column name in design matrix containing batch information.
 #' @param splitter Character dividing contrast conditions.
@@ -199,6 +200,12 @@ setReplaceMethod("pairwiseCompsFold", signature(object="NormalyzerStatistics"),
 #'   contrast calculations
 #' @param impute Whether to impute values
 #' @param imputeMinFraction Minimum fraction non-NA values for an analyte in any group to impute in other groups
+#' @param subsetByComparison If TRUE, subset data and design to each comparison
+#'   before NA-filtering, imputation and model fitting.
+#' @param oneVsRest If TRUE, compute one-vs-rest contrasts for each group in
+#'   \code{condCol} (or the subset in \code{oneVsRestGroups}).
+#' @param oneVsRestGroups Optional character vector specifying which groups in
+#'   \code{condCol} to compare against all other samples.
 #' @return nst Statistics object with statistical measures calculated
 #' @rdname calculateContrasts 
 #' @export
@@ -207,20 +214,22 @@ setReplaceMethod("pairwiseCompsFold", signature(object="NormalyzerStatistics"),
 #' nst <- NormalyzerStatistics(example_stat_summarized_experiment)
 #' results <- calculateContrasts(nst, c("1-2", "2-3"), "group")
 #' resultsBatch <- calculateContrasts(nst, c("1-2", "2-3"), "group", batchCol="batch")
+#' resultsOneVsRest <- calculateContrasts(nst, condCol="group", oneVsRest=TRUE)
 setGeneric(name="calculateContrasts", 
-           function(nst, comparisons, condCol, batchCol=NULL, splitter="-", 
-                    type="limma", leastRepCount=1, impute = FALSE, imputeMinFraction=1) standardGeneric("calculateContrasts"))
+           function(nst, comparisons=NULL, condCol, batchCol=NULL, splitter="-", 
+                    type="limma", leastRepCount=1, impute = FALSE, imputeMinFraction=1,
+                    subsetByComparison = FALSE, oneVsRest = FALSE, oneVsRestGroups = NULL) standardGeneric("calculateContrasts"))
 
 #' @rdname calculateContrasts
 setMethod(f="calculateContrasts", 
           signature=c("NormalyzerStatistics"),
-          function(nst, comparisons, condCol, batchCol=NULL, splitter="-", 
-                   type="limma", leastRepCount=1, impute = FALSE, imputeMinFraction=1) {
+          function(nst, comparisons=NULL, condCol, batchCol=NULL, splitter="-", 
+                   type="limma", leastRepCount=1, impute = FALSE, imputeMinFraction=1,
+                   subsetByComparison = FALSE, oneVsRest = FALSE, oneVsRestGroups = NULL) {
               
               dataMat <- dataMat(nst)
               designDf <- designDf(nst)
 
-              comparisons(nst) <- comparisons
               condCol(nst) <- as.character(designDf[, condCol])
 
               if (!is.null(batchCol)) {
@@ -233,52 +242,181 @@ setMethod(f="calculateContrasts",
               }
               
               rownames(dataMat) <- seq_len(nrow(dataMat))
-              dataMatNAFiltered <- filterLowRep(
-                  dataMat, 
-                  conditionCombs, 
-                  leastRep=leastRepCount
-              )
 
-                           
-              if (nrow(dataMatNAFiltered) == 0) {
-                  stop("No rows remained after NA-filtering for condition: '", 
-                       condCol, 
-                       "' and batchCol: '", batchCol, "' (if empty then batchCol is not specified)\n",
-                       "Consider whether you can reduce the 'leastRepCount' setting which sets the lower limit ",
-                       "of number of NA values in each condition-level combination ",
-                       "You could also try running without batchCol and see if there is enough data per condition then"
-                       )
-              }
-              
-             
-              naFilterContrast <- rownames(dataMat) %in% rownames(dataMatNAFiltered)
-              
-              if (leastRepCount == 0 && impute) { 
-                dataMatNAFiltered <- imputeGroupValues(
-                  dataMatNAFiltered, 
-                  conditionCombs, 
-                  minFraction=imputeMinFraction
-                )
-              }
-              
-              sampleReplicateGroupsStrings <- as.character(designDf(nst)[, condCol])
+              sampleReplicateGroupsStrings <- as.character(designDf[, condCol])
               statMeasures <- c("P", "FDR", "Ave", "Fold")
-              
-              verifyContrasts(sampleReplicateGroupsStrings, comparisons)
-              
-              model <- setupModel(nst, condCol, batchCol=batchCol, type=type)
 
-              if (type %in% c("limma", "limma_intensity")) {
-                  limmaDesign <- stats::model.matrix(model)
-                  limmaFit <- limma::lmFit(dataMatNAFiltered, limmaDesign)
+              setupModelFromDesign <- function(designDf, condCol, batchCol=NULL, type="limma") {
+                  if (is.null(batchCol)) {
+                      Variable <- as.factor(designDf[, condCol])
+                      model <- ~0+Variable
+                  }
+                  else {
+                      if (!(type %in% c("limma", "limma_intensity"))) {
+                          stop(
+                              "Batch compensation only compatible with Limma, got: ", 
+                              type
+                          )
+                      }
+                      Variable <- as.factor(designDf[, condCol])
+                      Batch <- as.factor(designDf[, batchCol])
+                      model <- ~0+Variable+Batch
+                  }
+                  model
               }
-              
+
               compLists <- list()
               for (statMeasure in statMeasures) {
                   compLists[[statMeasure]] <- list()
               }
 
-              for (comp in comparisons) {
+              if (oneVsRest) {
+
+                  restLabel <- "rest"
+                  if (restLabel %in% sampleReplicateGroupsStrings) {
+                      stop("The label '", restLabel, "' is reserved for one-vs-rest mode, but is present in condCol '", condCol, "'.")
+                  }
+
+                  targetGroups <- if (is.null(oneVsRestGroups)) {
+                      unique(sampleReplicateGroupsStrings)
+                  } else {
+                      unique(as.character(oneVsRestGroups))
+                  }
+
+                  if (length(targetGroups) == 0) {
+                      stop("No groups specified for one-vs-rest comparisons.")
+                  }
+
+                  missingGroups <- setdiff(targetGroups, unique(sampleReplicateGroupsStrings))
+                  if (length(missingGroups) > 0) {
+                      stop(
+                          "Some groups in oneVsRestGroups were not found in condCol '",
+                          condCol,
+                          "': ",
+                          paste(missingGroups, collapse=", ")
+                      )
+                  }
+
+                  comparisonsGenerated <- paste(targetGroups, restLabel, sep=splitter)
+                  comparisons(nst) <- comparisonsGenerated
+
+                  for (groupLabel in targetGroups) {
+
+                      compName <- paste(groupLabel, restLabel, sep=splitter)
+                      groupHeader <- ifelse(sampleReplicateGroupsStrings %in% groupLabel, groupLabel, restLabel)
+
+                      designDfOVR <- designDf
+                      designDfOVR[, condCol] <- groupHeader
+
+                      conditionCombsOVR <- if (!is.null(batchCol)) {
+                          paste(groupHeader, designDfOVR[, batchCol], sep="_")
+                      } else {
+                          groupHeader
+                      }
+
+                      dataMatNAFiltered <- filterLowRep(
+                          dataMat, 
+                          conditionCombsOVR, 
+                          leastRep=leastRepCount
+                      )
+
+                      if (nrow(dataMatNAFiltered) == 0) {
+                          stop(
+                              "No rows remained after NA-filtering for one-vs-rest comparison: '",
+                              compName,
+                              "' (condCol: '", condCol,
+                              "', batchCol: '", batchCol,
+                              "' (if empty then batchCol is not specified))\n",
+                              "Consider whether you can reduce the 'leastRepCount' setting which sets the lower limit ",
+                              "of number of NA values in each condition-level combination"
+                          )
+                      }
+
+                      naFilterContrast <- rownames(dataMat) %in% rownames(dataMatNAFiltered)
+
+                      if (leastRepCount == 0 && impute) { 
+                          dataMatNAFiltered <- imputeGroupValues(
+                              dataMatNAFiltered, 
+                              conditionCombsOVR, 
+                              minFraction=imputeMinFraction
+                          )
+                      }
+
+                      if (type == "welch") {
+                          statResults <- calculateWelch(
+                              dataMatNAFiltered, 
+                              groupHeader, 
+                              c(groupLabel, restLabel)
+                          )
+                      }
+                      else if (type %in% c("limma", "limma_intensity")) {
+                          model <- setupModelFromDesign(designDfOVR, condCol, batchCol=batchCol, type=type)
+                          limmaDesign <- stats::model.matrix(model)
+                          limmaFit <- limma::lmFit(dataMatNAFiltered, limmaDesign)
+
+                          statResults <- calculateLimmaContrast(
+                              dataMatNAFiltered, 
+                              limmaDesign, 
+                              limmaFit, 
+                              c(groupLabel, restLabel), 
+                              useIntensityTrend = type == "limma_intensity"
+                          )
+                      }
+                      else {
+                          stop("Unknown statistics type: ", type)
+                      }
+
+                      for (statMeasure in statMeasures) {
+                          compLists[[statMeasure]][[compName]] <- c()
+                          compLists[[statMeasure]][[compName]][naFilterContrast] <- statResults[[statMeasure]]
+                      }
+                  }
+              }
+              else {
+                  if (is.null(comparisons)) {
+                      stop("Argument 'comparisons' must be provided unless oneVsRest=TRUE.")
+                  }
+
+                  comparisons <- as.character(comparisons)
+                  comparisons(nst) <- comparisons
+                  verifyContrasts(sampleReplicateGroupsStrings, comparisons)
+
+                  if (!subsetByComparison) {
+
+                  dataMatNAFiltered <- filterLowRep(
+                      dataMat, 
+                      conditionCombs, 
+                      leastRep=leastRepCount
+                  )
+
+                  if (nrow(dataMatNAFiltered) == 0) {
+                      stop("No rows remained after NA-filtering for condition: '", 
+                           condCol, 
+                           "' and batchCol: '", batchCol, "' (if empty then batchCol is not specified)\n",
+                           "Consider whether you can reduce the 'leastRepCount' setting which sets the lower limit ",
+                           "of number of NA values in each condition-level combination ",
+                           "You could also try running without batchCol and see if there is enough data per condition then"
+                           )
+                  }
+
+                  naFilterContrast <- rownames(dataMat) %in% rownames(dataMatNAFiltered)
+
+                  if (leastRepCount == 0 && impute) { 
+                      dataMatNAFiltered <- imputeGroupValues(
+                          dataMatNAFiltered, 
+                          conditionCombs, 
+                          minFraction=imputeMinFraction
+                      )
+                  }
+
+                  model <- setupModel(nst, condCol, batchCol=batchCol, type=type)
+
+                  if (type %in% c("limma", "limma_intensity")) {
+                      limmaDesign <- stats::model.matrix(model)
+                      limmaFit <- limma::lmFit(dataMatNAFiltered, limmaDesign)
+                  }
+
+                  for (comp in comparisons) {
                   
                   compSplit <- unlist(strsplit(comp, splitter))
                   
@@ -336,6 +474,92 @@ setMethod(f="calculateContrasts",
                       compLists[[statMeasure]][[comp]] <- c()
                       compLists[[statMeasure]][[comp]][naFilterContrast] <- statResults[[statMeasure]]
                   }
+
+                  }
+              }
+              else {
+                  for (comp in comparisons) {
+
+                      compSplit <- unlist(strsplit(comp, splitter))
+
+                      if (length(compSplit) != 2) {
+                          stop("Comparison should be in format cond1-cond2 ", 
+                               "here the split product was: ", 
+                               paste(compSplit, collapse=" "))
+                      }
+
+                      level1 <- compSplit[1]
+                      level2 <- compSplit[2]
+
+                      groupMatch <- sampleReplicateGroupsStrings %in% c(level1, level2)
+                      designDfComp <- designDf[groupMatch, , drop=FALSE]
+                      dataMatComp <- dataMat[, groupMatch, drop=FALSE]
+
+                      if (!is.null(batchCol)) {
+                          conditionCombsComp <- paste(designDfComp[, condCol], designDfComp[, batchCol], sep="_")
+                      }
+                      else {
+                          conditionCombsComp <- designDfComp[, condCol]
+                      }
+
+                      dataMatNAFiltered <- filterLowRep(
+                          dataMatComp, 
+                          conditionCombsComp, 
+                          leastRep=leastRepCount
+                      )
+
+                      if (nrow(dataMatNAFiltered) == 0) {
+                          stop(
+                              "No rows remained after NA-filtering for comparison: '", 
+                              comp,
+                              "' (condCol: '", condCol,
+                              "', batchCol: '", batchCol,
+                              "' (if empty then batchCol is not specified))\n",
+                              "Consider whether you can reduce the 'leastRepCount' setting which sets the lower limit ",
+                              "of number of NA values in each condition-level combination"
+                          )
+                      }
+
+                      naFilterContrast <- rownames(dataMat) %in% rownames(dataMatNAFiltered)
+
+                      if (leastRepCount == 0 && impute) { 
+                          dataMatNAFiltered <- imputeGroupValues(
+                              dataMatNAFiltered, 
+                              conditionCombsComp, 
+                              minFraction=imputeMinFraction
+                          )
+                      }
+
+                      if (type == "welch") {
+                          statResults <- calculateWelch(
+                              dataMatNAFiltered, 
+                              as.character(designDfComp[, condCol]), 
+                              c(level1, level2)
+                          )
+                      }
+                      else if (type %in% c("limma", "limma_intensity")) {
+                          model <- setupModelFromDesign(designDfComp, condCol, batchCol=batchCol, type=type)
+                          limmaDesign <- stats::model.matrix(model)
+                          limmaFit <- limma::lmFit(dataMatNAFiltered, limmaDesign)
+
+                          statResults <- calculateLimmaContrast(
+                              dataMatNAFiltered, 
+                              limmaDesign, 
+                              limmaFit, 
+                              c(level1, level2), 
+                              useIntensityTrend = type == "limma_intensity"
+                          )
+                      }
+                      else {
+                          stop("Unknown statistics type: ", type)
+                      }
+
+                      for (statMeasure in statMeasures) {
+                          compLists[[statMeasure]][[comp]] <- c()
+                          compLists[[statMeasure]][[comp]][naFilterContrast] <- statResults[[statMeasure]]
+                      }
+                  }
+              }
               }
               
               pairwiseCompsP(nst) <- compLists[["P"]]
@@ -423,7 +647,7 @@ calculateWelch <- function(dataMat, groupHeader, levels) {
     statResults[["P"]] <- welchPValCol
     statResults[["FDR"]] <- welchFDRCol
     statResults[["Ave"]] <- rowMeans(dataMat, na.rm=TRUE)
-    statResults[["Fold"]] <- rowMeans(dataMat[, s1cols], na.rm=TRUE) - rowMeans(dataMat[, s2cols], na.rm=TRUE)
+    statResults[["Fold"]] <- rowMeans(dataMat[, s1cols, drop=FALSE], na.rm=TRUE) - rowMeans(dataMat[, s2cols, drop=FALSE], na.rm=TRUE)
 
     statResults
 }
@@ -445,4 +669,3 @@ calculateLimmaContrast <- function(dataMat, limmaDesign, limmaFit, levels, useIn
     statResults[["Fold"]] <- limmaTable$logFC
     statResults
 }
-

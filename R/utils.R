@@ -185,7 +185,7 @@ calculatePercentageAvgDiffInMat <- function(targetMat) {
 #' @keywords internal
 filterLowRep <- function(df, groups, leastRep = 2) {
   
-    allReplicatesHaveValuesContrast <- function(row, groups, minCount, minVal) {
+    allReplicatesHaveValuesContrast <- function(row, groups, minCount) {
         names(row) <- groups
         repCounts <- table(names(stats::na.omit(row)))
         length(repCounts) == length(unique(groups)) && min(repCounts) >= minCount || minCount == 0
@@ -196,10 +196,9 @@ filterLowRep <- function(df, groups, leastRep = 2) {
         1,
         allReplicatesHaveValuesContrast, 
         groups = groups, 
-        minCount = leastRep,
-        minVal = minValue)
+        minCount = leastRep)
     
-    filteredDf <- df[rowMeetThresContrast, ]
+    filteredDf <- df[rowMeetThresContrast, , drop=FALSE]
     filteredDf
 }
 
@@ -212,35 +211,50 @@ filterLowRep <- function(df, groups, leastRep = 2) {
 #' @keywords internal
 imputeGroupValues <- function(df, groups, minFraction = 0.75) {
   
-  minValue = min(df, na.rm = TRUE)
+    if (!any(!is.na(df))) {
+        return(df)
+    }
+
+    minValue <- min(df, na.rm = TRUE)
+    groupIndices <- split(seq_along(groups), groups)
+    groupTotalCounts <- vapply(groupIndices, length, integer(1))
+    inputRowNames <- if (is.data.frame(df)) attr(df, "row.names") else rownames(df)
   
-  imputeRow <- function(row, groups, minFraction, minVal) {
-    names(row) <- groups
-    repCounts <- table(names(stats::na.omit(row)))
-    totCounts <- table(names(row))
-    groups <- unique(names(row))
-    vals <- split(row, names(row))
-    rep2Counts <- sapply(vals, function(x) sum(!is.na(x)))
-    if (any(rep2Counts/totCounts>=minFraction) && 0 %in% rep2Counts){
-      for (i in 1:length(groups)){
-        if (rep2Counts[i] == 0){
-          row[names(row)==groups[i]][1] <- minValue
+    imputeRow <- function(row, groupIndices, groupTotalCounts, minFraction, minVal) {
+        groupNonNaCounts <- vapply(
+            groupIndices,
+            function(indices) sum(!is.na(row[indices])),
+            integer(1)
+        )
+
+        if (any(groupNonNaCounts / groupTotalCounts >= minFraction) && any(groupNonNaCounts == 0)) {
+            missingGroups <- names(groupNonNaCounts)[groupNonNaCounts == 0]
+            for (groupLabel in missingGroups) {
+                row[groupIndices[[groupLabel]][1]] <- minVal
+            }
         }
-      }
-    } 
-    return(row)
-  }
 
-  imputed <- apply(
-    df, 
-    1,
-    imputeRow, 
-    groups = groups, 
-    minFraction = minFraction,
-    minVal = minValue)
-  
-  imputedDf <- as.data.frame(t(imputed))
-  colnames(imputedDf) <- colnames(df)
-  return(imputedDf)
+        row
+    }
+
+    imputed <- apply(
+        df, 
+        1,
+        imputeRow, 
+        groupIndices = groupIndices,
+        groupTotalCounts = groupTotalCounts,
+        minFraction = minFraction,
+        minVal = minValue
+    )
+
+    imputedMat <- t(imputed)
+    colnames(imputedMat) <- colnames(df)
+    if (!is.null(inputRowNames)) rownames(imputedMat) <- rownames(df)
+
+    if (is.data.frame(df)) {
+        imputedDf <- as.data.frame(imputedMat)
+        if (!is.null(inputRowNames)) attr(imputedDf, "row.names") <- inputRowNames
+        return(imputedDf)
+    }
+    imputedMat
 }
-

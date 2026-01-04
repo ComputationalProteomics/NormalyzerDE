@@ -162,3 +162,23 @@ test_that("imputeGroupValues", {
   )
   
 })
+
+test_that("imputeGroupValues_ungrouped_samples", {
+
+  test_data <- data.frame(
+    "s1"=c(NA),
+    "s2"=c(2),
+    "s3"=c(NA),
+    "s4"=c(3)
+  )
+  groups <- c("B", "A", "B", "A")
+
+  out <- imputeGroupValues(test_data, groups, minFraction=1)
+
+  expect_true(
+    all.equal(
+      out,
+      data.frame("s1"=c(2), "s2"=c(2), "s3"=c(NA_real_), "s4"=c(3))
+    )
+  )
+})
