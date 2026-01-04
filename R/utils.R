@@ -10,15 +10,33 @@
 #' setupJobDir("job_name", "path/to/outdir")
 setupJobDir <- function(jobName, outputDir) {
     
+    sanitizedJobName <- sanitizeJobName(jobName)
+
     if (is.null(outputDir)) {
-        jobDir <- paste(getwd(), "/", jobName[1], sep="")
+        jobDir <- file.path(getwd(), sanitizedJobName)
     }
     else {
-        jobDir <- paste(outputDir, "/", jobName[1], sep="")
+        jobDir <- file.path(outputDir, sanitizedJobName)
     }
     createDirectory(jobDir)
     
     jobDir
+}
+
+sanitizeJobName <- function(jobName) {
+    
+    if (length(jobName) < 1 || is.null(jobName) || is.na(jobName[1])) {
+        stop("Invalid jobName: must be a non-empty character value")
+    }
+    
+    sanitizedJobName <- gsub("[^[:alnum:]_-]", "_", as.character(jobName[1]))
+    sanitizedJobName <- basename(sanitizedJobName)
+    
+    if (!nzchar(sanitizedJobName)) {
+        stop("Invalid jobName: must contain at least one character after sanitization")
+    }
+    
+    sanitizedJobName
 }
 
 #' Get dataframe with raw data column sorted on replicates
@@ -31,18 +49,8 @@ getReplicateSortedData <- function(rawDataOnly, groups) {
 
     indexList <- getIndexList(groups)
     orderedIndices <- unlist(indexList[sort(names(indexList))])
-    
-    repSortDf <- vapply(
-        orderedIndices,
-        function(index) {
-            rawDataOnly[, index]
-        },
-        rawDataOnly[, 1]
-    )
-    
-    colnames(repSortDf) <- colnames(rawDataOnly)[orderedIndices]
-    
-    repSortDf
+
+    rawDataOnly[, orderedIndices, drop=FALSE]
 }
 
 #' Create directory, or return error if already present

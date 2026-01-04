@@ -182,3 +182,16 @@ test_that("imputeGroupValues_ungrouped_samples", {
     )
   )
 })
+
+test_that("setupJobDir sanitizes jobName", {
+  
+  parentDir <- tempfile()
+  dir.create(parentDir)
+  on.exit(unlink(parentDir, recursive = TRUE), add = TRUE)
+  
+  jobDir <- setupJobDir("../my job", parentDir)
+  
+  expect_true(startsWith(normalizePath(jobDir), normalizePath(parentDir)))
+  expect_false(grepl("[/\\\\]", basename(jobDir)))
+  expect_false(grepl("\\.\\.", basename(jobDir)))
+})

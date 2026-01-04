@@ -17,7 +17,7 @@ se <- SummarizedExperiment::SummarizedExperiment(
     colData=example_wide_design,
     rowData=adf
 )
-SummarizedExperiment::metadata(se) <- list(
+S4Vectors::metadata(se) <- list(
     sample="sample",
     group="group"
 )
@@ -257,6 +257,5 @@ test_that("calculatePercentageAvgDiffInMat_CV", {
         )
     )
 })
-
 
 

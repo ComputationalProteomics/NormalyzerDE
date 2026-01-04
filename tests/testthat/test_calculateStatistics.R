@@ -530,3 +530,114 @@ test_that("calculateContrasts_oneVsRest_impute_limma", {
     folds <- pairwiseCompsFold(out)
     expect_true(all.equal(-0.5, round(folds[["A-rest"]][1], 5)))
 })
+
+test_that("calculateContrasts_limma_allows_group_names_with_spaces", {
+    
+    test_data <- matrix(
+        c(
+            1, 1, 2, 2,
+            0, 1, 0, 1
+        ),
+        nrow=2,
+        byrow=TRUE
+    )
+    colnames(test_data) <- c("s1", "s2", "s3", "s4")
+    
+    test_df <- data.frame(
+        sample=colnames(test_data),
+        group=c(rep("Group A", 2), rep("Group B", 2))
+    )
+    rownames(test_df) <- test_df$sample
+    
+    se <- SummarizedExperiment::SummarizedExperiment(
+        assay=test_data,
+        colData=test_df,
+        rowData=data.frame(annot=paste0("Pep", seq_len(2)))
+    )
+    
+    nst <- NormalyzerStatistics(se)
+    out <- calculateContrasts(
+        nst,
+        comparisons=c("Group A-Group B"),
+        condCol="group",
+        type="limma"
+    )
+    
+    folds <- pairwiseCompsFold(out)
+    expect_true("Group A-Group B" %in% names(folds))
+    expect_true(all.equal(-1, round(folds[["Group A-Group B"]][1], 5)))
+    expect_true(all.equal(0, round(folds[["Group A-Group B"]][2], 5)))
+})
+
+test_that("calculateContrasts_limma_allows_group_names_starting_with_special_characters", {
+    
+    test_data <- matrix(
+        c(
+            1, 1, 2, 2
+        ),
+        nrow=1,
+        byrow=TRUE
+    )
+    colnames(test_data) <- c("s1", "s2", "s3", "s4")
+    
+    test_df <- data.frame(
+        sample=colnames(test_data),
+        group=c(rep("#A", 2), rep("B", 2))
+    )
+    rownames(test_df) <- test_df$sample
+    
+    se <- SummarizedExperiment::SummarizedExperiment(
+        assay=test_data,
+        colData=test_df,
+        rowData=data.frame(annot="Pep1")
+    )
+    
+    nst <- NormalyzerStatistics(se)
+    out <- calculateContrasts(
+        nst,
+        comparisons=c("#A-B"),
+        condCol="group",
+        type="limma"
+    )
+    
+    folds <- pairwiseCompsFold(out)
+    expect_true("#A-B" %in% names(folds))
+    expect_true(all.equal(-1, round(folds[["#A-B"]][1], 5)))
+})
+
+test_that("calculateContrasts_oneVsRest_allows_group_named_rest", {
+    
+    test_data <- matrix(
+        c(
+            1, 1, 2, 2
+        ),
+        nrow=1,
+        byrow=TRUE
+    )
+    colnames(test_data) <- c("r1", "r2", "a1", "a2")
+    
+    test_df <- data.frame(
+        sample=colnames(test_data),
+        group=c(rep("rest", 2), rep("A", 2))
+    )
+    rownames(test_df) <- test_df$sample
+    
+    se <- SummarizedExperiment::SummarizedExperiment(
+        assay=test_data,
+        colData=test_df,
+        rowData=data.frame(annot="Pep1")
+    )
+    
+    nst <- NormalyzerStatistics(se)
+    out <- calculateContrasts(
+        nst,
+        condCol="group",
+        type="limma",
+        oneVsRest=TRUE
+    )
+    
+    folds <- pairwiseCompsFold(out)
+    expect_true(all(c("rest-others", "A-others") %in% names(folds)))
+    expect_true(all.equal(-1, round(folds[["rest-others"]][1], 5)))
+    expect_true(all.equal(1, round(folds[["A-others"]][1], 5)))
+})

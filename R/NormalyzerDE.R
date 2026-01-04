@@ -130,7 +130,7 @@ normalyzer <- function(
         verifySummarizedExperiment(experimentObj, sampleColName)
         SummarizedExperiment::colData(experimentObj)[[sampleColName]] <- 
             as.character(SummarizedExperiment::colData(experimentObj)[[sampleColName]])
-        SummarizedExperiment::metadata(experimentObj) <- list(
+        S4Vectors::metadata(experimentObj) <- list(
             sample=sampleColName, 
             group=groupColName)
     }
@@ -294,6 +294,7 @@ normalyzerDE <- function(jobName, comparisons=NULL, designPath=NULL, dataPath=NU
     
     startTime <- Sys.time()
     jobDir <- setupJobDir(jobName, outputDir)
+    safeJobName <- basename(jobDir)
 
     if (!quiet) print("Setting up statistics object")
     if (is.null(experimentObj)) {
@@ -330,12 +331,12 @@ normalyzerDE <- function(jobName, comparisons=NULL, designPath=NULL, dataPath=NU
     if (!quiet) print("Contrast calculations done!")
     
     annotDf <- generateAnnotatedMatrix(nst)
-    outPath <- paste0(jobDir, "/", jobName, "_stats.tsv")
+    outPath <- paste0(jobDir, "/", safeJobName, "_stats.tsv")
 
     if (!quiet) print(paste("Writing", nrow(annotDf), "annotated rows to", outPath))
     utils::write.table(annotDf, file=outPath, sep="\t", row.names = FALSE, quote=FALSE)
     if (!quiet) print(paste("Writing statistics report"))
-    generateStatsReport(nst, jobName, jobDir, sigThres, sigThresType, log2FoldThres, writeAsPngs=writeReportAsPngs)
+    generateStatsReport(nst, safeJobName, jobDir, sigThres, sigThresType, log2FoldThres, writeAsPngs=writeReportAsPngs)
     
     endTime <- Sys.time()
     totTime <- difftime(endTime, startTime, units="mins")

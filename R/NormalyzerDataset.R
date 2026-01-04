@@ -68,7 +68,7 @@ NormalyzerDataset <- function(jobName, designMatrix, rawData, annotationData,
               sampleNames <- as.character(designMatrix[, sampleNameCol])
               
               # annotationValues <- rawData[, !(colnames(rawData) %in% sampleNames), drop=FALSE]
-              filterrawdata <- rawData[, sampleNames]
+              filterrawdata <- rawData[, sampleNames, drop=FALSE]
               class(filterrawdata) <- "numeric"
               
               if (nrow(filterrawdata) < tinyRunThres) {
@@ -281,4 +281,3 @@ getRTColumn <- function(annotData, quiet=FALSE) {
         return(NULL)
     }
 }
-

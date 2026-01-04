@@ -270,16 +270,13 @@ setMethod(f="calculateContrasts",
                   compLists[[statMeasure]] <- list()
               }
 
-              if (oneVsRest) {
+	              if (oneVsRest) {
 
-                  restLabel <- "rest"
-                  if (restLabel %in% sampleReplicateGroupsStrings) {
-                      stop("The label '", restLabel, "' is reserved for one-vs-rest mode, but is present in condCol '", condCol, "'.")
-                  }
+	                  restLabel <- chooseOneVsRestLabel(sampleReplicateGroupsStrings)
 
-                  targetGroups <- if (is.null(oneVsRestGroups)) {
-                      unique(sampleReplicateGroupsStrings)
-                  } else {
+	                  targetGroups <- if (is.null(oneVsRestGroups)) {
+	                      unique(sampleReplicateGroupsStrings)
+	                  } else {
                       unique(as.character(oneVsRestGroups))
                   }
 
@@ -349,19 +346,23 @@ setMethod(f="calculateContrasts",
                               c(groupLabel, restLabel)
                           )
                       }
-                      else if (type %in% c("limma", "limma_intensity")) {
-                          model <- setupModelFromDesign(designDfOVR, condCol, batchCol=batchCol, type=type)
-                          limmaDesign <- stats::model.matrix(model)
-                          limmaFit <- limma::lmFit(dataMatNAFiltered, limmaDesign)
+	                      else if (type %in% c("limma", "limma_intensity")) {
+	                          model <- setupModelFromDesign(designDfOVR, condCol, batchCol=batchCol, type=type)
+	                          limmaDesignRaw <- stats::model.matrix(model)
+	                          limmaPrepared <- sanitizeLimmaDesign(limmaDesignRaw)
+	                          limmaDesign <- limmaPrepared$design
+	                          limmaCoefMap <- limmaPrepared$coefMap
+	                          limmaFit <- limma::lmFit(dataMatNAFiltered, limmaDesign)
 
-                          statResults <- calculateLimmaContrast(
-                              dataMatNAFiltered, 
-                              limmaDesign, 
-                              limmaFit, 
-                              c(groupLabel, restLabel), 
-                              useIntensityTrend = type == "limma_intensity"
-                          )
-                      }
+	                          statResults <- calculateLimmaContrast(
+	                              dataMatNAFiltered, 
+	                              limmaDesign, 
+	                              limmaFit, 
+	                              c(groupLabel, restLabel), 
+	                              useIntensityTrend = type == "limma_intensity",
+	                              coefMap = limmaCoefMap
+	                          )
+	                      }
                       else {
                           stop("Unknown statistics type: ", type)
                       }
@@ -377,9 +378,9 @@ setMethod(f="calculateContrasts",
                       stop("Argument 'comparisons' must be provided unless oneVsRest=TRUE.")
                   }
 
-                  comparisons <- as.character(comparisons)
-                  comparisons(nst) <- comparisons
-                  verifyContrasts(sampleReplicateGroupsStrings, comparisons)
+	                  comparisons <- as.character(comparisons)
+	                  comparisons(nst) <- comparisons
+	                  verifyContrasts(sampleReplicateGroupsStrings, comparisons, splitter=splitter)
 
                   if (!subsetByComparison) {
 
@@ -409,12 +410,15 @@ setMethod(f="calculateContrasts",
                       )
                   }
 
-                  model <- setupModel(nst, condCol, batchCol=batchCol, type=type)
+	                  model <- setupModel(nst, condCol, batchCol=batchCol, type=type)
 
-                  if (type %in% c("limma", "limma_intensity")) {
-                      limmaDesign <- stats::model.matrix(model)
-                      limmaFit <- limma::lmFit(dataMatNAFiltered, limmaDesign)
-                  }
+	                  if (type %in% c("limma", "limma_intensity")) {
+	                      limmaDesignRaw <- stats::model.matrix(model)
+	                      limmaPrepared <- sanitizeLimmaDesign(limmaDesignRaw)
+	                      limmaDesign <- limmaPrepared$design
+	                      limmaCoefMap <- limmaPrepared$coefMap
+	                      limmaFit <- limma::lmFit(dataMatNAFiltered, limmaDesign)
+	                  }
 
                   for (comp in comparisons) {
                   
@@ -448,24 +452,26 @@ setMethod(f="calculateContrasts",
                           sampleReplicateGroupsStrings, 
                           c(level1, level2))
                   }
-                  else if (type == "limma") {
-                      
-                      statResults <- calculateLimmaContrast(
-                          dataMatNAFiltered, 
-                          limmaDesign, 
-                          limmaFit, 
-                          c(level1, level2), 
-                          useIntensityTrend = FALSE)
-                  }
-                  else if (type == "limma_intensity") {
-                      
-                      statResults <- calculateLimmaContrast(
-                          dataMatNAFiltered, 
-                          limmaDesign, 
-                          limmaFit, 
-                          c(level1, level2), 
-                          useIntensityTrend = TRUE)
-                  }
+	                  else if (type == "limma") {
+	                      
+	                      statResults <- calculateLimmaContrast(
+	                          dataMatNAFiltered, 
+	                          limmaDesign, 
+	                          limmaFit, 
+	                          c(level1, level2), 
+	                          useIntensityTrend = FALSE,
+	                          coefMap = limmaCoefMap)
+	                  }
+	                  else if (type == "limma_intensity") {
+	                      
+	                      statResults <- calculateLimmaContrast(
+	                          dataMatNAFiltered, 
+	                          limmaDesign, 
+	                          limmaFit, 
+	                          c(level1, level2), 
+	                          useIntensityTrend = TRUE,
+	                          coefMap = limmaCoefMap)
+	                  }
                   else {
                       stop("Unknown statistics type: ", type)
                   }
@@ -537,19 +543,23 @@ setMethod(f="calculateContrasts",
                               c(level1, level2)
                           )
                       }
-                      else if (type %in% c("limma", "limma_intensity")) {
-                          model <- setupModelFromDesign(designDfComp, condCol, batchCol=batchCol, type=type)
-                          limmaDesign <- stats::model.matrix(model)
-                          limmaFit <- limma::lmFit(dataMatNAFiltered, limmaDesign)
+	                      else if (type %in% c("limma", "limma_intensity")) {
+	                          model <- setupModelFromDesign(designDfComp, condCol, batchCol=batchCol, type=type)
+	                          limmaDesignRaw <- stats::model.matrix(model)
+	                          limmaPrepared <- sanitizeLimmaDesign(limmaDesignRaw)
+	                          limmaDesign <- limmaPrepared$design
+	                          limmaCoefMap <- limmaPrepared$coefMap
+	                          limmaFit <- limma::lmFit(dataMatNAFiltered, limmaDesign)
 
-                          statResults <- calculateLimmaContrast(
-                              dataMatNAFiltered, 
-                              limmaDesign, 
-                              limmaFit, 
-                              c(level1, level2), 
-                              useIntensityTrend = type == "limma_intensity"
-                          )
-                      }
+	                          statResults <- calculateLimmaContrast(
+	                              dataMatNAFiltered, 
+	                              limmaDesign, 
+	                              limmaFit, 
+	                              c(level1, level2), 
+	                              useIntensityTrend = type == "limma_intensity",
+	                              coefMap = limmaCoefMap
+	                          )
+	                      }
                       else {
                           stop("Unknown statistics type: ", type)
                       }
@@ -582,13 +592,13 @@ setMethod(f="calculateContrasts",
 #'   strings for which contrasts should be performed
 #' @return None
 #' @keywords internal
-verifyContrasts <- function(designLevels, contrasts) {
+verifyContrasts <- function(designLevels, contrasts, splitter="-") {
     
     for (contrast in contrasts) {
-        parts <- unlist(strsplit(contrast, "-"))
+        parts <- unlist(strsplit(contrast, splitter))
         
         if (length(parts) != 2) {
-            stop("A contrast string delimited by one dash (-) was expected. Instead following was found: ", contrast)
+            stop("A contrast string delimited by one splitter (", splitter, ") was expected. Instead following was found: ", contrast)
         }
         
         if (!all(parts %in% designLevels)) {
@@ -622,6 +632,40 @@ setupModel <- function(nst, condCol, batchCol=NULL, type="limma") {
     model
 }
 
+sanitizeLimmaDesign <- function(limmaDesign) {
+
+    rawNames <- colnames(limmaDesign)
+    safeNames <- base::make.names(rawNames, unique=TRUE)
+    colnames(limmaDesign) <- safeNames
+    list(design=limmaDesign, coefMap=stats::setNames(safeNames, rawNames))
+}
+
+chooseOneVsRestLabel <- function(existingLabels,
+                                 candidates=c("rest", "others", "all_other", "all_others")) {
+
+    if (length(candidates) == 0) {
+        stop("Expected at least one candidate label")
+    }
+
+    existing <- unique(as.character(existingLabels))
+
+    for (candidate in candidates) {
+        if (!(candidate %in% existing)) {
+            return(candidate)
+        }
+    }
+
+    labelBase <- candidates[1]
+    suffix <- 1
+    label <- paste0(labelBase, suffix)
+    while (label %in% existing) {
+        suffix <- suffix + 1
+        label <- paste0(labelBase, suffix)
+    }
+
+    label
+}
+
 calculateWelch <- function(dataMat, groupHeader, levels) {
     
     s1cols <- which(groupHeader %in% levels[1])
@@ -652,9 +696,24 @@ calculateWelch <- function(dataMat, groupHeader, levels) {
     statResults
 }
 
-calculateLimmaContrast <- function(dataMat, limmaDesign, limmaFit, levels, useIntensityTrend) {
+calculateLimmaContrast <- function(dataMat, limmaDesign, limmaFit, levels, useIntensityTrend, coefMap=NULL) {
 
-    myContrast <- paste0("Variable", levels[1], "-", "Variable", levels[2])
+    coefLevel1 <- paste0("Variable", levels[1])
+    coefLevel2 <- paste0("Variable", levels[2])
+
+    if (!is.null(coefMap)) {
+        if (!(coefLevel1 %in% names(coefMap))) {
+            stop("Could not find limma coefficient name for level '", levels[1], "' (expected: '", coefLevel1, "')")
+        }
+        if (!(coefLevel2 %in% names(coefMap))) {
+            stop("Could not find limma coefficient name for level '", levels[2], "' (expected: '", coefLevel2, "')")
+        }
+
+        coefLevel1 <- coefMap[[coefLevel1]]
+        coefLevel2 <- coefMap[[coefLevel2]]
+    }
+
+    myContrast <- paste0(coefLevel1, "-", coefLevel2)
     contrastMatrix <- limma::makeContrasts(
         contrasts=c(myContrast), 
         levels=limmaDesign)

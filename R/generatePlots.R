@@ -193,6 +193,8 @@ writePage <- function(outputFunc, jobdir, writeAsPngs, pngPath=NULL, ...) {
 #' @keywords internal
 setupPlotting <- function(currentJob, jobDir, suffix) {
     
+    safeJobName <- sanitizeJobName(currentJob)
+    
     grDevices::palette(c(
         "red", "green", "blue", "orange", "darkgray", "blueviolet", 
         "darkslateblue", "darkviolet", "gray", "bisque4", "brown", 
@@ -201,7 +203,7 @@ setupPlotting <- function(currentJob, jobDir, suffix) {
     ))
 
     grDevices::pdf(
-      file=paste(jobDir, "/", suffix, "-", currentJob, ".pdf", sep=""),
+      file=paste(jobDir, "/", suffix, "-", safeJobName, ".pdf", sep=""),
       paper="a4r", width=0, height=0
     )
     
@@ -1230,4 +1232,3 @@ plotPHist <- function(nr, currentLayout, pageno) {
     grid::pushViewport(grid::viewport(layout=currentLayout))
     printPlots(histPlots, "HistPlots", pageno, currentjob, currentLayout)  
 }
-

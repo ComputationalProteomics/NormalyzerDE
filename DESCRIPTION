@@ -24,6 +24,7 @@ Imports:
     utils,
     stats,
     SummarizedExperiment,
+    S4Vectors,
     matrixStats,
     ggforce
 Suggests:

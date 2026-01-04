@@ -52,7 +52,8 @@ loadDesign <- function(designPath, sampleCol="sample", groupCol="group") {
         sep="\t", 
         stringsAsFactors=FALSE, 
         header=TRUE, 
-        comment.char=""
+        comment.char="",
+        check.names=FALSE
     )
     
     if (!(sampleCol %in% colnames(designMatrix)) || !(groupCol %in% colnames(designMatrix))) {
@@ -190,10 +191,10 @@ getVerifiedNormalyzerObject <- function(
     SummarizedExperiment::assay(summarizedExp) <- preprocessData(SummarizedExperiment::assay(summarizedExp), quiet=quiet)
     summarizedExp <- filterOnlyNARows(summarizedExp)
     
-    # TODO: The getter seems to not be available, check later if temporary issue
-    groupCol <- summarizedExp@metadata$group
-    sampleCol <- summarizedExp@metadata$sample
-    designMatrix <- as.data.frame(SummarizedExperiment::colData(summarizedExp))
+    metadata <- S4Vectors::metadata(summarizedExp)
+    groupCol <- metadata$group
+    sampleCol <- metadata$sample
+    designMatrix <- as.data.frame(SummarizedExperiment::colData(summarizedExp), optional=TRUE)
     
     if (!groupCol %in% colnames(designMatrix)) {
         stop("Given groupCol: '", groupCol, "' was not present among design matrix columns")
@@ -412,8 +413,8 @@ verifyDesignMatrix <- function(fullMatrix, designMatrix, sampleCol) {
         stop(errorString)
     }
 
-    dataMatrix <- fullMatrix[, designMatrix[, sampleCol]]
-    dataColumns <- dataMatrix[, designColnames]
+    dataMatrix <- fullMatrix[, designMatrix[, sampleCol], drop=FALSE]
+    dataColumns <- dataMatrix[, designColnames, drop=FALSE]
     
     if (length(designColnames) != ncol(dataColumns)) {
         errorString <- paste(
@@ -619,6 +620,3 @@ verifyMultipleSamplesPresent <- function(dataMatrix, groups, requireReplicates=T
         if (!quiet) message("Sample check: More than one sample group found")
     }
 }
-
-
-
