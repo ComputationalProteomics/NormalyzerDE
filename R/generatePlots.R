@@ -1076,10 +1076,10 @@ plotMeanSD <- function(nr, currentLayout, pageno) {
         
         methodData <- methodlist[[i]]
         msd <- vsn::meanSdPlot(
-            methodData, 
-            xlab="", 
-            ylab="", 
-            plot=FALSE, 
+            methodData,
+            xlab="",
+            ylab="",
+            plot=FALSE,
             na.rm=TRUE
         )
         
@@ -1196,7 +1196,7 @@ plotDendrograms <- function(nr, currentLayout, pageno) {
         )
         ape::axisPhylo(side=1)
     }
-    
+	    
     grid::pushViewport(grid::viewport(layout=currentLayout))
     printMeta(paste("Dendrograms - Built from", ncol(scaledTransposedMatrix), 
                     "variables containing non-missing data", sep=" "), 

@@ -92,7 +92,6 @@ test_that("meanNormalization", {
 })
 
 test_that("performVSNNormalization", {
-    
     expect_dim <- c(98, 9)
     expect_colsum <- c(
         2470.56447, 2407.87325, 2496.00488, 

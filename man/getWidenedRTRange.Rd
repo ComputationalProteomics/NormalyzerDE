@@ -11,6 +11,7 @@ getWidenedRTRange(
   rtEnd,
   minimumDatapoints,
   retentionTimes,
+  sortedRetentionTimes = NULL,
   allowTooWideData = FALSE
 )
 }

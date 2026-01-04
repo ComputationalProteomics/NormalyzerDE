@@ -137,7 +137,7 @@ meanNormalization <- function(rawMatrix, noLogTransform=FALSE) {
 #' normMatrix <- performVSNNormalization(example_data_only_values)
 performVSNNormalization <- function(rawMatrix) {
     
-    normMatrix <- suppressMessages(vsn::justvsn(rawMatrix, ))
+    normMatrix <- suppressMessages(vsn::justvsn(rawMatrix))
     colnames(normMatrix) <- colnames(rawMatrix)
     normMatrix
 }

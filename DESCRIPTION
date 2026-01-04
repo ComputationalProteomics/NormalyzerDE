@@ -20,19 +20,18 @@ Imports:
     ape,
     car,
     ggplot2,
+    ggforce,
     methods,
     utils,
     stats,
     SummarizedExperiment,
     S4Vectors,
-    matrixStats,
-    ggforce
+    matrixStats
 Suggests:
     knitr,
     testthat,
     rmarkdown,
     roxygen2,
-    hexbin,
     BiocStyle
 VignetteBuilder: knitr
 biocViews:

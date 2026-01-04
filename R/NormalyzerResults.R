@@ -99,15 +99,15 @@ setMethod("performNormalizations", "NormalyzerResults",
               rtColPresent <- length(retentionTimes(nds)) > 0
               normResults <- list()
               
-              if (!noLogTransform) {
-                  normResults[["log2"]] <- log2(filterrawdata(nds))
-                  
-                  if (!isTinyRun(nds)) {
-                      normResults[["VSN"]] <- performVSNNormalization(filterrawdata(nds))
-                  }
-                  else {
-                      if (!quiet) {
-                          message(
+	              if (!noLogTransform) {
+	                  normResults[["log2"]] <- log2(filterrawdata(nds))
+	                  
+	                  if (!isTinyRun(nds)) {
+	                      normResults[["VSN"]] <- performVSNNormalization(filterrawdata(nds))
+	                  }
+	                  else {
+	                      if (!quiet) {
+	                          message(
                               "Skipping VSN normalization due to small number of features, ",
                               nrow(filterrawdata(nds)), " features found"
                           )
@@ -174,21 +174,21 @@ setMethod("performNormalizations", "NormalyzerResults",
                       noLogTransform=noLogTransform
                   )
                   
-                  if (!noLogTransform) {
-                      normResults[["RT-VSN"]] <- getSmoothedRTNormalizedMatrix(
-                          rawMatrix=filterrawdata(nds), 
-                          retentionTimes=retentionTimes(nds), 
-                          normMethod=performVSNNormalization, 
-                          stepSizeMinutes=rtStepSizeMinutes,
-                          windowMinCount=rtWindowMinCount,
-                          mergeMethod=rtWindowMergeMethod,
-                          windowShifts=rtWindowShifts,
-                          noLogTransform=noLogTransform
-                      )
-                  }
-                  else {
-                      if (!quiet) {
-                          message("Skipping RT-VSN, only available for non log-transformed data\n")
+	                  if (!noLogTransform) {
+	                      normResults[["RT-VSN"]] <- getSmoothedRTNormalizedMatrix(
+	                          rawMatrix=filterrawdata(nds), 
+	                          retentionTimes=retentionTimes(nds), 
+	                          normMethod=performVSNNormalization, 
+	                          stepSizeMinutes=rtStepSizeMinutes,
+	                          windowMinCount=rtWindowMinCount,
+	                          mergeMethod=rtWindowMergeMethod,
+	                          windowShifts=rtWindowShifts,
+	                          noLogTransform=noLogTransform
+	                      )
+	                  }
+	                  else {
+	                      if (!quiet) {
+	                          message("Skipping RT-VSN, only available for non log-transformed data\n")
                       }
                   }
               }
@@ -204,5 +204,3 @@ setMethod("performNormalizations", "NormalyzerResults",
               nr
           }
 )
-
-
