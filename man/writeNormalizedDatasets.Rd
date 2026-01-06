@@ -19,7 +19,9 @@ writeNormalizedDatasets(
 
 \item{jobdir}{Path to output directory.}
 
-\item{includePairwiseComparisons}{Include p-values for pairwise comparisons.}
+\item{includePairwiseComparisons}{Include limma-based pairwise comparisons
+between all groups. For each normalization output file, columns named like
+\code{comp_A-B_p} and \code{comp_A-B_fdr} are added.}
 
 \item{includeCvCol}{Include CV column in output.}
 
