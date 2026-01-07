@@ -1,0 +1,14 @@
+^\.git$
+^\.github$
+^\.travis\.yml$
+^\.Rproj\.user$
+^\.Rhistory$
+^\.RData$
+^\.Ruserdata$
+^\.DS_Store$
+^\.idea$
+^\.vscode$
+^ignore$
+^\..*Rcheck$
+^NormalyzerDE_.*\.tar\.gz$
+^NormalyzerDE\.BiocCheck$

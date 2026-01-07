@@ -1,11 +1,11 @@
 Package: NormalyzerDE
 Title: Evaluation of normalization methods and calculation of differential expression analysis statistics
 Version: 1.23.6
-Author: Jakob Willforss
 Authors@R: c(
     person("Jakob", "Willforss", email="jakob.willforss@hotmail.com", role=c("aut", "cre")),
     person("Aakash", "Chawade", role="aut"),
-    person("Fredrik", "Levander", email="fredrik.levander@immun.lth.se", role=c("aut", "ths")))
+    person("Fredrik", "Levander", email="fredrik.levander@immun.lth.se", role=c("aut", "ths")),
+    person("Måns", "Zamore", email="mans.zamore@immun.lth.se", role="ctb"))
 Description: NormalyzerDE provides screening of normalization methods for 
     LC-MS based expression data. It calculates a range of normalized matrices 
     using both existing approaches and a novel time-segmented approach, 

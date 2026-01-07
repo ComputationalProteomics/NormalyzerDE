@@ -8,7 +8,6 @@ tests/testthat/test_analyzeResults.R
 *.swp
 *.Rhistory
 R/Rplots.pdf
-.Rbuildignore
 *.Rproj
 .RData
 *.old
