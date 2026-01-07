@@ -21,7 +21,6 @@ Takes a design path, loads the matrix and ensures that the sample column
 is in character format and that the group column is in factor format.
 }
 \examples{
-\dontrun{
-df <- loadDesign("design.tsv")
-}
+design_path <- system.file(package="NormalyzerDE", "extdata", "tiny_design.tsv")
+df <- loadDesign(design_path)
 }

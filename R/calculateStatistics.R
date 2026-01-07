@@ -522,5 +522,3 @@ plotContrastPCA <- function(nst, jobName, currentLayout, pageno, pcs=c(1,2)) {
     printPlots(plots, title, pageno, jobName, currentLayout)  
 }
 
-
-

@@ -40,7 +40,7 @@ calculateReplicateCV <- function(methodList, sampleReplicateGroups) {
         featureCVs <- vapply(
             unique(groups), 
             function(group) {
-                targetFeatures = feature[groups == group]
+                targetFeatures <- feature[groups == group]
                 stats::sd(targetFeatures, na.rm=TRUE) / mean(targetFeatures, na.rm=TRUE) 
             }, 
             c(1)
@@ -389,7 +389,6 @@ findLowlyVariableFeaturesCVs <- function(referenceFDR, methodList) {
     
     lowVarFeaturesAverageCVs
 }
-
 
 
 

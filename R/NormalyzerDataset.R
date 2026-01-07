@@ -229,9 +229,11 @@ setMethod("detectSingletonSample", "NormalyzerDataset",
               if (length(distinctSamples) == 1) {
                   singletonSamplePresent <- TRUE
                   if (!quiet) {
-                      message("Only one replicate group present. ",
-                              paste("Group: ", distinctSamples[1]),
-                              " Proceeding with limited processing\n")
+                      message(
+                          "Only one replicate group present. Group: ",
+                          distinctSamples[1],
+                          " Proceeding with limited processing\n"
+                      )
                   }
               }
               else if (length(distinctSamples) == 0) {

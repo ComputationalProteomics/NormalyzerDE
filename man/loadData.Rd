@@ -7,7 +7,7 @@
 loadData(dataPath, inputFormat = "default")
 }
 \arguments{
-\item{dataPath}{File path to design matrix.}
+\item{dataPath}{File path to data matrix.}
 
 \item{inputFormat}{If input is given in standard NormalyzerDE format, 
 Proteios format or in MaxQuant protein or peptide format}
@@ -21,7 +21,6 @@ including "proteios", "maxquantpep" (peptide output from MaxQuant) and
 "maxquantprot" (protein output from MaxQuant) formats.
 }
 \examples{
-\dontrun{
-df <- loadData("data.tsv")
-}
+data_path <- system.file(package="NormalyzerDE", "extdata", "tiny_data.tsv")
+df <- loadData(data_path)
 }

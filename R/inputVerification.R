@@ -4,13 +4,14 @@
 #' including "proteios", "maxquantpep" (peptide output from MaxQuant) and 
 #' "maxquantprot" (protein output from MaxQuant) formats.
 #' 
-#' @param dataPath File path to design matrix.
+#' @param dataPath File path to data matrix.
 #' @param inputFormat If input is given in standard NormalyzerDE format, 
 #' Proteios format or in MaxQuant protein or peptide format
 #' @return rawData Raw data loaded into data frame
-#' @examples \dontrun{
-#' df <- loadData("data.tsv")
-#' }
+#' @export
+#' @examples
+#' data_path <- system.file(package="NormalyzerDE", "extdata", "tiny_data.tsv")
+#' df <- loadData(data_path)
 loadData <- function(dataPath, inputFormat="default") {
     
     if (inputFormat == "default") {
@@ -42,9 +43,10 @@ loadData <- function(dataPath, inputFormat="default") {
 #' @param sampleCol Column name for column containing sample names.
 #' @param groupCol Column name for column containing condition levels.
 #' @return designMatrix Design data loaded into data frame
-#' @examples \dontrun{
-#' df <- loadDesign("design.tsv")
-#' }
+#' @export
+#' @examples
+#' design_path <- system.file(package="NormalyzerDE", "extdata", "tiny_design.tsv")
+#' df <- loadDesign(design_path)
 loadDesign <- function(designPath, sampleCol="sample", groupCol="group") {
     
     designMatrix <- utils::read.table(
@@ -273,28 +275,55 @@ filterOnlyNARows <- function(summarizedExp) {
 #' @return Table containing raw data from input file.
 #' @keywords internal
 loadRawDataFromFile <- function(inputPath) {
-    
-    tryCatch(
-        rawData <- as.matrix(utils::read.table(inputPath, 
-                                               header=FALSE, 
-                                               sep="\t", 
-                                               stringsAsFactors=FALSE,
-                                               quote="",
-                                               comment.char="")),
-        error=function(e) {
-            message("Error encountered for input file:", inputPath, ", error: ", e)
-            stop("Please provide a valid input file.\n")
-        },
-        
-        warning=function(w) {
-            message("An issue was encountered when attempting to load:", 
+
+    warningEnv <- new.env(parent=emptyenv())
+    warningEnv$condition <- NULL
+
+    rawData <- withCallingHandlers(
+        try(
+            as.matrix(
+                utils::read.table(
                     inputPath,
-                    "Warning:",
-                    w)
-            stop("Please investigate the warning and provide a valid input file.\n")
+                    header=FALSE,
+                    sep="\t",
+                    stringsAsFactors=FALSE,
+                    quote="",
+                    comment.char=""
+                )
+            ),
+            silent=TRUE
+        ),
+        warning=function(w) {
+            warningEnv$condition <- w
+            invokeRestart("muffleWarning")
         }
     )
-    
+
+    if (!is.null(warningEnv$condition)) {
+        stop(
+            "An issue was encountered when attempting to load: ", inputPath, "\n",
+            conditionMessage(warningEnv$condition), "\n",
+            "Please investigate and provide a valid input file.",
+            call.=FALSE
+        )
+    }
+
+    if (inherits(rawData, "try-error")) {
+        errorCondition <- attr(rawData, "condition")
+        errorMessage <- if (inherits(errorCondition, "condition")) {
+            conditionMessage(errorCondition)
+        } else {
+            as.character(rawData)
+        }
+
+        stop(
+            "Failed to read input file: ", inputPath, "\n",
+            errorMessage, "\n",
+            "Please provide a valid input file.",
+            call.=FALSE
+        )
+    }
+
     rawData
 }
 

@@ -136,7 +136,7 @@ test_that("Special characters survive normalization + output", {
         requireReplicates = FALSE,
         quiet = TRUE
     )
-    nr <- normMethods(nds, quiet = TRUE)
+    nr <- suppressWarnings(normMethods(nds, quiet = TRUE))
     nr_eval <- analyzeNormalizations(nr)
     
     output_dir <- tempfile()

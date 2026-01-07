@@ -37,8 +37,7 @@ normalyzer(
 
 \item{designPath}{Path to file containing design matrix.}
 
-\item{dataPath}{Specify an output directory for generated files.
-Defaults to current working directory.}
+\item{dataPath}{Path to file containing data matrix.}
 
 \item{experimentObj}{SummarizedExperiment object, can be provided as input
 as alternative to 'designPath' and 'dataPath'}
@@ -53,7 +52,7 @@ values compared to threshold given by sampleAbundThres.
 Will otherwise stop with error message if such sample is encountered.}
 
 \item{sampleAbundThres}{Threshold for omitting low-abundant
-samples. Is by default set to 15.}
+samples. Is by default set to 5.}
 
 \item{tinyRunThres}{If total number of features is less than this, a limited
 run is performed.}
@@ -118,27 +117,15 @@ NormalyzerEvaluationResults object.
 write them to a PDF report.
 }
 \examples{
-\dontrun{
 data_path <- system.file(package="NormalyzerDE", "extdata", "tiny_data.tsv")
 design_path <- system.file(package="NormalyzerDE", "extdata", "tiny_design.tsv")
 out_dir <- tempdir()
+job_name <- basename(tempfile("job_"))
 normalyzer(
-    jobName="my_jobname", 
+    jobName=job_name, 
     designPath=design_path, 
     dataPath=data_path, 
-    outputDir=out_dir)
-normalyzer(
-    "my_jobname", 
-    designMatrix="design.tsv", 
-    "data.tsv", 
-    outputDir="path/to/output", 
-    normalizeRetentionTime=TRUE, 
-    retentionTimeWindow=2)
-normalyzer(
-    "my_jobname", 
-    designMatrix="design.tsv", 
-    "data.tsv", 
-    outputDir="path/to/output", 
-    inputFormat="maxquantprot")
-}
+    outputDir=out_dir,
+    skipAnalysis=TRUE,
+    quiet=TRUE)
 }

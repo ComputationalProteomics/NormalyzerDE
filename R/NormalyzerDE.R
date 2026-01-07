@@ -21,8 +21,7 @@
 #' 
 #' @param jobName Give the current run a name.
 #' @param designPath Path to file containing design matrix.
-#' @param dataPath Specify an output directory for generated files.
-#'  Defaults to current working directory.
+#' @param dataPath Path to file containing data matrix.
 #' @param experimentObj SummarizedExperiment object, can be provided as input
 #'  as alternative to 'designPath' and 'dataPath'
 #' @param outputDir Directory where results folder is created.
@@ -32,7 +31,7 @@
 #'  values compared to threshold given by sampleAbundThres. 
 #'  Will otherwise stop with error message if such sample is encountered.
 #' @param sampleAbundThres Threshold for omitting low-abundant
-#'  samples. Is by default set to 15.
+#'  samples. Is by default set to 5.
 #' @param tinyRunThres If total number of features is less than this, a limited
 #'  run is performed.
 #' @param requireReplicates Require multiple samples per condition to pass input 
@@ -60,33 +59,21 @@
 #' @export
 #' @import MASS limma methods
 #' @examples
-#' \dontrun{
 #' data_path <- system.file(package="NormalyzerDE", "extdata", "tiny_data.tsv")
 #' design_path <- system.file(package="NormalyzerDE", "extdata", "tiny_design.tsv")
 #' out_dir <- tempdir()
+#' job_name <- basename(tempfile("job_"))
 #' normalyzer(
-#'     jobName="my_jobname", 
+#'     jobName=job_name, 
 #'     designPath=design_path, 
 #'     dataPath=data_path, 
-#'     outputDir=out_dir)
-#' normalyzer(
-#'     "my_jobname", 
-#'     designMatrix="design.tsv", 
-#'     "data.tsv", 
-#'     outputDir="path/to/output", 
-#'     normalizeRetentionTime=TRUE, 
-#'     retentionTimeWindow=2)
-#' normalyzer(
-#'     "my_jobname", 
-#'     designMatrix="design.tsv", 
-#'     "data.tsv", 
-#'     outputDir="path/to/output", 
-#'     inputFormat="maxquantprot")
-#' }
+#'     outputDir=out_dir,
+#'     skipAnalysis=TRUE,
+#'     quiet=TRUE)
 normalyzer <- function(
-        jobName,
-        designPath=NULL, 
-        dataPath=NULL,
+	        jobName,
+	        designPath=NULL, 
+	        dataPath=NULL,
         experimentObj=NULL,
         outputDir=".",
         forceAllMethods=FALSE,
@@ -291,12 +278,12 @@ normalyzerDE <- function(jobName, comparisons=NULL, designPath=NULL, dataPath=NU
              "Example, one comparison between group 1 and 2: c('1-2')\n",
              "Example, two comparisons between groups 1 and 2, and groups 2 and 3: c('1-2', '2-3')")
     }
-    
+
     startTime <- Sys.time()
     jobDir <- setupJobDir(jobName, outputDir)
     safeJobName <- basename(jobDir)
 
-    if (!quiet) print("Setting up statistics object")
+    if (!quiet) message("Setting up statistics object")
     if (is.null(experimentObj)) {
         experimentObj <- setupRawContrastObject(dataPath, designPath, sampleCol)
     }
@@ -305,7 +292,7 @@ normalyzerDE <- function(jobName, comparisons=NULL, designPath=NULL, dataPath=NU
     }
     
     if (!is.null(techRepCol)) {
-        if (!quiet) print("Reducing technical replicates")
+        if (!quiet) message("Reducing technical replicates")
         experimentObj <- reduceTechnicalReplicates(experimentObj, techRepCol, sampleCol)
     }
 
@@ -314,7 +301,7 @@ normalyzerDE <- function(jobName, comparisons=NULL, designPath=NULL, dataPath=NU
         logTrans=logTrans
     )
         
-    if (!quiet) print("Calculating statistical contrasts...")
+    if (!quiet) message("Calculating statistical contrasts...")
     nst <- calculateContrasts(
         nst,
         comparisons,
@@ -328,17 +315,22 @@ normalyzerDE <- function(jobName, comparisons=NULL, designPath=NULL, dataPath=NU
         oneVsRest=oneVsRest,
         oneVsRestGroups=oneVsRestGroups
     )
-    if (!quiet) print("Contrast calculations done!")
+    if (!quiet) message("Contrast calculations done!")
     
     annotDf <- generateAnnotatedMatrix(nst)
     outPath <- paste0(jobDir, "/", safeJobName, "_stats.tsv")
 
-    if (!quiet) print(paste("Writing", nrow(annotDf), "annotated rows to", outPath))
+    if (!quiet) message("Writing ", nrow(annotDf), " annotated rows to ", outPath)
     utils::write.table(annotDf, file=outPath, sep="\t", row.names = FALSE, quote=FALSE)
-    if (!quiet) print(paste("Writing statistics report"))
+    if (!quiet) message("Writing statistics report")
     generateStatsReport(nst, safeJobName, jobDir, sigThres, sigThresType, log2FoldThres, writeAsPngs=writeReportAsPngs)
     
     endTime <- Sys.time()
     totTime <- difftime(endTime, startTime, units="mins")
-    if (!quiet) print(paste0("All done! Results are stored in: ", jobDir, ", processing time was ", round(totTime, 1), " minutes"))
+    if (!quiet) {
+        message(
+            "All done! Results are stored in: ", jobDir, ", processing time was ",
+            round(totTime, 1), " minutes"
+        )
+    }
 }
