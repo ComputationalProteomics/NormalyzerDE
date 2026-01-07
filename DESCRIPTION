@@ -6,6 +6,7 @@ Authors@R: c(
     person("Aakash", "Chawade", role="aut"),
     person("Fredrik", "Levander", email="fredrik.levander@immun.lth.se", role=c("aut", "ths")),
     person("Måns", "Zamore", email="mans.zamore@immun.lth.se", role="ctb"))
+BugReports: https://github.com/ComputationalProteomics/NormalyzerDE/issues
 Description: NormalyzerDE provides screening of normalization methods for 
     LC-MS based expression data. It calculates a range of normalized matrices 
     using both existing approaches and a novel time-segmented approach, 

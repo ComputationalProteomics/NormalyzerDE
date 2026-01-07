@@ -320,7 +320,7 @@ getCombinedMatrix <- function(mList, combFunc) {
         return(combinedMatrix)
     }
 
-    isMedian <- identical(combFunc, stats::median) || identical(combFunc, median)
+    isMedian <- identical(combFunc, stats::median)
     if (!isMedian) {
         stop("Unknown merge function. Only mean and median are supported.")
     }
@@ -347,4 +347,3 @@ getCombinedMatrix <- function(mList, combFunc) {
     colnames(combinedMatrix) <- colnames(mList[[1]])
     combinedMatrix
 }
-

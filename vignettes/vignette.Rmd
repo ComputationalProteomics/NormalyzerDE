@@ -75,7 +75,7 @@ Alternatively the `designPath` and `dataPath` arguments can be replaced with the
 where the first assay should contain the data matrix of interest, the `colData` attribute the design matrix
 and the `rowData` attribute the annotation columns.
 
-```{r}
+```{r run-normalyzer}
 library(NormalyzerDE)
 outDir <- tempdir()
 designFp <- system.file(package="NormalyzerDE", "extdata", "tiny_design.tsv")
@@ -97,7 +97,7 @@ compare separated by a dash ("-").
 Similarly as for the normalization step the `designPath` and `dataPath` arguments can be replaced with
 an instance of `SummarizedExperiment` sent to the `experimentObj` argument.
 
-```{r}
+```{r run-normalyzerde}
 normMatrixPath <- paste(outDir, "vignette_run/CycLoess-normalized.txt", sep="/")
 normalyzerDE("vignette_run", 
              comparisons=c("4-5"),
@@ -113,7 +113,7 @@ A benefit of using a SummarizedExperiment object as input is that it allows exec
 
 The conversion of `designMatrix$sample` is required if using `read.table` as it otherwise is interpreted as a factor. For more intuitive behaviour you can use `read_tsv` from the `readr` package instead of `read.table`.
 
-```{r}
+```{r summarizedexperiment-input}
 dataMatrix <- read.table(dataFp, sep="\t", header = TRUE)
 designMatrix <- read.table(designFp, sep="\t", header = TRUE)
 designMatrix$sample <- as.character(designMatrix$sample)
@@ -137,7 +137,7 @@ Retention time based normalization can be performed with an arbitrary normalizat
 
 There are two points of access for the higher order normalization. Either by calling `getRTNormalizedMatrix` which applies the target normalization approach stepwise over the matrix based on retention times, or by calling `getSmoothedRTNormalizedMatrix` which generates multiple layered matrices and combines them. To use them you need your raw data loaded into a matrix, a list containing retention times and a normalization matrix able to take a raw matrix and return a normalized in similar format.
 
-```{r}
+```{r rt-load-data}
 fullDf <- read.csv(dataFp, sep="\t")
 designDf <- read.csv(designFp, sep="\t")
 head(fullDf, 1)
@@ -148,14 +148,14 @@ At this point we have loaded the full data into dataframes. Next, we use the sam
 
 Make sure that sample names extracted from design matrix are in right format. We expect it to be in 'character' format.
 
-```{r}
+```{r rt-sample-names}
 sampleNames <- as.character(designDf$sample)
 typeof(sampleNames)
 ```
 
 Now we are ready to extract the data matrix from the full matrix. We also need to get the retention time column from the full matrix.
 
-```{r}
+```{r rt-extract-matrix}
 dataMat <- as.matrix(fullDf[, sampleNames])
 retentionTimes <- fullDf$Average.RT
 
@@ -164,7 +164,7 @@ head(dataMat, 1)
 
 If everything is fine the data matrix should be `double`, and have the same number of rows as the number of retention time values we have.
 
-```{r}
+```{r rt-check-dimensions}
 typeof(dataMat)
 
 print("Rows and columns of data")
@@ -176,7 +176,7 @@ length(retentionTimes)
 
 The normalization function is expected to take a raw intensity matrix and return log transformed values. We borrow the wrapper function for Loess normalization from NormalyzerDE. It can be replaced with any custom function as long as the wrapper has the same input/output format.
 
-```{r}
+```{r rt-define-loess}
 performCyclicLoessNormalization <- function(rawMatrix) {
     log2Matrix <- log2(rawMatrix)
     normMatrix <- limma::normalizeCyclicLoess(log2Matrix, method="fast")
@@ -187,7 +187,7 @@ performCyclicLoessNormalization <- function(rawMatrix) {
 
 We are ready to perform the normalization.
 
-```{r}
+```{r rt-run-stepwise}
 rtNormMat <- getRTNormalizedMatrix(dataMat, 
                                    retentionTimes, 
                                    performCyclicLoessNormalization, 
@@ -197,7 +197,7 @@ rtNormMat <- getRTNormalizedMatrix(dataMat,
 
 Let's double check the results. We expect a matrix in the same format and shape as before. Furthermore, we expect similar but not the exact same values as if we'd applied the normalization globally.
 
-```{r}
+```{r rt-compare-global}
 globalNormMat <- performCyclicLoessNormalization(dataMat)
 dim(rtNormMat)
 dim(globalNormMat)
@@ -209,7 +209,7 @@ head(globalNormMat, 1)
 
 We have everything set up to perform the layered normalization. The result here is expected to be overall similar to the normal retention time approach.
 
-```{r}
+```{r rt-run-layered}
 layeredRtNormMat <- getSmoothedRTNormalizedMatrix(
     dataMat, 
     retentionTimes, 
@@ -231,7 +231,7 @@ NormalyzerDE consists of a set of steps. The workflow can be run as a whole, or 
 
 This step performs input validation of the data, and generates an object of the class NormalyzerDataset.
 
-```{r}
+```{r step1-setup-rawdata}
 jobName <- "vignette_run"
 experimentObj <- setupRawDataObject(dataFp, designFp, "default", TRUE, "sample", "group")
 normObj <- getVerifiedNormalyzerObject(jobName, experimentObj)
@@ -246,7 +246,7 @@ as `rowData`.
 
 Here, normalizations are performed. This generates a NormalyzerResults object containing both a reference to its original dataset object, but also generated normalization matrices.
 
-```{r}
+```{r step2-normmethods}
 normResults <- normMethods(normObj)
 ```
 
@@ -254,7 +254,7 @@ normResults <- normMethods(normObj)
 
 Performance measures are calculated for normalizations. These are stored in an object NormalizationEvaluationResults. A NormalyzerResults object similar to the one sent in is returned, but with this field added.
 
-```{r}
+```{r step3-evaluate}
 normResultsWithEval <- analyzeNormalizations(normResults)
 ```
 
@@ -262,7 +262,7 @@ normResultsWithEval <- analyzeNormalizations(normResults)
 
 Generated normalization matrices are written to the provided folder.
 
-```{r}
+```{r step4-write-matrices}
 jobDir <- setupJobDir("vignette_run", tempdir())
 writeNormalizedDatasets(normResultsWithEval, jobDir)
 ```
@@ -271,7 +271,7 @@ writeNormalizedDatasets(normResultsWithEval, jobDir)
 
 Performance measures are used to generate evaluation figures which is written in an evaluation report.
 
-```{r}
+```{r step5-plots}
 generatePlots(normResultsWithEval, jobDir)
 ```
 
@@ -285,7 +285,7 @@ For continued processing you select the matrix containing the normalized data
 from the best performing normalization. The design matrix is the same as for
 the normalization step.
 
-```{r}
+```{r de-step1-setup}
 bestNormMatPath <- paste(jobDir, "RT-Loess-normalized.txt", sep="/")
 experimentObj <- setupRawContrastObject(bestNormMatPath, designFp, "sample")
 nst <- NormalyzerStatistics(experimentObj, logTrans=FALSE)
@@ -299,7 +299,7 @@ above can be prepared directly as a `SummarizedExperiment` object.
 Now we are ready to perform the contrasts. Contrasts are provided as a vector
 in the format `c("condA-condB", "condB-condC")`, where `condX` is the group levels.
 
-```{r}
+```{r de-step2-contrasts}
 comparisons <- c("4-5")
 nst <- calculateContrasts(nst, comparisons, condCol="group", leastRepCount=2)
 ```
@@ -310,7 +310,7 @@ Finally we generate a table containing the statistics results for each feature
 and write it to file together with an evaluation report containing P-value histograms
 for each comparison.
 
-```{r}
+```{r de-step3-output}
 annotDf <- generateAnnotatedMatrix(nst)
 utils::write.table(annotDf, file=paste(jobDir, "stat_table.tsv", sep="/"))
 generateStatsReport(nst, "Vignette stats", jobDir)
@@ -345,7 +345,6 @@ When a normalized matrix is selected the analysis proceeds to the statistical an
 
 # Used packages
 
-```{r}
+```{r session-info}
 sessionInfo()
 ```
-

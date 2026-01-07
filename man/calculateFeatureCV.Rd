@@ -10,8 +10,6 @@ calculateFeatureCV(methodList)
 }
 \arguments{
 \item{methodList}{List containing normalized matrices.}
-
-\item{sampleReplicateGroups}{Condition header.}
 }
 \value{
 methodFeatureCVMatrix Matrix with feature as rows and normalization

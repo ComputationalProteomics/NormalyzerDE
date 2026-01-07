@@ -359,12 +359,13 @@ verifyValidNumbers <- function(rawDataOnly, groups, noLogTransform=FALSE, quiet=
 }
 
 
-#' Verify that design matrix setup matches the data matrix
-#' 
-#' @param fullMatrix Dataframe with input data.
-#' @param designMatrix Dataframe with design setup.
-#' @param sampleCol Column in design matrix containing sample IDs.
-#' 
+#' Verify a SummarizedExperiment contains matching samples
+#'
+#' Checks that the sample names (columns) present in a \code{SummarizedExperiment}
+#' object match the sample IDs in its \code{colData}.
+#'
+#' @param summarizedExp SummarizedExperiment object to validate.
+#' @param sampleCol Column in \code{colData} containing sample IDs.
 #' @return None
 #' @keywords internal
 verifySummarizedExperiment <- function(summarizedExp, sampleCol) {
