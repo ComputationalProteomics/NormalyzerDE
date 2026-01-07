@@ -218,11 +218,12 @@ filterLowRep <- function(df, groups, leastRep = 2) {
 #' @return imputedDf Imputed data frame
 #' @keywords internal
 imputeGroupValues <- function(df, groups, minFraction = 0.75) {
-  
+	  
     if (!any(!is.na(df))) {
         return(df)
     }
 
+    groups <- as.character(groups)
     minValue <- min(df, na.rm = TRUE)
     groupIndices <- split(seq_along(groups), groups)
     groupTotalCounts <- vapply(groupIndices, length, integer(1))
