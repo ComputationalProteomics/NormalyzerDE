@@ -287,7 +287,7 @@ plotFrontPage <- function(currentjob, currentFont) {
     
     grid::grid.text(
         paste("Documentation for analyzing this report can be found at",
-              "http://quantitativeproteomics.org/normalyzer/help.php"),
+              "http://quantitativeproteomics.org/normalyzerde/help"),
         vp=grid::viewport(layout.pos.row=7), 
         just=c("center", "center"), 
         gp=grid::gpar(fontsize=10, fontfamily=currentFont, col="black")
