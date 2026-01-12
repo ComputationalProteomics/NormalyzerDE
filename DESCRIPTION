@@ -40,5 +40,5 @@ biocViews:
 License: Artistic-2.0
 Encoding: UTF-8
 RoxygenNote: 7.3.3
-URL: https://github.com/ComputationalProteomics/NormalyzerDE
+URL: https://computationalproteomics.github.io/NormalyzerDE/, https://github.com/ComputationalProteomics/NormalyzerDE
 Depends: R (>= 4.1.0)

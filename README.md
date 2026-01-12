@@ -1,4 +1,4 @@
-# About
+# NormalyzerDE
 
 An online server running NormalyzerDE can be accessed at the following link:
 
@@ -8,14 +8,14 @@ NormalyzerDE is a software designed to ease the process of selecting an optimal 
 
 NormalyzerDE includes several normalization approaches, a empirical Bayes-based statistical approach implemented as part of Limma and a newly implemented retention-time segmented normalization approach inspired by previously outlined approaches. The emprical-based based statistics has been shown to increase sensitivity over ANOVA when detecting differentially expressed features.
 
-# Cite NormalyzerDE
+## Citation
 
 NormalyzerDE is published [here](https://pubs.acs.org/doi/10.1021/acs.jproteome.8b00523)
 
 Willforss, J., Chawade, A., Levander, F. 
 NormalyzerDE: Online tool for improved normalization of omics expression data and high-sensitivity differential expression analysis. *Journal of Proteome Research* **2018**, 10.1021/acs.jproteome.8b00523.
 
-# Installation
+## Installation
 
 NormalyzerDE can be installed from [Bioconductor](https://www.bioconductor.org/packages/release/bioc/html/NormalyzerDE.html), or directly from GitHub:
 
@@ -24,7 +24,7 @@ install.packages("devtools")
 devtools::install_github("ComputationalProteomics/NormalyzerDE")
 ```
 
-# Running NormalyzerDE - Minimal example
+## Running NormalyzerDE (minimal example)
 
 ```
 library(NormalyzerDE)
@@ -44,7 +44,7 @@ normalyzerDE(jobName="rscript_de", designPath="test_design.tsv", dataPath="test_
 
 For more comprehensive documentation, check the [Vignette](https://bioconductor.org/packages/devel/bioc/vignettes/NormalyzerDE/inst/doc/vignette.pdf) at NormalyzerDE's [Bioconductor page](https://bioconductor.org/packages/devel/bioc/html/NormalyzerDE.html). More information about required input formats is available [here](https://quantitativeproteomics.org/normalyzerde/help).
 
-# Executing from command line
+## Executing from command line
 
 If you want to run NormalyzerDE directly from the command line this is possible by executing it through the `Rscript` command.
 
@@ -53,7 +53,7 @@ Rscript -e 'NormalyzerDE::normalyzer(jobName="rscript_norm", designPath="test_de
 Rscript -e 'NormalyzerDE::normalyzerDE(jobName="rscript_de", designPath="test_design.tsv", dataPath="test_data.tsv", comparisons=c("1-2", "1-3"))'
 ```
 
-# References
+## References
 
 (1) Bolstad, B. preprocessCore: A collection of pre-processing functions. **2018**; https://github.com/bmbolstad/preprocessCore.
 
@@ -73,7 +73,7 @@ expression. *Bioinformatics* **2002**, 18, S96–S104.
 
 (8) Wolfgang, H. et al. Orchestrating high-throughput genomic analysis with Bioconductor. *Nat. Methods* **2015**, 12, 115–121.
 
-# Code organization
+## Code organization
 
 NormalyzerDE consists of a number of scripts and classes. They are focused around
 two separate workflows. One is for normalizing and evaluating the normalizations. The
@@ -97,5 +97,4 @@ When a normalized matrix is selected the analysis proceeds to the statistical an
 * An instance of `NormalyzerStatistics` is prepared containing the input data.
 * Code in the `calculateStatistics.R` script is used to calculate the statistical contrasts. The results are attached to the `NormalyzerStatistics` object.
 * The resulting statistics are used to generate a report and an annotated output matrix where key statistical measures are attached to the original matrix.
-
 

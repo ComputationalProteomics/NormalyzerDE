@@ -1,0 +1,147 @@
+# NormalyzerDE 1.23.2
+
+- Fix bug where non-categorical ANOVA setting wasn't applied
+
+# NormalyzerDE 1.23.1
+
+- Remove unnecessary dependency (Biobase) by calling `matrixStats::rowMedians` instead
+- Fix deprecation warning by using `guide = "none"` instead of `FALSE`
+
+# NormalyzerDE 1.19.7
+
+- Remove RCmdrMisc as dependency, resolving a fatal crash
+  caused by updated signature of RCmdrMisc CV calculation function
+- Updating code to remove deprecation warnings for ggplot2 code
+
+# NormalyzerDE 1.13.2
+
+- Fixed leastRepCount setting of zero for statistics report
+
+# NormalyzerDE 1.9.1
+
+- Version sync with Bioconductor
+
+# NormalyzerDE 1.5.5
+
+- Updating the maintainer email
+
+# NormalyzerDE 1.5.4
+
+- Option to write output as PNG files
+- Option to use Limma trend=TRUE for including the intensity in its prior
+- State the design groups on second page in the NormalyzerDE report
+
+# NormalyzerDE 1.5.2
+
+- Updated to follow Bioconductor release cycle
+- Updated to fix issues in vignette introduced by updated external packages
+
+# NormalyzerDE 1.3.4
+
+- Certain datasets with fixed imputed values caused large difference in CV and MAD
+  for RLR normalization, which in turn lead to a crash in the plotting functions.
+  This update makes sure that the plotting can be carried out despite extreme values.
+
+# NormalyzerDE 1.3.3
+
+- Extended input validation when executing NormalyzerDE using experimentObj
+
+# NormalyzerDE 1.3.2
+
+- Correctly showing the number of values replaced with NA in status text
+
+# NormalyzerDE 1.3.0
+
+- Sync with Bioconductor changes
+
+# NormalyzerDE 1.1.16
+
+- Clearer input verification error for both incorrect fields and when values < 1 are encountered
+
+# NormalyzerDE 1.1.14/15
+
+- Updating tests to avoid cyclic dependency on the NormalyzerDE package
+
+# NormalyzerDE 1.1.13
+
+- Running in reduced mode for small datasets (to avoid crashing on for instance
+  VSN normalization and instead omitting it)
+
+# NormalyzerDE 1.1.12
+
+- Pairwise Venn-diagrams in place
+
+# NormalyzerDE 1.1.11
+
+- Fix minor issue where fully empty rows were filtered before substituting
+  'null' and '0' with NA
+
+# NormalyzerDE 1.1.10
+
+- Add PCA visualizations showing which samples are included in each performed
+  contrast
+
+# NormalyzerDE 1.1.9
+
+- Extensive testing suite set up
+- Bug fixes:
+  - Technical replicates run through properly (previously crashed)
+  - Using log-transformed input for normalization debugged
+- Refactor of statistics module to separate contrast filtering from object
+
+# NormalyzerDE 1.1.7
+
+- Single-replicate runs fixed so that they run through correctly
+
+# NormalyzerDE 1.1.6
+
+- Add support for assigning custom thresholds for statistics report
+
+# NormalyzerDE 1.1.5
+
+- Issue corrected where pattern matching for zeroToNA option incorrectly was
+  matching non-zero values.
+
+# NormalyzerDE 1.1.4
+
+- Allow processing of non log-transformed data
+
+# NormalyzerDE 1.1.3
+
+- Additional plots for statistical comparisons, and updated look
+
+# NormalyzerDE 0.99.24
+
+- Various input checks added
+
+# NormalyzerDE 0.99.22
+
+- Input parsing corrected so that a clear error message is provided when the
+  design matrix samples doesn't match the data matrix header
+
+# NormalyzerDE 0.99.21
+
+- Documentation example fixes
+
+# NormalyzerDE 0.99.20
+
+- Reactivate quantile normalization
+
+# NormalyzerDE 0.99.19
+
+- Empty annotation no longer leads to crash when writing output
+
+# NormalyzerDE 0.99.17/0.99.18
+
+- Very minor fix where function wasn't retrieved properly from SummarizedExperiment
+
+# NormalyzerDE 0.99.16
+
+- Crash when feeding SummarizedExperiment as input is fixed
+- If full rows contains only NA values they are filtered and a warning is generated
+
+# NormalyzerDE 0.99.15
+
+- Corrected expected output from vapply in correlation matrix (where previous varying lengths caused crash)
+- Clearer error message when providing invalid sample/group conditions to statistics module
+- Issue where several identical RT-values caused crash in RT-slicing fixed

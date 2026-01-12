@@ -18,6 +18,8 @@ ignore
 inst/doc
 tests/testthat/output/
 builds/
+docs/
+.pkgdown/
 
 # Vignette output
 vignettes/my_vignette.pdf

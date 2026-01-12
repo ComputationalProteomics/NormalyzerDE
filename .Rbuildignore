@@ -12,3 +12,6 @@
 ^\..*Rcheck$
 ^NormalyzerDE_.*\.tar\.gz$
 ^NormalyzerDE\.BiocCheck$
+^_pkgdown\.yml$
+^docs$
+^\.pkgdown$
