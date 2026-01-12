@@ -306,8 +306,11 @@ plotComparisonVenns <- function(nst, jobName, currentLayout, pageno,
             
             plt <- ggplot2::ggplot(data=df.venn) +
                 ggforce::geom_circle(
-                    ggplot2::aes_string(x0 = "x", y0 = "y", r = 1.5, fill = "labels"), 
-                    alpha = .3, size = 0.5, colour = 'darkgray') +
+                    ggplot2::aes(x0 = x, y0 = y, r = 1.5, fill = labels),
+                    alpha = 0.3,
+                    linewidth = 0.5,
+                    colour = "darkgray"
+                ) +
                 ggplot2::coord_fixed() +
                 ggplot2::theme_void() +
                 ggplot2::theme(legend.position = 'bottom', legend.direction='vertical') +
@@ -502,9 +505,12 @@ plotContrastPCA <- function(nst, jobName, currentLayout, pageno, pcs=c(1,2)) {
             list(high=contrastLevels[1], low=contrastLevels[2])
         )
         
+        dfOut$pc_x <- dfOut[[pc1]]
+        dfOut$pc_y <- dfOut[[pc2]]
+
         plt <- ggplot2::ggplot(
             dfOut, 
-            ggplot2::aes_string(x=pc1, y=pc2, color="group", label="sample")) + 
+            ggplot2::aes(x = pc_x, y = pc_y, color = group, label = sample)) + 
             ggplot2::geom_text() + 
             ggplot2::theme_classic() +
             ggplot2::scale_color_manual(values=c("#00AAAA", "#AA0000", "#BBBBBB")) +
@@ -521,4 +527,3 @@ plotContrastPCA <- function(nst, jobName, currentLayout, pageno, pcs=c(1,2)) {
     title <- paste0("PCA, contrast colored (factors", pcs[1], " and ", pcs[2], ")")
     printPlots(plots, title, pageno, jobName, currentLayout)  
 }
-

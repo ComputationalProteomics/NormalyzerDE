@@ -1075,12 +1075,20 @@ plotMeanSD <- function(nr, currentLayout, pageno) {
     for (i in seq_along(methodlist)) {
 
         methodData <- methodlist[[i]]
-        msd <- vsn::meanSdPlot(
-            methodData,
-            xlab="",
-            ylab="",
-            plot=FALSE,
-            na.rm=TRUE
+        msd <- withCallingHandlers(
+            vsn::meanSdPlot(
+                methodData,
+                xlab="",
+                ylab="",
+                plot=FALSE,
+                na.rm=TRUE
+            ),
+            warning = function(w) {
+                if (inherits(w, "lifecycle_warning_deprecated") &&
+                    grepl("aes_string()", conditionMessage(w), fixed = TRUE)) {
+                    invokeRestart("muffleWarning")
+                }
+            }
         )
 
         sdPlots[[i]] <- msd$gg + ggplot2::ggtitle(methodnames[i]) +
