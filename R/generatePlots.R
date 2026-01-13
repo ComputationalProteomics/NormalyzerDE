@@ -231,12 +231,10 @@ plotFrontPage <- function(currentjob, currentFont) {
     # data(data4pdftitle)
     graphics::plot(1, type="n", axes=FALSE, xlab="", ylab="")
 
-    if ("NormalyzerDE" %in% rownames(utils::installed.packages())) {
-      version <- utils::packageVersion("NormalyzerDE")
-    }
-    else {
-      version <- "(version not found)"
-    }
+    version <- tryCatch(
+        utils::packageVersion("NormalyzerDE"),
+        error=function(e) "(version not found)"
+    )
 
     la1 <- grid::grid.layout(
         nrow=7,
@@ -379,7 +377,7 @@ plotSampleOutlierSummary <- function(nr, currentLayout, pageno) {
         names.arg=substr(names(datacoltotal), 1, 10)
     )
 
-    datamissingcol <- apply(filterrawdata, 2, function(x) { sum(is.na(x)) })
+    datamissingcol <- colSums(is.na(filterrawdata))
     graphics::barplot(
         datamissingcol,
         las=2,
@@ -679,36 +677,21 @@ plotCVvsIntensity <- function(nr, currentLayout, pageno) {
     sampleReplicateGroups <- sampleReplicateGroups(nds)
     filterrawdata <- filterrawdata(nds)
 
+    firstReplicateGroup <- min(sampleReplicateGroups)
+    firstReplicateGroupCols <- sampleReplicateGroups == firstReplicateGroup
+    rawIntensityAvg <- rowMeans(filterrawdata, na.rm=TRUE)
+
     log2Mat <- methodlist[[1]]
-    tempcvmat1 <- matrix(
-        nrow=nrow(log2Mat),
-        ncol=length(methodlist),
-        byrow=TRUE
-    )
-    tempavgmat1 <- matrix(
-        nrow=nrow(log2Mat),
-        ncol=length(methodlist),
-        byrow=TRUE
-    )
+    tempcvmat1 <- matrix(NA_real_, nrow=nrow(log2Mat), ncol=length(methodlist))
+    tempavgmat1 <- matrix(rawIntensityAvg, nrow=length(rawIntensityAvg), ncol=length(methodlist))
+
     maxtempcv <- 0
-
     for (j in seq_along(methodlist)) {
-
-        log2Mat <- methodlist[[j]]
-        log2Mat <- log2Mat[, sampleReplicateGroups == min(sampleReplicateGroups)]
-
-        for (i in seq_len(nrow(log2Mat))) {
-
-            tempcv <- stats::sd(log2Mat[i, ], na.rm=TRUE) / mean(log2Mat[i, ], na.rm=TRUE)
-            tempavg <- mean(filterrawdata[i, ], na.rm=TRUE)
-
-            tempcvmat1[i, j] <- 100 * tempcv
-            tempavgmat1[i, j] <- tempavg
-        }
-
-        if (maxtempcv < max(tempcvmat1, na.rm=TRUE)) {
-            maxtempcv <- max(tempcvmat1, na.rm=TRUE)
-        }
+        log2Mat <- methodlist[[j]][, firstReplicateGroupCols, drop=FALSE]
+        rowMean <- rowMeans(log2Mat, na.rm=TRUE)
+        rowSd <- matrixStats::rowSds(log2Mat, na.rm=TRUE)
+        tempcvmat1[, j] <- 100 * (rowSd / rowMean)
+        maxtempcv <- max(maxtempcv, max(tempcvmat1[, j], na.rm=TRUE))
     }
 
     tout <- matrix(
@@ -752,26 +735,36 @@ plotMA <- function(nr, currentLayout, pageno) {
     normalizedDataList <- normalizations(nr)
     currentjob <- jobName(nds)
     sampleReplicateGroups <- sampleReplicateGroups(nds)
-    filterrawdata <- filterrawdata(nds)
+    firstReplicateGroupCols <- sampleReplicateGroups == min(sampleReplicateGroups)
 
-    Malist <- list()
-    for (i in seq_along(normalizedDataList)) {
+    Malist <- lapply(seq_along(normalizedDataList), function(i) {
+        methodData <- normalizedDataList[[i]]
+        methodName <- methodNames[[i]]
 
-        methodData <- as.matrix(normalizedDataList[[i]])
-        methodDataFirstCond <- methodData[, sampleReplicateGroups == min(sampleReplicateGroups), drop=FALSE]
-        firstColWoNA <- methodDataFirstCond[!is.na(methodDataFirstCond[, 1]), ]
-        avgExpr <- rowMeans(firstColWoNA)
-        fold <- apply(cbind(firstColWoNA[, 1], avgExpr), 1, function(x) x[1] - x[2])
-        plotDf <- as.data.frame(cbind(avgExpr, fold))
+        function() {
+            methodDataFirstCond <- methodData[, firstReplicateGroupCols, drop=FALSE]
+            firstColWoNA <- methodDataFirstCond[!is.na(methodDataFirstCond[, 1]), , drop=FALSE]
+            avgExpr <- rowMeans(firstColWoNA)
+            fold <- firstColWoNA[, 1] - avgExpr
+            plotDf <- data.frame(avgExpr=avgExpr, fold=fold)
 
-        Malist[[i]] <- ggplot2::ggplot(plotDf, ggplot2::aes(avgExpr, fold)) +
-            ggplot2::geom_point(color="darkgray", size=0.7, na.rm=TRUE) +
-            ggplot2::labs(x=("Replicate group mean"),
-                          y=("Replicate-1 Fold Change"),
-                          title=methodNames[i]) +
-            ggplot2::stat_smooth(method="loess", se=FALSE, colour="red", na.rm=TRUE, formula='y ~ x') +
-            ggplot2::geom_abline(intercept=0, slope=0, linewidth=0.3)
-    }
+            ggplot2::ggplot(plotDf, ggplot2::aes(avgExpr, fold)) +
+                ggplot2::geom_point(color="darkgray", size=0.7, na.rm=TRUE) +
+                ggplot2::labs(
+                    x=("Replicate group mean"),
+                    y=("Replicate-1 Fold Change"),
+                    title=methodName
+                ) +
+                ggplot2::stat_smooth(
+                    method="loess",
+                    se=FALSE,
+                    colour="red",
+                    na.rm=TRUE,
+                    formula='y ~ x'
+                ) +
+                ggplot2::geom_abline(intercept=0, slope=0, linewidth=0.3)
+        }
+    })
 
     grid::grid.newpage()
     grid::pushViewport(grid::viewport(layout=currentLayout))
@@ -987,7 +980,7 @@ plotDensity <- function(nr, currentLayout, pageno) {
 
         methodData <- methodlist[[i]]
         tempd <- stats::density(methodData[, 1], na.rm=TRUE)
-        graphics::plot(stats::density(methodData[, 1], na.rm=TRUE), xlab="",
+        graphics::plot(tempd, xlab="",
                        ylab="", ylim=c(min(tempd$y), max(tempd$y) * 1.5),
                        main=methodnames[i], lty=2, lwd=1, col="darkgray")
 

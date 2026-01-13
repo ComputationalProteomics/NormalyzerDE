@@ -31,8 +31,9 @@ writeNormalizedDatasets <- function(nr, jobdir, includePairwiseComparisons=FALSE
     methodlist <- normalizations(nr)
     methodnames <- names(methodlist)
     annotationColumns <- annotationValues(nds)
-    if (ncol(annotationColumns) == 0) {
-        annotationColumns <- NULL
+    annotationDf <- as.data.frame(annotationColumns, stringsAsFactors=FALSE, check.names=FALSE)
+    if (ncol(annotationDf) == 0) {
+        annotationDf <- NULL
     }
 
     if (includePairwiseComparisons) {
@@ -77,7 +78,13 @@ writeNormalizedDatasets <- function(nr, jobdir, includePairwiseComparisons=FALSE
         
         currentMethod <- methodnames[sampleIndex]
         filePath <- paste(jobdir, "/", currentMethod, normSuffix, sep="")
-        outputTable <- cbind(annotationColumns, methodlist[[sampleIndex]])
+        methodDf <- as.data.frame(methodlist[[sampleIndex]], check.names=FALSE)
+        if (is.null(annotationDf)) {
+            outputTable <- methodDf
+        }
+        else {
+            outputTable <- data.frame(annotationDf, methodDf, check.names=FALSE)
+        }
 
         if (includeAnovaP) {
             anovaP <- anovaP(ner)[,sampleIndex]
@@ -88,7 +95,7 @@ writeNormalizedDatasets <- function(nr, jobdir, includePairwiseComparisons=FALSE
                      length(anovaP))
             }
             
-            outputTable <- cbind(outputTable, anovaP=anovaP)
+            outputTable$anovaP <- anovaP
         }
         
         if (includePairwiseComparisons) {
@@ -112,12 +119,12 @@ writeNormalizedDatasets <- function(nr, jobdir, includePairwiseComparisons=FALSE
             pairCols[, seq(2, ncol(pairCols), by=2)] <- fdrMat
             colnames(pairCols) <- as.vector(rbind(pColNames, fdrColNames))
 
-            outputTable <- cbind(outputTable, pairCols)
+            outputTable <- cbind(outputTable, as.data.frame(pairCols, check.names=FALSE))
         }
 
         if (includeCvCol) {
             cvCol <- featureCVPerMethod(ner)[, sampleIndex]
-            outputTable <- cbind(outputTable, CV=cvCol)
+            outputTable$CV <- cvCol
         }
 
         utils::write.table(
@@ -125,7 +132,13 @@ writeNormalizedDatasets <- function(nr, jobdir, includePairwiseComparisons=FALSE
     }
     
     rawFilePath <- paste(jobdir, "/", rawdataName, sep="")
-    rawOutputTable <- cbind(annotationColumns, filterrawdata(nds))
+    rawDf <- as.data.frame(filterrawdata(nds), check.names=FALSE)
+    if (is.null(annotationDf)) {
+        rawOutputTable <- rawDf
+    }
+    else {
+        rawOutputTable <- data.frame(annotationDf, rawDf, check.names=FALSE)
+    }
     
     utils::write.table(
         rawOutputTable, 

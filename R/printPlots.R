@@ -51,8 +51,13 @@ printPlots <- function(plotlist, plotname, pageno, jobname, currentLayout) {
         
         row <- (posCounter - 1) %/% gridCols + 2
         col <- (posCounter - 1) %% gridCols + 2
-        
-        print(plotlist[[i]], vp=grid::viewport(layout.pos.row=row, layout.pos.col=col))
+
+        plotObj <- plotlist[[i]]
+        if (is.function(plotObj)) {
+            plotObj <- plotObj()
+        }
+
+        print(plotObj, vp=grid::viewport(layout.pos.row=row, layout.pos.col=col))
     }
 }
 

@@ -97,41 +97,46 @@ setMethod("performNormalizations", "NormalyzerResults",
               
               nds <- nds(nr)
               rtColPresent <- length(retentionTimes(nds)) > 0
+              rawMatrix <- filterrawdata(nds)
               normResults <- list()
               
-	              if (!noLogTransform) {
-	                  normResults[["log2"]] <- log2(filterrawdata(nds))
-	                  
-	                  if (!isTinyRun(nds)) {
-	                      normResults[["VSN"]] <- performVSNNormalization(filterrawdata(nds))
-	                  }
-	                  else {
-	                      if (!quiet) {
-	                          message(
+              if (!noLogTransform) {
+                  log2Matrix <- log2(rawMatrix)
+                  normResults[["log2"]] <- log2Matrix
+                  
+                  if (!isTinyRun(nds)) {
+                      normResults[["VSN"]] <- performVSNNormalization(rawMatrix)
+                  }
+                  else {
+                      if (!quiet) {
+                          message(
                               "Skipping VSN normalization due to small number of features, ",
-                              nrow(filterrawdata(nds)), " features found"
+                              nrow(rawMatrix), " features found"
                           )
                       }
                   }
               }
               else {
-                  normResults[["log2"]] <- filterrawdata(nds)
+                  log2Matrix <- rawMatrix
+                  normResults[["log2"]] <- rawMatrix
                   if (!quiet) {
-                      message("VSN normalization assumes non log-transformed data, as the option ",
-                              "noLogTransform is specified it is assumed to not need log2-transformation ",
-                              "and thus the VSN normalization is skipped\n")
+                      message(
+                          "VSN normalization assumes non log-transformed data, as the option ",
+                          "noLogTransform is specified it is assumed to not need log2-transformation ",
+                          "and thus the VSN normalization is skipped\n"
+                      )
                   }
               }
               
-              normResults[["GI"]] <- globalIntensityNormalization(filterrawdata(nds), noLogTransform=noLogTransform)
-              normResults[["median"]] <- medianNormalization(filterrawdata(nds), noLogTransform=noLogTransform)
-              normResults[["mean"]] <- meanNormalization(filterrawdata(nds), noLogTransform=noLogTransform)
-              normResults[["Quantile"]] <- performQuantileNormalization(filterrawdata(nds), noLogTransform=noLogTransform)
+              normResults[["GI"]] <- globalIntensityNormalization(rawMatrix, noLogTransform=noLogTransform)
+              normResults[["median"]] <- medianNormalization(rawMatrix, noLogTransform=noLogTransform)
+              normResults[["mean"]] <- meanNormalization(rawMatrix, noLogTransform=noLogTransform)
+              normResults[["Quantile"]] <- performQuantileNormalization(log2Matrix, noLogTransform=TRUE)
               # normResults[["SMAD"]] <- performSMADNormalization(filterrawdata(nds), noLogTransform=noLogTransform)
-              normResults[["CycLoess"]] <- performCyclicLoessNormalization(filterrawdata(nds), noLogTransform=noLogTransform)
-              normResults[["RLR"]] <- performGlobalRLRNormalization(filterrawdata(nds), noLogTransform=noLogTransform)
+              normResults[["CycLoess"]] <- performCyclicLoessNormalization(log2Matrix, noLogTransform=TRUE)
+              normResults[["RLR"]] <- performGlobalRLRNormalization(log2Matrix, noLogTransform=TRUE)
               
-              enoughDataForRT <- nrow(filterrawdata(nds)) >= rtWindowMinCount
+              enoughDataForRT <- nrow(rawMatrix) >= rtWindowMinCount
               
               if (!enoughDataForRT) {
                   if (!quiet) {
@@ -142,7 +147,7 @@ setMethod("performNormalizations", "NormalyzerResults",
               else if (rtNorm && rtColPresent) {
 
                   normResults[["RT-median"]] <- getSmoothedRTNormalizedMatrix(
-                      rawMatrix=filterrawdata(nds), 
+                      rawMatrix=rawMatrix, 
                       retentionTimes=retentionTimes(nds), 
                       normMethod=medianNormalization, 
                       stepSizeMinutes=rtStepSizeMinutes,
@@ -153,7 +158,7 @@ setMethod("performNormalizations", "NormalyzerResults",
                   )
                   
                   normResults[["RT-mean"]] <- getSmoothedRTNormalizedMatrix(
-                      rawMatrix=filterrawdata(nds), 
+                      rawMatrix=rawMatrix, 
                       retentionTimes=retentionTimes(nds), 
                       normMethod=meanNormalization, 
                       stepSizeMinutes=rtStepSizeMinutes,
@@ -164,7 +169,7 @@ setMethod("performNormalizations", "NormalyzerResults",
                   )
                   
                   normResults[["RT-Loess"]] <- getSmoothedRTNormalizedMatrix(
-                      rawMatrix=filterrawdata(nds), 
+                      rawMatrix=rawMatrix, 
                       retentionTimes=retentionTimes(nds), 
                       normMethod=performCyclicLoessNormalization, 
                       stepSizeMinutes=rtStepSizeMinutes,
@@ -176,7 +181,7 @@ setMethod("performNormalizations", "NormalyzerResults",
                   
 	                  if (!noLogTransform) {
 	                      normResults[["RT-VSN"]] <- getSmoothedRTNormalizedMatrix(
-	                          rawMatrix=filterrawdata(nds), 
+	                          rawMatrix=rawMatrix, 
 	                          retentionTimes=retentionTimes(nds), 
 	                          normMethod=performVSNNormalization, 
 	                          stepSizeMinutes=rtStepSizeMinutes,
