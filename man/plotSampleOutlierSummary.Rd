@@ -2,7 +2,7 @@
 % Please edit documentation in R/generatePlots.R
 \name{plotSampleOutlierSummary}
 \alias{plotSampleOutlierSummary}
-\title{Write page containing sample summary of intensities, missing values and 
+\title{Write page containing sample summary of intensities, missing values and
 MDS plot to the viewport}
 \usage{
 plotSampleOutlierSummary(nr, currentLayout, pageno)
@@ -18,7 +18,7 @@ plotSampleOutlierSummary(nr, currentLayout, pageno)
 None
 }
 \description{
-Write page containing sample summary of intensities, missing values and 
+Write page containing sample summary of intensities, missing values and
 MDS plot to the viewport
 }
 \keyword{internal}

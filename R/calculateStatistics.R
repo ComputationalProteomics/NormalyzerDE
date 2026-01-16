@@ -488,22 +488,49 @@ plotContrastPCA <- function(nst, jobName, currentLayout, pageno, pcs=c(1,2)) {
     dfOut <- as.data.frame(dfPCA$x)
     percentageVar <- round(dfPCA$sdev^2 / sum(dfPCA$sdev^2) * 100, 2)
     percentageVar <- paste0(colnames(dfOut), " (", paste0(as.character(percentageVar), "%)"))
-    groups <- condCol(nst)
+    groups <- as.character(condCol(nst))
     dfOut$sample <- colnames(dataDf)
+
+    splitContrast <- function(contrast, sep) {
+        parts <- strsplit(contrast, sep, fixed=TRUE)[[1]]
+        if (length(parts) <= 2) {
+            return(parts)
+        }
+        c(paste(parts[seq_len(length(parts) - 1)], collapse=sep), parts[length(parts)])
+    }
     
     pc1 <- paste0("PC", pcs[1])
     pc2 <- paste0("PC", pcs[2])
     
     plots <- list()
+
+    contrastSplitter <- .getContrastSplitter(nst)
     
     for (contrast in contrasts) {
         
-        contrastLevels <- unlist(strsplit(contrast, "-"))
+        contrastLevels <- splitContrast(contrast, contrastSplitter)
+        if (length(contrastLevels) != 2) {
+            contrastLevels <- splitContrast(contrast, "-")
+        }
+        if (length(contrastLevels) != 2) {
+            contrastLevels <- c(contrast, "")
+        }
         
-        dfOut$group <- activeLevelsFactor(
-            condCol(nst), 
-            list(high=contrastLevels[1], low=contrastLevels[2])
-        )
+        if (contrastLevels[1] %in% groups && contrastLevels[2] %in% groups) {
+            dfOut$group <- activeLevelsFactor(
+                groups,
+                list(high=contrastLevels[1], low=contrastLevels[2])
+            )
+        } else if (contrastLevels[1] %in% groups) {
+            otherGroups <- unique(groups)
+            otherGroups <- otherGroups[!is.na(otherGroups)]
+            dfOut$group <- activeLevelsFactor(
+                groups,
+                list(high=contrastLevels[1], low=setdiff(otherGroups, contrastLevels[1]))
+            )
+        } else {
+            dfOut$group <- "other"
+        }
         
         dfOut$pc_x <- dfOut[[pc1]]
         dfOut$pc_y <- dfOut[[pc2]]
@@ -513,7 +540,7 @@ plotContrastPCA <- function(nst, jobName, currentLayout, pageno, pcs=c(1,2)) {
             ggplot2::aes(x = pc_x, y = pc_y, color = group, label = sample)) + 
             ggplot2::geom_text() + 
             ggplot2::theme_classic() +
-            ggplot2::scale_color_manual(values=c("#00AAAA", "#AA0000", "#BBBBBB")) +
+            ggplot2::scale_color_manual(values=c(high="#00AAAA", low="#AA0000", other="#BBBBBB")) +
             ggplot2::ggtitle(paste(contrastLevels, collapse=" vs. ")) +
             ggplot2::xlab(percentageVar[pcs[1]]) +
             ggplot2::ylab(percentageVar[pcs[2]])  

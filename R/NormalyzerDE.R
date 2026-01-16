@@ -218,8 +218,10 @@ normalyzer <- function(
 #' @param logTrans Log transform the input (needed if providing non-logged 
 #'   input)
 #' @param type Type of statistical comparison, "limma", "limma_intensity" or 
-#'  "welch", where "limma_intensity" allows the prior to be fit according to
-#'  intensity rather than using a flat prior
+#'  "welch" or "limpa", where "limma_intensity" allows the prior to be fit
+#'  according to intensity rather than using a flat prior. "limpa" uses the
+#'  optional Bioconductor package \pkg{limpa} to handle missing values via a
+#'  detection probability curve (DPC) model.
 #' @param sampleCol Design matrix column header for column containing sample IDs
 #' @param condCol Design matrix column header for column containing sample 
 #'   conditions
@@ -227,16 +229,40 @@ normalyzer <- function(
 #'   variance in the model
 #' @param techRepCol Design matrix column header for column containing technical 
 #'   replicates
-#' @param leastRepCount Minimum required replicate count
-#' @param impute Whether to impute values
+#' @param leastRepCount Minimum required replicate count. For \code{type="limpa"},
+#'   a feature is retained if at least one group has \code{leastRepCount}
+#'   observed samples (features entirely missing across all samples are removed).
+#' @param impute Whether to impute values (ignored for \code{type="limpa"}).
 #' @param imputeMinFraction Minimum fraction non-NA values for an analyte in 
-#'   any group to impute in other groups
+#'   any group to impute in other groups (ignored for \code{type="limpa"}).
 #' @param subsetByComparison If TRUE, subset data and design to each comparison
 #'   before NA-filtering, imputation and model fitting.
 #' @param oneVsRest If TRUE, compute one-vs-rest contrasts for each group in
 #'   \code{condCol} (or the subset in \code{oneVsRestGroups}).
 #' @param oneVsRestGroups Optional character vector specifying which groups in
 #'   \code{condCol} to compare against all other samples.
+#' @param limpaProteinIdCol For \code{type="limpa"}, optionally summarize
+#'   peptide/precursor rows to protein-level using \code{limpa::dpcQuant()}.
+#'   Set to a column name in the row annotation (for example \code{"Protein.Group"})
+#'   to use as the protein identifier. Use \code{"auto"} (default) to try common
+#'   identifiers. If the chosen column contains duplicate identifiers, the data
+#'   are summarized once across all samples and the output rows correspond to
+#'   proteins. Set to \code{NULL} to disable protein summarization and treat each
+#'   row as one protein.
+#' @param limpaDpc For \code{type="limpa"}, optional DPC parameters to pass to
+#'   \code{limpa::dpcQuant()} / \code{limpa::dpcImpute()}. Can be a list as
+#'   returned by \code{limpa::dpc()}, or a numeric vector \code{c(beta0, beta1)}.
+#' @param limpaDpcSlope For \code{type="limpa"}, slope for DPC estimation when
+#'   \code{limpaDpc} is not provided. Passed as \code{dpc.slope}.
+#' @param limpaChunk For \code{type="limpa"}, chunk size passed to
+#'   \code{limpa::dpcQuant()} / \code{limpa::dpcImpute()}.
+#' @param limpaVerbose For \code{type="limpa"}, whether to show limpa progress
+#'   messages.
+#' @param limpaSampleWeights For \code{type="limpa"}, whether to estimate limma
+#'   sample weights via \code{sample.weights=TRUE}.
+#' @param limpaDEArgs For \code{type="limpa"}, optional named list of additional
+#'   arguments forwarded to \code{limpa::dpcDE()} (and then to
+#'   \code{limpa::voomaLmFitWithImputation()}).
 #' @param quiet Omit status messages printed during run
 #' 
 #' @param sigThres Significance threshold use for illustrating significant hits
@@ -264,8 +290,10 @@ normalyzer <- function(
 #' @export
 normalyzerDE <- function(jobName, comparisons=NULL, designPath=NULL, dataPath=NULL, experimentObj=NULL, 
                          outputDir=".", logTrans=FALSE, type="limma", sampleCol="sample", condCol="group", 
-                         batchCol=NULL, techRepCol=NULL, leastRepCount=1, impute=FALSE, imputeMinFraction=1, subsetByComparison=FALSE, oneVsRest=FALSE, oneVsRestGroups=NULL, quiet=FALSE, 
-                         sigThres=0.1, sigThresType="fdr", log2FoldThres=0, writeReportAsPngs=FALSE) {
+                         batchCol=NULL, techRepCol=NULL, leastRepCount=1, impute=FALSE, imputeMinFraction=0.75, subsetByComparison=FALSE, oneVsRest=FALSE, oneVsRestGroups=NULL, quiet=FALSE, 
+                         sigThres=0.1, sigThresType="fdr", log2FoldThres=0, writeReportAsPngs=FALSE,
+                         limpaProteinIdCol="auto", limpaDpc=NULL, limpaDpcSlope=0.8, limpaChunk=1000L,
+                         limpaVerbose=FALSE, limpaSampleWeights=FALSE, limpaDEArgs=NULL) {
 
     if (!quiet) message("You are running version ", utils::packageVersion("NormalyzerDE"), " of NormalyzerDE")
     
@@ -313,7 +341,14 @@ normalyzerDE <- function(jobName, comparisons=NULL, designPath=NULL, dataPath=NU
         imputeMinFraction=imputeMinFraction,
         subsetByComparison=subsetByComparison,
         oneVsRest=oneVsRest,
-        oneVsRestGroups=oneVsRestGroups
+        oneVsRestGroups=oneVsRestGroups,
+        limpaProteinIdCol=limpaProteinIdCol,
+        limpaDpc=limpaDpc,
+        limpaDpcSlope=limpaDpcSlope,
+        limpaChunk=limpaChunk,
+        limpaVerbose=limpaVerbose,
+        limpaSampleWeights=limpaSampleWeights,
+        limpaDEArgs=limpaDEArgs
     )
     if (!quiet) message("Contrast calculations done!")
     

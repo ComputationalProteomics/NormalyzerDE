@@ -16,9 +16,10 @@
 #' @slot pairwiseCompsAve List with average expression values
 #' @slot pairwiseCompsFold List with log2 fold-change values for pairwise 
 #'   comparisons
-#' @slot contrasts Spot for saving vector of last used contrasts
+#' @slot comparisons Spot for saving vector of last used contrasts
 #' @slot condCol Column containing last used conditions
 #' @slot batchCol Column containing last used batch conditions
+#' @slot splitter Character dividing contrast conditions
 NormalyzerStatistics <- setClass("NormalyzerStatistics",
                                  slots = c(
                                      annotMat = "matrix",
@@ -30,27 +31,39 @@ NormalyzerStatistics <- setClass("NormalyzerStatistics",
                                      pairwiseCompsAve = "list",
                                      pairwiseCompsFold = "list",
                                      pairwiseCompsSig = "list",
-                                     
+                                    
                                      comparisons = "character",
                                      condCol = "character",
-                                     batchCol = "numeric"
+                                     batchCol = "numeric",
+                                     splitter = "character"
                                  ))
 
 #' Constructor for NormalyzerStatistics
 #' 
 #' @param experimentObj Instance of SummarizedExperiment containing matrix
 #'   and design information as column data
-#' @param logTrans Whether the input data should be log transformed
+#' @param logTrans Whether the input data should be log transformed. When
+#'   \code{TRUE}, non-finite values produced by the transform (e.g.
+#'   \code{log2(0)} returning \code{-Inf}) are treated as missing (set to
+#'   \code{NA}).
 #' @return nds Generated NormalyzerStatistics instance
 #' @export
 #' @examples
 #' data(example_stat_summarized_experiment)
 #' nst <- NormalyzerStatistics(example_stat_summarized_experiment)
 NormalyzerStatistics <- function(experimentObj, logTrans=FALSE) { 
-
-              dataMat <- SummarizedExperiment::assay(experimentObj)
+              dataMat <- as.matrix(SummarizedExperiment::assay(experimentObj))
               if (logTrans) {
+                  wasMissing <- is.na(dataMat)
                   dataMat <- log2(dataMat)
+                  nonFinite <- !is.finite(dataMat) & !wasMissing
+                  if (any(nonFinite)) {
+                      warning(
+                          "Non-finite values produced by log2 transform (e.g. zeros or negative values) ",
+                          "were treated as missing (set to NA)."
+                      )
+                      dataMat[nonFinite] <- NA_real_
+                  }
               }
               
               annotMat <- SummarizedExperiment::rowData(experimentObj)
@@ -58,7 +71,7 @@ NormalyzerStatistics <- function(experimentObj, logTrans=FALSE) {
 
               nst <- new("NormalyzerStatistics",
                          annotMat=as.matrix(annotMat), 
-                         dataMat=as.matrix(dataMat), 
+                         dataMat=dataMat, 
                          designDf=as.data.frame(designDf)
               )
 
@@ -94,6 +107,17 @@ setGeneric("comparisons<-", function(object, value) { standardGeneric("compariso
 setReplaceMethod("comparisons", signature(object="NormalyzerStatistics"), 
                  function(object, value) { 
                      slot(object, "comparisons") <- value
+                     validObject(object)
+                     object
+                 })
+
+setGeneric("contrastSplitter", function(object) { standardGeneric("contrastSplitter") })
+setMethod("contrastSplitter", signature(object="NormalyzerStatistics"),
+          function(object) { slot(object, "splitter") })
+setGeneric("contrastSplitter<-", function(object, value) { standardGeneric("contrastSplitter<-") })
+setReplaceMethod("contrastSplitter", signature(object="NormalyzerStatistics"),
+                 function(object, value) {
+                     slot(object, "splitter") <- as.character(value)
                      validObject(object)
                      object
                  })
@@ -187,7 +211,7 @@ setReplaceMethod("pairwiseCompsFold", signature(object="NormalyzerStatistics"),
 #' 
 #' Optionally, a batch column can be specified allowing compensation for
 #' covariate variation in the statistical model. This is only compatible
-#' with a Limma-based statistical analysis.
+#' with a Limma- or limpa-based statistical analysis.
 #'
 #' @param nst Results evaluation object.
 #' @param comparisons Character vector with pairwise comparisons for contrasts.
@@ -195,17 +219,44 @@ setReplaceMethod("pairwiseCompsFold", signature(object="NormalyzerStatistics"),
 #' @param condCol Column name in design matrix containing condition information.
 #' @param batchCol Column name in design matrix containing batch information.
 #' @param splitter Character dividing contrast conditions.
-#' @param type Type of statistical test (Limma or welch).
-#' @param leastRepCount Least replicates in each group to be retained for 
-#'   contrast calculations
-#' @param impute Whether to impute values
-#' @param imputeMinFraction Minimum fraction non-NA values for an analyte in any group to impute in other groups
+#' @param type Type of statistical test ("limma", "limma_intensity", "welch" or
+#'   "limpa"). "limpa" uses the optional Bioconductor package \pkg{limpa} to
+#'   handle missing values via a detection probability curve (DPC) model.
+#' @param leastRepCount Least replicates in each group to be retained for
+#'   contrast calculations. For \code{type="limpa"}, a feature is retained if at
+#'   least one group has \code{leastRepCount} observed samples (and features
+#'   entirely missing across all samples are removed).
+#' @param impute Whether to impute values (ignored for \code{type="limpa"}).
+#' @param imputeMinFraction Minimum fraction non-NA values for an analyte in any
+#'   group to impute in other groups (ignored for \code{type="limpa"}).
 #' @param subsetByComparison If TRUE, subset data and design to each comparison
 #'   before NA-filtering, imputation and model fitting.
 #' @param oneVsRest If TRUE, compute one-vs-rest contrasts for each group in
 #'   \code{condCol} (or the subset in \code{oneVsRestGroups}).
 #' @param oneVsRestGroups Optional character vector specifying which groups in
 #'   \code{condCol} to compare against all other samples.
+#' @param limpaProteinIdCol For \code{type="limpa"}, optionally summarize
+#'   peptide/precursor rows to protein-level using \code{limpa::dpcQuant()}.
+#'   Set to a column name in the row annotation (for example \code{"Protein.Group"})
+#'   to use as the protein identifier. Use \code{"auto"} (default) to try common
+#'   identifiers. If the chosen column contains duplicate identifiers, the data
+#'   are summarized once across all samples and the output rows correspond to
+#'   proteins. Set to \code{NULL} to disable protein summarization and treat each
+#'   row as one protein.
+#' @param limpaDpc For \code{type="limpa"}, optional DPC parameters to pass to
+#'   \code{limpa::dpcQuant()} / \code{limpa::dpcImpute()}. Can be a list as
+#'   returned by \code{limpa::dpc()}, or a numeric vector \code{c(beta0, beta1)}.
+#' @param limpaDpcSlope For \code{type="limpa"}, slope for DPC estimation when
+#'   \code{limpaDpc} is not provided. Passed as \code{dpc.slope}.
+#' @param limpaChunk For \code{type="limpa"}, chunk size passed to
+#'   \code{limpa::dpcQuant()} / \code{limpa::dpcImpute()}.
+#' @param limpaVerbose For \code{type="limpa"}, whether to show limpa progress
+#'   messages.
+#' @param limpaSampleWeights For \code{type="limpa"}, whether to estimate limma
+#'   sample weights via \code{sample.weights=TRUE}.
+#' @param limpaDEArgs For \code{type="limpa"}, optional named list of additional
+#'   arguments forwarded to \code{limpa::dpcDE()} (and then to
+#'   \code{limpa::voomaLmFitWithImputation()}).
 #' @return nst Statistics object with statistical measures calculated
 #' @rdname calculateContrasts 
 #' @export
@@ -217,20 +268,31 @@ setReplaceMethod("pairwiseCompsFold", signature(object="NormalyzerStatistics"),
 #' resultsOneVsRest <- calculateContrasts(nst, condCol="group", oneVsRest=TRUE)
 setGeneric(name="calculateContrasts", 
            function(nst, comparisons=NULL, condCol, batchCol=NULL, splitter="-", 
-                    type="limma", leastRepCount=1, impute = FALSE, imputeMinFraction=1,
-                    subsetByComparison = FALSE, oneVsRest = FALSE, oneVsRestGroups = NULL) standardGeneric("calculateContrasts"))
+                    type="limma", leastRepCount=1, impute = FALSE, imputeMinFraction=0.75,
+                    subsetByComparison = FALSE, oneVsRest = FALSE, oneVsRestGroups = NULL,
+                    limpaProteinIdCol="auto", limpaDpc=NULL, limpaDpcSlope=0.8,
+                    limpaChunk=1000L, limpaVerbose=FALSE, limpaSampleWeights=FALSE,
+                    limpaDEArgs=NULL) standardGeneric("calculateContrasts"))
 
 #' @rdname calculateContrasts
 setMethod(f="calculateContrasts", 
           signature=c("NormalyzerStatistics"),
           function(nst, comparisons=NULL, condCol, batchCol=NULL, splitter="-", 
-                   type="limma", leastRepCount=1, impute = FALSE, imputeMinFraction=1,
-                   subsetByComparison = FALSE, oneVsRest = FALSE, oneVsRestGroups = NULL) {
+                   type="limma", leastRepCount=1, impute = FALSE, imputeMinFraction=0.75,
+                   subsetByComparison = FALSE, oneVsRest = FALSE, oneVsRestGroups = NULL,
+                   limpaProteinIdCol="auto", limpaDpc=NULL, limpaDpcSlope=0.8,
+                   limpaChunk=1000L, limpaVerbose=FALSE, limpaSampleWeights=FALSE,
+                   limpaDEArgs=NULL) {
               
               dataMat <- dataMat(nst)
               designDf <- designDf(nst)
 
+              contrastSplitter(nst) <- splitter
               condCol(nst) <- as.character(designDf[, condCol])
+
+              if (!is.null(batchCol) && !(type %in% c("limma", "limma_intensity", "limpa"))) {
+                  stop("Batch compensation only compatible with Limma and limpa, got: ", type)
+              }
 
               if (!is.null(batchCol)) {
                   conditionCombs <- paste(designDf[, condCol], designDf[, batchCol], sep="_")
@@ -252,9 +314,9 @@ setMethod(f="calculateContrasts",
                       model <- ~0+Variable
                   }
                   else {
-                      if (!(type %in% c("limma", "limma_intensity"))) {
+                      if (!(type %in% c("limma", "limma_intensity", "limpa"))) {
                           stop(
-                              "Batch compensation only compatible with Limma, got: ", 
+                              "Batch compensation only compatible with Limma and limpa, got: ", 
                               type
                           )
                       }
@@ -263,6 +325,261 @@ setMethod(f="calculateContrasts",
                       model <- ~0+Variable+Batch
                   }
                   model
+              }
+
+              requireLimpaPackage <- function() {
+                  if (!requireNamespace("limpa", quietly=TRUE)) {
+                      stop(
+                          "Statistics type 'limpa' requires the optional Bioconductor package 'limpa'.\n",
+                          "Install it with `BiocManager::install(\"limpa\")`."
+                      )
+                  }
+              }
+
+              if (type == "limpa") {
+                  requireLimpaPackage()
+
+                  limpaChunk <- as.integer(limpaChunk)
+                  if (is.na(limpaChunk) || limpaChunk < 1) {
+                      stop("limpaChunk must be a positive integer, got: ", limpaChunk)
+                  }
+
+                  if (!is.numeric(limpaDpcSlope) || length(limpaDpcSlope) != 1 || is.na(limpaDpcSlope) || limpaDpcSlope <= 0) {
+                      stop("limpaDpcSlope must be a single positive numeric value.")
+                  }
+
+                  if (!is.null(limpaDpc) && !(is.list(limpaDpc) || (is.numeric(limpaDpc) && length(limpaDpc) == 2))) {
+                      stop("limpaDpc must be NULL, a list returned by limpa::dpc(), or a numeric vector c(beta0, beta1).")
+                  }
+
+                  if (!is.null(limpaDEArgs) && !is.list(limpaDEArgs)) {
+                      stop("limpaDEArgs must be a list (or NULL).")
+                  }
+              }
+
+              sanitizeLimpaDEArgs <- function(args) {
+
+                  if (is.null(args)) {
+                      return(list())
+                  }
+                  if (length(args) == 0) {
+                      return(list())
+                  }
+                  if (is.null(names(args))) {
+                      stop("limpaDEArgs must be a named list.")
+                  }
+
+                  forbidden <- c("y", "design", "plot")
+                  args[forbidden] <- NULL
+                  args
+              }
+
+              inferLimpaProteinIdCol <- function(annotationMat, proteinIdCol) {
+
+                  if (is.null(proteinIdCol)) {
+                      return(NULL)
+                  }
+
+                  proteinIdCol <- as.character(proteinIdCol)[1]
+                  annotationCols <- colnames(annotationMat)
+                  if (is.null(annotationCols)) {
+                      annotationCols <- character()
+                  }
+
+                  if (identical(proteinIdCol, "auto")) {
+                      candidates <- c("Protein.Group", "Protein")
+                      proteinIdCol <- candidates[candidates %in% annotationCols][1]
+                      if (is.na(proteinIdCol) || is.null(proteinIdCol)) {
+                          return(NULL)
+                      }
+                      return(proteinIdCol)
+                  }
+
+                  if (!(proteinIdCol %in% annotationCols)) {
+                      stop(
+                          "limpaProteinIdCol '", proteinIdCol, "' was not found in the row annotation.\n",
+                          "Available columns: ", paste(annotationCols, collapse=", ")
+                      )
+                  }
+
+                  proteinIdCol
+              }
+
+              prepareLimpaQuantified <- function(dataMat, annotationMat, proteinIdCol) {
+
+                  if (is.null(proteinIdCol)) {
+                      return(NULL)
+                  }
+
+                  proteinId <- annotationMat[, proteinIdCol]
+                  proteinId <- as.character(proteinId)
+
+                  if (length(proteinId) != nrow(dataMat)) {
+                      stop(
+                          "Row annotation column '", proteinIdCol, "' does not match the number of rows in the data matrix."
+                      )
+                  }
+
+                  if (anyNA(proteinId) || any(proteinId == "")) {
+                      stop(
+                          "Row annotation column '", proteinIdCol, "' contains missing or empty protein identifiers. ",
+                          "Remove these rows or choose another column."
+                      )
+                  }
+
+                  if (anyDuplicated(proteinId) == 0) {
+                      return(NULL)
+                  }
+
+                  keepRows <- rowSums(!is.na(dataMat)) > 0
+                  dataMat <- dataMat[keepRows, , drop=FALSE]
+                  proteinId <- proteinId[keepRows]
+
+                  genesInput <- as.data.frame(
+                      annotationMat[keepRows, , drop=FALSE],
+                      stringsAsFactors=FALSE,
+                      check.names=FALSE
+                  )
+                  genesInput[[proteinIdCol]] <- proteinId
+                  yPeptide <- methods::new("EList", list(E=dataMat, genes=genesInput))
+                  yProtein <- limpa::dpcQuant(
+                      yPeptide,
+                      protein.id=proteinIdCol,
+                      dpc=limpaDpc,
+                      dpc.slope=limpaDpcSlope,
+                      verbose=limpaVerbose,
+                      chunk=limpaChunk
+                  )
+
+                  proteinIds <- rownames(yProtein$E)
+                  rowIds <- as.character(seq_len(nrow(yProtein$E)))
+
+                  rownames(yProtein$E) <- rowIds
+
+                  if (!is.null(yProtein$other$n.observations)) {
+                      rownames(yProtein$other$n.observations) <- rowIds
+                  }
+                  if (!is.null(yProtein$other$standard.error)) {
+                      rownames(yProtein$other$standard.error) <- rowIds
+                  }
+
+                  genes <- if (!is.null(yProtein$genes)) {
+                      as.data.frame(yProtein$genes, check.names=FALSE)
+                  } else {
+                      data.frame(check.names=FALSE)
+                  }
+                  if (!(proteinIdCol %in% colnames(genes))) {
+                      genes[[proteinIdCol]] <- proteinIds
+                  }
+                  genes <- genes[, c(proteinIdCol, setdiff(names(genes), proteinIdCol)), drop=FALSE]
+                  rownames(genes) <- rowIds
+                  yProtein$genes <- genes
+
+                  yProtein
+              }
+
+              filterLowRepLimpa <- function(df, groups, leastRep=1) {
+
+                  hasAnyObs <- rowSums(!is.na(df)) > 0
+                  df <- df[hasAnyObs, , drop=FALSE]
+                  if (nrow(df) == 0) {
+                      return(df)
+                  }
+
+                  leastRep <- as.integer(leastRep)
+                  if (leastRep <= 1) {
+                      return(df)
+                  }
+
+                  groups <- as.character(groups)
+                  groupLevels <- unique(groups)
+
+                  maxCount <- integer(nrow(df))
+                  for (groupLevel in groupLevels) {
+                      cols <- which(groups == groupLevel)
+                      if (length(cols) == 0) {
+                          next
+                      }
+                      counts <- rowSums(!is.na(df[, cols, drop=FALSE]))
+                      maxCount <- pmax(maxCount, counts)
+                  }
+
+                  df[maxCount >= leastRep, , drop=FALSE]
+              }
+
+              limpaProteinIdColUsed <- if (type == "limpa") {
+                  inferLimpaProteinIdCol(annotMat(nst), limpaProteinIdCol)
+              } else {
+                  NULL
+              }
+              limpaQuantified <- if (type == "limpa" && !is.null(limpaProteinIdColUsed)) {
+                  prepareLimpaQuantified(dataMat, annotMat(nst), limpaProteinIdColUsed)
+              } else {
+                  NULL
+              }
+
+              if (!is.null(limpaQuantified)) {
+                  dataMat <- as.matrix(limpaQuantified$E)
+                  slot(nst, "dataMat") <- dataMat
+                  slot(nst, "annotMat") <- as.matrix(limpaQuantified$genes)
+              }
+
+              calculateLimpaFit <- function(dataMat, limmaDesign) {
+
+                  if (is.null(limpaQuantified)) {
+                      yImputed <- limpa::dpcImpute(
+                          dataMat,
+                          dpc=limpaDpc,
+                          dpc.slope=limpaDpcSlope,
+                          verbose=limpaVerbose,
+                          chunk=limpaChunk
+                      )
+
+                      limpaDEArgsUse <- sanitizeLimpaDEArgs(limpaDEArgs)
+                      if (!("sample.weights" %in% names(limpaDEArgsUse))) {
+                          limpaDEArgsUse[["sample.weights"]] <- isTRUE(limpaSampleWeights)
+                      }
+                      return(
+                          do.call(
+                              limpa::dpcDE,
+                              c(list(y=yImputed, design=limmaDesign, plot=FALSE), limpaDEArgsUse)
+                          )
+                      )
+                  }
+
+                  yUse <- limpaQuantified
+
+                  cols <- colnames(dataMat)
+                  yUse$E <- yUse$E[, cols, drop=FALSE]
+
+                  if (!is.null(yUse$other$n.observations)) {
+                      yUse$other$n.observations <- yUse$other$n.observations[, cols, drop=FALSE]
+                  }
+                  if (!is.null(yUse$other$standard.error)) {
+                      yUse$other$standard.error <- yUse$other$standard.error[, cols, drop=FALSE]
+                  }
+
+                  rows <- rownames(dataMat)
+                  yUse$E <- yUse$E[rows, , drop=FALSE]
+
+                  if (!is.null(yUse$other$n.observations)) {
+                      yUse$other$n.observations <- yUse$other$n.observations[rows, , drop=FALSE]
+                  }
+                  if (!is.null(yUse$other$standard.error)) {
+                      yUse$other$standard.error <- yUse$other$standard.error[rows, , drop=FALSE]
+                  }
+                  if (!is.null(yUse$genes)) {
+                      yUse$genes <- yUse$genes[rows, , drop=FALSE]
+                  }
+
+                  limpaDEArgsUse <- sanitizeLimpaDEArgs(limpaDEArgs)
+                  if (!("sample.weights" %in% names(limpaDEArgsUse))) {
+                      limpaDEArgsUse[["sample.weights"]] <- isTRUE(limpaSampleWeights)
+                  }
+                  do.call(
+                      limpa::dpcDE,
+                      c(list(y=yUse, design=limmaDesign, plot=FALSE), limpaDEArgsUse)
+                  )
               }
 
               compLists <- list()
@@ -311,11 +628,19 @@ setMethod(f="calculateContrasts",
                           groupHeader
                       }
 
-                      dataMatNAFiltered <- filterLowRep(
-                          dataMat, 
-                          conditionCombsOVR, 
-                          leastRep=leastRepCount
-                      )
+                      dataMatNAFiltered <- if (type == "limpa") {
+                          filterLowRepLimpa(
+                              dataMat,
+                              conditionCombsOVR,
+                              leastRep=leastRepCount
+                          )
+                      } else {
+                          filterLowRep(
+                              dataMat,
+                              conditionCombsOVR,
+                              leastRep=leastRepCount
+                          )
+                      }
 
                       if (nrow(dataMatNAFiltered) == 0) {
                           stop(
@@ -331,7 +656,7 @@ setMethod(f="calculateContrasts",
 
                       naFilterContrast <- rownames(dataMat) %in% rownames(dataMatNAFiltered)
 
-                      if (leastRepCount == 0 && impute) { 
+                      if (type != "limpa" && leastRepCount == 0 && impute) {
                           dataMatNAFiltered <- imputeGroupValues(
                               dataMatNAFiltered, 
                               conditionCombsOVR, 
@@ -346,13 +671,17 @@ setMethod(f="calculateContrasts",
                               c(groupLabel, restLabel)
                           )
                       }
-	                      else if (type %in% c("limma", "limma_intensity")) {
+	                      else if (type %in% c("limma", "limma_intensity", "limpa")) {
 	                          model <- setupModelFromDesign(designDfOVR, condCol, batchCol=batchCol, type=type)
 	                          limmaDesignRaw <- stats::model.matrix(model)
 	                          limmaPrepared <- sanitizeLimmaDesign(limmaDesignRaw)
 	                          limmaDesign <- limmaPrepared$design
 	                          limmaCoefMap <- limmaPrepared$coefMap
-	                          limmaFit <- limma::lmFit(dataMatNAFiltered, limmaDesign)
+	                          limmaFit <- if (type == "limpa") {
+	                              calculateLimpaFit(dataMatNAFiltered, limmaDesign)
+	                          } else {
+	                              limma::lmFit(dataMatNAFiltered, limmaDesign)
+	                          }
 
 	                          statResults <- calculateLimmaContrast(
 	                              dataMatNAFiltered, 
@@ -384,11 +713,19 @@ setMethod(f="calculateContrasts",
 
                   if (!subsetByComparison) {
 
-                  dataMatNAFiltered <- filterLowRep(
-                      dataMat, 
-                      conditionCombs, 
-                      leastRep=leastRepCount
-                  )
+                  dataMatNAFiltered <- if (type == "limpa") {
+                      filterLowRepLimpa(
+                          dataMat,
+                          conditionCombs,
+                          leastRep=leastRepCount
+                      )
+                  } else {
+                      filterLowRep(
+                          dataMat,
+                          conditionCombs,
+                          leastRep=leastRepCount
+                      )
+                  }
 
                   if (nrow(dataMatNAFiltered) == 0) {
                       stop("No rows remained after NA-filtering for condition: '", 
@@ -402,7 +739,7 @@ setMethod(f="calculateContrasts",
 
                   naFilterContrast <- rownames(dataMat) %in% rownames(dataMatNAFiltered)
 
-                  if (leastRepCount == 0 && impute) { 
+                  if (type != "limpa" && leastRepCount == 0 && impute) { 
                       dataMatNAFiltered <- imputeGroupValues(
                           dataMatNAFiltered, 
                           conditionCombs, 
@@ -412,17 +749,21 @@ setMethod(f="calculateContrasts",
 
 	                  model <- setupModel(nst, condCol, batchCol=batchCol, type=type)
 
-	                  if (type %in% c("limma", "limma_intensity")) {
+	                  if (type %in% c("limma", "limma_intensity", "limpa")) {
 	                      limmaDesignRaw <- stats::model.matrix(model)
 	                      limmaPrepared <- sanitizeLimmaDesign(limmaDesignRaw)
 	                      limmaDesign <- limmaPrepared$design
 	                      limmaCoefMap <- limmaPrepared$coefMap
-	                      limmaFit <- limma::lmFit(dataMatNAFiltered, limmaDesign)
+	                      limmaFit <- if (type == "limpa") {
+	                          calculateLimpaFit(dataMatNAFiltered, limmaDesign)
+	                      } else {
+	                          limma::lmFit(dataMatNAFiltered, limmaDesign)
+	                      }
 	                  }
 
                   for (comp in comparisons) {
                   
-                  compSplit <- unlist(strsplit(comp, splitter))
+                  compSplit <- unlist(strsplit(comp, splitter, fixed=TRUE))
                   
                   if (length(compSplit) != 2) {
                       stop("Comparison should be in format cond1-cond2 ", 
@@ -433,14 +774,14 @@ setMethod(f="calculateContrasts",
                   level1 <- compSplit[1]
                   level2 <- compSplit[2]
                   
-                  if (length(sampleReplicateGroupsStrings %in% level1) == 0) {
+                  if (!any(sampleReplicateGroupsStrings %in% level1)) {
                       stop("No samples matching condition ", 
                            level1, 
                            " found in conditions: ", 
                            paste(sampleReplicateGroupsStrings, collapse=" "))
                   }
                   
-                  if (length(sampleReplicateGroupsStrings %in% level2) == 0) {
+                  if (!any(sampleReplicateGroupsStrings %in% level2)) {
                       stop("No samples matching condition ", 
                            level2, " found in conditions: ", 
                            paste(sampleReplicateGroupsStrings, collapse=" "))
@@ -452,24 +793,14 @@ setMethod(f="calculateContrasts",
                           sampleReplicateGroupsStrings, 
                           c(level1, level2))
                   }
-	                  else if (type == "limma") {
-	                      
+	                  else if (type %in% c("limma", "limma_intensity", "limpa")) {
+
 	                      statResults <- calculateLimmaContrast(
 	                          dataMatNAFiltered, 
 	                          limmaDesign, 
 	                          limmaFit, 
 	                          c(level1, level2), 
-	                          useIntensityTrend = FALSE,
-	                          coefMap = limmaCoefMap)
-	                  }
-	                  else if (type == "limma_intensity") {
-	                      
-	                      statResults <- calculateLimmaContrast(
-	                          dataMatNAFiltered, 
-	                          limmaDesign, 
-	                          limmaFit, 
-	                          c(level1, level2), 
-	                          useIntensityTrend = TRUE,
+	                          useIntensityTrend = type == "limma_intensity",
 	                          coefMap = limmaCoefMap)
 	                  }
                   else {
@@ -486,7 +817,7 @@ setMethod(f="calculateContrasts",
               else {
                   for (comp in comparisons) {
 
-                      compSplit <- unlist(strsplit(comp, splitter))
+                      compSplit <- unlist(strsplit(comp, splitter, fixed=TRUE))
 
                       if (length(compSplit) != 2) {
                           stop("Comparison should be in format cond1-cond2 ", 
@@ -508,11 +839,19 @@ setMethod(f="calculateContrasts",
                           conditionCombsComp <- designDfComp[, condCol]
                       }
 
-                      dataMatNAFiltered <- filterLowRep(
-                          dataMatComp, 
-                          conditionCombsComp, 
-                          leastRep=leastRepCount
-                      )
+	                      dataMatNAFiltered <- if (type == "limpa") {
+	                          filterLowRepLimpa(
+	                              dataMatComp,
+	                              conditionCombsComp,
+	                              leastRep=leastRepCount
+	                          )
+	                      } else {
+	                          filterLowRep(
+	                              dataMatComp, 
+	                              conditionCombsComp, 
+	                              leastRep=leastRepCount
+	                          )
+	                      }
 
                       if (nrow(dataMatNAFiltered) == 0) {
                           stop(
@@ -528,13 +867,13 @@ setMethod(f="calculateContrasts",
 
                       naFilterContrast <- rownames(dataMat) %in% rownames(dataMatNAFiltered)
 
-                      if (leastRepCount == 0 && impute) { 
-                          dataMatNAFiltered <- imputeGroupValues(
-                              dataMatNAFiltered, 
-                              conditionCombsComp, 
-                              minFraction=imputeMinFraction
-                          )
-                      }
+	                      if (type != "limpa" && leastRepCount == 0 && impute) { 
+	                          dataMatNAFiltered <- imputeGroupValues(
+	                              dataMatNAFiltered, 
+	                              conditionCombsComp, 
+	                              minFraction=imputeMinFraction
+	                          )
+	                      }
 
                       if (type == "welch") {
                           statResults <- calculateWelch(
@@ -543,13 +882,17 @@ setMethod(f="calculateContrasts",
                               c(level1, level2)
                           )
                       }
-	                      else if (type %in% c("limma", "limma_intensity")) {
+	                      else if (type %in% c("limma", "limma_intensity", "limpa")) {
 	                          model <- setupModelFromDesign(designDfComp, condCol, batchCol=batchCol, type=type)
 	                          limmaDesignRaw <- stats::model.matrix(model)
 	                          limmaPrepared <- sanitizeLimmaDesign(limmaDesignRaw)
 	                          limmaDesign <- limmaPrepared$design
 	                          limmaCoefMap <- limmaPrepared$coefMap
-	                          limmaFit <- limma::lmFit(dataMatNAFiltered, limmaDesign)
+	                          limmaFit <- if (type == "limpa") {
+	                              calculateLimpaFit(dataMatNAFiltered, limmaDesign)
+	                          } else {
+	                              limma::lmFit(dataMatNAFiltered, limmaDesign)
+	                          }
 
 	                          statResults <- calculateLimmaContrast(
 	                              dataMatNAFiltered, 
@@ -595,7 +938,7 @@ setMethod(f="calculateContrasts",
 verifyContrasts <- function(designLevels, contrasts, splitter="-") {
     
     for (contrast in contrasts) {
-        parts <- unlist(strsplit(contrast, splitter))
+        parts <- unlist(strsplit(contrast, splitter, fixed=TRUE))
         
         if (length(parts) != 2) {
             stop("A contrast string delimited by one splitter (", splitter, ") was expected. Instead following was found: ", contrast)
@@ -612,6 +955,20 @@ verifyContrasts <- function(designLevels, contrasts, splitter="-") {
     }
 }
 
+.getContrastSplitter <- function(nst, default="-") {
+
+    if (!methods::is(nst, "NormalyzerStatistics")) {
+        return(default)
+    }
+
+    sep <- tryCatch(contrastSplitter(nst), error=function(e) character())
+    if (length(sep) == 0 || is.na(sep[1]) || !nzchar(sep[1])) {
+        return(default)
+    }
+
+    sep[1]
+}
+
 setupModel <- function(nst, condCol, batchCol=NULL, type="limma") {
     
     if (is.null(batchCol)) {
@@ -619,9 +976,9 @@ setupModel <- function(nst, condCol, batchCol=NULL, type="limma") {
         model <- ~0+Variable
     }
     else {
-        if (!(type %in% c("limma", "limma_intensity"))) {
+        if (!(type %in% c("limma", "limma_intensity", "limpa"))) {
             stop(
-                "Batch compensation only compatible with Limma, got: ", 
+                "Batch compensation only compatible with Limma and limpa, got: ", 
                 type
             )
         }

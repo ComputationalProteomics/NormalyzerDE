@@ -26,23 +26,23 @@ None
 They include:
 }
 \details{
-"Total intensity" 
-Barplot showing the summed intensity in each sample for thelog2-transformed 
+"Total intensity"
+Barplot showing the summed intensity in each sample for thelog2-transformed
 data
 
-"Total missing" 
-Barplot showing the number of missing values found in each sample for the 
+"Total missing"
+Barplot showing the number of missing values found in each sample for the
 log2-tranformed data
 
-Log2-MDS plot: MDS plot where data is reduced to two dimensions allowing 
+Log2-MDS plot: MDS plot where data is reduced to two dimensions allowing
 inspection of the main global changes in the data
 
 PCV - Intragroup: Mean of intragroup CV of all replicate groups
 
-PMAD - Intragroup: Mean of intragroup median absolute deviation across 
+PMAD - Intragroup: Mean of intragroup median absolute deviation across
 replicate groups
 
-PEV - Intragroup: Mean of intragroup pooled estimate of variance across the 
+PEV - Intragroup: Mean of intragroup pooled estimate of variance across the
 replicate groups
 
 Relative PCV, PMAD and PEV compared to log2: The results from PCV, PMAD
@@ -82,7 +82,7 @@ The samples should be aligned around zero. Any deviation would indicate
 discrepancies in the data.
 
 Density plots:
-Density distributions for each sample using the density function. Can 
+Density distributions for each sample using the density function. Can
 capture outliers (if single densities lies far from the others) and see
 if there is batch effects in the dataset (if for instance there is two
 clear collections of lines in the data).

@@ -19,10 +19,17 @@ calculateContrasts(
   type = "limma",
   leastRepCount = 1,
   impute = FALSE,
-  imputeMinFraction = 1,
+  imputeMinFraction = 0.75,
   subsetByComparison = FALSE,
   oneVsRest = FALSE,
-  oneVsRestGroups = NULL
+  oneVsRestGroups = NULL,
+  limpaProteinIdCol = "auto",
+  limpaDpc = NULL,
+  limpaDpcSlope = 0.8,
+  limpaChunk = 1000L,
+  limpaVerbose = FALSE,
+  limpaSampleWeights = FALSE,
+  limpaDEArgs = NULL
 )
 
 \S4method{calculateContrasts}{NormalyzerStatistics}(
@@ -34,10 +41,17 @@ calculateContrasts(
   type = "limma",
   leastRepCount = 1,
   impute = FALSE,
-  imputeMinFraction = 1,
+  imputeMinFraction = 0.75,
   subsetByComparison = FALSE,
   oneVsRest = FALSE,
-  oneVsRestGroups = NULL
+  oneVsRestGroups = NULL,
+  limpaProteinIdCol = "auto",
+  limpaDpc = NULL,
+  limpaDpcSlope = 0.8,
+  limpaChunk = 1000L,
+  limpaVerbose = FALSE,
+  limpaSampleWeights = FALSE,
+  limpaDEArgs = NULL
 )
 }
 \arguments{
@@ -52,14 +66,19 @@ Ignored if \code{oneVsRest=TRUE}.}
 
 \item{splitter}{Character dividing contrast conditions.}
 
-\item{type}{Type of statistical test (Limma or welch).}
+\item{type}{Type of statistical test ("limma", "limma_intensity", "welch" or
+"limpa"). "limpa" uses the optional Bioconductor package \pkg{limpa} to
+handle missing values via a detection probability curve (DPC) model.}
 
-\item{leastRepCount}{Least replicates in each group to be retained for 
-contrast calculations}
+\item{leastRepCount}{Least replicates in each group to be retained for
+contrast calculations. For \code{type="limpa"}, a feature is retained if at
+least one group has \code{leastRepCount} observed samples (and features
+entirely missing across all samples are removed).}
 
-\item{impute}{Whether to impute values}
+\item{impute}{Whether to impute values (ignored for \code{type="limpa"}).}
 
-\item{imputeMinFraction}{Minimum fraction non-NA values for an analyte in any group to impute in other groups}
+\item{imputeMinFraction}{Minimum fraction non-NA values for an analyte in any
+group to impute in other groups (ignored for \code{type="limpa"}).}
 
 \item{subsetByComparison}{If TRUE, subset data and design to each comparison
 before NA-filtering, imputation and model fitting.}
@@ -69,6 +88,35 @@ before NA-filtering, imputation and model fitting.}
 
 \item{oneVsRestGroups}{Optional character vector specifying which groups in
 \code{condCol} to compare against all other samples.}
+
+\item{limpaProteinIdCol}{For \code{type="limpa"}, optionally summarize
+peptide/precursor rows to protein-level using \code{limpa::dpcQuant()}.
+Set to a column name in the row annotation (for example \code{"Protein.Group"})
+to use as the protein identifier. Use \code{"auto"} (default) to try common
+identifiers. If the chosen column contains duplicate identifiers, the data
+are summarized once across all samples and the output rows correspond to
+proteins. Set to \code{NULL} to disable protein summarization and treat each
+row as one protein.}
+
+\item{limpaDpc}{For \code{type="limpa"}, optional DPC parameters to pass to
+\code{limpa::dpcQuant()} / \code{limpa::dpcImpute()}. Can be a list as
+returned by \code{limpa::dpc()}, or a numeric vector \code{c(beta0, beta1)}.}
+
+\item{limpaDpcSlope}{For \code{type="limpa"}, slope for DPC estimation when
+\code{limpaDpc} is not provided. Passed as \code{dpc.slope}.}
+
+\item{limpaChunk}{For \code{type="limpa"}, chunk size passed to
+\code{limpa::dpcQuant()} / \code{limpa::dpcImpute()}.}
+
+\item{limpaVerbose}{For \code{type="limpa"}, whether to show limpa progress
+messages.}
+
+\item{limpaSampleWeights}{For \code{type="limpa"}, whether to estimate limma
+sample weights via \code{sample.weights=TRUE}.}
+
+\item{limpaDEArgs}{For \code{type="limpa"}, optional named list of additional
+arguments forwarded to \code{limpa::dpcDE()} (and then to
+\code{limpa::voomaLmFitWithImputation()}).}
 }
 \value{
 nst Statistics object with statistical measures calculated
@@ -76,7 +124,7 @@ nst Statistics object with statistical measures calculated
 \description{
 Optionally, a batch column can be specified allowing compensation for
 covariate variation in the statistical model. This is only compatible
-with a Limma-based statistical analysis.
+with a Limma- or limpa-based statistical analysis.
 }
 \examples{
 data(example_stat_summarized_experiment)

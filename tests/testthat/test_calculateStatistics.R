@@ -453,6 +453,44 @@ test_that("calculateContrasts_oneVsRest_welch", {
     expect_true(all.equal(1, round(folds[["C-rest"]][2], 5)))
 })
 
+test_that("calculateContrasts_oneVsRest_welch_rejects_batch", {
+
+    test_data <- matrix(
+        c(
+            1, 1, 2, 2
+        ),
+        nrow=1,
+        byrow=TRUE
+    )
+    colnames(test_data) <- c("A1", "A2", "B1", "B2")
+
+    test_df <- data.frame(
+        sample=colnames(test_data),
+        group=c(rep("A", 2), rep("B", 2)),
+        batch=c("b1", "b2", "b1", "b2"),
+        stringsAsFactors=FALSE
+    )
+    rownames(test_df) <- test_df$sample
+
+    se <- SummarizedExperiment::SummarizedExperiment(
+        assay=test_data,
+        colData=test_df,
+        rowData=data.frame(annot="Pep1")
+    )
+
+    nst <- NormalyzerStatistics(se)
+    expect_error(
+        calculateContrasts(
+            nst,
+            condCol="group",
+            batchCol="batch",
+            type="welch",
+            oneVsRest=TRUE
+        ),
+        "Batch compensation only compatible with Limma"
+    )
+})
+
 test_that("calculateContrasts_oneVsRestGroups", {
 
     test_data <- matrix(
@@ -529,6 +567,44 @@ test_that("calculateContrasts_oneVsRest_impute_limma", {
     
     folds <- pairwiseCompsFold(out)
     expect_true(all.equal(-0.5, round(folds[["A-rest"]][1], 5)))
+})
+
+test_that("calculateContrasts_oneVsRest_limma_supports_batch", {
+
+    set.seed(1)
+    mat <- matrix(stats::rnorm(20 * 6, mean=10, sd=1), nrow=20)
+    colnames(mat) <- c("A1", "A2", "B1", "B2", "C1", "C2")
+
+    design <- data.frame(
+        sample=colnames(mat),
+        group=c(rep("A", 2), rep("B", 2), rep("C", 2)),
+        batch=rep(c("b1", "b2"), 3),
+        stringsAsFactors=FALSE
+    )
+    rownames(design) <- design$sample
+
+    se <- SummarizedExperiment::SummarizedExperiment(
+        assay=mat,
+        colData=design,
+        rowData=data.frame(annot=paste0("Pep", seq_len(nrow(mat))))
+    )
+
+    nst <- NormalyzerStatistics(se)
+    out <- suppressWarnings(calculateContrasts(
+        nst,
+        condCol="group",
+        batchCol="batch",
+        type="limma",
+        leastRepCount=1,
+        oneVsRest=TRUE
+    ))
+
+    restLabel <- NormalyzerDE:::chooseOneVsRestLabel(design$group)
+    expected <- paste0(c("A", "B", "C"), "-", restLabel)
+
+    folds <- pairwiseCompsFold(out)
+    expect_true(all(expected %in% names(folds)))
+    expect_equal(length(folds[[expected[1]]]), nrow(mat))
 })
 
 test_that("calculateContrasts_limma_allows_group_names_with_spaces", {

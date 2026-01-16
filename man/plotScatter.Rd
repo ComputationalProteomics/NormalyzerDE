@@ -2,7 +2,7 @@
 % Please edit documentation in R/generatePlots.R
 \name{plotScatter}
 \alias{plotScatter}
-\title{Produces page containing scatter plot plotting the first two samples from 
+\title{Produces page containing scatter plot plotting the first two samples from
 each dataset against each other for each normalization method}
 \usage{
 plotScatter(nr, currentLayout, pageno)
@@ -18,7 +18,7 @@ plotScatter(nr, currentLayout, pageno)
 None
 }
 \description{
-Produces page containing scatter plot plotting the first two samples from 
+Produces page containing scatter plot plotting the first two samples from
 each dataset against each other for each normalization method
 }
 \keyword{internal}

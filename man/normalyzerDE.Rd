@@ -19,7 +19,7 @@ normalyzerDE(
   techRepCol = NULL,
   leastRepCount = 1,
   impute = FALSE,
-  imputeMinFraction = 1,
+  imputeMinFraction = 0.75,
   subsetByComparison = FALSE,
   oneVsRest = FALSE,
   oneVsRestGroups = NULL,
@@ -27,7 +27,14 @@ normalyzerDE(
   sigThres = 0.1,
   sigThresType = "fdr",
   log2FoldThres = 0,
-  writeReportAsPngs = FALSE
+  writeReportAsPngs = FALSE,
+  limpaProteinIdCol = "auto",
+  limpaDpc = NULL,
+  limpaDpcSlope = 0.8,
+  limpaChunk = 1000L,
+  limpaVerbose = FALSE,
+  limpaSampleWeights = FALSE,
+  limpaDEArgs = NULL
 )
 }
 \arguments{
@@ -50,8 +57,10 @@ as alternative to 'designPath' and 'dataPath'}
 input)}
 
 \item{type}{Type of statistical comparison, "limma", "limma_intensity" or 
-"welch", where "limma_intensity" allows the prior to be fit according to
-intensity rather than using a flat prior}
+"welch" or "limpa", where "limma_intensity" allows the prior to be fit
+according to intensity rather than using a flat prior. "limpa" uses the
+optional Bioconductor package \pkg{limpa} to handle missing values via a
+detection probability curve (DPC) model.}
 
 \item{sampleCol}{Design matrix column header for column containing sample IDs}
 
@@ -64,12 +73,14 @@ variance in the model}
 \item{techRepCol}{Design matrix column header for column containing technical 
 replicates}
 
-\item{leastRepCount}{Minimum required replicate count}
+\item{leastRepCount}{Minimum required replicate count. For \code{type="limpa"},
+a feature is retained if at least one group has \code{leastRepCount}
+observed samples (features entirely missing across all samples are removed).}
 
-\item{impute}{Whether to impute values}
+\item{impute}{Whether to impute values (ignored for \code{type="limpa"}).}
 
 \item{imputeMinFraction}{Minimum fraction non-NA values for an analyte in 
-any group to impute in other groups}
+any group to impute in other groups (ignored for \code{type="limpa"}).}
 
 \item{subsetByComparison}{If TRUE, subset data and design to each comparison
 before NA-filtering, imputation and model fitting.}
@@ -93,6 +104,35 @@ diagnostic plots}
 
 \item{writeReportAsPngs}{Output report as separate PNG files instead of a
 single PDF}
+
+\item{limpaProteinIdCol}{For \code{type="limpa"}, optionally summarize
+peptide/precursor rows to protein-level using \code{limpa::dpcQuant()}.
+Set to a column name in the row annotation (for example \code{"Protein.Group"})
+to use as the protein identifier. Use \code{"auto"} (default) to try common
+identifiers. If the chosen column contains duplicate identifiers, the data
+are summarized once across all samples and the output rows correspond to
+proteins. Set to \code{NULL} to disable protein summarization and treat each
+row as one protein.}
+
+\item{limpaDpc}{For \code{type="limpa"}, optional DPC parameters to pass to
+\code{limpa::dpcQuant()} / \code{limpa::dpcImpute()}. Can be a list as
+returned by \code{limpa::dpc()}, or a numeric vector \code{c(beta0, beta1)}.}
+
+\item{limpaDpcSlope}{For \code{type="limpa"}, slope for DPC estimation when
+\code{limpaDpc} is not provided. Passed as \code{dpc.slope}.}
+
+\item{limpaChunk}{For \code{type="limpa"}, chunk size passed to
+\code{limpa::dpcQuant()} / \code{limpa::dpcImpute()}.}
+
+\item{limpaVerbose}{For \code{type="limpa"}, whether to show limpa progress
+messages.}
+
+\item{limpaSampleWeights}{For \code{type="limpa"}, whether to estimate limma
+sample weights via \code{sample.weights=TRUE}.}
+
+\item{limpaDEArgs}{For \code{type="limpa"}, optional named list of additional
+arguments forwarded to \code{limpa::dpcDE()} (and then to
+\code{limpa::voomaLmFitWithImputation()}).}
 }
 \value{
 None
