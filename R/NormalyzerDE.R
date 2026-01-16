@@ -43,6 +43,31 @@
 #' @param sampleColName Column name in design matrix containing sample IDs.
 #' @param groupColName Column name in design matrix containing condition IDs.
 #' @param inputFormat Type of input format.
+#' @param diannLevel When \code{inputFormat="diann"}, which DIA-NN level to use
+#'   when reading a long "report" file: \code{"auto"} (default) tries protein-level
+#'   first and falls back to precursor-level, \code{"protein"} forces protein-level,
+#'   and \code{"precursor"} forces precursor-level.
+#' @param diannSampleCol When \code{inputFormat="diann"}, optional name of the DIA-NN
+#'   report column containing sample/run identifiers (defaults to \code{"Run"} if present,
+#'   otherwise \code{"File.Name"}).
+#' @param diannFeatureCol When \code{inputFormat="diann"}, optional override of the DIA-NN
+#'   report feature column (for example \code{"Protein.Group"} or \code{"Precursor.Id"}).
+#' @param diannQuantityCol When \code{inputFormat="diann"}, optional override of the DIA-NN
+#'   report quantity column (for example \code{"PG.MaxLFQ"} or \code{"Precursor.Normalised"}).
+#' @param diannFilterDecoy When \code{inputFormat="diann"}, filter out rows marked as decoys
+#'   when a \code{Decoy} column is present.
+#' @param diannFilterQValue When \code{inputFormat="diann"}, filter out rows failing q-value
+#'   cutoffs when reading a long DIA-NN report file (\code{.tsv} or \code{.parquet}).
+#' @param diannQValueCols When \code{inputFormat="diann"}, q-value columns used for filtering.
+#'   Set to \code{NULL} (default) to use a level-dependent default if present, or set to
+#'   \code{character()} / \code{"none"} to disable q-value filtering.
+#' @param diannQValueCutoffs When \code{inputFormat="diann"}, q-value cutoffs (recycled if needed).
+#'   Defaults to \code{0.01}.
+#' @param diannMinPositive When \code{inputFormat="diann"}, treat values below this threshold
+#'   as missing. Defaults to \code{0} (no filtering beyond \code{0 -> NA}).
+#' @param diannRTCol When \code{inputFormat="diann"} and reading a precursor-level report,
+#'   optional DIA-NN column used to compute per-precursor median retention time stored as
+#'   row annotation column \code{RT}. Defaults to \code{"RT"} when present.
 #' @param skipAnalysis Only perform normalization steps.
 #' @param quiet Omit status messages printed during run.
 #' @param noLogTransform Don't log-transform the input.
@@ -88,6 +113,16 @@ normalyzer <- function(
         sampleColName="sample",
         groupColName="group",
         inputFormat="default",
+        diannLevel=c("auto", "protein", "precursor"),
+        diannSampleCol=NULL,
+        diannFeatureCol=NULL,
+        diannQuantityCol=NULL,
+        diannFilterDecoy=TRUE,
+        diannFilterQValue=TRUE,
+        diannQValueCols=NULL,
+        diannQValueCutoffs=0.01,
+        diannMinPositive=0,
+        diannRTCol="RT",
         skipAnalysis=FALSE,
         quiet=FALSE,
         noLogTransform=FALSE,
@@ -110,8 +145,24 @@ normalyzer <- function(
     if (!quiet) message("[Step 1/5] Load data and verify input")
 
     if (is.null(experimentObj)) {
-        experimentObj <- setupRawDataObject(dataPath, designPath, inputFormat, 
-                                            zeroToNA, sampleColName, groupColName)
+        experimentObj <- setupRawDataObject(
+            dataPath=dataPath,
+            designPath=designPath,
+            inputFormat=inputFormat,
+            zeroToNA=zeroToNA,
+            sampleColName=sampleColName,
+            groupColName=groupColName,
+            diannLevel=diannLevel,
+            diannSampleCol=diannSampleCol,
+            diannFeatureCol=diannFeatureCol,
+            diannQuantityCol=diannQuantityCol,
+            diannFilterDecoy=diannFilterDecoy,
+            diannFilterQValue=diannFilterQValue,
+            diannQValueCols=diannQValueCols,
+            diannQValueCutoffs=diannQValueCutoffs,
+            diannMinPositive=diannMinPositive,
+            diannRTCol=diannRTCol
+        )
     }
     else {
         verifySummarizedExperiment(experimentObj, sampleColName)
@@ -273,6 +324,33 @@ normalyzer <- function(
 #'   diagnostic plots
 #' @param writeReportAsPngs Output report as separate PNG files instead of a
 #'   single PDF
+#' @param inputFormat Type of input format for \code{dataPath} when reading from
+#'   files. Supports \code{"default"} and \code{"diann"}.
+#' @param diannLevel When \code{inputFormat="diann"}, which DIA-NN level to use
+#'   when reading a long "report" file: \code{"auto"} (default) tries protein-level
+#'   first and falls back to precursor-level, \code{"protein"} forces protein-level,
+#'   and \code{"precursor"} forces precursor-level.
+#' @param diannSampleCol When \code{inputFormat="diann"}, optional name of the DIA-NN
+#'   report column containing sample/run identifiers (defaults to \code{"Run"} if present,
+#'   otherwise \code{"File.Name"}).
+#' @param diannFeatureCol When \code{inputFormat="diann"}, optional override of the DIA-NN
+#'   report feature column (for example \code{"Protein.Group"} or \code{"Precursor.Id"}).
+#' @param diannQuantityCol When \code{inputFormat="diann"}, optional override of the DIA-NN
+#'   report quantity column (for example \code{"PG.MaxLFQ"} or \code{"Precursor.Normalised"}).
+#' @param diannFilterDecoy When \code{inputFormat="diann"}, filter out rows marked as decoys
+#'   when a \code{Decoy} column is present.
+#' @param diannFilterQValue When \code{inputFormat="diann"}, filter out rows failing q-value
+#'   cutoffs when reading a long DIA-NN report file (\code{.tsv} or \code{.parquet}).
+#' @param diannQValueCols When \code{inputFormat="diann"}, q-value columns used for filtering.
+#'   Set to \code{NULL} (default) to use a level-dependent default if present, or set to
+#'   \code{character()} / \code{"none"} to disable q-value filtering.
+#' @param diannQValueCutoffs When \code{inputFormat="diann"}, q-value cutoffs (recycled if needed).
+#'   Defaults to \code{0.01}.
+#' @param diannMinPositive When \code{inputFormat="diann"}, treat values below this threshold
+#'   as missing. Defaults to \code{0} (no filtering beyond \code{0 -> NA}).
+#' @param diannRTCol When \code{inputFormat="diann"} and reading a precursor-level report,
+#'   optional DIA-NN column used to compute per-precursor median retention time stored as
+#'   row annotation column \code{RT}. Defaults to \code{"RT"} when present.
 #' 
 #' @return None
 #' @export
@@ -293,7 +371,12 @@ normalyzerDE <- function(jobName, comparisons=NULL, designPath=NULL, dataPath=NU
                          batchCol=NULL, techRepCol=NULL, leastRepCount=1, impute=FALSE, imputeMinFraction=0.75, subsetByComparison=FALSE, oneVsRest=FALSE, oneVsRestGroups=NULL, quiet=FALSE, 
                          sigThres=0.1, sigThresType="fdr", log2FoldThres=0, writeReportAsPngs=FALSE,
                          limpaProteinIdCol="auto", limpaDpc=NULL, limpaDpcSlope=0.8, limpaChunk=1000L,
-                         limpaVerbose=FALSE, limpaSampleWeights=FALSE, limpaDEArgs=NULL) {
+                         limpaVerbose=FALSE, limpaSampleWeights=FALSE, limpaDEArgs=NULL,
+                         inputFormat="default", diannLevel=c("auto", "protein", "precursor"),
+                         diannSampleCol=NULL, diannFeatureCol=NULL, diannQuantityCol=NULL,
+                         diannFilterDecoy=TRUE,
+                         diannFilterQValue=TRUE, diannQValueCols=NULL, diannQValueCutoffs=0.01,
+                         diannMinPositive=0, diannRTCol="RT") {
 
     if (!quiet) message("You are running version ", utils::packageVersion("NormalyzerDE"), " of NormalyzerDE")
     
@@ -311,13 +394,28 @@ normalyzerDE <- function(jobName, comparisons=NULL, designPath=NULL, dataPath=NU
     jobDir <- setupJobDir(jobName, outputDir)
     safeJobName <- basename(jobDir)
 
-    if (!quiet) message("Setting up statistics object")
-    if (is.null(experimentObj)) {
-        experimentObj <- setupRawContrastObject(dataPath, designPath, sampleCol)
-    }
-    else {
-        verifySummarizedExperiment(experimentObj, sampleCol)
-    }
+	    if (!quiet) message("Setting up statistics object")
+	    if (is.null(experimentObj)) {
+	        experimentObj <- setupRawContrastObject(
+	            dataPath,
+	            designPath,
+	            sampleCol,
+	            inputFormat=inputFormat,
+	            diannLevel=diannLevel,
+	            diannSampleCol=diannSampleCol,
+	            diannFeatureCol=diannFeatureCol,
+	            diannQuantityCol=diannQuantityCol,
+	            diannFilterDecoy=diannFilterDecoy,
+	            diannFilterQValue=diannFilterQValue,
+	            diannQValueCols=diannQValueCols,
+	            diannQValueCutoffs=diannQValueCutoffs,
+	            diannMinPositive=diannMinPositive,
+	            diannRTCol=diannRTCol
+	        )
+	    }
+	    else {
+	        verifySummarizedExperiment(experimentObj, sampleCol)
+	    }
     
     if (!is.null(techRepCol)) {
         if (!quiet) message("Reducing technical replicates")

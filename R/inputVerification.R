@@ -75,11 +75,36 @@ loadDesign <- function(designPath, sampleCol="sample", groupCol="group") {
 #' @param dataPath File path to data matrix.
 #' @param designPath File path to design matrix.
 #' @param inputFormat Type of matrix for data, can be either 'default',
-#'   'proteios', 'maxquantprot' or 'maxquantpep'
+#'   'proteios', 'maxquantprot', 'maxquantpep' or 'diann'
 #' @param zeroToNA If TRUE zeroes in the data is automatically converted to
 #'   NA values
 #' @param sampleColName Column name for column containing sample names
 #' @param groupColName Column name for column containing condition levels
+#' @param diannLevel When \code{inputFormat="diann"}, which DIA-NN level to use
+#'   when reading a long "report" file: \code{"auto"} (default) tries protein-level
+#'   first and falls back to precursor-level, \code{"protein"} forces protein-level,
+#'   and \code{"precursor"} forces precursor-level.
+#' @param diannSampleCol When \code{inputFormat="diann"}, optional name of the DIA-NN
+#'   report column containing sample/run identifiers (defaults to \code{"Run"} if present,
+#'   otherwise \code{"File.Name"}).
+#' @param diannFeatureCol When \code{inputFormat="diann"}, optional override of the DIA-NN
+#'   report feature column (for example \code{"Protein.Group"} or \code{"Precursor.Id"}).
+#' @param diannQuantityCol When \code{inputFormat="diann"}, optional override of the DIA-NN
+#'   report quantity column (for example \code{"PG.MaxLFQ"} or \code{"Precursor.Normalised"}).
+#' @param diannFilterDecoy When \code{inputFormat="diann"}, filter out rows marked as decoys
+#'   when a \code{Decoy} column is present.
+#' @param diannFilterQValue When \code{inputFormat="diann"}, filter out rows failing q-value
+#'   cutoffs when reading a long DIA-NN report file (\code{.tsv} or \code{.parquet}).
+#' @param diannQValueCols When \code{inputFormat="diann"}, q-value columns used for filtering.
+#'   Set to \code{NULL} (default) to use a level-dependent default if present, or set to
+#'   \code{character()} / \code{"none"} to disable q-value filtering.
+#' @param diannQValueCutoffs When \code{inputFormat="diann"}, q-value cutoffs (recycled if needed).
+#'   Defaults to \code{0.01}.
+#' @param diannMinPositive When \code{inputFormat="diann"}, treat values below this threshold
+#'   as missing. Defaults to \code{0} (no filtering beyond \code{0 -> NA}).
+#' @param diannRTCol When \code{inputFormat="diann"} and reading a precursor-level report,
+#'   optional DIA-NN column used to compute per-precursor median retention time stored as
+#'   row annotation column \code{RT}. Defaults to \code{"RT"} when present.
 #' @return experimentObj SummarizedExperiment object loaded with the data
 #' @export
 #' @examples 
@@ -87,12 +112,39 @@ loadDesign <- function(designPath, sampleCol="sample", groupCol="group") {
 #' design_path <- system.file(package="NormalyzerDE", "extdata", "tiny_design.tsv")
 #' df <- setupRawDataObject(data_path, design_path)
 setupRawDataObject <- function(dataPath, designPath, inputFormat="default", zeroToNA=FALSE, 
-                               sampleColName="sample", groupColName="group") {
-    
-    rawDesign <- loadDesign(designPath, sampleCol=sampleColName, groupCol=groupColName)
-    rawData <- loadData(dataPath, inputFormat=inputFormat)
-    rdf <- rawData[2:nrow(rawData), ]
-    colnames(rdf) <- rawData[1, ]
+                               sampleColName="sample", groupColName="group",
+                               diannLevel=c("auto", "protein", "precursor"),
+                               diannSampleCol=NULL, diannFeatureCol=NULL, diannQuantityCol=NULL,
+                               diannFilterDecoy=TRUE,
+                               diannFilterQValue=TRUE,
+                               diannQValueCols=NULL, diannQValueCutoffs=0.01,
+                               diannMinPositive=0, diannRTCol="RT") {
+	    
+	    rawDesign <- loadDesign(designPath, sampleCol=sampleColName, groupCol=groupColName)
+
+	    if (identical(inputFormat, "diann")) {
+	        fullDf <- readDiannToDataFrame(
+	            dataPath,
+	            designSampleNames=rawDesign[[sampleColName]],
+	            diannLevel=diannLevel,
+	            diannSampleCol=diannSampleCol,
+	            diannFeatureCol=diannFeatureCol,
+	            diannQuantityCol=diannQuantityCol,
+	            diannFilterDecoy=diannFilterDecoy,
+	            diannFilterQValue=diannFilterQValue,
+	            diannQValueCols=diannQValueCols,
+	            diannQValueCutoffs=diannQValueCutoffs,
+	            diannMinPositive=diannMinPositive,
+	            diannRTCol=diannRTCol
+	        )
+	        rawData <- as.matrix(rbind(colnames(fullDf), fullDf))
+	    }
+	    else {
+	        rawData <- loadData(dataPath, inputFormat=inputFormat)
+	    }
+
+	    rdf <- rawData[2:nrow(rawData), ]
+	    colnames(rdf) <- rawData[1, ]
     
     verifyDesignMatrix(rdf, rawDesign, sampleColName)
         
@@ -115,33 +167,84 @@ setupRawDataObject <- function(dataPath, designPath, inputFormat="default", zero
 #' @param dataPath Path to raw data matrix
 #' @param designPath Path to design matrix
 #' @param sampleColName Name for column in design matrix containing sample names
+#' @param inputFormat Type of input format for \code{dataPath}. Supports
+#'   \code{"default"} and \code{"diann"}.
+#' @param diannLevel When \code{inputFormat="diann"}, which DIA-NN level to use
+#'   when reading a long "report" file: \code{"auto"} (default) tries protein-level
+#'   first and falls back to precursor-level, \code{"protein"} forces protein-level,
+#'   and \code{"precursor"} forces precursor-level.
+#' @param diannSampleCol When \code{inputFormat="diann"}, optional name of the DIA-NN
+#'   report column containing sample/run identifiers (defaults to \code{"Run"} if present,
+#'   otherwise \code{"File.Name"}).
+#' @param diannFeatureCol When \code{inputFormat="diann"}, optional override of the DIA-NN
+#'   report feature column (for example \code{"Protein.Group"} or \code{"Precursor.Id"}).
+#' @param diannQuantityCol When \code{inputFormat="diann"}, optional override of the DIA-NN
+#'   report quantity column (for example \code{"PG.MaxLFQ"} or \code{"Precursor.Normalised"}).
+#' @param diannFilterDecoy When \code{inputFormat="diann"}, filter out rows marked as decoys
+#'   when a \code{Decoy} column is present.
+#' @param diannFilterQValue When \code{inputFormat="diann"}, filter out rows failing q-value
+#'   cutoffs when reading a long DIA-NN report file (\code{.tsv} or \code{.parquet}).
+#' @param diannQValueCols When \code{inputFormat="diann"}, q-value columns used for filtering.
+#'   Set to \code{NULL} (default) to use a level-dependent default if present, or set to
+#'   \code{character()} / \code{"none"} to disable q-value filtering.
+#' @param diannQValueCutoffs When \code{inputFormat="diann"}, q-value cutoffs (recycled if needed).
+#'   Defaults to \code{0.01}.
+#' @param diannMinPositive When \code{inputFormat="diann"}, treat values below this threshold
+#'   as missing. Defaults to \code{0} (no filtering beyond \code{0 -> NA}).
+#' @param diannRTCol When \code{inputFormat="diann"} and reading a precursor-level report,
+#'   optional DIA-NN column used to compute per-precursor median retention time stored as
+#'   row annotation column \code{RT}. Defaults to \code{"RT"} when present.
 #' @return experimentObj Prepared instance of SummarizedExperiment
 #' @export
 #' @examples 
 #' data_path <- system.file(package="NormalyzerDE", "extdata", "tiny_data.tsv")
 #' design_path <- system.file(package="NormalyzerDE", "extdata", "tiny_design.tsv")
 #' sumExpObj <- setupRawContrastObject(data_path, design_path, "sample")
-setupRawContrastObject <- function(dataPath, designPath, sampleColName) {
-    
-    fullDf <- utils::read.csv(
-        dataPath, 
-        sep="\t", 
-        stringsAsFactors=FALSE, 
-        quote="", 
-        comment.char="",
-        check.names=FALSE
-    )
-    
-    designDf <- utils::read.csv(
-        designPath, 
-        sep="\t",
-        stringsAsFactors=FALSE,
-        quote="",
-        comment.char="",
-        check.names=FALSE
-    )
-    
-    verifyDesignMatrix(fullDf, designDf, sampleColName)
+setupRawContrastObject <- function(dataPath, designPath, sampleColName, inputFormat="default",
+                                   diannLevel=c("auto", "protein", "precursor"),
+                                   diannSampleCol=NULL, diannFeatureCol=NULL, diannQuantityCol=NULL,
+                                   diannFilterDecoy=TRUE,
+                                   diannFilterQValue=TRUE,
+                                   diannQValueCols=NULL, diannQValueCutoffs=0.01,
+                                   diannMinPositive=0, diannRTCol="RT") {
+	    
+	    designDf <- utils::read.csv(
+	        designPath, 
+	        sep="\t",
+	        stringsAsFactors=FALSE,
+	        quote="",
+	        comment.char="",
+	        check.names=FALSE
+	    )
+
+	    if (identical(inputFormat, "diann")) {
+	        fullDf <- readDiannToDataFrame(
+	            dataPath,
+	            designSampleNames=designDf[[sampleColName]],
+	            diannLevel=diannLevel,
+	            diannSampleCol=diannSampleCol,
+	            diannFeatureCol=diannFeatureCol,
+	            diannQuantityCol=diannQuantityCol,
+	            diannFilterDecoy=diannFilterDecoy,
+	            diannFilterQValue=diannFilterQValue,
+	            diannQValueCols=diannQValueCols,
+	            diannQValueCutoffs=diannQValueCutoffs,
+	            diannMinPositive=diannMinPositive,
+	            diannRTCol=diannRTCol
+	        )
+	    }
+	    else {
+	        fullDf <- utils::read.csv(
+	            dataPath, 
+	            sep="\t", 
+	            stringsAsFactors=FALSE, 
+	            quote="", 
+	            comment.char="",
+	            check.names=FALSE
+	        )
+	    }
+	    
+	    verifyDesignMatrix(fullDf, designDf, sampleColName)
     
     sdf <- fullDf[, designDf[[sampleColName]]]
     adf <- fullDf[, !(colnames(fullDf) %in% as.character(designDf[[sampleColName]])), drop=FALSE]

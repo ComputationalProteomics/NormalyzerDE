@@ -169,3 +169,52 @@ test_that("generatePlots writes a Normalyzer report", {
     expect_false(dir.exists(pngDir2))
 })
 
+test_that("generateStatsReport handles missing PC3/PC4", {
+
+    mat <- matrix(
+        c(
+            1, 2, 3, 4,
+            4, 3, 2, 1
+        ),
+        nrow=2,
+        byrow=TRUE,
+        dimnames=list(c("f1", "f2"), c("s1", "s2", "s3", "s4"))
+    )
+    design <- data.frame(
+        sample=colnames(mat),
+        group=c("A", "A", "B", "B"),
+        stringsAsFactors=FALSE
+    )
+    rownames(design) <- design$sample
+
+    se <- SummarizedExperiment::SummarizedExperiment(
+        assay=mat,
+        colData=design,
+        rowData=data.frame(feature=rownames(mat))
+    )
+
+    nst <- NormalyzerStatistics(se, logTrans=FALSE)
+    nst <- calculateContrasts(
+        nst,
+        condCol="group",
+        type="limma",
+        leastRepCount=0,
+        oneVsRest=TRUE,
+        oneVsRestGroups="A"
+    )
+
+    jobName <- paste0("de_report_pca_", sample.int(1e9, 1))
+    outDir <- file.path(tempdir(), paste0("report_pca_", sample.int(1e9, 1)))
+    dir.create(outDir, recursive=TRUE)
+    on.exit(unlink(outDir, recursive=TRUE, force=TRUE), add=TRUE)
+
+    expect_silent(suppressWarnings(generateStatsReport(
+        nst,
+        jobName=jobName,
+        jobDir=outDir,
+        sigThres=0.5,
+        sigThresType="fdr",
+        log2FoldThres=0,
+        writeAsPngs=TRUE
+    )))
+})

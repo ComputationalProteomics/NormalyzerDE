@@ -30,6 +30,8 @@ Imports:
     S4Vectors,
     matrixStats
 Suggests:
+    arrow,
+    data.table,
     knitr,
     testthat,
     rmarkdown,

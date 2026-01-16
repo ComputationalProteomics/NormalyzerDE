@@ -484,8 +484,68 @@ plotContrastPCA <- function(nst, jobName, currentLayout, pageno, pcs=c(1,2)) {
     
     contrasts <- comparisons(nst)
     dataDf <- dataMat(nst)
-    dfPCA <- stats::prcomp(t(dataDf[stats::complete.cases(dataDf), ]), scale=TRUE, center=TRUE)
+
+    title <- paste0("PCA, contrast colored (factors", pcs[1], " and ", pcs[2], ")")
+
+    messagePlot <- function(text) {
+        ggplot2::ggplot(data.frame(x=0, y=0, label=text), ggplot2::aes(x=x, y=y)) +
+            ggplot2::geom_text(ggplot2::aes(label=label), size=3) +
+            ggplot2::theme_void()
+    }
+
+    completeRows <- stats::complete.cases(dataDf)
+    dataComplete <- dataDf[completeRows, , drop=FALSE]
+
+    if (nrow(dataComplete) == 0 || ncol(dataComplete) < 2) {
+        grid::grid.newpage()
+        grid::pushViewport(grid::viewport(layout=currentLayout))
+        printPlots(
+            list(messagePlot("PCA unavailable (no complete features).")),
+            title,
+            pageno,
+            jobName,
+            currentLayout
+        )
+        return(invisible(NULL))
+    }
+
+    rowVars <- matrixStats::rowVars(dataComplete, na.rm=TRUE)
+    nonConstant <- is.finite(rowVars) & rowVars > 0
+    dataComplete <- dataComplete[nonConstant, , drop=FALSE]
+
+    dfPCA <- tryCatch(
+        stats::prcomp(t(dataComplete), scale=TRUE, center=TRUE),
+        error=function(e) NULL
+    )
+
+    if (is.null(dfPCA) || is.null(dfPCA$x) || ncol(dfPCA$x) < 1) {
+        grid::grid.newpage()
+        grid::pushViewport(grid::viewport(layout=currentLayout))
+        printPlots(
+            list(messagePlot("PCA unavailable (prcomp failed).")),
+            title,
+            pageno,
+            jobName,
+            currentLayout
+        )
+        return(invisible(NULL))
+    }
+
     dfOut <- as.data.frame(dfPCA$x)
+
+    if (max(pcs) > ncol(dfOut)) {
+        grid::grid.newpage()
+        grid::pushViewport(grid::viewport(layout=currentLayout))
+        printPlots(
+            list(messagePlot(paste0("PCA unavailable (only ", ncol(dfOut), " PC(s))."))),
+            title,
+            pageno,
+            jobName,
+            currentLayout
+        )
+        return(invisible(NULL))
+    }
+
     percentageVar <- round(dfPCA$sdev^2 / sum(dfPCA$sdev^2) * 100, 2)
     percentageVar <- paste0(colnames(dfOut), " (", paste0(as.character(percentageVar), "%)"))
     groups <- as.character(condCol(nst))
@@ -551,6 +611,5 @@ plotContrastPCA <- function(nst, jobName, currentLayout, pageno, pcs=c(1,2)) {
     
     grid::grid.newpage()
     grid::pushViewport(grid::viewport(layout=currentLayout))
-    title <- paste0("PCA, contrast colored (factors", pcs[1], " and ", pcs[2], ")")
     printPlots(plots, title, pageno, jobName, currentLayout)  
 }

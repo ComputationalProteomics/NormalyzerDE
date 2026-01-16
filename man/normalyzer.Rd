@@ -22,6 +22,16 @@ normalyzer(
   sampleColName = "sample",
   groupColName = "group",
   inputFormat = "default",
+  diannLevel = c("auto", "protein", "precursor"),
+  diannSampleCol = NULL,
+  diannFeatureCol = NULL,
+  diannQuantityCol = NULL,
+  diannFilterDecoy = TRUE,
+  diannFilterQValue = TRUE,
+  diannQValueCols = NULL,
+  diannQValueCutoffs = 0.01,
+  diannMinPositive = 0,
+  diannRTCol = "RT",
   skipAnalysis = FALSE,
   quiet = FALSE,
   noLogTransform = FALSE,
@@ -73,6 +83,41 @@ validation.}
 \item{groupColName}{Column name in design matrix containing condition IDs.}
 
 \item{inputFormat}{Type of input format.}
+
+\item{diannLevel}{When \code{inputFormat="diann"}, which DIA-NN level to use
+when reading a long "report" file: \code{"auto"} (default) tries protein-level
+first and falls back to precursor-level, \code{"protein"} forces protein-level,
+and \code{"precursor"} forces precursor-level.}
+
+\item{diannSampleCol}{When \code{inputFormat="diann"}, optional name of the DIA-NN
+report column containing sample/run identifiers (defaults to \code{"Run"} if present,
+otherwise \code{"File.Name"}).}
+
+\item{diannFeatureCol}{When \code{inputFormat="diann"}, optional override of the DIA-NN
+report feature column (for example \code{"Protein.Group"} or \code{"Precursor.Id"}).}
+
+\item{diannQuantityCol}{When \code{inputFormat="diann"}, optional override of the DIA-NN
+report quantity column (for example \code{"PG.MaxLFQ"} or \code{"Precursor.Normalised"}).}
+
+\item{diannFilterDecoy}{When \code{inputFormat="diann"}, filter out rows marked as decoys
+when a \code{Decoy} column is present.}
+
+\item{diannFilterQValue}{When \code{inputFormat="diann"}, filter out rows failing q-value
+cutoffs when reading a long DIA-NN report file (\code{.tsv} or \code{.parquet}).}
+
+\item{diannQValueCols}{When \code{inputFormat="diann"}, q-value columns used for filtering.
+Set to \code{NULL} (default) to use a level-dependent default if present, or set to
+\code{character()} / \code{"none"} to disable q-value filtering.}
+
+\item{diannQValueCutoffs}{When \code{inputFormat="diann"}, q-value cutoffs (recycled if needed).
+Defaults to \code{0.01}.}
+
+\item{diannMinPositive}{When \code{inputFormat="diann"}, treat values below this threshold
+as missing. Defaults to \code{0} (no filtering beyond \code{0 -> NA}).}
+
+\item{diannRTCol}{When \code{inputFormat="diann"} and reading a precursor-level report,
+optional DIA-NN column used to compute per-precursor median retention time stored as
+row annotation column \code{RT}. Defaults to \code{"RT"} when present.}
 
 \item{skipAnalysis}{Only perform normalization steps.}
 
