@@ -1,5 +1,5 @@
 #' Generate PDF grid page filling it with provided list of plots
-#' 
+#'
 #' @param plotlist List of target plots to display.
 #' @param plotname List of names corresponding to the provided plot list.
 #' @param pageno Current page number.
@@ -8,66 +8,98 @@
 #' @return None
 #' @keywords internal
 printPlots <- function(plotlist, plotname, pageno, jobname, currentLayout) {
-    
-    ncol <- currentLayout$ncol
-    nrow <- currentLayout$nrow
-    
-    gp <- grid::gpar(fontsize=11, fontfamily="Helvetica", col="black", fontface="bold")
-    gpfill <- grid::gpar(fill="gray90", lwd=0, lty=0)
-    
-    drawRectangles(nrow, ncol, gpfill, gp)
-    
-    grid::grid.text(plotname, 
-                    vp=grid::viewport(layout.pos.row=1, layout.pos.col=1),
-                    just=c("left","center"), gp=grid::gpar(fontface="bold", fontsize=14, 
-                                                           fontfamily="Helvetica", col="darkBlue"))
-    grid::grid.text("NormalyzerDE Report", 
-                    vp=grid::viewport(layout.pos.row=1, layout.pos.col=ncol),
-                    just=c("right", "center"), gp=gp)
-    grid::grid.text(paste("Page ", pageno, sep=""), 
-                    vp=grid::viewport(layout.pos.row=nrow, layout.pos.col=ncol), just=c("right", "center"), gp=gp)
-    grid::grid.text(paste("Project: ", jobname, sep=""),
-                    vp=grid::viewport(layout.pos.row=nrow, layout.pos.col=1), just=c("left", "center"), gp=gp)
-    
-    gridRows <- nrow - 2
-    gridCols <- ncol - 2
-    gridSize <- gridRows * gridCols
+  ncol <- currentLayout$ncol
+  nrow <- currentLayout$nrow
 
-    row <- 2  # Start value
-    col <- 2  # Start value
+  gp <- grid::gpar(
+    fontsize = 11,
+    fontfamily = "Helvetica",
+    col = "black",
+    fontface = "bold"
+  )
+  gpfill <- grid::gpar(fill = "gray90", lwd = 0, lty = 0)
 
-    posCounter <- 0
-    for (i in seq_along(plotlist)) {
-        
-        if (gridSize == 1 || (i != 1 && i %% gridSize == 1)) {
-             grid::grid.newpage()
-            grid::pushViewport(grid::viewport(layout=currentLayout))
-            
-            grid::grid.rect(vp=grid::viewport(layout.pos.row=row, layout.pos.col=col), gp=gpfill)
-            posCounter <- 0
-        }
-        
-        posCounter <- posCounter + 1
-        
-        row <- (posCounter - 1) %/% gridCols + 2
-        col <- (posCounter - 1) %% gridCols + 2
+  drawRectangles(nrow, ncol, gpfill, gp)
 
-        plotObj <- plotlist[[i]]
-        if (is.function(plotObj)) {
-            plotObj <- plotObj()
-        }
+  grid::grid.text(
+    plotname,
+    vp = grid::viewport(layout.pos.row = 1, layout.pos.col = 1),
+    just = c("left", "center"),
+    gp = grid::gpar(
+      fontface = "bold",
+      fontsize = 14,
+      fontfamily = "Helvetica",
+      col = "darkBlue"
+    )
+  )
+  grid::grid.text(
+    "NormalyzerDE Report",
+    vp = grid::viewport(layout.pos.row = 1, layout.pos.col = ncol),
+    just = c("right", "center"),
+    gp = gp
+  )
+  grid::grid.text(
+    paste("Page ", pageno, sep = ""),
+    vp = grid::viewport(layout.pos.row = nrow, layout.pos.col = ncol),
+    just = c("right", "center"),
+    gp = gp
+  )
+  grid::grid.text(
+    paste("Project: ", jobname, sep = ""),
+    vp = grid::viewport(layout.pos.row = nrow, layout.pos.col = 1),
+    just = c("left", "center"),
+    gp = gp
+  )
 
-        print(plotObj, vp=grid::viewport(layout.pos.row=row, layout.pos.col=col))
+  gridRows <- nrow - 2
+  gridCols <- ncol - 2
+  gridSize <- gridRows * gridCols
+
+  row <- 2 # Start value
+  col <- 2 # Start value
+
+  posCounter <- 0
+  for (i in seq_along(plotlist)) {
+    if (gridSize == 1 || (i != 1 && i %% gridSize == 1)) {
+      grid::grid.newpage()
+      grid::pushViewport(grid::viewport(layout = currentLayout))
+
+      grid::grid.rect(
+        vp = grid::viewport(layout.pos.row = row, layout.pos.col = col),
+        gp = gpfill
+      )
+      posCounter <- 0
     }
+
+    posCounter <- posCounter + 1
+
+    row <- (posCounter - 1) %/% gridCols + 2
+    col <- (posCounter - 1) %% gridCols + 2
+
+    plotObj <- plotlist[[i]]
+    if (is.function(plotObj)) {
+      plotObj <- plotObj()
+    }
+
+    print(
+      plotObj,
+      vp = grid::viewport(layout.pos.row = row, layout.pos.col = col)
+    )
+  }
 }
 
 drawRectangles <- function(nrow, ncol, gpfill, gp) {
-    
-    for (pos in seq_len((ncol - 1) * (nrow - 1))) {
-        if (pos <= ncol) row <- 1
-        else row <- nrow
-        
-        col <- (pos - 1) %% ncol + 1
-        grid::grid.rect(vp=grid::viewport(layout.pos.row=row, layout.pos.col=col), gp=gpfill)
+  for (pos in seq_len((ncol - 1) * (nrow - 1))) {
+    if (pos <= ncol) {
+      row <- 1
+    } else {
+      row <- nrow
     }
+
+    col <- (pos - 1) %% ncol + 1
+    grid::grid.rect(
+      vp = grid::viewport(layout.pos.row = row, layout.pos.col = col),
+      gp = gpfill
+    )
+  }
 }

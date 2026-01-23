@@ -8,7 +8,7 @@ half values are present, and each sample has at least one non-NA value}
 getRowNAFilterContrast(dataMatrix, replicateHeader, minCount = 1)
 }
 \arguments{
-\item{dataMatrix}{Matrix with expression values for entities in replicate 
+\item{dataMatrix}{Matrix with expression values for entities in replicate
 samples.}
 
 \item{replicateHeader}{Header showing how samples in matrix are replicated.}

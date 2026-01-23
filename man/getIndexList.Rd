@@ -7,7 +7,7 @@
 getIndexList(targetVector)
 }
 \arguments{
-\item{targetVector}{}
+\item{targetVector}{Vector of values to index (for example, condition labels).}
 }
 \value{
 indexList List where key is condition level and values are indices

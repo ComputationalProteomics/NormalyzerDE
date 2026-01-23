@@ -35,7 +35,7 @@ generateStatsReport(
 
 \item{plotCols}{Number of plot columns.}
 
-\item{writeAsPngs}{Output the report as separate PNG files instead of a 
+\item{writeAsPngs}{Output the report as separate PNG files instead of a
 single PDF file}
 }
 \value{
@@ -49,7 +49,7 @@ to a PDF report.
 \examples{
 data(example_stat_summarized_experiment)
 statObj <- NormalyzerStatistics(example_stat_summarized_experiment)
-statObj <- calculateContrasts(statObj, comparisons=c("1-2", "2-3"), 
+statObj <- calculateContrasts(statObj, comparisons=c("1-2", "2-3"),
   condCol="group", type="limma")
 outputDir <- tempdir()
 generateStatsReport(statObj, "jobName", outputDir)

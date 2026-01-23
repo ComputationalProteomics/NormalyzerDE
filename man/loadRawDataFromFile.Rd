@@ -4,7 +4,7 @@
 \alias{loadRawDataFromFile}
 \title{Try reading raw Normalyzer matrix from provided filepath}
 \usage{
-loadRawDataFromFile(inputPath)
+loadRawDataFromFile(inputPath, sep = "\\t")
 }
 \arguments{
 \item{inputPath}{Path to Normalyzer data.}

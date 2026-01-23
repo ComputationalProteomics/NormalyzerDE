@@ -55,7 +55,7 @@ performCyclicLoessNormalization <- function(rawMatrix) {
     colnames(normMatrix) <- colnames(rawMatrix)
     normMatrix
 }
-rtNormMat <- getSmoothedRTNormalizedMatrix(dataMat, retentionTimes, 
-    performCyclicLoessNormalization, stepSizeMinutes=1, windowMinCount=100, 
+rtNormMat <- getSmoothedRTNormalizedMatrix(dataMat, retentionTimes,
+    performCyclicLoessNormalization, stepSizeMinutes=1, windowMinCount=100,
     windowShifts=2, mergeMethod="median")
 }

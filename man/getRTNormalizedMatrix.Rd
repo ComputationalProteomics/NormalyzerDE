@@ -35,8 +35,8 @@ Normalized matrix
 }
 \description{
 The function orders the retention times and steps through them using the
-supplied step size (in minutes). If smaller than a fixed lower boundary 
-the window is expanded to ensure a minimum amount of data in each 
+supplied step size (in minutes). If smaller than a fixed lower boundary
+the window is expanded to ensure a minimum amount of data in each
 normalization step. An offset can be specified which can be used to perform
 multiple RT-segmentations with partial overlapping windows.
 }
@@ -52,6 +52,6 @@ performCyclicLoessNormalization <- function(rawMatrix) {
     colnames(normMatrix) <- colnames(rawMatrix)
     normMatrix
 }
-rtNormMat <- getRTNormalizedMatrix(dataMat, retentionTimes, 
+rtNormMat <- getRTNormalizedMatrix(dataMat, retentionTimes,
 performCyclicLoessNormalization, stepSizeMinutes=1, windowMinCount=100)
 }

@@ -29,13 +29,13 @@ column containing the sample names
 }
 \examples{
 testData <- as.matrix(data.frame(
-    c(1,1,1), 
-    c(1,2,1), 
-    c(7,7,7), 
+    c(1,1,1),
+    c(1,2,1),
+    c(7,7,7),
     c(7,9,7)))
 colnames(testData) <- c("a1", "a2", "b1", "b2")
 designDf <- data.frame(
-    sample=c("a1", "a2", "b1", "b2"), 
+    sample=c("a1", "a2", "b1", "b2"),
     techrep=c("a", "a", "b", "b"))
 se <- SummarizedExperiment::SummarizedExperiment(
     assay=testData,

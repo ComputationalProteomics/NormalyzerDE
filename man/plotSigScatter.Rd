@@ -2,7 +2,7 @@
 % Please edit documentation in R/calculateStatistics.R
 \name{plotSigScatter}
 \alias{plotSigScatter}
-\title{Takes an NormalyzerStatistics instance and generates and prints a 
+\title{Takes an NormalyzerStatistics instance and generates and prints a
 volcano plot}
 \usage{
 plotSigScatter(
@@ -33,7 +33,7 @@ plotSigScatter(
 None
 }
 \description{
-Takes an NormalyzerStatistics instance and generates and prints a 
+Takes an NormalyzerStatistics instance and generates and prints a
 volcano plot
 }
 \keyword{internal}

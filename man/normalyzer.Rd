@@ -22,16 +22,7 @@ normalyzer(
   sampleColName = "sample",
   groupColName = "group",
   inputFormat = "default",
-  diannLevel = c("auto", "protein", "precursor"),
-  diannSampleCol = NULL,
-  diannFeatureCol = NULL,
-  diannQuantityCol = NULL,
-  diannFilterDecoy = TRUE,
-  diannFilterQValue = TRUE,
-  diannQValueCols = NULL,
-  diannQValueCutoffs = 0.01,
-  diannMinPositive = 0,
-  diannRTCol = "RT",
+  inputOptions = NULL,
   skipAnalysis = FALSE,
   quiet = FALSE,
   noLogTransform = FALSE,
@@ -58,7 +49,7 @@ as alternative to 'designPath' and 'dataPath'}
 they aren't in the recommended range of number of values}
 
 \item{omitLowAbundSamples}{Automatically remove samples with fewer non-NA
-values compared to threshold given by sampleAbundThres. 
+values compared to threshold given by sampleAbundThres.
 Will otherwise stop with error message if such sample is encountered.}
 
 \item{sampleAbundThres}{Threshold for omitting low-abundant
@@ -67,7 +58,7 @@ samples. Is by default set to 5.}
 \item{tinyRunThres}{If total number of features is less than this, a limited
 run is performed.}
 
-\item{requireReplicates}{Require multiple samples per condition to pass input 
+\item{requireReplicates}{Require multiple samples per condition to pass input
 validation.}
 
 \item{normalizeRetentionTime}{Perform normalizations over retention time.}
@@ -84,40 +75,10 @@ validation.}
 
 \item{inputFormat}{Type of input format.}
 
-\item{diannLevel}{When \code{inputFormat="diann"}, which DIA-NN level to use
-when reading a long "report" file: \code{"auto"} (default) tries protein-level
-first and falls back to precursor-level, \code{"protein"} forces protein-level,
-and \code{"precursor"} forces precursor-level.}
-
-\item{diannSampleCol}{When \code{inputFormat="diann"}, optional name of the DIA-NN
-report column containing sample/run identifiers (defaults to \code{"Run"} if present,
-otherwise \code{"File.Name"}).}
-
-\item{diannFeatureCol}{When \code{inputFormat="diann"}, optional override of the DIA-NN
-report feature column (for example \code{"Protein.Group"} or \code{"Precursor.Id"}).}
-
-\item{diannQuantityCol}{When \code{inputFormat="diann"}, optional override of the DIA-NN
-report quantity column (for example \code{"PG.MaxLFQ"} or \code{"Precursor.Normalised"}).}
-
-\item{diannFilterDecoy}{When \code{inputFormat="diann"}, filter out rows marked as decoys
-when a \code{Decoy} column is present.}
-
-\item{diannFilterQValue}{When \code{inputFormat="diann"}, filter out rows failing q-value
-cutoffs when reading a long DIA-NN report file (\code{.tsv} or \code{.parquet}).}
-
-\item{diannQValueCols}{When \code{inputFormat="diann"}, q-value columns used for filtering.
-Set to \code{NULL} (default) to use a level-dependent default if present, or set to
-\code{character()} / \code{"none"} to disable q-value filtering.}
-
-\item{diannQValueCutoffs}{When \code{inputFormat="diann"}, q-value cutoffs (recycled if needed).
-Defaults to \code{0.01}.}
-
-\item{diannMinPositive}{When \code{inputFormat="diann"}, treat values below this threshold
-as missing. Defaults to \code{0} (no filtering beyond \code{0 -> NA}).}
-
-\item{diannRTCol}{When \code{inputFormat="diann"} and reading a precursor-level report,
-optional DIA-NN column used to compute per-precursor median retention time stored as
-row annotation column \code{RT}. Defaults to \code{"RT"} when present.}
+\item{inputOptions}{Optional list of input-reader options. For DIA-NN, use
+\code{\link{diannInputOptions}}. For delimited inputs, use
+\code{\link{defaultInputOptions}}, \code{\link{proteiosInputOptions}}, or
+\code{\link{maxQuantInputOptions}} to configure the delimiter.}
 
 \item{skipAnalysis}{Only perform normalization steps.}
 
@@ -155,7 +116,7 @@ instance of the NormalyzerDataset class representing the unprocessed data.
 provided as a NormalyzerResults object containing the resulting data matrices
 from each normalization.
 4: Analyze the normalizations and generate performance measures for each
-of the normalized datasets. This result is provided as a 
+of the normalized datasets. This result is provided as a
 NormalyzerEvaluationResults object.
 5: Output the matrices containing the normalized datasets to files.
 6: Generate visualizations overviewing the performance measures and
@@ -167,9 +128,9 @@ design_path <- system.file(package="NormalyzerDE", "extdata", "tiny_design.tsv")
 out_dir <- tempdir()
 job_name <- basename(tempfile("job_"))
 normalyzer(
-    jobName=job_name, 
-    designPath=design_path, 
-    dataPath=data_path, 
+    jobName=job_name,
+    designPath=design_path,
+    dataPath=data_path,
     outputDir=out_dir,
     skipAnalysis=TRUE,
     quiet=TRUE)

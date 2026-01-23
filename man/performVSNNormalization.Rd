@@ -14,8 +14,8 @@ performVSNNormalization(rawMatrix)
 Normalized matrix
 }
 \description{
-The VSN (Variance Stabilizing Normalization) attempts to transform the data 
-in such a way that the variance remains nearly constant over the intensity 
+The VSN (Variance Stabilizing Normalization) attempts to transform the data
+in such a way that the variance remains nearly constant over the intensity
 spectrum
 }
 \examples{

@@ -4,7 +4,7 @@
 \alias{calculateContrasts}
 \alias{calculateContrasts,NormalyzerStatistics-method}
 \title{Performs statistical comparisons between the supplied conditions.
-It uses the design matrix and data matrix in the supplied 
+It uses the design matrix and data matrix in the supplied
 NormalyzerStatistics object. A column is supplied specifying which of the
 columns in the design matrix that is used for deciding the sample groups.
 The comparisons vector specifies which pairwise comparisons between

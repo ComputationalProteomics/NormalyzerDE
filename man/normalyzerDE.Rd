@@ -36,22 +36,13 @@ normalyzerDE(
   limpaSampleWeights = FALSE,
   limpaDEArgs = NULL,
   inputFormat = "default",
-  diannLevel = c("auto", "protein", "precursor"),
-  diannSampleCol = NULL,
-  diannFeatureCol = NULL,
-  diannQuantityCol = NULL,
-  diannFilterDecoy = TRUE,
-  diannFilterQValue = TRUE,
-  diannQValueCols = NULL,
-  diannQValueCutoffs = 0.01,
-  diannMinPositive = 0,
-  diannRTCol = "RT"
+  inputOptions = NULL
 )
 }
 \arguments{
 \item{jobName}{Name of job}
 
-\item{comparisons}{Character vector containing target contrasts. 
+\item{comparisons}{Character vector containing target contrasts.
 If comparing condA with condB, then the vector would be c("condA-condB").
 Ignored if \code{oneVsRest=TRUE}.}
 
@@ -64,10 +55,10 @@ as alternative to 'designPath' and 'dataPath'}
 
 \item{outputDir}{Path to output directory}
 
-\item{logTrans}{Log transform the input (needed if providing non-logged 
+\item{logTrans}{Log transform the input (needed if providing non-logged
 input)}
 
-\item{type}{Type of statistical comparison, "limma", "limma_intensity" or 
+\item{type}{Type of statistical comparison, "limma", "limma_intensity" or
 "welch" or "limpa", where "limma_intensity" allows the prior to be fit
 according to intensity rather than using a flat prior. "limpa" uses the
 optional Bioconductor package \pkg{limpa} to handle missing values via a
@@ -75,13 +66,13 @@ detection probability curve (DPC) model.}
 
 \item{sampleCol}{Design matrix column header for column containing sample IDs}
 
-\item{condCol}{Design matrix column header for column containing sample 
+\item{condCol}{Design matrix column header for column containing sample
 conditions}
 
-\item{batchCol}{Provide an optional column for inclusion of possible batch 
+\item{batchCol}{Provide an optional column for inclusion of possible batch
 variance in the model}
 
-\item{techRepCol}{Design matrix column header for column containing technical 
+\item{techRepCol}{Design matrix column header for column containing technical
 replicates}
 
 \item{leastRepCount}{Minimum required replicate count. For \code{type="limpa"},
@@ -90,7 +81,7 @@ observed samples (features entirely missing across all samples are removed).}
 
 \item{impute}{Whether to impute values (ignored for \code{type="limpa"}).}
 
-\item{imputeMinFraction}{Minimum fraction non-NA values for an analyte in 
+\item{imputeMinFraction}{Minimum fraction non-NA values for an analyte in
 any group to impute in other groups (ignored for \code{type="limpa"}).}
 
 \item{subsetByComparison}{If TRUE, subset data and design to each comparison
@@ -148,40 +139,10 @@ arguments forwarded to \code{limpa::dpcDE()} (and then to
 \item{inputFormat}{Type of input format for \code{dataPath} when reading from
 files. Supports \code{"default"} and \code{"diann"}.}
 
-\item{diannLevel}{When \code{inputFormat="diann"}, which DIA-NN level to use
-when reading a long "report" file: \code{"auto"} (default) tries protein-level
-first and falls back to precursor-level, \code{"protein"} forces protein-level,
-and \code{"precursor"} forces precursor-level.}
-
-\item{diannSampleCol}{When \code{inputFormat="diann"}, optional name of the DIA-NN
-report column containing sample/run identifiers (defaults to \code{"Run"} if present,
-otherwise \code{"File.Name"}).}
-
-\item{diannFeatureCol}{When \code{inputFormat="diann"}, optional override of the DIA-NN
-report feature column (for example \code{"Protein.Group"} or \code{"Precursor.Id"}).}
-
-\item{diannQuantityCol}{When \code{inputFormat="diann"}, optional override of the DIA-NN
-report quantity column (for example \code{"PG.MaxLFQ"} or \code{"Precursor.Normalised"}).}
-
-\item{diannFilterDecoy}{When \code{inputFormat="diann"}, filter out rows marked as decoys
-when a \code{Decoy} column is present.}
-
-\item{diannFilterQValue}{When \code{inputFormat="diann"}, filter out rows failing q-value
-cutoffs when reading a long DIA-NN report file (\code{.tsv} or \code{.parquet}).}
-
-\item{diannQValueCols}{When \code{inputFormat="diann"}, q-value columns used for filtering.
-Set to \code{NULL} (default) to use a level-dependent default if present, or set to
-\code{character()} / \code{"none"} to disable q-value filtering.}
-
-\item{diannQValueCutoffs}{When \code{inputFormat="diann"}, q-value cutoffs (recycled if needed).
-Defaults to \code{0.01}.}
-
-\item{diannMinPositive}{When \code{inputFormat="diann"}, treat values below this threshold
-as missing. Defaults to \code{0} (no filtering beyond \code{0 -> NA}).}
-
-\item{diannRTCol}{When \code{inputFormat="diann"} and reading a precursor-level report,
-optional DIA-NN column used to compute per-precursor median retention time stored as
-row annotation column \code{RT}. Defaults to \code{"RT"} when present.}
+\item{inputOptions}{Optional list of input-reader options. For DIA-NN, use
+\code{\link{diannInputOptions}}. For delimited inputs, use
+\code{\link{defaultInputOptions}}, \code{\link{proteiosInputOptions}}, or
+\code{\link{maxQuantInputOptions}} to configure the delimiter.}
 }
 \value{
 None
@@ -198,7 +159,7 @@ When executed, it performs the following steps:
 1: Read the data and the design matrices into dataframes.
 2: Generate an instance of the NormalyzerStatistics class representing the
 data and their statistical comparisons.
-3: Optionally reduce technical replicates in both the data matrix and the 
+3: Optionally reduce technical replicates in both the data matrix and the
 design matrix
 4: Calculate statistical contrats between supplied groups
 5: Generate an annotated version of the original dataframe where columns
@@ -212,9 +173,9 @@ data_path <- system.file(package="NormalyzerDE", "extdata", "tiny_data.tsv")
 design_path <- system.file(package="NormalyzerDE", "extdata", "tiny_design.tsv")
 out_dir <- tempdir()
 normalyzerDE(
-  jobName="my_jobname", 
-  comparisons=c("4-5"), 
-  designPath=design_path, 
+  jobName="my_jobname",
+  comparisons=c("4-5"),
+  designPath=design_path,
   dataPath=data_path,
   outputDir=out_dir,
   condCol="group")

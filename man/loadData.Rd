@@ -4,23 +4,31 @@
 \alias{loadData}
 \title{Load raw data into dataframe}
 \usage{
-loadData(dataPath, inputFormat = "default")
+loadData(dataPath, inputFormat = "default", inputOptions = NULL)
 }
 \arguments{
 \item{dataPath}{File path to data matrix.}
 
-\item{inputFormat}{If input is given in standard NormalyzerDE format, 
+\item{inputFormat}{If input is given in standard NormalyzerDE format,
 Proteios format or in MaxQuant protein or peptide format}
+
+\item{inputOptions}{Optional list of input-reader options. For example,
+\code{defaultInputOptions(sep=",")} to read comma-separated files.}
 }
 \value{
 rawData Raw data loaded into data frame
 }
 \description{
 General function which allows specifying different types of input data
-including "proteios", "maxquantpep" (peptide output from MaxQuant) and 
+including "proteios", "maxquantpep" (peptide output from MaxQuant) and
 "maxquantprot" (protein output from MaxQuant) formats.
 }
 \examples{
 data_path <- system.file(package="NormalyzerDE", "extdata", "tiny_data.tsv")
 df <- loadData(data_path)
+
+}
+\seealso{
+\code{\link{defaultInputOptions}}, \code{\link{proteiosInputOptions}},
+  and \code{\link{maxQuantInputOptions}} for delimiter configuration.
 }

@@ -72,7 +72,7 @@ basic representation of a dataset in the NormalyzerDE normalization part.
 
 \item{\code{sampleNames}}{Vector containing sample names.}
 
-\item{\code{filterrawdata}}{Reduced raw data matrix where low abundance rows are 
+\item{\code{filterrawdata}}{Reduced raw data matrix where low abundance rows are
 removed}
 
 \item{\code{sampleReplicateGroups}}{Vector with sample replicate information}
