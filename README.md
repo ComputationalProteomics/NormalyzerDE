@@ -16,6 +16,10 @@ An online server running NormalyzerDE can be accessed at the following link:
 
 https://quantitativeproteomics.org/normalyzerde
 
+Alternatively:
+
+https://normalyzerde.serve.scilifelab.se
+
 NormalyzerDE is a software designed to ease the process of selecting an optimal normalization approach for your dataset and to perform subsequent differential expression analysis.
 
 NormalyzerDE includes several normalization approaches, a empirical Bayes-based statistical approach implemented as part of Limma and a newly implemented retention-time segmented normalization approach inspired by previously outlined approaches. The emprical-based based statistics has been shown to increase sensitivity over ANOVA when detecting differentially expressed features.
