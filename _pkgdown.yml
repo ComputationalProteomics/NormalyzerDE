@@ -1,0 +1,44 @@
+url: https://computationalproteomics.github.io/NormalyzerDE/
+template:
+  bootstrap: 5
+
+reference:
+- title: Main workflows
+  contents:
+  - normalyzerDE
+  - normalyzer
+  - analyzeNormalizations
+  - generatePlots
+  - generateStatsReport
+  - writeNormalizedDatasets
+- title: Results objects
+  contents:
+  - NormalyzerResults
+  - NormalyzerEvaluationResults
+  - NormalyzerStatistics
+- title: Input and setup
+  contents:
+  - loadData
+  - loadDesign
+  - setupJobDir
+  - setupRawDataObject
+  - setupRawContrastObject
+  - reduceTechnicalReplicates
+  - getVerifiedNormalyzerObject
+  - generateAnnotatedMatrix
+  - getRTNormalizedMatrix
+  - getSmoothedRTNormalizedMatrix
+- title: Normalization methods
+  contents:
+  - normMethods
+  - globalIntensityNormalization
+  - meanNormalization
+  - medianNormalization
+  - performQuantileNormalization
+  - performVSNNormalization
+  - performCyclicLoessNormalization
+  - performSMADNormalization
+  - performGlobalRLRNormalization
+- title: Differential expression
+  contents:
+  - calculateContrasts
