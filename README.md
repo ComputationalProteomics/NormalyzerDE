@@ -1,3 +1,8 @@
+<!-- badges: start -->
+[![R-CMD-check-bioc](https://github.com/ComputationalProteomics/NormalyzerDE/actions/workflows/check-bioc.yml/badge.svg?branch=devel)](https://github.com/ComputationalProteomics/NormalyzerDE/actions/workflows/check-bioc.yml?query=branch%3Adevel)
+[![pkgdown](https://github.com/ComputationalProteomics/NormalyzerDE/actions/workflows/pkgdown.yaml/badge.svg?branch=devel)](https://github.com/ComputationalProteomics/NormalyzerDE/actions/workflows/pkgdown.yaml?query=branch%3Adevel)
+<!-- badges: end -->
+
 # About
 
 An online server running NormalyzerDE can be accessed at the following link:
@@ -97,5 +102,4 @@ When a normalized matrix is selected the analysis proceeds to the statistical an
 * An instance of `NormalyzerStatistics` is prepared containing the input data.
 * Code in the `calculateStatistics.R` script is used to calculate the statistical contrasts. The results are attached to the `NormalyzerStatistics` object.
 * The resulting statistics are used to generate a report and an annotated output matrix where key statistical measures are attached to the original matrix.
-
 
