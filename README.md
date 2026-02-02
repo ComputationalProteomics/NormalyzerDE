@@ -1,6 +1,13 @@
 <!-- badges: start -->
+[![Bioc release status](https://bioconductor.org/shields/build/release/bioc/NormalyzerDE.svg)](https://bioconductor.org/checkResults/release/bioc-LATEST/NormalyzerDE/)
+[![Bioc devel status](https://bioconductor.org/shields/build/devel/bioc/NormalyzerDE.svg)](https://bioconductor.org/checkResults/devel/bioc-LATEST/NormalyzerDE/)
 [![R-CMD-check-bioc](https://github.com/ComputationalProteomics/NormalyzerDE/actions/workflows/check-bioc.yml/badge.svg?branch=devel)](https://github.com/ComputationalProteomics/NormalyzerDE/actions/workflows/check-bioc.yml?query=branch%3Adevel)
 [![pkgdown](https://github.com/ComputationalProteomics/NormalyzerDE/actions/workflows/pkgdown.yaml/badge.svg?branch=devel)](https://github.com/ComputationalProteomics/NormalyzerDE/actions/workflows/pkgdown.yaml?query=branch%3Adevel)
+[![Bioc downloads rank](https://bioconductor.org/shields/downloads/release/NormalyzerDE.svg)](https://bioconductor.org/packages/stats/bioc/NormalyzerDE/)
+[![Bioc support](https://bioconductor.org/shields/posts/NormalyzerDE.svg)](https://support.bioconductor.org/tag/NormalyzerDE)
+[![Bioc history](https://bioconductor.org/shields/years-in-bioc/NormalyzerDE.svg)](https://bioconductor.org/packages/release/bioc/html/NormalyzerDE.html#since)
+[![Bioc last commit](https://bioconductor.org/shields/lastcommit/devel/bioc/NormalyzerDE.svg)](https://bioconductor.org/checkResults/devel/bioc-LATEST/NormalyzerDE/)
+[![Bioc dependencies](https://bioconductor.org/shields/dependencies/release/NormalyzerDE.svg)](https://bioconductor.org/packages/release/bioc/html/NormalyzerDE.html)
 <!-- badges: end -->
 
 # About
@@ -102,4 +109,3 @@ When a normalized matrix is selected the analysis proceeds to the statistical an
 * An instance of `NormalyzerStatistics` is prepared containing the input data.
 * Code in the `calculateStatistics.R` script is used to calculate the statistical contrasts. The results are attached to the `NormalyzerStatistics` object.
 * The resulting statistics are used to generate a report and an annotated output matrix where key statistical measures are attached to the original matrix.
-
