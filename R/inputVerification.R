@@ -358,11 +358,10 @@ verifyValidNumbers <- function(rawDataOnly, groups, noLogTransform=FALSE, quiet=
 }
 
 
-#' Verify that design matrix setup matches the data matrix
+#' Verify that SummarizedExperiment setup matches the data matrix
 #' 
-#' @param fullMatrix Dataframe with input data.
-#' @param designMatrix Dataframe with design setup.
-#' @param sampleCol Column in design matrix containing sample IDs.
+#' @param summarizedExp SummarizedExperiment object.
+#' @param sampleCol Column in the SummarizedExperiment colData containing sample IDs.
 #' 
 #' @return None
 #' @keywords internal
@@ -619,6 +618,5 @@ verifyMultipleSamplesPresent <- function(dataMatrix, groups, requireReplicates=T
         if (!quiet) message("Sample check: More than one sample group found")
     }
 }
-
 
 

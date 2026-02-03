@@ -38,6 +38,6 @@ biocViews:
     Normalization, MultipleComparison, Visualization, Bayesian, Proteomics, Metabolomics, DifferentialExpression
 License: Artistic-2.0
 Encoding: UTF-8
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.3
 URL: https://computationalproteomics.github.io/NormalyzerDE/, https://github.com/ComputationalProteomics/NormalyzerDE
 Depends: R (>= 4.1.0)

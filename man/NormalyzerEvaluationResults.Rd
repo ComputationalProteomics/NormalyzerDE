@@ -5,12 +5,14 @@
 \title{Representation of evaluation results by calculating performance measures
 for an an NormalyzerResults instance}
 \usage{
-NormalyzerEvaluationResults(nr)
+NormalyzerEvaluationResults(nr, categoricalAnova = TRUE)
 
-NormalyzerEvaluationResults(nr)
+NormalyzerEvaluationResults(nr, categoricalAnova = TRUE)
 }
 \arguments{
 \item{nr}{NormalyzerResults object}
+
+\item{categoricalAnova}{Should ANOVA be categorical or not}
 }
 \value{
 nds Generated NormalyzerEvaluationResults instance

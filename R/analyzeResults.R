@@ -95,7 +95,6 @@ calculateReplicateCV <- function(methodList, sampleReplicateGroups) {
 #' a method and each row corresponds to a feature.
 #' 
 #' @param methodList List containing normalized matrices.
-#' @param sampleReplicateGroups Condition header.
 #' @return methodFeatureCVMatrix Matrix with feature as rows and normalization
 #'   method as columns
 #' @keywords internal
@@ -390,7 +389,6 @@ findLowlyVariableFeaturesCVs <- function(referenceFDR, methodList) {
     
     lowVarFeaturesAverageCVs
 }
-
 
 
 

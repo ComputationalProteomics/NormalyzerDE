@@ -2,21 +2,19 @@
 % Please edit documentation in R/inputVerification.R
 \name{verifySummarizedExperiment}
 \alias{verifySummarizedExperiment}
-\title{Verify that design matrix setup matches the data matrix}
+\title{Verify that SummarizedExperiment setup matches the data matrix}
 \usage{
 verifySummarizedExperiment(summarizedExp, sampleCol)
 }
 \arguments{
-\item{sampleCol}{Column in design matrix containing sample IDs.}
+\item{summarizedExp}{SummarizedExperiment object.}
 
-\item{fullMatrix}{Dataframe with input data.}
-
-\item{designMatrix}{Dataframe with design setup.}
+\item{sampleCol}{Column in the SummarizedExperiment colData containing sample IDs.}
 }
 \value{
 None
 }
 \description{
-Verify that design matrix setup matches the data matrix
+Verify that SummarizedExperiment setup matches the data matrix
 }
 \keyword{internal}
