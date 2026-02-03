@@ -1,6 +1,7 @@
 <!-- badges: start -->
 [![Bioc release status](https://bioconductor.org/shields/build/release/bioc/NormalyzerDE.svg)](https://bioconductor.org/checkResults/release/bioc-LATEST/NormalyzerDE/)
 [![Bioc devel status](https://bioconductor.org/shields/build/devel/bioc/NormalyzerDE.svg)](https://bioconductor.org/checkResults/devel/bioc-LATEST/NormalyzerDE/)
+[![DOI](https://img.shields.io/badge/DOI-10.1021%2Facs.jproteome.8b00523-blue)](https://doi.org/10.1021/acs.jproteome.8b00523)
 [![R-CMD-check-bioc](https://github.com/ComputationalProteomics/NormalyzerDE/actions/workflows/check-bioc.yml/badge.svg?branch=devel)](https://github.com/ComputationalProteomics/NormalyzerDE/actions/workflows/check-bioc.yml?query=branch%3Adevel)
 [![pkgdown](https://github.com/ComputationalProteomics/NormalyzerDE/actions/workflows/pkgdown.yaml/badge.svg?branch=devel)](https://github.com/ComputationalProteomics/NormalyzerDE/actions/workflows/pkgdown.yaml?query=branch%3Adevel)
 [![Bioc downloads rank](https://bioconductor.org/shields/downloads/release/NormalyzerDE.svg)](https://bioconductor.org/packages/stats/bioc/NormalyzerDE/)
