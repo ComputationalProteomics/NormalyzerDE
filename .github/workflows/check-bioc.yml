@@ -238,7 +238,6 @@ jobs:
           remotes::install_cran("covr")
         shell: Rscript {0}
 
-      - name: Install pkgdown
       - name: Session info
         run: |
           options(width = 100)
