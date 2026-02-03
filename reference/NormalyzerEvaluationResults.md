@@ -6,9 +6,9 @@ subsequently can be used to generate the quality assessment report.
 ## Usage
 
 ``` r
-NormalyzerEvaluationResults(nr)
+NormalyzerEvaluationResults(nr, categoricalAnova = TRUE)
 
-NormalyzerEvaluationResults(nr)
+NormalyzerEvaluationResults(nr, categoricalAnova = TRUE)
 ```
 
 ## Arguments
@@ -16,6 +16,10 @@ NormalyzerEvaluationResults(nr)
 - nr:
 
   NormalyzerResults object
+
+- categoricalAnova:
+
+  Should ANOVA be categorical or not
 
 ## Value
 

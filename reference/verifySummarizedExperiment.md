@@ -1,6 +1,6 @@
-# Verify that design matrix setup matches the data matrix
+# Verify that SummarizedExperiment setup matches the data matrix
 
-Verify that design matrix setup matches the data matrix
+Verify that SummarizedExperiment setup matches the data matrix
 
 ## Usage
 
@@ -10,17 +10,13 @@ verifySummarizedExperiment(summarizedExp, sampleCol)
 
 ## Arguments
 
+- summarizedExp:
+
+  SummarizedExperiment object.
+
 - sampleCol:
 
-  Column in design matrix containing sample IDs.
-
-- fullMatrix:
-
-  Dataframe with input data.
-
-- designMatrix:
-
-  Dataframe with design setup.
+  Column in the SummarizedExperiment colData containing sample IDs.
 
 ## Value
 

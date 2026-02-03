@@ -16,10 +16,6 @@ calculateFeatureCV(methodList)
 
   List containing normalized matrices.
 
-- sampleReplicateGroups:
-
-  Condition header.
-
 ## Value
 
 methodFeatureCVMatrix Matrix with feature as rows and normalization
