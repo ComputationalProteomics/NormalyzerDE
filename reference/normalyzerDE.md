@@ -145,7 +145,7 @@ normalyzerDE(
 #> [1] "Setting up statistics object"
 #> [1] "Calculating statistical contrasts..."
 #> [1] "Contrast calculations done!"
-#> [1] "Writing 100 annotated rows to /tmp/RtmpVapksj/my_jobname/my_jobname_stats.tsv"
+#> [1] "Writing 100 annotated rows to /tmp/RtmpnVjpp6/my_jobname/my_jobname_stats.tsv"
 #> [1] "Writing statistics report"
-#> [1] "All done! Results are stored in: /tmp/RtmpVapksj/my_jobname, processing time was 0 minutes"
+#> [1] "All done! Results are stored in: /tmp/RtmpnVjpp6/my_jobname, processing time was 0 minutes"
 ```

@@ -5,6 +5,10 @@ link:
 
 <https://quantitativeproteomics.org/normalyzerde>
 
+Alternatively:
+
+<https://normalyzerde.serve.scilifelab.se>
+
 NormalyzerDE is a software designed to ease the process of selecting an
 optimal normalization approach for your dataset and to perform
 subsequent differential expression analysis.
