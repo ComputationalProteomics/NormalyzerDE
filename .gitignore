@@ -15,6 +15,7 @@ R/Rplots.pdf
 
 # Folders
 ignore
+check-local/
 inst/doc
 tests/testthat/output/
 builds/

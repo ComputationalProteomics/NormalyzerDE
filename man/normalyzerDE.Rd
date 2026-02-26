@@ -30,11 +30,11 @@ normalyzerDE(
   writeReportAsPngs = FALSE,
   limpaProteinIdCol = "auto",
   limpaDpc = NULL,
-  limpaDpcSlope = 0.8,
-  limpaChunk = 1000L,
-  limpaVerbose = FALSE,
-  limpaSampleWeights = FALSE,
+  limpaDpcMethod = c("none", "dpc", "dpcCN"),
+  limpaDpcArgs = NULL,
+  limpaQuantArgs = NULL,
   limpaDEArgs = NULL,
+  limpaKeep = c("none", "elist", "fit", "all"),
   inputFormat = "default",
   inputOptions = NULL
 )
@@ -117,24 +117,41 @@ proteins. Set to \code{NULL} to disable protein summarization and treat each
 row as one protein.}
 
 \item{limpaDpc}{For \code{type="limpa"}, optional DPC parameters to pass to
-\code{limpa::dpcQuant()} / \code{limpa::dpcImpute()}. Can be a list as
+\code{limpa::dpcQuant()} / \code{limpa::dpcQuantByRow()}. Can be a list as
 returned by \code{limpa::dpc()}, or a numeric vector \code{c(beta0, beta1)}.}
 
-\item{limpaDpcSlope}{For \code{type="limpa"}, slope for DPC estimation when
-\code{limpaDpc} is not provided. Passed as \code{dpc.slope}.}
+\item{limpaDpcMethod}{For \code{type="limpa"}, optional method to estimate the
+DPC parameters from the data when \code{limpaDpc} is not supplied.
+\code{"none"} (default) uses a fixed slope (\code{limpaQuantArgs$dpc.slope},
+default \code{0.8}) and lets limpa estimate the intercept internally.
+\code{"dpc"} estimates both DPC parameters from the observed-normal model
+via \code{limpa::dpc()}. \code{"dpcCN"} estimates the DPC from the
+complete-normal model via \code{limpa::dpcCN()}, which can be more robust
+for datasets with very large fold-changes.}
 
-\item{limpaChunk}{For \code{type="limpa"}, chunk size passed to
-\code{limpa::dpcQuant()} / \code{limpa::dpcImpute()}.}
+\item{limpaDpcArgs}{For \code{type="limpa"}, optional named list of additional
+arguments forwarded to \code{limpa::dpc()} or \code{limpa::dpcCN()} when
+\code{limpaDpcMethod} is not \code{"none"}. Argument \code{y} is ignored.
+For \code{limpaDpcMethod="dpcCN"}, \code{dpc.slope.start} defaults to
+\code{limpaQuantArgs$dpc.slope}.}
 
-\item{limpaVerbose}{For \code{type="limpa"}, whether to show limpa progress
-messages.}
-
-\item{limpaSampleWeights}{For \code{type="limpa"}, whether to estimate limma
-sample weights via \code{sample.weights=TRUE}.}
+\item{limpaQuantArgs}{For \code{type="limpa"}, optional named list of
+additional arguments forwarded to \code{limpa::dpcQuant()} /
+\code{limpa::dpcQuantByRow()}. Use this to set \code{dpc.slope} (default
+\code{0.8}), \code{chunk} (default \code{1000L}), and \code{verbose} (default
+\code{FALSE}), plus any additional \code{...} arguments supported by limpa.
+Arguments \code{y}, \code{protein.id}, and \code{dpc} are ignored.}
 
 \item{limpaDEArgs}{For \code{type="limpa"}, optional named list of additional
 arguments forwarded to \code{limpa::dpcDE()} (and then to
-\code{limpa::voomaLmFitWithImputation()}).}
+\code{limpa::voomaLmFitWithImputation()}). To enable limma sample weights,
+set \code{limpaDEArgs = list(sample.weights = TRUE)}.}
+
+\item{limpaKeep}{For \code{type="limpa"}, optionally store intermediate limpa
+objects in \code{backendData(nst)$limpa} for reuse/debugging. Set to
+\code{"elist"} to keep the \code{EList} object (completed expression matrix
+plus uncertainty estimates), \code{"fit"} to keep the fitted \code{MArrayLM}
+object(s), or \code{"all"} to keep both. Default is \code{"none"}.}
 
 \item{inputFormat}{Type of input format for \code{dataPath} when reading from
 files. Supports \code{"default"} and \code{"diann"}.}
@@ -167,6 +184,23 @@ containing statistical key measures have been added
 6: Write the table to file
 7: Generate a PDF report displaying p-value histograms for each calculated
 contrast
+
+
+For \code{type="limpa"}, NormalyzerDE uses the Bioconductor package
+\pkg{limpa} to model intensity-dependent missing values via a detection
+probability curve (DPC) and to propagate quantification uncertainty into the
+differential expression analysis. The input should be on the log2 scale with
+missing values encoded as \code{NA}. Between-sample normalization (if desired)
+should be performed upstream (for example by the quantification tool or via
+\code{\link{normalyzer}}), because limpa focuses on missing-value modeling and
+uncertainty propagation rather than normalization. Avoid applying multiple
+normalizations unintentionally.
+
+By default, NormalyzerDE uses a fixed DPC slope
+(\code{limpaQuantArgs$dpc.slope}, default \code{0.8}) and lets limpa estimate
+the intercept. To estimate both DPC parameters from your data, set
+\code{limpaDpcMethod="dpc"} (or \code{"dpcCN"} for a complete-normal estimate,
+which can be more robust for datasets with very large fold-changes).
 }
 \examples{
 data_path <- system.file(package="NormalyzerDE", "extdata", "tiny_data.tsv")

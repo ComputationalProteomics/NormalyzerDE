@@ -37,6 +37,8 @@ information as well as a graphical report of the comparisons.
 
 \item{\code{designDf}}{Data frame containing design conditions}
 
+\item{\code{backendData}}{Named list of backend-specific cached objects.}
+
 \item{\code{filteringContrast}}{Vector showing which entries are filtered
 (due to low count)}
 
