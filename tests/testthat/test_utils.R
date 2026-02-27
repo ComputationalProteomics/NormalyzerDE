@@ -249,7 +249,10 @@ test_that("setupJobDir sanitizes jobName", {
   dir.create(parentDir)
   on.exit(unlink(parentDir, recursive = TRUE), add = TRUE)
 
-  jobDir <- setupJobDir("../my job", parentDir)
+  jobDir <- expect_warning(
+    setupJobDir("../my job", parentDir),
+    "sanitized"
+  )
 
   expect_true(startsWith(normalizePath(jobDir), normalizePath(parentDir)))
   expect_false(grepl("[/\\\\]", basename(jobDir)))

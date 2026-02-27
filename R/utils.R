@@ -26,12 +26,28 @@ sanitizeJobName <- function(jobName) {
     stop("Invalid jobName: must be a non-empty character value")
   }
 
-  sanitizedJobName <- gsub("[^[:alnum:]_-]", "_", as.character(jobName[1]))
-  sanitizedJobName <- basename(sanitizedJobName)
+  originalJobName <- as.character(jobName[1])
+  sanitizedJobName <- basename(originalJobName)
+
+  sanitizedJobName <- gsub("[[:cntrl:]]", "_", sanitizedJobName)
+  sanitizedJobName <- gsub("[<>:\"/\\\\|?*]", "_", sanitizedJobName)
+  sanitizedJobName <- trimws(sanitizedJobName)
+  sanitizedJobName <- sub("[. ]+$", "", sanitizedJobName)
 
   if (!nzchar(sanitizedJobName)) {
     stop(
       "Invalid jobName: must contain at least one character after sanitization"
+    )
+  }
+
+  if (!identical(originalJobName, sanitizedJobName)) {
+    warning(
+      "jobName was sanitized from '",
+      originalJobName,
+      "' to '",
+      sanitizedJobName,
+      "' for filesystem compatibility.",
+      call. = FALSE
     )
   }
 
