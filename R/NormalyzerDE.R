@@ -271,6 +271,10 @@ normalyzer <- function(
 #' uncertainty propagation rather than normalization. Avoid applying multiple
 #' normalizations unintentionally.
 #'
+#' For PTM-level data (e.g., phosphoproteomics) where each row corresponds to a
+#' modified site, set \code{limpaByRow=TRUE} (or \code{limpaProteinIdCol=NULL})
+#' to keep each row separate rather than summarizing to protein-level.
+#'
 #' By default, NormalyzerDE uses a fixed DPC slope
 #' (\code{limpaQuantArgs$dpc.slope}, default \code{0.8}) and lets limpa estimate
 #' the intercept. To estimate both DPC parameters from your data, set
@@ -319,7 +323,12 @@ normalyzer <- function(
 #'   identifiers. If the chosen column contains duplicate identifiers, the data
 #'   are summarized once across all samples and the output rows correspond to
 #'   proteins. Set to \code{NULL} to disable protein summarization and treat each
-#'   row as one protein.
+#'   row as one protein (recommended for PTM-level data such as phosphoproteomics
+#'   where each row corresponds to a modified site).
+#' @param limpaByRow For \code{type="limpa"}, treat each input row as a separate
+#'   protein and always use \code{limpa::dpcQuantByRow()} instead of summarizing
+#'   via \code{limpa::dpcQuant()}. This is recommended for PTM-level matrices
+#'   (e.g., phosphosites). Equivalent to setting \code{limpaProteinIdCol=NULL}.
 #' @param limpaDpc For \code{type="limpa"}, optional DPC parameters to pass to
 #'   \code{limpa::dpcQuant()} / \code{limpa::dpcQuantByRow()}. Can be a list as
 #'   returned by \code{limpa::dpc()}, or a numeric vector \code{c(beta0, beta1)}.
@@ -414,7 +423,8 @@ normalyzerDE <- function(
   limpaDEArgs = NULL,
   limpaKeep = c("none", "elist", "fit", "all"),
   inputFormat = "default",
-  inputOptions = NULL
+  inputOptions = NULL,
+  limpaByRow = FALSE
 ) {
   if (!quiet) {
     message(
@@ -489,6 +499,7 @@ normalyzerDE <- function(
     oneVsRest = oneVsRest,
     oneVsRestGroups = oneVsRestGroups,
     limpaProteinIdCol = limpaProteinIdCol,
+    limpaByRow = limpaByRow,
     limpaDpc = limpaDpc,
     limpaDpcMethod = limpaDpcMethod,
     limpaDpcArgs = limpaDpcArgs,

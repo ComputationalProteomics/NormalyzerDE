@@ -426,7 +426,12 @@ setReplaceMethod(
 #'   identifiers. If the chosen column contains duplicate identifiers, the data
 #'   are summarized once across all samples and the output rows correspond to
 #'   proteins. Set to \code{NULL} to disable protein summarization and treat each
-#'   row as one protein.
+#'   row as one protein (recommended for PTM-level data such as phosphoproteomics
+#'   where each row corresponds to a modified site).
+#' @param limpaByRow For \code{type="limpa"}, treat each input row as a separate
+#'   protein and always use \code{limpa::dpcQuantByRow()} instead of summarizing
+#'   via \code{limpa::dpcQuant()}. This is recommended for PTM-level matrices
+#'   (e.g., phosphosites). Equivalent to setting \code{limpaProteinIdCol=NULL}.
 #' @param limpaDpc For \code{type="limpa"}, optional DPC parameters to pass to
 #'   \code{limpa::dpcQuant()} / \code{limpa::dpcQuantByRow()}. Can be a list as
 #'   returned by \code{limpa::dpc()}, or a numeric vector \code{c(beta0, beta1)}.
@@ -488,7 +493,8 @@ setGeneric(
     limpaDpcArgs = NULL,
     limpaQuantArgs = NULL,
     limpaDEArgs = NULL,
-    limpaKeep = c("none", "elist", "fit", "all")
+    limpaKeep = c("none", "elist", "fit", "all"),
+    limpaByRow = FALSE
   ) {
     standardGeneric("calculateContrasts")
   }
@@ -517,7 +523,8 @@ setMethod(
     limpaDpcArgs = NULL,
     limpaQuantArgs = NULL,
     limpaDEArgs = NULL,
-    limpaKeep = c("none", "elist", "fit", "all")
+    limpaKeep = c("none", "elist", "fit", "all"),
+    limpaByRow = FALSE
   ) {
     dataMat <- dataMat(nst)
     designDf <- designDf(nst)
@@ -610,6 +617,26 @@ setMethod(
 
       limpaDpcMethod <- match.arg(limpaDpcMethod)
       limpaKeep <- match.arg(limpaKeep)
+
+      limpaByRow <- as.logical(limpaByRow)[1]
+      if (is.na(limpaByRow)) {
+        stop("limpaByRow must be TRUE or FALSE.")
+      }
+
+      if (isTRUE(limpaByRow)) {
+        proteinIdColValue <- if (is.null(limpaProteinIdCol)) {
+          NULL
+        } else {
+          as.character(limpaProteinIdCol)[1]
+        }
+        if (!is.null(proteinIdColValue) && !identical(proteinIdColValue, "auto")) {
+          stop(
+            "limpaByRow=TRUE is incompatible with a non-default limpaProteinIdCol. ",
+            "Set limpaProteinIdCol=NULL (or leave it as 'auto')."
+          )
+        }
+        limpaProteinIdCol <- NULL
+      }
 
       if (!is.null(limpaDpcArgs) && !is.list(limpaDpcArgs)) {
         stop("limpaDpcArgs must be a named list (or NULL).")

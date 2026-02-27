@@ -29,7 +29,8 @@ calculateContrasts(
   limpaDpcArgs = NULL,
   limpaQuantArgs = NULL,
   limpaDEArgs = NULL,
-  limpaKeep = c("none", "elist", "fit", "all")
+  limpaKeep = c("none", "elist", "fit", "all"),
+  limpaByRow = FALSE
 )
 
 \S4method{calculateContrasts}{NormalyzerStatistics}(
@@ -51,7 +52,8 @@ calculateContrasts(
   limpaDpcArgs = NULL,
   limpaQuantArgs = NULL,
   limpaDEArgs = NULL,
-  limpaKeep = c("none", "elist", "fit", "all")
+  limpaKeep = c("none", "elist", "fit", "all"),
+  limpaByRow = FALSE
 )
 }
 \arguments{
@@ -96,7 +98,8 @@ to use as the protein identifier. Use \code{"auto"} (default) to try common
 identifiers. If the chosen column contains duplicate identifiers, the data
 are summarized once across all samples and the output rows correspond to
 proteins. Set to \code{NULL} to disable protein summarization and treat each
-row as one protein.}
+row as one protein (recommended for PTM-level data such as phosphoproteomics
+where each row corresponds to a modified site).}
 
 \item{limpaDpc}{For \code{type="limpa"}, optional DPC parameters to pass to
 \code{limpa::dpcQuant()} / \code{limpa::dpcQuantByRow()}. Can be a list as
@@ -134,6 +137,11 @@ objects in \code{backendData(nst)$limpa} for reuse/debugging. Set to
 \code{"elist"} to keep the \code{EList} object (completed expression matrix
 plus uncertainty estimates), \code{"fit"} to keep the fitted \code{MArrayLM}
 object(s), or \code{"all"} to keep both. Default is \code{"none"}.}
+
+\item{limpaByRow}{For \code{type="limpa"}, treat each input row as a separate
+protein and always use \code{limpa::dpcQuantByRow()} instead of summarizing
+via \code{limpa::dpcQuant()}. This is recommended for PTM-level matrices
+(e.g., phosphosites). Equivalent to setting \code{limpaProteinIdCol=NULL}.}
 }
 \value{
 nst Statistics object with statistical measures calculated

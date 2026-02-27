@@ -317,7 +317,16 @@ test_that("limpa backend can summarize peptides to proteins via dpcQuant", {
   design <- data.frame(sample = colnames(test_data), group = group)
   rownames(design) <- design$sample
 
-  row_anno <- data.frame(`Protein.Group` = peptide_protein)
+  row_anno <- data.frame(
+    `Protein.Group` = peptide_protein,
+    `Protein.Names` = rep(
+      paste0("Prot_", protein_ids),
+      each = peptides_per_protein
+    ),
+    Proteotypic = rep(c(0, 1), times = n_proteins),
+    `Precursor.Charge` = rep(c(2, 3), times = n_proteins),
+    check.names = FALSE
+  )
 
   se <- SummarizedExperiment::SummarizedExperiment(
     assay = test_data,
@@ -337,7 +346,73 @@ test_that("limpa backend can summarize peptides to proteins via dpcQuant", {
 
   expect_equal(nrow(dataMat(out)), n_proteins)
   expect_true("Protein.Group" %in% colnames(annotMat(out)))
+  expect_true("Protein.Names" %in% colnames(annotMat(out)))
+  expect_false("Proteotypic" %in% colnames(annotMat(out)))
+  expect_false("Precursor.Charge" %in% colnames(annotMat(out)))
   expect_length(pairwiseCompsP(out)[["A-B"]], n_proteins)
+})
+
+test_that("limpaByRow keeps duplicate protein IDs as separate rows", {
+  testthat::skip_if_not_installed("limpa")
+
+  set.seed(1)
+  n_proteins <- 6
+  peptides_per_protein <- 2
+  n_samples <- 6
+
+  protein_ids <- paste0("P", seq_len(n_proteins))
+  peptide_protein <- rep(protein_ids, each = peptides_per_protein)
+
+  group <- c("A", "A", "A", "B", "B", "B")
+  protein_expr <- matrix(
+    rnorm(n_proteins * n_samples, mean = 10, sd = 1),
+    nrow = n_proteins
+  )
+  protein_expr[, group == "B"] <- protein_expr[, group == "B"] +
+    seq_len(n_proteins) / n_proteins
+
+  test_data <- matrix(
+    NA_real_,
+    nrow = length(peptide_protein),
+    ncol = n_samples
+  )
+  for (ii in seq_along(peptide_protein)) {
+    protein_index <- match(peptide_protein[ii], protein_ids)
+    test_data[ii, ] <- protein_expr[protein_index, ] +
+      rnorm(n_samples, sd = 0.1)
+  }
+  missing_mask <- matrix(runif(length(test_data)) < 0.1, nrow = nrow(test_data))
+  test_data[missing_mask] <- NA_real_
+
+  colnames(test_data) <- paste0("s", seq_len(n_samples))
+
+  design <- data.frame(sample = colnames(test_data), group = group)
+  rownames(design) <- design$sample
+
+  row_anno <- data.frame(`Protein.Group` = peptide_protein)
+
+  se <- SummarizedExperiment::SummarizedExperiment(
+    assay = test_data,
+    colData = design,
+    rowData = row_anno
+  )
+
+  nst <- NormalyzerStatistics(se, logTrans = FALSE)
+  out <- calculateContrasts(
+    nst,
+    comparisons = "A-B",
+    condCol = "group",
+    type = "limpa",
+    limpaByRow = TRUE,
+    limpaKeep = "elist",
+    limpaQuantArgs = list(dpc.slope = 0.7, chunk = 10L)
+  )
+
+  backend <- backendData(out)[["limpa"]]
+  expect_type(backend, "list")
+  expect_false(isTRUE(backend$usedDpcQuant))
+
+  expect_equal(nrow(dataMat(out)), nrow(test_data))
 })
 
 test_that("limpa backend can auto-estimate DPC via limpaDpcMethod", {

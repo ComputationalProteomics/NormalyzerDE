@@ -36,7 +36,8 @@ normalyzerDE(
   limpaDEArgs = NULL,
   limpaKeep = c("none", "elist", "fit", "all"),
   inputFormat = "default",
-  inputOptions = NULL
+  inputOptions = NULL,
+  limpaByRow = FALSE
 )
 }
 \arguments{
@@ -114,7 +115,8 @@ to use as the protein identifier. Use \code{"auto"} (default) to try common
 identifiers. If the chosen column contains duplicate identifiers, the data
 are summarized once across all samples and the output rows correspond to
 proteins. Set to \code{NULL} to disable protein summarization and treat each
-row as one protein.}
+row as one protein (recommended for PTM-level data such as phosphoproteomics
+where each row corresponds to a modified site).}
 
 \item{limpaDpc}{For \code{type="limpa"}, optional DPC parameters to pass to
 \code{limpa::dpcQuant()} / \code{limpa::dpcQuantByRow()}. Can be a list as
@@ -160,6 +162,11 @@ files. Supports \code{"default"} and \code{"diann"}.}
 \code{\link{diannInputOptions}}. For delimited inputs, use
 \code{\link{defaultInputOptions}}, \code{\link{proteiosInputOptions}}, or
 \code{\link{maxQuantInputOptions}} to configure the delimiter.}
+
+\item{limpaByRow}{For \code{type="limpa"}, treat each input row as a separate
+protein and always use \code{limpa::dpcQuantByRow()} instead of summarizing
+via \code{limpa::dpcQuant()}. This is recommended for PTM-level matrices
+(e.g., phosphosites). Equivalent to setting \code{limpaProteinIdCol=NULL}.}
 }
 \value{
 None
@@ -195,6 +202,10 @@ should be performed upstream (for example by the quantification tool or via
 \code{\link{normalyzer}}), because limpa focuses on missing-value modeling and
 uncertainty propagation rather than normalization. Avoid applying multiple
 normalizations unintentionally.
+
+For PTM-level data (e.g., phosphoproteomics) where each row corresponds to a
+modified site, set \code{limpaByRow=TRUE} (or \code{limpaProteinIdCol=NULL})
+to keep each row separate rather than summarizing to protein-level.
 
 By default, NormalyzerDE uses a fixed DPC slope
 (\code{limpaQuantArgs$dpc.slope}, default \code{0.8}) and lets limpa estimate
