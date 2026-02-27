@@ -1050,11 +1050,44 @@ setMethod(
       df[maxCount >= leastRep, , drop = FALSE]
     }
 
+    warnIfLimpaProteinSummarizationWillBeSkipped <- function(
+      annotationMat,
+      proteinIdCol
+    ) {
+      if (is.null(proteinIdCol)) {
+        return(invisible(NULL))
+      }
+
+      proteinId <- annotationMat[, proteinIdCol]
+      proteinId <- as.character(proteinId)
+
+      if (anyDuplicated(proteinId) == 0) {
+        warning(
+          "limpaProteinIdCol '",
+          proteinIdCol,
+          "' contains no duplicated identifiers, so no peptide/precursor-to-protein summarization ",
+          "will be performed. The analysis will proceed with the input rows as features (this may ",
+          "indicate the input is already protein-level).",
+          call. = FALSE
+        )
+      }
+
+      invisible(NULL)
+    }
+
     limpaProteinIdColUsed <- if (type == "limpa") {
       inferLimpaProteinIdCol(annotMat(nst), limpaProteinIdCol)
     } else {
       NULL
     }
+
+    if (type == "limpa") {
+      warnIfLimpaProteinSummarizationWillBeSkipped(
+        annotMat(nst),
+        limpaProteinIdColUsed
+      )
+    }
+
     limpaQuantified <- if (type == "limpa" && !is.null(limpaProteinIdColUsed)) {
       prepareLimpaQuantified(dataMat, annotMat(nst), limpaProteinIdColUsed)
     } else {

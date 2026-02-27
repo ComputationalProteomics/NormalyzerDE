@@ -153,6 +153,69 @@ test_that("limpa backend warns when input does not look log2-transformed", {
   )
 })
 
+test_that("limpa backend warns when input looks protein-level", {
+  testthat::skip_if_not_installed("limpa")
+
+  test_data <- matrix(
+    c(
+      10,
+      11,
+      NA,
+      13,
+      12,
+      11,
+      NA,
+      NA,
+      NA,
+      9,
+      9,
+      10,
+      5,
+      5,
+      5,
+      NA,
+      NA,
+      NA,
+      7,
+      8,
+      7,
+      7,
+      7,
+      7
+    ),
+    nrow = 4,
+    byrow = TRUE
+  )
+  colnames(test_data) <- paste0("s", seq_len(ncol(test_data)))
+
+  design <- data.frame(
+    sample = colnames(test_data),
+    group = c("A", "A", "A", "B", "B", "B")
+  )
+  rownames(design) <- design$sample
+
+  se <- SummarizedExperiment::SummarizedExperiment(
+    assay = test_data,
+    colData = design,
+    rowData = data.frame(`Protein.Group` = paste0("P", seq_len(nrow(test_data))))
+  )
+
+  out <- testthat::expect_warning(
+    calculateContrasts(
+      NormalyzerStatistics(se, logTrans = FALSE),
+      comparisons = "A-B",
+      condCol = "group",
+      type = "limpa",
+      leastRepCount = 1,
+      limpaQuantArgs = list(chunk = 10L)
+    ),
+    "no peptide/precursor-to-protein summarization"
+  )
+
+  expect_equal(nrow(dataMat(out)), nrow(test_data))
+  expect_equal(ncol(dataMat(out)), ncol(test_data))
+})
+
 test_that("limpa backend supports one-vs-rest contrasts", {
   if (!requireNamespace("limpa", quietly = TRUE)) {
     skip("limpa not installed")
