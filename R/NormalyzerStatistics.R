@@ -583,8 +583,30 @@ setMethod(
       }
     }
 
+    warnIfLimpaInputLooksNotLog2 <- function(dataMat, threshold = 50) {
+      finiteVals <- dataMat[is.finite(dataMat)]
+      if (length(finiteVals) == 0) {
+        return(invisible(NULL))
+      }
+
+      maxVal <- max(finiteVals)
+      if (is.finite(maxVal) && maxVal > threshold) {
+        warning(
+          "For type='limpa', the input data should be on the log2 scale (missing values as NA). ",
+          "The values look large for log2 data (max finite value = ",
+          format(signif(maxVal, 4), trim = TRUE),
+          "). If your matrix is on the linear scale, set `logTrans=TRUE` in ",
+          "`normalyzerDE()` (or log2-transform upstream before calling `calculateContrasts()`).",
+          call. = FALSE
+        )
+      }
+
+      invisible(NULL)
+    }
+
     if (type == "limpa") {
       requireLimpaPackage()
+      warnIfLimpaInputLooksNotLog2(dataMat)
 
       limpaDpcMethod <- match.arg(limpaDpcMethod)
       limpaKeep <- match.arg(limpaKeep)

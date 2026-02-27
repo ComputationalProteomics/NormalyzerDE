@@ -84,6 +84,75 @@ test_that("calculateContrasts supports type='limpa'", {
   expect_length(fdrs, nrow(test_data))
 })
 
+test_that("limpa backend warns when input does not look log2-transformed", {
+  testthat::skip_if_not_installed("limpa")
+
+  test_data <- matrix(
+    c(
+      100,
+      110,
+      NA,
+      130,
+      120,
+      110,
+      NA,
+      NA,
+      NA,
+      90,
+      90,
+      100,
+      50,
+      50,
+      50,
+      NA,
+      NA,
+      NA,
+      70,
+      80,
+      70,
+      70,
+      70,
+      70,
+      NA,
+      NA,
+      NA,
+      NA,
+      NA,
+      NA
+    ),
+    nrow = 5,
+    byrow = TRUE
+  )
+  colnames(test_data) <- paste0("s", seq_len(ncol(test_data)))
+
+  design <- data.frame(
+    sample = colnames(test_data),
+    group = c("A", "A", "A", "B", "B", "B")
+  )
+  rownames(design) <- design$sample
+
+  se <- SummarizedExperiment::SummarizedExperiment(
+    assay = test_data,
+    colData = design,
+    rowData = data.frame(feature = paste0("f", seq_len(nrow(test_data))))
+  )
+  nst <- NormalyzerStatistics(se, logTrans = FALSE)
+
+  expect_warning(
+    expect_error(
+      calculateContrasts(
+        nst,
+        comparisons = "A-C",
+        condCol = "group",
+        type = "limpa",
+        limpaProteinIdCol = NULL
+      ),
+      "issues in your contrast"
+    ),
+    "log2"
+  )
+})
+
 test_that("limpa backend supports one-vs-rest contrasts", {
   if (!requireNamespace("limpa", quietly = TRUE)) {
     skip("limpa not installed")
