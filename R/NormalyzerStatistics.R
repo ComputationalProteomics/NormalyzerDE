@@ -1000,12 +1000,63 @@ setMethod(
       dataMat <- dataMat[keepRows, , drop = FALSE]
       proteinId <- proteinId[keepRows]
 
+      inferStableProteinAnnotationCols <- function(
+        genesDf,
+        proteinId,
+        proteinIdCol
+      ) {
+        colNames <- colnames(genesDf)
+        if (is.null(colNames) || length(colNames) == 0) {
+          return(character())
+        }
+
+        candidates <- setdiff(colNames, proteinIdCol)
+        if (length(candidates) == 0) {
+          return(character())
+        }
+
+        proteinId <- as.character(proteinId)
+        idxByProtein <- split(seq_along(proteinId), proteinId)
+
+        isStable <- function(values) {
+          values <- as.character(values)
+          values[values == ""] <- NA_character_
+
+          if (!any(!is.na(values))) {
+            return(FALSE)
+          }
+
+          all(vapply(
+            idxByProtein,
+            function(idx) {
+              x <- values[idx]
+              x <- x[!is.na(x)]
+              length(unique(x)) <= 1
+            },
+            logical(1)
+          ))
+        }
+
+        stable <- vapply(
+          candidates,
+          function(col) isStable(genesDf[[col]]),
+          logical(1)
+        )
+        candidates[stable]
+      }
+
       genesInput <- as.data.frame(
         annotationMat[keepRows, , drop = FALSE],
         stringsAsFactors = FALSE,
         check.names = FALSE
       )
       genesInput[[proteinIdCol]] <- proteinId
+      stableCols <- inferStableProteinAnnotationCols(
+        genesDf = genesInput,
+        proteinId = proteinId,
+        proteinIdCol = proteinIdCol
+      )
+      genesInput <- genesInput[, unique(c(proteinIdCol, stableCols)), drop = FALSE]
       yPeptide <- methods::new("EList", list(E = dataMat, genes = genesInput))
       yProtein <- do.call(
         limpa::dpcQuant,
