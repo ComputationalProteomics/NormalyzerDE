@@ -30,7 +30,8 @@ calculateContrasts(
   limpaQuantArgs = NULL,
   limpaDEArgs = NULL,
   limpaKeep = c("none", "elist", "fit", "all"),
-  limpaByRow = FALSE
+  limpaByRow = FALSE,
+  limpaPostQuantNorm = c("none", "quantile")
 )
 
 \S4method{calculateContrasts}{NormalyzerStatistics}(
@@ -53,7 +54,8 @@ calculateContrasts(
   limpaQuantArgs = NULL,
   limpaDEArgs = NULL,
   limpaKeep = c("none", "elist", "fit", "all"),
-  limpaByRow = FALSE
+  limpaByRow = FALSE,
+  limpaPostQuantNorm = c("none", "quantile")
 )
 }
 \arguments{
@@ -142,6 +144,12 @@ object(s), or \code{"all"} to keep both. Default is \code{"none"}.}
 protein and always use \code{limpa::dpcQuantByRow()} instead of summarizing
 via \code{limpa::dpcQuant()}. This is recommended for PTM-level matrices
 (e.g., phosphosites). Equivalent to setting \code{limpaProteinIdCol=NULL}.}
+
+\item{limpaPostQuantNorm}{For \code{type="limpa"}, optional between-sample
+normalization applied to the quantified expression matrix after
+\code{limpa::dpcQuant()} / \code{limpa::dpcQuantByRow()} and before
+\code{limpa::dpcDE()}. One of \code{"none"} (default) or \code{"quantile"}.
+Avoid double-normalization if your input was already normalized upstream.}
 }
 \value{
 nst Statistics object with statistical measures calculated

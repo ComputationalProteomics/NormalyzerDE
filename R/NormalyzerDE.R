@@ -266,10 +266,10 @@ normalyzer <- function(
 #' probability curve (DPC) and to propagate quantification uncertainty into the
 #' differential expression analysis. The input should be on the log2 scale with
 #' missing values encoded as \code{NA}. Between-sample normalization (if desired)
-#' should be performed upstream (for example by the quantification tool or via
-#' \code{\link{normalyzer}}), because limpa focuses on missing-value modeling and
-#' uncertainty propagation rather than normalization. Avoid applying multiple
-#' normalizations unintentionally.
+#' can be performed upstream (for example by the quantification tool or via
+#' \code{\link{normalyzer}}) or after \code{limpa::dpcQuant()} using
+#' \code{limpaPostQuantNorm}. Avoid applying multiple normalizations
+#' unintentionally.
 #'
 #' For PTM-level data (e.g., phosphoproteomics) where each row corresponds to a
 #' modified site, set \code{limpaByRow=TRUE} (or \code{limpaProteinIdCol=NULL})
@@ -351,6 +351,11 @@ normalyzer <- function(
 #'   \code{0.8}), \code{chunk} (default \code{1000L}), and \code{verbose} (default
 #'   \code{FALSE}), plus any additional \code{...} arguments supported by limpa.
 #'   Arguments \code{y}, \code{protein.id}, and \code{dpc} are ignored.
+#' @param limpaPostQuantNorm For \code{type="limpa"}, optional between-sample
+#'   normalization applied to the quantified expression matrix after
+#'   \code{limpa::dpcQuant()} / \code{limpa::dpcQuantByRow()} and before
+#'   \code{limpa::dpcDE()}. One of \code{"none"} (default) or \code{"quantile"}.
+#'   Avoid double-normalization if your input was already normalized upstream.
 #' @param limpaDEArgs For \code{type="limpa"}, optional named list of additional
 #'   arguments forwarded to \code{limpa::dpcDE()} (and then to
 #'   \code{limpa::voomaLmFitWithImputation()}). To enable limma sample weights,
@@ -424,7 +429,8 @@ normalyzerDE <- function(
   limpaKeep = c("none", "elist", "fit", "all"),
   inputFormat = "default",
   inputOptions = NULL,
-  limpaByRow = FALSE
+  limpaByRow = FALSE,
+  limpaPostQuantNorm = c("none", "quantile")
 ) {
   if (!quiet) {
     message(
@@ -504,6 +510,7 @@ normalyzerDE <- function(
     limpaDpcMethod = limpaDpcMethod,
     limpaDpcArgs = limpaDpcArgs,
     limpaQuantArgs = limpaQuantArgs,
+    limpaPostQuantNorm = limpaPostQuantNorm,
     limpaDEArgs = limpaDEArgs,
     limpaKeep = limpaKeep
   )

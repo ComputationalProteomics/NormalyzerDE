@@ -37,7 +37,8 @@ normalyzerDE(
   limpaKeep = c("none", "elist", "fit", "all"),
   inputFormat = "default",
   inputOptions = NULL,
-  limpaByRow = FALSE
+  limpaByRow = FALSE,
+  limpaPostQuantNorm = c("none", "quantile")
 )
 }
 \arguments{
@@ -167,6 +168,12 @@ files. Supports \code{"default"} and \code{"diann"}.}
 protein and always use \code{limpa::dpcQuantByRow()} instead of summarizing
 via \code{limpa::dpcQuant()}. This is recommended for PTM-level matrices
 (e.g., phosphosites). Equivalent to setting \code{limpaProteinIdCol=NULL}.}
+
+\item{limpaPostQuantNorm}{For \code{type="limpa"}, optional between-sample
+normalization applied to the quantified expression matrix after
+\code{limpa::dpcQuant()} / \code{limpa::dpcQuantByRow()} and before
+\code{limpa::dpcDE()}. One of \code{"none"} (default) or \code{"quantile"}.
+Avoid double-normalization if your input was already normalized upstream.}
 }
 \value{
 None
@@ -198,10 +205,10 @@ For \code{type="limpa"}, NormalyzerDE uses the Bioconductor package
 probability curve (DPC) and to propagate quantification uncertainty into the
 differential expression analysis. The input should be on the log2 scale with
 missing values encoded as \code{NA}. Between-sample normalization (if desired)
-should be performed upstream (for example by the quantification tool or via
-\code{\link{normalyzer}}), because limpa focuses on missing-value modeling and
-uncertainty propagation rather than normalization. Avoid applying multiple
-normalizations unintentionally.
+can be performed upstream (for example by the quantification tool or via
+\code{\link{normalyzer}}) or after \code{limpa::dpcQuant()} using
+\code{limpaPostQuantNorm}. Avoid applying multiple normalizations
+unintentionally.
 
 For PTM-level data (e.g., phosphoproteomics) where each row corresponds to a
 modified site, set \code{limpaByRow=TRUE} (or \code{limpaProteinIdCol=NULL})

@@ -635,6 +635,77 @@ test_that("limpa backend accepts and records limpaQuantArgs", {
   expect_identical(backend$quantArgs$verbose, FALSE)
 })
 
+test_that("limpa backend can apply quantile normalization after dpcQuant", {
+  testthat::skip_if_not_installed("limpa")
+
+  test_data <- matrix(
+    c(
+      10,
+      11,
+      NA,
+      13,
+      12,
+      11,
+      NA,
+      NA,
+      NA,
+      9,
+      9,
+      10,
+      5,
+      5,
+      5,
+      NA,
+      NA,
+      NA,
+      7,
+      8,
+      7,
+      7,
+      7,
+      7
+    ),
+    nrow = 4,
+    byrow = TRUE
+  )
+  colnames(test_data) <- paste0("s", seq_len(ncol(test_data)))
+
+  design <- data.frame(
+    sample = colnames(test_data),
+    group = c("A", "A", "A", "B", "B", "B")
+  )
+  rownames(design) <- design$sample
+
+  se <- SummarizedExperiment::SummarizedExperiment(
+    assay = test_data,
+    colData = design,
+    rowData = data.frame(feature = paste0("f", seq_len(nrow(test_data))))
+  )
+
+  out <- calculateContrasts(
+    NormalyzerStatistics(se, logTrans = FALSE),
+    comparisons = "A-B",
+    condCol = "group",
+    type = "limpa",
+    leastRepCount = 1,
+    limpaKeep = "elist",
+    limpaPostQuantNorm = "quantile",
+    limpaQuantArgs = list(chunk = 10L)
+  )
+
+  backend <- backendData(out)[["limpa"]]
+  expect_equal(backend$postQuantNorm, "quantile")
+
+  y <- backend$elists[[".global"]]
+  expect_true(inherits(y, "EList"))
+
+  sortedE <- apply(y$E, 2, sort)
+  ref <- sortedE[, 1]
+  for (ii in seq_len(ncol(sortedE))) {
+    expect_equal(sortedE[, ii], ref, tolerance = 1e-10)
+  }
+})
+
 test_that("limpa backend keeps fits keyed by one-vs-rest comparisons", {
   testthat::skip_if_not_installed("limpa")
 

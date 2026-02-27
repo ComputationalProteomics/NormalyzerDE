@@ -454,6 +454,11 @@ setReplaceMethod(
 #'   \code{0.8}), \code{chunk} (default \code{1000L}), and \code{verbose} (default
 #'   \code{FALSE}), plus any additional \code{...} arguments supported by limpa.
 #'   Arguments \code{y}, \code{protein.id}, and \code{dpc} are ignored.
+#' @param limpaPostQuantNorm For \code{type="limpa"}, optional between-sample
+#'   normalization applied to the quantified expression matrix after
+#'   \code{limpa::dpcQuant()} / \code{limpa::dpcQuantByRow()} and before
+#'   \code{limpa::dpcDE()}. One of \code{"none"} (default) or \code{"quantile"}.
+#'   Avoid double-normalization if your input was already normalized upstream.
 #' @param limpaDEArgs For \code{type="limpa"}, optional named list of additional
 #'   arguments forwarded to \code{limpa::dpcDE()} (and then to
 #'   \code{limpa::voomaLmFitWithImputation()}). To enable limma sample weights,
@@ -494,7 +499,8 @@ setGeneric(
     limpaQuantArgs = NULL,
     limpaDEArgs = NULL,
     limpaKeep = c("none", "elist", "fit", "all"),
-    limpaByRow = FALSE
+    limpaByRow = FALSE,
+    limpaPostQuantNorm = c("none", "quantile")
   ) {
     standardGeneric("calculateContrasts")
   }
@@ -524,7 +530,8 @@ setMethod(
     limpaQuantArgs = NULL,
     limpaDEArgs = NULL,
     limpaKeep = c("none", "elist", "fit", "all"),
-    limpaByRow = FALSE
+    limpaByRow = FALSE,
+    limpaPostQuantNorm = c("none", "quantile")
   ) {
     dataMat <- dataMat(nst)
     designDf <- designDf(nst)
@@ -590,11 +597,11 @@ setMethod(
       }
     }
 
-    warnIfLimpaInputLooksNotLog2 <- function(dataMat, threshold = 50) {
-      finiteVals <- dataMat[is.finite(dataMat)]
-      if (length(finiteVals) == 0) {
-        return(invisible(NULL))
-      }
+	    warnIfLimpaInputLooksNotLog2 <- function(dataMat, threshold = 50) {
+	      finiteVals <- dataMat[is.finite(dataMat)]
+	      if (length(finiteVals) == 0) {
+	        return(invisible(NULL))
+	      }
 
       maxVal <- max(finiteVals)
       if (is.finite(maxVal) && maxVal > threshold) {
@@ -608,20 +615,22 @@ setMethod(
         )
       }
 
-      invisible(NULL)
-    }
+	      invisible(NULL)
+	    }
 
-    if (type == "limpa") {
-      requireLimpaPackage()
-      warnIfLimpaInputLooksNotLog2(dataMat)
+	    limpaPostQuantNormUse <- "none"
+	    if (type == "limpa") {
+	      requireLimpaPackage()
+	      warnIfLimpaInputLooksNotLog2(dataMat)
 
-      limpaDpcMethod <- match.arg(limpaDpcMethod)
-      limpaKeep <- match.arg(limpaKeep)
+	      limpaDpcMethod <- match.arg(limpaDpcMethod)
+	      limpaKeep <- match.arg(limpaKeep)
+	      limpaPostQuantNormUse <- match.arg(limpaPostQuantNorm)
 
-      limpaByRow <- as.logical(limpaByRow)[1]
-      if (is.na(limpaByRow)) {
-        stop("limpaByRow must be TRUE or FALSE.")
-      }
+	      limpaByRow <- as.logical(limpaByRow)[1]
+	      if (is.na(limpaByRow)) {
+	        stop("limpaByRow must be TRUE or FALSE.")
+	      }
 
       if (isTRUE(limpaByRow)) {
         proteinIdColValue <- if (is.null(limpaProteinIdCol)) {
@@ -924,19 +933,20 @@ setMethod(
         limpaDpcMethod
       }
 
-      limpaBackend <- list(
-        dpc = dpcVec,
-        dpcMethod = dpcMethodUsed,
-        dpcSlopeInput = as.numeric(limpaDpcSlopeUse),
-        dpcSlopeUsed = if (is.null(dpcVec)) {
-          as.numeric(limpaDpcSlopeUse)
-        } else {
-          as.numeric(dpcVec[[2]])
-        },
-        fits = list(),
-        designs = list(),
-        elists = list()
-      )
+	      limpaBackend <- list(
+	        dpc = dpcVec,
+	        dpcMethod = dpcMethodUsed,
+	        dpcSlopeInput = as.numeric(limpaDpcSlopeUse),
+	        dpcSlopeUsed = if (is.null(dpcVec)) {
+	          as.numeric(limpaDpcSlopeUse)
+	        } else {
+	          as.numeric(dpcVec[[2]])
+	        },
+	        postQuantNorm = limpaPostQuantNormUse,
+	        fits = list(),
+	        designs = list(),
+	        elists = list()
+	      )
 
       if (length(limpaDpcArgsUse) > 0) {
         limpaBackend$dpcArgs <- limpaDpcArgsUse
@@ -1180,17 +1190,37 @@ setMethod(
       }
     }
 
-    if (!is.null(limpaQuantified)) {
-      dataMat <- as.matrix(limpaQuantified$E)
-      slot(nst, "dataMat") <- dataMat
-      slot(nst, "annotMat") <- as.matrix(limpaQuantified$genes)
-    }
+	    if (!is.null(limpaQuantified)) {
+	      dataMat <- as.matrix(limpaQuantified$E)
+	      slot(nst, "dataMat") <- dataMat
+	      slot(nst, "annotMat") <- as.matrix(limpaQuantified$genes)
+	    }
 
-    calculateLimpaFit <- function(
-      dataMat,
-      limmaDesign,
-      backendKey = ".global"
-    ) {
+	    applyLimpaPostQuantNorm <- function(y) {
+	      if (identical(limpaPostQuantNormUse, "none")) {
+	        return(y)
+	      }
+
+	      if (!is.null(y$E) && anyNA(y$E)) {
+	        stop(
+	          "limpaPostQuantNorm='",
+	          limpaPostQuantNormUse,
+	          "' requires a completed expression matrix without NA values."
+	        )
+	      }
+
+	      if (identical(limpaPostQuantNormUse, "quantile")) {
+	        y$E <- limma::normalizeQuantiles(y$E)
+	      }
+
+	      y
+	    }
+
+	    calculateLimpaFit <- function(
+	      dataMat,
+	      limmaDesign,
+	      backendKey = ".global"
+	    ) {
       if (is.null(limpaQuantified)) {
         yImputed <- do.call(
           limpa::dpcQuantByRow,
@@ -1199,14 +1229,15 @@ setMethod(
               y = dataMat,
               dpc = limpaDpcUse
             ),
-            limpaQuantArgsUse
-          )
-        )
+	            limpaQuantArgsUse
+	          )
+	        )
+	        yImputed <- applyLimpaPostQuantNorm(yImputed)
 
-        limpaDEArgsUse <-
-          applyLimpaDEDefaultsAndValidate(sanitizeLimpaDEArgs(limpaDEArgs))
-        fit <- do.call(
-          limpa::dpcDE,
+	        limpaDEArgsUse <-
+	          applyLimpaDEDefaultsAndValidate(sanitizeLimpaDEArgs(limpaDEArgs))
+	        fit <- do.call(
+	          limpa::dpcDE,
           c(
             list(y = yImputed, design = limmaDesign, plot = FALSE),
             limpaDEArgsUse
@@ -1250,14 +1281,16 @@ setMethod(
           drop = FALSE
         ]
       }
-      if (!is.null(yUse$genes)) {
-        yUse$genes <- yUse$genes[rows, , drop = FALSE]
-      }
+	      if (!is.null(yUse$genes)) {
+	        yUse$genes <- yUse$genes[rows, , drop = FALSE]
+	      }
 
-      limpaDEArgsUse <-
-        applyLimpaDEDefaultsAndValidate(sanitizeLimpaDEArgs(limpaDEArgs))
-      fit <- do.call(
-        limpa::dpcDE,
+	      yUse <- applyLimpaPostQuantNorm(yUse)
+
+	      limpaDEArgsUse <-
+	        applyLimpaDEDefaultsAndValidate(sanitizeLimpaDEArgs(limpaDEArgs))
+	      fit <- do.call(
+	        limpa::dpcDE,
         c(list(y = yUse, design = limmaDesign, plot = FALSE), limpaDEArgsUse)
       )
       recordLimpaBackend(backendKey, y = yUse, fit = fit, design = limmaDesign)
