@@ -1,6 +1,16 @@
+# NormalyzerDE 1.23.6
+
+- Add optional limpa-based workflows for missing-value completion and differential
+  expression analysis, including pre-quantification in `normalyzer()` and
+  post-quantification analysis in `normalyzerDE()`.
+- Add one-vs-rest contrasts and group-aware imputation controls for differential
+  expression analysis.
+- Add DIANN input support.
+- Improve robustness and performance.
+
 # NormalyzerDE 1.23.2
 
-- Fix bug where non-categorical ANOVA setting wasn't applied
+- Fix bug where non-categorical ANOVA setting wasn't applied.
 
 # NormalyzerDE 1.23.1
 

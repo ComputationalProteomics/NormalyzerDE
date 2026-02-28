@@ -154,7 +154,12 @@ NormalyzerDE skips the internal \code{dpcQuant*()} step and reuses the
 cached quantification (including \code{standard.error} and
 \code{n.observations}) for differential expression. This is required to
 preserve quantification uncertainty when you first ran \code{dpcQuant*()}
-upstream (for example via \code{normalyzer(preQuant=\"limpa\")}).}
+upstream (for example via \code{normalyzer(preQuant=\"limpa\")}).
+If \code{NULL}, NormalyzerDE first looks for a canonical cache file named
+\code{"<basename(dataDir)>_limpa_quantified.rds"} next to \code{dataPath}.
+If that canonical file is not present and multiple cache candidates match
+\code{"*_limpa_quantified.rds"}, specify \code{limpaQuantifiedRds}
+explicitly.}
 
 \item{limpaDEArgs}{For \code{type="limpa"}, optional named list of additional
 arguments forwarded to \code{limpa::dpcDE()} (and then to
