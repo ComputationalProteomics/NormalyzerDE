@@ -1,0 +1,119 @@
+context("NormalyzerStatistics accessors and helpers")
+
+test_that("NormalyzerStatistics accessors and setters round-trip", {
+  mat <- matrix(
+    c(1, 2, 3, 4),
+    nrow = 2,
+    dimnames = list(c("f1", "f2"), c("s1", "s2"))
+  )
+
+  design <- data.frame(
+    sample = c("s1", "s2"),
+    group = c("A", "B"),
+    stringsAsFactors = FALSE,
+    check.names = FALSE
+  )
+
+  se <- SummarizedExperiment::SummarizedExperiment(
+    assay = mat,
+    colData = design,
+    rowData = data.frame(id = rownames(mat), check.names = FALSE)
+  )
+
+  nst <- NormalyzerStatistics(se, logTrans = FALSE)
+
+  expect_true(is.matrix(annotMat(nst)))
+  expect_true(is.matrix(dataMat(nst)))
+  expect_true(is.data.frame(designDf(nst)))
+
+  expect_true(is.list(backendData(nst)))
+  backendData(nst) <- list(example = 1)
+  expect_equal(backendData(nst)$example, 1)
+
+  expect_true(is.character(comparisons(nst)))
+  nst <- `comparisons<-`(nst, c("A-B"))
+  expect_equal(comparisons(nst), "A-B")
+
+  expect_true(is.character(condCol(nst)))
+  nst <- `condCol<-`(nst, c("A", "B"))
+  expect_equal(condCol(nst), c("A", "B"))
+
+  nst <- `contrastSplitter<-`(nst, "-")
+  expect_equal(contrastSplitter(nst), "-")
+
+  outMat <- dataMat(nst) * 2
+  nst <- `dataMat<-`(nst, outMat)
+  expect_equal(dataMat(nst), outMat)
+
+  newDesign <- design
+  newDesign$group <- c("A", "A")
+  nst <- `designDf<-`(nst, newDesign)
+  expect_equal(designDf(nst)$group, c("A", "A"))
+
+  nst <- `pairwiseCompsP<-`(nst, list("A-B" = c(0.1, 0.2)))
+  nst <- `pairwiseCompsFdr<-`(nst, list("A-B" = c(0.2, 0.4)))
+  nst <- `pairwiseCompsAve<-`(nst, list("A-B" = c(1, 2)))
+  nst <- `pairwiseCompsFold<-`(nst, list("A-B" = c(-1, 1)))
+
+  expect_equal(pairwiseCompsP(nst)[["A-B"]], c(0.1, 0.2))
+  expect_equal(pairwiseCompsFdr(nst)[["A-B"]], c(0.2, 0.4))
+  expect_equal(pairwiseCompsAve(nst)[["A-B"]], c(1, 2))
+  expect_equal(pairwiseCompsFold(nst)[["A-B"]], c(-1, 1))
+})
+
+test_that("chooseOneVsRestLabel selects an unused label", {
+  expect_equal(chooseOneVsRestLabel(c("A", "B")), "rest")
+
+  used <- c("rest", "others", "all_other", "all_others")
+  expect_equal(chooseOneVsRestLabel(used), "rest1")
+
+  expect_error(chooseOneVsRestLabel("A", candidates = character()), "candidate")
+})
+
+test_that("sanitizeLimmaDesign and calculateLimmaContrast work with coefMap", {
+  set.seed(1)
+  dataMat <- matrix(stats::rnorm(20), nrow = 5)
+  colnames(dataMat) <- paste0("s", seq_len(ncol(dataMat)))
+
+  designDf <- data.frame(
+    group = c("A", "A", "B", "B"),
+    stringsAsFactors = FALSE
+  )
+
+  limmaDesignRaw <- stats::model.matrix(~ 0 + Variable, data = transform(
+    designDf,
+    Variable = as.factor(group)
+  ))
+
+  limmaPrepared <- sanitizeLimmaDesign(limmaDesignRaw)
+  limmaDesign <- limmaPrepared$design
+  coefMap <- limmaPrepared$coefMap
+
+  limmaFit <- limma::lmFit(dataMat, limmaDesign)
+
+  out <- calculateLimmaContrast(
+    dataMat,
+    limmaDesign,
+    limmaFit,
+    levels = c("A", "B"),
+    useIntensityTrend = FALSE,
+    coefMap = coefMap
+  )
+
+  expect_true(is.list(out))
+  expect_true(all(c("P", "FDR", "Ave", "Fold") %in% names(out)))
+  expect_equal(length(out$P), nrow(dataMat))
+
+  expect_error(
+    calculateLimmaContrast(
+      dataMat,
+      limmaDesign,
+      limmaFit,
+      levels = c("A", "B"),
+      useIntensityTrend = FALSE,
+      coefMap = coefMap[1]
+    ),
+    "Could not find limma coefficient name"
+  )
+})
+

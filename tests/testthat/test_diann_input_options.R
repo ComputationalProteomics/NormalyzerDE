@@ -28,8 +28,48 @@ test_that("diannInputOptions validates arguments and blocks typos", {
   expect_error(diannInputOptions(qCutoff = 0.01), "Unknown argument")
 })
 
+test_that("diannInputOptions validates edge cases for columns/filters/rt", {
+  expect_error(diannInputOptions(sampleCol = c("Run", "File.Name")), "sampleCol")
+  expect_error(diannInputOptions(extraCols = c("Protein.Group", "")), "extraCols")
+  expect_error(diannInputOptions(decoy = NA), "decoy")
+  expect_error(diannInputOptions(qEnable = NA), "qEnable")
+  expect_error(diannInputOptions(qCols = c("Q.Value", "")), "qCols")
+  expect_error(diannInputOptions(qCutoffs = "0.01"), "qCutoffs must be numeric")
+
+  expect_error(diannInputOptions(rt = c(TRUE, FALSE)), "rt must be a single")
+  expect_error(diannInputOptions(rt = list(col = "")), "rt\\$col")
+  expect_error(diannInputOptions(rt = 1), "rt must be NULL")
+})
+
+test_that("diannNormalizeInputOptions validates nested list structure", {
+  expect_error(
+    NormalyzerDE:::diannNormalizeInputOptions("not_a_list"),
+    "inputOptions must be a list"
+  )
+
+  expect_error(
+    NormalyzerDE:::diannNormalizeInputOptions(list(columns = "oops")),
+    "inputOptions\\$columns must be a list"
+  )
+
+  expect_error(
+    NormalyzerDE:::diannNormalizeInputOptions(list(filters = "oops")),
+    "inputOptions\\$filters must be a list"
+  )
+
+  expect_error(
+    NormalyzerDE:::diannNormalizeInputOptions(list(filters = list(q = 1))),
+    "inputOptions\\$filters\\$q must be logical"
+  )
+
+  expect_error(
+    NormalyzerDE:::diannNormalizeInputOptions(list(rt = 1)),
+    "inputOptions\\$rt must be a list"
+  )
+})
+
 test_that("diannInputOptions works end-to-end with DIANN q filtering", {
-  tmpDir <- tempdir()
+  tmpDir <- withr::local_tempdir(pattern = "diann_input_opts_")
   dataPath <- file.path(tmpDir, "diann_report_qfilter_opts.tsv")
   designPath <- file.path(tmpDir, "diann_design_qfilter_opts.tsv")
 
@@ -43,27 +83,8 @@ test_that("diannInputOptions works end-to-end with DIANN q filtering", {
     check.names = FALSE
   )
 
-  design <- data.frame(
-    sample = c("S1", "S2"),
-    group = c("A", "B"),
-    stringsAsFactors = FALSE,
-    check.names = FALSE
-  )
-
-  utils::write.table(
-    diannReport,
-    file = dataPath,
-    sep = "\t",
-    row.names = FALSE,
-    quote = FALSE
-  )
-  utils::write.table(
-    design,
-    file = designPath,
-    sep = "\t",
-    row.names = FALSE,
-    quote = FALSE
-  )
+  nd_write_table(diannReport, dataPath)
+  nd_write_table(nd_two_sample_design(), designPath)
 
   opts <- diannInputOptions(
     level = "precursor",

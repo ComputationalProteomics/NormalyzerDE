@@ -258,3 +258,18 @@ test_that("setupJobDir sanitizes jobName", {
   expect_false(grepl("[/\\\\]", basename(jobDir)))
   expect_false(grepl("\\.\\.", basename(jobDir)))
 })
+
+test_that("setupJobDir reuses existing directory by default", {
+  parentDir <- tempfile()
+  dir.create(parentDir)
+  on.exit(unlink(parentDir, recursive = TRUE), add = TRUE)
+
+  jobName <- "my_job"
+  existingDir <- file.path(parentDir, jobName)
+  dir.create(existingDir)
+
+  jobDir <- expect_silent(setupJobDir(jobName, parentDir))
+
+  expect_true(dir.exists(jobDir))
+  expect_identical(normalizePath(jobDir), normalizePath(existingDir))
+})

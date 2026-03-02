@@ -15,7 +15,7 @@ test_that("input option helpers validate sep and block typos", {
 })
 
 test_that("setupRawDataObject supports custom delimiter for default input", {
-  tmpDir <- tempdir()
+  tmpDir <- withr::local_tempdir(pattern = "default_sep_")
   dataPath <- file.path(tmpDir, "default_sep.csv")
   designPath <- file.path(tmpDir, "default_design.tsv")
 
@@ -28,19 +28,7 @@ test_that("setupRawDataObject supports custom delimiter for default input", {
     con = dataPath
   )
 
-  design <- data.frame(
-    sample = c("S1", "S2"),
-    group = c("A", "B"),
-    stringsAsFactors = FALSE,
-    check.names = FALSE
-  )
-  utils::write.table(
-    design,
-    file = designPath,
-    sep = "\t",
-    row.names = FALSE,
-    quote = FALSE
-  )
+  nd_write_table(nd_two_sample_design(), designPath)
 
   se <- setupRawDataObject(
     dataPath = dataPath,
@@ -57,7 +45,7 @@ test_that("setupRawDataObject supports custom delimiter for default input", {
 })
 
 test_that("setupRawDataObject supports custom delimiter for Proteios input", {
-  tmpDir <- tempdir()
+  tmpDir <- withr::local_tempdir(pattern = "proteios_sep_")
   dataPath <- file.path(tmpDir, "proteios_sep.tsv")
   designPath <- file.path(tmpDir, "proteios_design.tsv")
 
@@ -70,19 +58,7 @@ test_that("setupRawDataObject supports custom delimiter for Proteios input", {
     con = dataPath
   )
 
-  design <- data.frame(
-    sample = c("S1", "S2"),
-    group = c("A", "B"),
-    stringsAsFactors = FALSE,
-    check.names = FALSE
-  )
-  utils::write.table(
-    design,
-    file = designPath,
-    sep = "\t",
-    row.names = FALSE,
-    quote = FALSE
-  )
+  nd_write_table(nd_two_sample_design(), designPath)
 
   se <- setupRawDataObject(
     dataPath = dataPath,
@@ -99,7 +75,7 @@ test_that("setupRawDataObject supports custom delimiter for Proteios input", {
 })
 
 test_that("setupRawDataObject supports custom delimiter for MaxQuant input", {
-  tmpDir <- tempdir()
+  tmpDir <- withr::local_tempdir(pattern = "maxquant_sep_")
   dataPath <- file.path(tmpDir, "maxquant_pep.csv")
   designPath <- file.path(tmpDir, "maxquant_design.tsv")
 
@@ -115,27 +91,8 @@ test_that("setupRawDataObject supports custom delimiter for MaxQuant input", {
     stringsAsFactors = FALSE,
     check.names = FALSE
   )
-  utils::write.table(
-    maxQuantPep,
-    file = dataPath,
-    sep = ",",
-    row.names = FALSE,
-    quote = FALSE
-  )
-
-  design <- data.frame(
-    sample = c("S1", "S2"),
-    group = c("A", "B"),
-    stringsAsFactors = FALSE,
-    check.names = FALSE
-  )
-  utils::write.table(
-    design,
-    file = designPath,
-    sep = "\t",
-    row.names = FALSE,
-    quote = FALSE
-  )
+  nd_write_table(maxQuantPep, dataPath, sep = ",")
+  nd_write_table(nd_two_sample_design(), designPath)
 
   se <- setupRawDataObject(
     dataPath = dataPath,

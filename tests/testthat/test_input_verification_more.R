@@ -44,8 +44,7 @@ test_that("loadData errors for unknown input formats", {
 })
 
 test_that("loadDesign errors when sample/group columns are missing", {
-  fp <- tempfile(fileext = ".tsv")
-  on.exit(unlink(fp), add = TRUE)
+  fp <- withr::local_tempfile(pattern = "design_", fileext = ".tsv")
 
   utils::write.table(
     data.frame(a = 1, b = 2),
@@ -101,5 +100,130 @@ test_that("getLowCountSampleFiltered errors when all samples fail threshold", {
       stopIfTooFew = TRUE
     ),
     "None of the samples had enough"
+  )
+})
+
+test_that("verifyDesignMatrix errors for missing/mismatched/duplicate samples", {
+  full <- data.frame(
+    feature = c("f1", "f2"),
+    S1 = c(1, 2),
+    S2 = c(3, 4),
+    check.names = FALSE
+  )
+
+  expect_error(
+    NormalyzerDE:::verifyDesignMatrix(
+      full,
+      data.frame(group = c("A", "B"), stringsAsFactors = FALSE),
+      sampleCol = "sample"
+    ),
+    "Design matrix header must contain sampleCol name"
+  )
+
+  expect_error(
+    NormalyzerDE:::verifyDesignMatrix(
+      full,
+      data.frame(
+        sample = c("S1", "S3"),
+        group = c("A", "B"),
+        stringsAsFactors = FALSE
+      ),
+      sampleCol = "sample"
+    ),
+    "Not all columns present in design matrix are present in data matrix"
+  )
+
+  expect_error(
+    NormalyzerDE:::verifyDesignMatrix(
+      full,
+      data.frame(
+        sample = c("S1", "S1"),
+        group = c("A", "B"),
+        stringsAsFactors = FALSE
+      ),
+      sampleCol = "sample"
+    ),
+    "Sample labels must be unique"
+  )
+})
+
+test_that("preprocessData replaces 0/empty/null and emits messages", {
+  mat <- matrix(c("0", "", "null", "1"), nrow = 2, byrow = TRUE)
+  msgs <- testthat::capture_messages(
+    out <- NormalyzerDE:::preprocessData(mat, quiet = FALSE)
+  )
+
+  expect_true(any(grepl("fields with '0'", msgs)))
+  expect_true(any(grepl("empty fields were replaced", msgs)))
+  expect_true(any(grepl("'null' fields were replaced", msgs)))
+
+  expect_true(all(is.na(out[1, ])))
+  expect_equal(out[2, 2], "1")
+})
+
+test_that("loadRawDataFromFile errors for missing file and for parse warnings", {
+  expect_error(
+    NormalyzerDE:::loadRawDataFromFile(file.path(tempdir(), "no_such_file.tsv")),
+    "An issue was encountered when attempting to load"
+  )
+
+  expect_error(
+    NormalyzerDE:::loadRawDataFromFile(NA_character_),
+    "Failed to read input file"
+  )
+
+  fp <- withr::local_tempfile(pattern = "embedded_nulls_", fileext = ".tsv")
+  con <- file(fp, open = "wb")
+  bytes <- c(charToRaw("A\tB\n1\t2"), as.raw(0), charToRaw("\n"))
+  writeBin(bytes, con)
+  close(con)
+
+  expect_error(
+    NormalyzerDE:::loadRawDataFromFile(fp),
+    "embedded nulls"
+  )
+})
+
+test_that("verifyMultipleSamplesPresent errors/warns/messages appropriately", {
+  mat <- matrix(1, nrow = 1, ncol = 1)
+
+  expect_error(
+    NormalyzerDE:::verifyMultipleSamplesPresent(
+      mat,
+      groups = "A",
+      requireReplicates = TRUE,
+      quiet = TRUE
+    ),
+    "At least two samples are required"
+  )
+
+  expect_error(
+    NormalyzerDE:::verifyMultipleSamplesPresent(
+      mat,
+      groups = c("A", "A"),
+      requireReplicates = TRUE,
+      quiet = TRUE
+    ),
+    "Found less than two distinct sample groups"
+  )
+
+  expect_warning(
+    NormalyzerDE:::verifyMultipleSamplesPresent(
+      mat,
+      groups = c("A", "A"),
+      requireReplicates = FALSE,
+      quiet = FALSE
+    ),
+    "Found less than two distinct sample groups"
+  )
+
+  expect_message(
+    NormalyzerDE:::verifyMultipleSamplesPresent(
+      mat,
+      groups = c("A", "B"),
+      requireReplicates = TRUE,
+      quiet = FALSE
+    ),
+    "More than one sample group found"
   )
 })
