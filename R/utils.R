@@ -73,16 +73,24 @@ getReplicateSortedData <- function(rawDataOnly, groups) {
 #' @return None
 #' @keywords internal
 createDirectory <- function(targetPath) {
-  if (file.exists(targetPath)) {
-    errorHandler <- "Directory already exists"
-    class(errorHandler) <- "try-error"
-    if (inherits(errorHandler, "try-error")) {
-      return(errorHandler)
-    }
-    stop("Directory already exists")
-  } else {
-    dir.create(targetPath, recursive = TRUE)
+  if (dir.exists(targetPath)) {
+    return(invisible(NULL))
   }
+
+  if (file.exists(targetPath)) {
+    stop(
+      "Path already exists and is not a directory: ",
+      targetPath,
+      call. = FALSE
+    )
+  }
+
+  created <- dir.create(targetPath, recursive = TRUE, showWarnings = FALSE)
+  if (!isTRUE(created) && !dir.exists(targetPath)) {
+    stop("Failed to create directory: ", targetPath, call. = FALSE)
+  }
+
+  invisible(NULL)
 }
 
 #' Get number of seconds between two Sys.time() objects
