@@ -59,6 +59,52 @@
 #' @param rtWindowShifts Number of layered retention time normalized windows.
 #' @param rtWindowMergeMethod Merge approach for layered retention time windows.
 #'
+#' @param preQuant Optional pre-quantification step applied before running the
+#'   Normalyzer normalization evaluation. Use \code{"limpa"} to first complete
+#'   the data matrix with \code{limpa::dpcQuant()} / \code{limpa::dpcQuantByRow()}
+#'   and then evaluate Normalyzer normalizations on the post-quant log2 matrix.
+#'   This follows the recommended way to use limpa (quantify first, then
+#'   normalize). When enabled, the quantified \code{EList} is saved as
+#'   an RDS file \code{<jobDir>/<basename(jobDir)>_limpa_quantified.rds} for reuse with
+#'   \code{\link{normalyzerDE}} via \code{limpaQuantifiedRds}.
+#' @param limpaProteinIdCol For \code{preQuant="limpa"}, optionally summarize
+#'   peptide/precursor rows to protein-level using \code{limpa::dpcQuant()}.
+#'   Set to a column name in the row annotation (for example
+#'   \code{"Protein.Group"}) to use as the protein identifier. Use
+#'   \code{"auto"} (default) to try common identifiers. If the chosen column
+#'   contains duplicate identifiers, the data are summarized once across all
+#'   samples and the output rows correspond to proteins. Set to \code{NULL} to
+#'   disable protein summarization and quantify each row separately as one feature via
+#'   \code{limpa::dpcQuantByRow()} (recommended for PTM-level data such as
+#'   phosphoproteomics where each row corresponds to a modified site).
+#' @param limpaByRow For \code{preQuant="limpa"}, treat each input row as a
+#'   separate feature and always use \code{limpa::dpcQuantByRow()} instead of
+#'   summarizing via \code{limpa::dpcQuant()}. This is recommended for PTM-level
+#'   matrices (e.g., phosphosites). Equivalent to setting
+#'   \code{limpaProteinIdCol=NULL}.
+#' @param limpaDpc For \code{preQuant="limpa"}, optional DPC parameters to pass
+#'   to \code{limpa::dpcQuant()} / \code{limpa::dpcQuantByRow()}. Can be a list as
+#'   returned by \code{limpa::dpc()}, or a numeric vector \code{c(beta0, beta1)}.
+#' @param limpaDpcMethod For \code{preQuant="limpa"}, optional method to estimate
+#'   the DPC parameters from the data when \code{limpaDpc} is not supplied.
+#'   \code{"none"} (default) uses a fixed slope (\code{limpaQuantArgs$dpc.slope},
+#'   default \code{0.8}) and lets limpa estimate the intercept internally.
+#'   \code{"dpc"} estimates both DPC parameters from the observed-normal model
+#'   via \code{limpa::dpc()}. \code{"dpcCN"} estimates the DPC from the
+#'   complete-normal model via \code{limpa::dpcCN()}, which can be more robust
+#'   for datasets with very large fold-changes.
+#' @param limpaDpcArgs For \code{preQuant="limpa"}, optional named list of
+#'   additional arguments forwarded to \code{limpa::dpc()} or \code{limpa::dpcCN()}
+#'   when \code{limpaDpcMethod} is not \code{"none"}. Argument \code{y} is ignored.
+#'   For \code{limpaDpcMethod="dpcCN"}, \code{dpc.slope.start} defaults to
+#'   \code{limpaQuantArgs$dpc.slope}.
+#' @param limpaQuantArgs For \code{preQuant="limpa"}, optional named list of
+#'   additional arguments forwarded to \code{limpa::dpcQuant()} /
+#'   \code{limpa::dpcQuantByRow()}. Use this to set \code{dpc.slope} (default
+#'   \code{0.8}), \code{chunk} (default \code{1000L}), and \code{verbose} (default
+#'   \code{FALSE}), plus any additional \code{...} arguments supported by limpa.
+#'   Arguments \code{y}, \code{protein.id}, and \code{dpc} are ignored.
+#'
 #' @return None
 #' @export
 #' @import MASS limma methods
@@ -101,7 +147,15 @@ normalyzer <- function(
   rtStepSizeMinutes = 1,
   rtWindowMinCount = 100,
   rtWindowShifts = 1,
-  rtWindowMergeMethod = "mean"
+  rtWindowMergeMethod = "mean",
+
+  preQuant = c("none", "limpa"),
+  limpaProteinIdCol = "auto",
+  limpaByRow = FALSE,
+  limpaDpc = NULL,
+  limpaDpcMethod = c("none", "dpc", "dpcCN"),
+  limpaDpcArgs = NULL,
+  limpaQuantArgs = NULL
 ) {
   if (!quiet) {
     message(
@@ -118,9 +172,11 @@ normalyzer <- function(
   }
 
   startTime <- Sys.time()
+  preQuantUse <- match.arg(preQuant)
+  totalSteps <- if (identical(preQuantUse, "limpa")) 6 else 5
 
   if (!quiet) {
-    message("[Step 1/5] Load data and verify input")
+    message("[Step 1/", totalSteps, "] Load data and verify input")
   }
 
   if (is.null(experimentObj)) {
@@ -159,13 +215,470 @@ normalyzer <- function(
   jobDir <- setupJobDir(jobName, outputDir)
   if (!quiet) {
     message(
-      "[Step 1/5] Input verified, job directory prepared at:",
+      "[Step 1/", totalSteps, "] Input verified, job directory prepared at:",
       jobDir
     )
   }
 
+  noLogTransformUse <- noLogTransform
+  if (identical(preQuantUse, "limpa")) {
+    if (!quiet) {
+      message("[Step 2/", totalSteps, "] Running limpa pre-quantification")
+    }
+
+    if (!requireNamespace("limpa", quietly = TRUE)) {
+      stop(
+        "preQuant='limpa' requires the optional Bioconductor package 'limpa'.\n",
+        "Install it with `BiocManager::install(\"limpa\")`."
+      )
+    }
+
+    limpaDpcMethod <- match.arg(limpaDpcMethod)
+
+    if (!is.null(limpaDpcArgs) && !is.list(limpaDpcArgs)) {
+      stop("limpaDpcArgs must be a named list (or NULL).")
+    }
+    if (!is.null(limpaDpcArgs) && length(limpaDpcArgs) > 0) {
+      if (is.null(names(limpaDpcArgs))) {
+        stop("limpaDpcArgs must be a named list.")
+      }
+    }
+
+    if (!is.null(limpaQuantArgs) && !is.list(limpaQuantArgs)) {
+      stop("limpaQuantArgs must be a named list (or NULL).")
+    }
+    if (!is.null(limpaQuantArgs) && length(limpaQuantArgs) > 0) {
+      if (is.null(names(limpaQuantArgs))) {
+        stop("limpaQuantArgs must be a named list.")
+      }
+    }
+
+    if (
+      !is.null(limpaDpc) &&
+        !(is.list(limpaDpc) || (is.numeric(limpaDpc) && length(limpaDpc) == 2))
+    ) {
+      stop(
+        "limpaDpc must be NULL, a list returned by limpa::dpc(), or a numeric vector c(beta0, beta1)."
+      )
+    }
+
+    sanitizeLimpaDpcArgs <- function(args) {
+      if (is.null(args) || length(args) == 0) {
+        return(list())
+      }
+      if (is.null(names(args))) {
+        stop("limpaDpcArgs must be a named list.")
+      }
+      args[["y"]] <- NULL
+      args
+    }
+
+    sanitizeLimpaQuantArgs <- function(args) {
+      if (is.null(args) || length(args) == 0) {
+        return(list())
+      }
+      if (is.null(names(args))) {
+        stop("limpaQuantArgs must be a named list.")
+      }
+
+      forbidden <- c("y", "protein.id", "dpc")
+      args[forbidden] <- NULL
+      args
+    }
+
+    applyLimpaQuantDefaultsAndValidate <- function(args) {
+      if (!("dpc.slope" %in% names(args))) {
+        args[["dpc.slope"]] <- 0.8
+      }
+      if (!("chunk" %in% names(args))) {
+        args[["chunk"]] <- 1000L
+      }
+      if (!("verbose" %in% names(args))) {
+        args[["verbose"]] <- FALSE
+      }
+
+      slope <- as.numeric(args[["dpc.slope"]])[1]
+      if (is.na(slope) || !is.finite(slope) || slope <= 0) {
+        stop("limpaQuantArgs$dpc.slope must be a single positive numeric value.")
+      }
+      args[["dpc.slope"]] <- slope
+
+      chunk <- as.integer(args[["chunk"]])[1]
+      if (is.na(chunk) || chunk < 1) {
+        stop("limpaQuantArgs$chunk must be a positive integer.")
+      }
+      args[["chunk"]] <- chunk
+
+      verbose <- as.logical(args[["verbose"]])[1]
+      if (is.na(verbose)) {
+        stop("limpaQuantArgs$verbose must be TRUE or FALSE.")
+      }
+      args[["verbose"]] <- verbose
+
+      args
+    }
+
+    validateLimpaArgsByFormals <- function(args, fn, methodLabel) {
+      if (length(args) == 0) {
+        return(args)
+      }
+
+      allowed <- names(formals(fn))
+      allowed <- allowed[!is.na(allowed) & nzchar(allowed)]
+      allowed <- setdiff(allowed, "y")
+
+      unknown <- setdiff(names(args), allowed)
+      if (length(unknown) > 0) {
+        stop(
+          "limpaDpcArgs contains unsupported argument names for limpaDpcMethod='",
+          methodLabel,
+          "': ",
+          paste(unknown, collapse = ", "),
+          ". Allowed: ",
+          paste(allowed, collapse = ", "),
+          "."
+        )
+      }
+
+      args
+    }
+
+    limpaByRowUse <- as.logical(limpaByRow)[1]
+    if (is.na(limpaByRowUse)) {
+      stop("limpaByRow must be TRUE or FALSE.")
+    }
+
+    if (isTRUE(limpaByRowUse)) {
+      proteinIdColValue <- if (is.null(limpaProteinIdCol)) {
+        NULL
+      } else {
+        as.character(limpaProteinIdCol)[1]
+      }
+      if (!is.null(proteinIdColValue) && !identical(proteinIdColValue, "auto")) {
+        stop(
+          "limpaByRow=TRUE is incompatible with a non-default limpaProteinIdCol. ",
+          "Set limpaProteinIdCol=NULL (or leave it as 'auto')."
+        )
+      }
+      limpaProteinIdCol <- NULL
+    }
+
+    dpcArgsUse <- sanitizeLimpaDpcArgs(limpaDpcArgs)
+    quantArgsUse <- applyLimpaQuantDefaultsAndValidate(
+      sanitizeLimpaQuantArgs(limpaQuantArgs)
+    )
+    verboseUse <- isTRUE(quantArgsUse[["verbose"]])
+    dpcSlopeUse <- as.numeric(quantArgsUse[["dpc.slope"]])
+
+    log2WithNonFiniteAsNA <- function(mat) {
+      wasMissing <- is.na(mat)
+      out <- log2(mat)
+      nonFinite <- !is.finite(out) & !wasMissing
+      if (any(nonFinite)) {
+        warning(
+          "Non-finite values produced by log2 transform (e.g. zeros or negative values) ",
+          "were treated as missing (set to NA)."
+        )
+        out[nonFinite] <- NA_real_
+      }
+      out
+    }
+
+    inferLimpaProteinIdCol <- function(annotationMat, proteinIdCol) {
+      if (is.null(proteinIdCol)) {
+        return(NULL)
+      }
+
+      proteinIdCol <- as.character(proteinIdCol)[1]
+      annotationCols <- colnames(annotationMat)
+      if (is.null(annotationCols)) {
+        annotationCols <- character()
+      }
+
+      if (identical(proteinIdCol, "auto")) {
+        candidates <- c("Protein.Group", "Protein")
+        proteinIdCol <- candidates[candidates %in% annotationCols][1]
+        if (is.na(proteinIdCol) || is.null(proteinIdCol)) {
+          return(NULL)
+        }
+        return(proteinIdCol)
+      }
+
+      if (!(proteinIdCol %in% annotationCols)) {
+        stop(
+          "limpaProteinIdCol '",
+          proteinIdCol,
+          "' was not found in the row annotation.\n",
+          "Available columns: ",
+          paste(annotationCols, collapse = ", ")
+        )
+      }
+
+      proteinIdCol
+    }
+
+    estimateLimpaDpc <- function(dataMat, method = c("none", "dpc", "dpcCN")) {
+      method <- match.arg(method)
+      if (method == "none") {
+        return(NULL)
+      }
+
+      if (method == "dpc") {
+        dpcArgsUseValidated <- validateLimpaArgsByFormals(
+          dpcArgsUse,
+          fn = limpa::dpc,
+          methodLabel = method
+        )
+        dpcCall <- c(list(y = dataMat), dpcArgsUseValidated)
+        if (!isTRUE(verboseUse)) {
+          return(suppressMessages(do.call(limpa::dpc, dpcCall)))
+        }
+        return(do.call(limpa::dpc, dpcCall))
+      }
+
+      dpcArgsUseValidated <- validateLimpaArgsByFormals(
+        dpcArgsUse,
+        fn = limpa::dpcCN,
+        methodLabel = method
+      )
+      if (!("dpc.slope.start" %in% names(dpcArgsUseValidated))) {
+        dpcArgsUseValidated[["dpc.slope.start"]] <- dpcSlopeUse
+      }
+      if (!("verbose" %in% names(dpcArgsUseValidated))) {
+        dpcArgsUseValidated[["verbose"]] <- isTRUE(verboseUse)
+      }
+
+      dpcCall <- c(list(y = dataMat), dpcArgsUseValidated)
+      do.call(limpa::dpcCN, dpcCall)
+    }
+
+    log2Mat <- filterrawdata(normObj)
+    if (!noLogTransform) {
+      log2Mat <- log2WithNonFiniteAsNA(log2Mat)
+    }
+
+    annotMatRaw <- annotationValues(normObj)
+    keepRows <- rowSums(!is.na(log2Mat)) > 0
+    log2Mat <- log2Mat[keepRows, , drop = FALSE]
+    annotMatRaw <- annotMatRaw[keepRows, , drop = FALSE]
+
+    genesInputAll <- as.data.frame(
+      annotMatRaw,
+      stringsAsFactors = FALSE,
+      check.names = FALSE
+    )
+
+    limpaProteinIdColUsed <- inferLimpaProteinIdCol(
+      annotMatRaw,
+      limpaProteinIdCol
+    )
+
+    limpaDpcUse <- if (!is.null(limpaDpc)) {
+      if (limpaDpcMethod != "none" && isTRUE(verboseUse)) {
+        message(
+          "limpaDpc was supplied; ignoring limpaDpcMethod='",
+          limpaDpcMethod,
+          "'."
+        )
+      }
+      limpaDpc
+    } else {
+      estimateLimpaDpc(log2Mat, method = limpaDpcMethod)
+    }
+
+    quantifyByRow <- function(mat, genesDf) {
+      y <- methods::new("EList", list(E = mat, genes = genesDf))
+      do.call(
+        limpa::dpcQuantByRow,
+        c(list(y = y, dpc = limpaDpcUse), quantArgsUse)
+      )
+    }
+
+    quantifyByProtein <- function(mat, genesDf, proteinIdCol) {
+      proteinId <- genesDf[[proteinIdCol]]
+      proteinId <- as.character(proteinId)
+
+      if (length(proteinId) != nrow(mat)) {
+        stop(
+          "Row annotation column '",
+          proteinIdCol,
+          "' does not match the number of rows in the data matrix."
+        )
+      }
+
+      if (anyNA(proteinId) || any(proteinId == "")) {
+        stop(
+          "Row annotation column '",
+          proteinIdCol,
+          "' contains missing or empty protein identifiers. ",
+          "Remove these rows or choose another column."
+        )
+      }
+
+      idxByProtein <- split(seq_along(proteinId), proteinId)
+
+      inferStableProteinAnnotationCols <- function(genesDf, proteinIdCol) {
+        colNames <- colnames(genesDf)
+        if (is.null(colNames) || length(colNames) == 0) {
+          return(character())
+        }
+
+        candidates <- setdiff(colNames, proteinIdCol)
+        if (length(candidates) == 0) {
+          return(character())
+        }
+
+        isStable <- function(values) {
+          values <- as.character(values)
+          values[values == ""] <- NA_character_
+
+          if (!any(!is.na(values))) {
+            return(FALSE)
+          }
+
+          all(vapply(
+            idxByProtein,
+            function(idx) {
+              x <- values[idx]
+              x <- x[!is.na(x)]
+              length(unique(x)) <= 1
+            },
+            logical(1)
+          ))
+        }
+
+        stable <- vapply(
+          candidates,
+          function(col) isStable(genesDf[[col]]),
+          logical(1)
+        )
+        candidates[stable]
+      }
+
+      stableCols <- inferStableProteinAnnotationCols(genesDf, proteinIdCol)
+      genesForQuant <- genesDf[, unique(c(proteinIdCol, stableCols)), drop = FALSE]
+
+      yPeptide <- methods::new("EList", list(E = mat, genes = genesForQuant))
+      yProtein <- do.call(
+        limpa::dpcQuant,
+        c(
+          list(
+            y = yPeptide,
+            protein.id = proteinIdCol,
+            dpc = limpaDpcUse
+          ),
+          quantArgsUse
+        )
+      )
+
+      proteinIds <- rownames(yProtein$E)
+      rowIds <- as.character(seq_len(nrow(yProtein$E)))
+
+      rownames(yProtein$E) <- rowIds
+      if (!is.null(yProtein$other$n.observations)) {
+        rownames(yProtein$other$n.observations) <- rowIds
+      }
+      if (!is.null(yProtein$other$standard.error)) {
+        rownames(yProtein$other$standard.error) <- rowIds
+      }
+
+      genes <- if (!is.null(yProtein$genes)) {
+        as.data.frame(yProtein$genes, check.names = FALSE)
+      } else {
+        data.frame(check.names = FALSE)
+      }
+      if (!(proteinIdCol %in% colnames(genes))) {
+        genes[[proteinIdCol]] <- proteinIds
+      }
+      genes <- genes[,
+        c(proteinIdCol, setdiff(names(genes), proteinIdCol)),
+        drop = FALSE
+      ]
+      rownames(genes) <- rowIds
+      yProtein$genes <- genes
+
+      yProtein
+    }
+
+    yQuant <- NULL
+    if (!is.null(limpaProteinIdColUsed)) {
+      proteinIdVec <- as.character(genesInputAll[[limpaProteinIdColUsed]])
+      if (anyDuplicated(proteinIdVec) > 0) {
+        yQuant <- quantifyByProtein(
+          log2Mat,
+          genesDf = genesInputAll,
+          proteinIdCol = limpaProteinIdColUsed
+        )
+      } else {
+        if (!quiet) {
+          message(
+            "limpaProteinIdCol '",
+            limpaProteinIdColUsed,
+            "' contains no duplicated identifiers, so no peptide/precursor-to-protein summarization ",
+            "will be performed."
+          )
+        }
+        yQuant <- quantifyByRow(log2Mat, genesDf = genesInputAll)
+      }
+    } else {
+      yQuant <- quantifyByRow(log2Mat, genesDf = genesInputAll)
+    }
+
+    rowIds <- as.character(seq_len(nrow(yQuant$E)))
+    rownames(yQuant$E) <- rowIds
+    if (!is.null(yQuant$other$n.observations)) {
+      rownames(yQuant$other$n.observations) <- rowIds
+    }
+    if (!is.null(yQuant$other$standard.error)) {
+      rownames(yQuant$other$standard.error) <- rowIds
+    }
+    if (!is.null(yQuant$genes)) {
+      rownames(yQuant$genes) <- rowIds
+    }
+
+    safeJobName <- basename(jobDir)
+    quantifiedRds <- file.path(
+      jobDir,
+      paste0(safeJobName, "_limpa_quantified.rds")
+    )
+    saveRDS(yQuant, file = quantifiedRds)
+
+    if (!quiet) {
+      message("[Step 2/", totalSteps, "] Saved quantified EList to: ", quantifiedRds)
+    }
+
+    noLogTransformUse <- TRUE
+    designDf <- designMatrix(normObj)
+    sampleColUsed <- sampleNameCol(normObj)
+    groupColUsed <- groupNameCol(normObj)
+
+    sampleNamesUse <- as.character(designDf[[sampleColUsed]])
+    postQuantMat <- as.matrix(yQuant$E)[, sampleNamesUse, drop = FALSE]
+    annotMatQuant <- if (!is.null(yQuant$genes)) {
+      as.matrix(yQuant$genes)
+    } else {
+      matrix(nrow = nrow(postQuantMat), ncol = 0)
+    }
+
+    normObj <- NormalyzerDataset(
+      jobName = jobName,
+      designMatrix = designDf,
+      rawData = postQuantMat,
+      annotationData = annotMatQuant,
+      sampleNameCol = sampleColUsed,
+      groupNameCol = groupColUsed,
+      tinyRunThres = tinyRunThres,
+      quiet = quiet
+    )
+
+    if (!quiet) {
+      message("[Step 2/", totalSteps, "] Done!")
+    }
+  }
+
   if (!quiet) {
-    message("[Step 2/5] Performing normalizations")
+    stepLabel <- if (identical(preQuantUse, "limpa")) 3 else 2
+    message("[Step ", stepLabel, "/", totalSteps, "] Performing normalizations")
   }
   normalyzerResultsObject <- normMethods(
     normObj,
@@ -176,38 +689,49 @@ normalyzer <- function(
     rtWindowShifts = rtWindowShifts,
     rtWindowMergeMethod = rtWindowMergeMethod,
     quiet = quiet,
-    noLogTransform = noLogTransform
+    noLogTransform = noLogTransformUse
   )
   if (!quiet) {
-    message("[Step 2/5] Done!")
+    stepLabel <- if (identical(preQuantUse, "limpa")) 3 else 2
+    message("[Step ", stepLabel, "/", totalSteps, "] Done!")
   }
 
   if (!skipAnalysis) {
     if (!quiet) {
-      message("[Step 3/5] Generating evaluation measures...")
+      stepLabel <- if (identical(preQuantUse, "limpa")) 4 else 3
+      message("[Step ", stepLabel, "/", totalSteps, "] Generating evaluation measures...")
     }
     normalyzerResultsObject <- analyzeNormalizations(normalyzerResultsObject)
-    if (!quiet) message("[Step 3/5] Done!")
+    if (!quiet) {
+      stepLabel <- if (identical(preQuantUse, "limpa")) 4 else 3
+      message("[Step ", stepLabel, "/", totalSteps, "] Done!")
+    }
   } else {
     if (!quiet) {
       message(
-        "[Step 3/5] skipAnalysis flag set so no analysis 
-                          performed"
+        "[Step ",
+        if (identical(preQuantUse, "limpa")) 4 else 3,
+        "/",
+        totalSteps,
+        "] skipAnalysis flag set so no analysis performed"
       )
     }
   }
 
   if (!quiet) {
-    message("[Step 4/5] Writing matrices to file")
+    stepLabel <- if (identical(preQuantUse, "limpa")) 5 else 4
+    message("[Step ", stepLabel, "/", totalSteps, "] Writing matrices to file")
   }
   writeNormalizedDatasets(normalyzerResultsObject, jobDir)
   if (!quiet) {
-    message("[Step 4/5] Matrices successfully written")
+    stepLabel <- if (identical(preQuantUse, "limpa")) 5 else 4
+    message("[Step ", stepLabel, "/", totalSteps, "] Matrices successfully written")
   }
 
   if (!skipAnalysis) {
     if (!quiet) {
-      message("[Step 5/5] Generating plots...")
+      stepLabel <- if (identical(preQuantUse, "limpa")) 6 else 5
+      message("[Step ", stepLabel, "/", totalSteps, "] Generating plots...")
     }
     generatePlots(
       normalyzerResultsObject,
@@ -216,12 +740,18 @@ normalyzer <- function(
       plotCols = plotCols,
       writeAsPngs = writeReportAsPngs
     )
-    if (!quiet) message("[Step 5/5] Plots successfully generated")
+    if (!quiet) {
+      stepLabel <- if (identical(preQuantUse, "limpa")) 6 else 5
+      message("[Step ", stepLabel, "/", totalSteps, "] Plots successfully generated")
+    }
   } else {
     if (!quiet) {
       message(
-        "[Step 5/5] skipAnalysis flag set so no plots 
-                          generated"
+        "[Step ",
+        if (identical(preQuantUse, "limpa")) 6 else 5,
+        "/",
+        totalSteps,
+        "] skipAnalysis flag set so no plots generated"
       )
     }
   }
@@ -323,10 +853,10 @@ normalyzer <- function(
 #'   identifiers. If the chosen column contains duplicate identifiers, the data
 #'   are summarized once across all samples and the output rows correspond to
 #'   proteins. Set to \code{NULL} to disable protein summarization and treat each
-#'   row as one protein (recommended for PTM-level data such as phosphoproteomics
+#'   row as one feature (recommended for PTM-level data such as phosphoproteomics
 #'   where each row corresponds to a modified site).
 #' @param limpaByRow For \code{type="limpa"}, treat each input row as a separate
-#'   protein and always use \code{limpa::dpcQuantByRow()} instead of summarizing
+#'   feature and always use \code{limpa::dpcQuantByRow()} instead of summarizing
 #'   via \code{limpa::dpcQuant()}. This is recommended for PTM-level matrices
 #'   (e.g., phosphosites). Equivalent to setting \code{limpaProteinIdCol=NULL}.
 #' @param limpaDpc For \code{type="limpa"}, optional DPC parameters to pass to
@@ -351,10 +881,20 @@ normalyzer <- function(
 #'   \code{0.8}), \code{chunk} (default \code{1000L}), and \code{verbose} (default
 #'   \code{FALSE}), plus any additional \code{...} arguments supported by limpa.
 #'   Arguments \code{y}, \code{protein.id}, and \code{dpc} are ignored.
+#' @param limpaQuantifiedRds For \code{type="limpa"}, optional path to an RDS
+#'   file containing a quantified \code{EList} object (as returned by
+#'   \code{limpa::dpcQuant()} or \code{limpa::dpcQuantByRow()}). When provided,
+#'   NormalyzerDE skips the internal \code{dpcQuant*()} step and reuses the
+#'   cached quantification (including \code{standard.error} and
+#'   \code{n.observations}) for differential expression. This is required to
+#'   preserve quantification uncertainty when you first ran \code{dpcQuant*()}
+#'   upstream (for example via \code{normalyzer(preQuant=\"limpa\")}).
 #' @param limpaPostQuantNorm For \code{type="limpa"}, optional between-sample
 #'   normalization applied to the quantified expression matrix after
 #'   \code{limpa::dpcQuant()} / \code{limpa::dpcQuantByRow()} and before
-#'   \code{limpa::dpcDE()}. One of \code{"none"} (default) or \code{"quantile"}.
+#'   \code{limpa::dpcDE()}. One of \code{"none"} (default), \code{"GI"},
+#'   \code{"median"}, \code{"mean"}, \code{"Quantile"} (or \code{"quantile"}),
+#'   \code{"CycLoess"}, or \code{"RLR"}.
 #'   Avoid double-normalization if your input was already normalized upstream.
 #' @param limpaDEArgs For \code{type="limpa"}, optional named list of additional
 #'   arguments forwarded to \code{limpa::dpcDE()} (and then to
@@ -425,12 +965,22 @@ normalyzerDE <- function(
   limpaDpcMethod = c("none", "dpc", "dpcCN"),
   limpaDpcArgs = NULL,
   limpaQuantArgs = NULL,
+  limpaQuantifiedRds = NULL,
   limpaDEArgs = NULL,
   limpaKeep = c("none", "elist", "fit", "all"),
   inputFormat = "default",
   inputOptions = NULL,
   limpaByRow = FALSE,
-  limpaPostQuantNorm = c("none", "quantile")
+  limpaPostQuantNorm = c(
+    "none",
+    "GI",
+    "median",
+    "mean",
+    "Quantile",
+    "CycLoess",
+    "RLR",
+    "quantile"
+  )
 ) {
   if (!quiet) {
     message(
@@ -510,6 +1060,7 @@ normalyzerDE <- function(
     limpaDpcMethod = limpaDpcMethod,
     limpaDpcArgs = limpaDpcArgs,
     limpaQuantArgs = limpaQuantArgs,
+    limpaQuantifiedRds = limpaQuantifiedRds,
     limpaPostQuantNorm = limpaPostQuantNorm,
     limpaDEArgs = limpaDEArgs,
     limpaKeep = limpaKeep

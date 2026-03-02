@@ -28,10 +28,12 @@ calculateContrasts(
   limpaDpcMethod = c("none", "dpc", "dpcCN"),
   limpaDpcArgs = NULL,
   limpaQuantArgs = NULL,
+  limpaQuantifiedRds = NULL,
   limpaDEArgs = NULL,
   limpaKeep = c("none", "elist", "fit", "all"),
   limpaByRow = FALSE,
-  limpaPostQuantNorm = c("none", "quantile")
+  limpaPostQuantNorm = c("none", "GI", "median", "mean", "Quantile", "CycLoess", "RLR",
+    "quantile")
 )
 
 \S4method{calculateContrasts}{NormalyzerStatistics}(
@@ -52,10 +54,12 @@ calculateContrasts(
   limpaDpcMethod = c("none", "dpc", "dpcCN"),
   limpaDpcArgs = NULL,
   limpaQuantArgs = NULL,
+  limpaQuantifiedRds = NULL,
   limpaDEArgs = NULL,
   limpaKeep = c("none", "elist", "fit", "all"),
   limpaByRow = FALSE,
-  limpaPostQuantNorm = c("none", "quantile")
+  limpaPostQuantNorm = c("none", "GI", "median", "mean", "Quantile", "CycLoess", "RLR",
+    "quantile")
 )
 }
 \arguments{
@@ -100,7 +104,7 @@ to use as the protein identifier. Use \code{"auto"} (default) to try common
 identifiers. If the chosen column contains duplicate identifiers, the data
 are summarized once across all samples and the output rows correspond to
 proteins. Set to \code{NULL} to disable protein summarization and treat each
-row as one protein (recommended for PTM-level data such as phosphoproteomics
+row as one feature (recommended for PTM-level data such as phosphoproteomics
 where each row corresponds to a modified site).}
 
 \item{limpaDpc}{For \code{type="limpa"}, optional DPC parameters to pass to
@@ -129,6 +133,15 @@ additional arguments forwarded to \code{limpa::dpcQuant()} /
 \code{FALSE}), plus any additional \code{...} arguments supported by limpa.
 Arguments \code{y}, \code{protein.id}, and \code{dpc} are ignored.}
 
+\item{limpaQuantifiedRds}{For \code{type="limpa"}, optional path to an RDS
+file containing a quantified \code{EList} object (as returned by
+\code{limpa::dpcQuant()} or \code{limpa::dpcQuantByRow()}). When provided,
+NormalyzerDE skips the internal \code{dpcQuant*()} step and reuses the
+cached quantification (including \code{standard.error} and
+\code{n.observations}) for differential expression. This is required to
+preserve quantification uncertainty when you first ran \code{dpcQuant*()}
+upstream (for example via \code{normalyzer(preQuant=\"limpa\")}).}
+
 \item{limpaDEArgs}{For \code{type="limpa"}, optional named list of additional
 arguments forwarded to \code{limpa::dpcDE()} (and then to
 \code{limpa::voomaLmFitWithImputation()}). To enable limma sample weights,
@@ -141,14 +154,16 @@ plus uncertainty estimates), \code{"fit"} to keep the fitted \code{MArrayLM}
 object(s), or \code{"all"} to keep both. Default is \code{"none"}.}
 
 \item{limpaByRow}{For \code{type="limpa"}, treat each input row as a separate
-protein and always use \code{limpa::dpcQuantByRow()} instead of summarizing
+feature and always use \code{limpa::dpcQuantByRow()} instead of summarizing
 via \code{limpa::dpcQuant()}. This is recommended for PTM-level matrices
 (e.g., phosphosites). Equivalent to setting \code{limpaProteinIdCol=NULL}.}
 
 \item{limpaPostQuantNorm}{For \code{type="limpa"}, optional between-sample
 normalization applied to the quantified expression matrix after
 \code{limpa::dpcQuant()} / \code{limpa::dpcQuantByRow()} and before
-\code{limpa::dpcDE()}. One of \code{"none"} (default) or \code{"quantile"}.
+\code{limpa::dpcDE()}. One of \code{"none"} (default), \code{"GI"},
+\code{"median"}, \code{"mean"}, \code{"Quantile"} (or \code{"quantile"}),
+\code{"CycLoess"}, or \code{"RLR"}.
 Avoid double-normalization if your input was already normalized upstream.}
 }
 \value{

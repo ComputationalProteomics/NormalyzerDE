@@ -426,10 +426,10 @@ setReplaceMethod(
 #'   identifiers. If the chosen column contains duplicate identifiers, the data
 #'   are summarized once across all samples and the output rows correspond to
 #'   proteins. Set to \code{NULL} to disable protein summarization and treat each
-#'   row as one protein (recommended for PTM-level data such as phosphoproteomics
+#'   row as one feature (recommended for PTM-level data such as phosphoproteomics
 #'   where each row corresponds to a modified site).
 #' @param limpaByRow For \code{type="limpa"}, treat each input row as a separate
-#'   protein and always use \code{limpa::dpcQuantByRow()} instead of summarizing
+#'   feature and always use \code{limpa::dpcQuantByRow()} instead of summarizing
 #'   via \code{limpa::dpcQuant()}. This is recommended for PTM-level matrices
 #'   (e.g., phosphosites). Equivalent to setting \code{limpaProteinIdCol=NULL}.
 #' @param limpaDpc For \code{type="limpa"}, optional DPC parameters to pass to
@@ -454,10 +454,20 @@ setReplaceMethod(
 #'   \code{0.8}), \code{chunk} (default \code{1000L}), and \code{verbose} (default
 #'   \code{FALSE}), plus any additional \code{...} arguments supported by limpa.
 #'   Arguments \code{y}, \code{protein.id}, and \code{dpc} are ignored.
+#' @param limpaQuantifiedRds For \code{type="limpa"}, optional path to an RDS
+#'   file containing a quantified \code{EList} object (as returned by
+#'   \code{limpa::dpcQuant()} or \code{limpa::dpcQuantByRow()}). When provided,
+#'   NormalyzerDE skips the internal \code{dpcQuant*()} step and reuses the
+#'   cached quantification (including \code{standard.error} and
+#'   \code{n.observations}) for differential expression. This is required to
+#'   preserve quantification uncertainty when you first ran \code{dpcQuant*()}
+#'   upstream (for example via \code{normalyzer(preQuant=\"limpa\")}).
 #' @param limpaPostQuantNorm For \code{type="limpa"}, optional between-sample
 #'   normalization applied to the quantified expression matrix after
 #'   \code{limpa::dpcQuant()} / \code{limpa::dpcQuantByRow()} and before
-#'   \code{limpa::dpcDE()}. One of \code{"none"} (default) or \code{"quantile"}.
+#'   \code{limpa::dpcDE()}. One of \code{"none"} (default), \code{"GI"},
+#'   \code{"median"}, \code{"mean"}, \code{"Quantile"} (or \code{"quantile"}),
+#'   \code{"CycLoess"}, or \code{"RLR"}.
 #'   Avoid double-normalization if your input was already normalized upstream.
 #' @param limpaDEArgs For \code{type="limpa"}, optional named list of additional
 #'   arguments forwarded to \code{limpa::dpcDE()} (and then to
@@ -497,10 +507,20 @@ setGeneric(
     limpaDpcMethod = c("none", "dpc", "dpcCN"),
     limpaDpcArgs = NULL,
     limpaQuantArgs = NULL,
+    limpaQuantifiedRds = NULL,
     limpaDEArgs = NULL,
     limpaKeep = c("none", "elist", "fit", "all"),
     limpaByRow = FALSE,
-    limpaPostQuantNorm = c("none", "quantile")
+    limpaPostQuantNorm = c(
+      "none",
+      "GI",
+      "median",
+      "mean",
+      "Quantile",
+      "CycLoess",
+      "RLR",
+      "quantile"
+    )
   ) {
     standardGeneric("calculateContrasts")
   }
@@ -528,12 +548,23 @@ setMethod(
     limpaDpcMethod = c("none", "dpc", "dpcCN"),
     limpaDpcArgs = NULL,
     limpaQuantArgs = NULL,
+    limpaQuantifiedRds = NULL,
     limpaDEArgs = NULL,
     limpaKeep = c("none", "elist", "fit", "all"),
     limpaByRow = FALSE,
-    limpaPostQuantNorm = c("none", "quantile")
+    limpaPostQuantNorm = c(
+      "none",
+      "GI",
+      "median",
+      "mean",
+      "Quantile",
+      "CycLoess",
+      "RLR",
+      "quantile"
+    )
   ) {
     dataMat <- dataMat(nst)
+    dataMatOriginalRowNames <- rownames(dataMat)
     designDf <- designDf(nst)
 
     contrastSplitter(nst) <- splitter
@@ -588,20 +619,11 @@ setMethod(
       model
     }
 
-    requireLimpaPackage <- function() {
-      if (!requireNamespace("limpa", quietly = TRUE)) {
-        stop(
-          "Statistics type 'limpa' requires the optional Bioconductor package 'limpa'.\n",
-          "Install it with `BiocManager::install(\"limpa\")`."
-        )
+    warnIfLimpaInputLooksNotLog2 <- function(dataMat, threshold = 50) {
+      finiteVals <- dataMat[is.finite(dataMat)]
+      if (length(finiteVals) == 0) {
+        return(invisible(NULL))
       }
-    }
-
-	    warnIfLimpaInputLooksNotLog2 <- function(dataMat, threshold = 50) {
-	      finiteVals <- dataMat[is.finite(dataMat)]
-	      if (length(finiteVals) == 0) {
-	        return(invisible(NULL))
-	      }
 
       maxVal <- max(finiteVals)
       if (is.finite(maxVal) && maxVal > threshold) {
@@ -615,165 +637,53 @@ setMethod(
         )
       }
 
-	      invisible(NULL)
-	    }
-
-	    limpaPostQuantNormUse <- "none"
-	    if (type == "limpa") {
-	      requireLimpaPackage()
-	      warnIfLimpaInputLooksNotLog2(dataMat)
-
-	      limpaDpcMethod <- match.arg(limpaDpcMethod)
-	      limpaKeep <- match.arg(limpaKeep)
-	      limpaPostQuantNormUse <- match.arg(limpaPostQuantNorm)
-
-	      limpaByRow <- as.logical(limpaByRow)[1]
-	      if (is.na(limpaByRow)) {
-	        stop("limpaByRow must be TRUE or FALSE.")
-	      }
-
-      if (isTRUE(limpaByRow)) {
-        proteinIdColValue <- if (is.null(limpaProteinIdCol)) {
-          NULL
-        } else {
-          as.character(limpaProteinIdCol)[1]
-        }
-        if (!is.null(proteinIdColValue) && !identical(proteinIdColValue, "auto")) {
-          stop(
-            "limpaByRow=TRUE is incompatible with a non-default limpaProteinIdCol. ",
-            "Set limpaProteinIdCol=NULL (or leave it as 'auto')."
-          )
-        }
-        limpaProteinIdCol <- NULL
-      }
-
-      if (!is.null(limpaDpcArgs) && !is.list(limpaDpcArgs)) {
-        stop("limpaDpcArgs must be a named list (or NULL).")
-      }
-      if (!is.null(limpaDpcArgs) && length(limpaDpcArgs) > 0) {
-        if (is.null(names(limpaDpcArgs))) {
-          stop("limpaDpcArgs must be a named list.")
-        }
-      }
-
-      if (!is.null(limpaQuantArgs) && !is.list(limpaQuantArgs)) {
-        stop("limpaQuantArgs must be a named list (or NULL).")
-      }
-      if (!is.null(limpaQuantArgs) && length(limpaQuantArgs) > 0) {
-        if (is.null(names(limpaQuantArgs))) {
-          stop("limpaQuantArgs must be a named list.")
-        }
-      }
-
-      if (
-        !is.null(limpaDpc) &&
-          !(is.list(limpaDpc) ||
-            (is.numeric(limpaDpc) && length(limpaDpc) == 2))
-      ) {
-        stop(
-          "limpaDpc must be NULL, a list returned by limpa::dpc(), or a numeric vector c(beta0, beta1)."
-        )
-      }
-
-      if (!is.null(limpaDEArgs) && !is.list(limpaDEArgs)) {
-        stop("limpaDEArgs must be a list (or NULL).")
-      }
+      invisible(NULL)
     }
 
-    sanitizeLimpaDpcArgs <- function(args) {
-      if (is.null(args)) {
-        return(list())
+    limpaPostQuantNormUse <- "none"
+    if (type == "limpa") {
+      requireLimpaPackageInternal("Statistics type 'limpa'")
+      warnIfLimpaInputLooksNotLog2(dataMat)
+
+      limpaDpcMethod <- match.arg(limpaDpcMethod)
+      limpaKeep <- match.arg(limpaKeep)
+      limpaPostQuantNormUse <- match.arg(limpaPostQuantNorm)
+
+      byRowConfig <- normalizeLimpaByRowConfig(
+        limpaByRow = limpaByRow,
+        limpaProteinIdCol = limpaProteinIdCol
+      )
+      limpaByRow <- byRowConfig$limpaByRow
+      limpaProteinIdCol <- byRowConfig$limpaProteinIdCol
+
+      if (!is.null(limpaQuantifiedRds)) {
+        if (
+          !is.character(limpaQuantifiedRds) || length(limpaQuantifiedRds) != 1
+        ) {
+          stop(
+            "limpaQuantifiedRds must be a length-1 character file path (or NULL)."
+          )
+        }
+        limpaQuantifiedRds <- as.character(limpaQuantifiedRds)[1]
+        if (is.na(limpaQuantifiedRds) || !nzchar(limpaQuantifiedRds)) {
+          stop("limpaQuantifiedRds must be a non-empty file path (or NULL).")
+        }
+        if (!file.exists(limpaQuantifiedRds)) {
+          stop("limpaQuantifiedRds file does not exist: ", limpaQuantifiedRds)
+        }
       }
-      if (length(args) == 0) {
-        return(list())
-      }
-      if (is.null(names(args))) {
-        stop("limpaDpcArgs must be a named list.")
-      }
-      args[["y"]] <- NULL
-      args
+
+      validateLimpaDpc(limpaDpc)
+    }
+
+    if (type != "limpa" && !is.null(limpaQuantifiedRds)) {
+      stop("limpaQuantifiedRds is only supported for type='limpa'.")
     }
 
     limpaDpcArgsUse <- if (type == "limpa") {
       sanitizeLimpaDpcArgs(limpaDpcArgs)
     } else {
       list()
-    }
-
-    sanitizeLimpaDEArgs <- function(args) {
-      if (is.null(args)) {
-        return(list())
-      }
-      if (length(args) == 0) {
-        return(list())
-      }
-      if (is.null(names(args))) {
-        stop("limpaDEArgs must be a named list.")
-      }
-
-      forbidden <- c("y", "design", "plot")
-      args[forbidden] <- NULL
-      args
-    }
-
-    applyLimpaDEDefaultsAndValidate <- function(args) {
-      if (is.null(args[["sample.weights"]])) {
-        args[["sample.weights"]] <- FALSE
-      }
-      sampleWeights <- as.logical(args[["sample.weights"]])[1]
-      if (is.na(sampleWeights)) {
-        stop("limpaDEArgs$sample.weights must be TRUE or FALSE.")
-      }
-      args[["sample.weights"]] <- sampleWeights
-      args
-    }
-
-    sanitizeLimpaQuantArgs <- function(args) {
-      if (is.null(args)) {
-        return(list())
-      }
-      if (length(args) == 0) {
-        return(list())
-      }
-      if (is.null(names(args))) {
-        stop("limpaQuantArgs must be a named list.")
-      }
-
-      forbidden <- c("y", "protein.id", "dpc")
-      args[forbidden] <- NULL
-      args
-    }
-
-    applyLimpaQuantDefaultsAndValidate <- function(args) {
-      if (!("dpc.slope" %in% names(args))) {
-        args[["dpc.slope"]] <- 0.8
-      }
-      if (!("chunk" %in% names(args))) {
-        args[["chunk"]] <- 1000L
-      }
-      if (!("verbose" %in% names(args))) {
-        args[["verbose"]] <- FALSE
-      }
-
-      slope <- as.numeric(args[["dpc.slope"]])[1]
-      if (is.na(slope) || !is.finite(slope) || slope <= 0) {
-        stop("limpaQuantArgs$dpc.slope must be a single positive numeric value.")
-      }
-      args[["dpc.slope"]] <- slope
-
-      chunk <- as.integer(args[["chunk"]])[1]
-      if (is.na(chunk) || chunk < 1) {
-        stop("limpaQuantArgs$chunk must be a positive integer.")
-      }
-      args[["chunk"]] <- chunk
-
-      verbose <- as.logical(args[["verbose"]])[1]
-      if (is.na(verbose)) {
-        stop("limpaQuantArgs$verbose must be TRUE or FALSE.")
-      }
-      args[["verbose"]] <- verbose
-
-      args
     }
 
     limpaQuantArgsUse <- if (type == "limpa") {
@@ -800,102 +710,6 @@ setMethod(
       )
     }
 
-    validateLimpaArgsByFormals <- function(args, fn, methodLabel) {
-      if (length(args) == 0) {
-        return(args)
-      }
-
-      allowed <- names(formals(fn))
-      allowed <- allowed[!is.na(allowed) & nzchar(allowed)]
-      allowed <- setdiff(allowed, "y")
-
-      unknown <- setdiff(names(args), allowed)
-      if (length(unknown) > 0) {
-        stop(
-          "limpaDpcArgs contains unsupported argument names for limpaDpcMethod='",
-          methodLabel,
-          "': ",
-          paste(unknown, collapse = ", "),
-          ". Allowed: ",
-          paste(allowed, collapse = ", "),
-          "."
-        )
-      }
-
-      args
-    }
-
-    estimateLimpaDpc <- function(dataMat, method = c("none", "dpc", "dpcCN")) {
-      method <- match.arg(method)
-      if (method == "none") {
-        return(NULL)
-      }
-
-      dpcArgsUse <- limpaDpcArgsUse
-
-      if (method == "dpc") {
-        dpcArgsUse <- validateLimpaArgsByFormals(
-          dpcArgsUse,
-          fn = limpa::dpc,
-          methodLabel = method
-        )
-        dpcCall <- c(list(y = dataMat), dpcArgsUse)
-        if (!isTRUE(limpaVerboseUse)) {
-          return(suppressMessages(do.call(limpa::dpc, dpcCall)))
-        }
-        return(do.call(limpa::dpc, dpcCall))
-      }
-
-      dpcArgsUse <- validateLimpaArgsByFormals(
-        dpcArgsUse,
-        fn = limpa::dpcCN,
-        methodLabel = method
-      )
-
-      if (!("dpc.slope.start" %in% names(dpcArgsUse))) {
-        dpcArgsUse[["dpc.slope.start"]] <- limpaDpcSlopeUse
-      }
-      if (!("verbose" %in% names(dpcArgsUse))) {
-        dpcArgsUse[["verbose"]] <- isTRUE(limpaVerboseUse)
-      }
-
-      dpcCall <- c(list(y = dataMat), dpcArgsUse)
-      do.call(limpa::dpcCN, dpcCall)
-    }
-
-    inferLimpaProteinIdCol <- function(annotationMat, proteinIdCol) {
-      if (is.null(proteinIdCol)) {
-        return(NULL)
-      }
-
-      proteinIdCol <- as.character(proteinIdCol)[1]
-      annotationCols <- colnames(annotationMat)
-      if (is.null(annotationCols)) {
-        annotationCols <- character()
-      }
-
-      if (identical(proteinIdCol, "auto")) {
-        candidates <- c("Protein.Group", "Protein")
-        proteinIdCol <- candidates[candidates %in% annotationCols][1]
-        if (is.na(proteinIdCol) || is.null(proteinIdCol)) {
-          return(NULL)
-        }
-        return(proteinIdCol)
-      }
-
-      if (!(proteinIdCol %in% annotationCols)) {
-        stop(
-          "limpaProteinIdCol '",
-          proteinIdCol,
-          "' was not found in the row annotation.\n",
-          "Available columns: ",
-          paste(annotationCols, collapse = ", ")
-        )
-      }
-
-      proteinIdCol
-    }
-
     limpaDpcUse <- if (type == "limpa") {
       if (!is.null(limpaDpc)) {
         if (limpaDpcMethod != "none" && isTRUE(limpaVerboseUse)) {
@@ -907,7 +721,13 @@ setMethod(
         }
         limpaDpc
       } else {
-        estimateLimpaDpc(dataMat, method = limpaDpcMethod)
+        estimateLimpaDpcFromData(
+          dataMat = dataMat,
+          limpaDpcMethod = limpaDpcMethod,
+          limpaDpcArgs = limpaDpcArgsUse,
+          dpcSlope = limpaDpcSlopeUse,
+          verbose = limpaVerboseUse
+        )
       }
     } else {
       NULL
@@ -933,20 +753,20 @@ setMethod(
         limpaDpcMethod
       }
 
-	      limpaBackend <- list(
-	        dpc = dpcVec,
-	        dpcMethod = dpcMethodUsed,
-	        dpcSlopeInput = as.numeric(limpaDpcSlopeUse),
-	        dpcSlopeUsed = if (is.null(dpcVec)) {
-	          as.numeric(limpaDpcSlopeUse)
-	        } else {
-	          as.numeric(dpcVec[[2]])
-	        },
-	        postQuantNorm = limpaPostQuantNormUse,
-	        fits = list(),
-	        designs = list(),
-	        elists = list()
-	      )
+      limpaBackend <- list(
+        dpc = dpcVec,
+        dpcMethod = dpcMethodUsed,
+        dpcSlopeInput = as.numeric(limpaDpcSlopeUse),
+        dpcSlopeUsed = if (is.null(dpcVec)) {
+          as.numeric(limpaDpcSlopeUse)
+        } else {
+          as.numeric(dpcVec[[2]])
+        },
+        postQuantNorm = limpaPostQuantNormUse,
+        fits = list(),
+        designs = list(),
+        elists = list()
+      )
 
       if (length(limpaDpcArgsUse) > 0) {
         limpaBackend$dpcArgs <- limpaDpcArgsUse
@@ -1010,51 +830,6 @@ setMethod(
       dataMat <- dataMat[keepRows, , drop = FALSE]
       proteinId <- proteinId[keepRows]
 
-      inferStableProteinAnnotationCols <- function(
-        genesDf,
-        proteinId,
-        proteinIdCol
-      ) {
-        colNames <- colnames(genesDf)
-        if (is.null(colNames) || length(colNames) == 0) {
-          return(character())
-        }
-
-        candidates <- setdiff(colNames, proteinIdCol)
-        if (length(candidates) == 0) {
-          return(character())
-        }
-
-        proteinId <- as.character(proteinId)
-        idxByProtein <- split(seq_along(proteinId), proteinId)
-
-        isStable <- function(values) {
-          values <- as.character(values)
-          values[values == ""] <- NA_character_
-
-          if (!any(!is.na(values))) {
-            return(FALSE)
-          }
-
-          all(vapply(
-            idxByProtein,
-            function(idx) {
-              x <- values[idx]
-              x <- x[!is.na(x)]
-              length(unique(x)) <= 1
-            },
-            logical(1)
-          ))
-        }
-
-        stable <- vapply(
-          candidates,
-          function(col) isStable(genesDf[[col]]),
-          logical(1)
-        )
-        candidates[stable]
-      }
-
       genesInput <- as.data.frame(
         annotationMat[keepRows, , drop = FALSE],
         stringsAsFactors = FALSE,
@@ -1066,7 +841,10 @@ setMethod(
         proteinId = proteinId,
         proteinIdCol = proteinIdCol
       )
-      genesInput <- genesInput[, unique(c(proteinIdCol, stableCols)), drop = FALSE]
+      genesInput <- genesInput[,
+        unique(c(proteinIdCol, stableCols)),
+        drop = FALSE
+      ]
       yPeptide <- methods::new("EList", list(E = dataMat, genes = genesInput))
       yProtein <- do.call(
         limpa::dpcQuant,
@@ -1110,9 +888,27 @@ setMethod(
       yProtein
     }
 
-    filterLowRepLimpa <- function(df, groups, leastRep = 1) {
-      hasAnyObs <- rowSums(!is.na(df)) > 0
+    filterLowRepLimpa <- function(
+      df,
+      groups,
+      leastRep = 1,
+      nObservations = NULL
+    ) {
+      obsMat <- if (!is.null(nObservations)) {
+        if (!is.matrix(nObservations)) {
+          stop("nObservations must be a matrix when provided.")
+        }
+        if (!all(dim(nObservations) == dim(df))) {
+          stop("nObservations must have the same dimensions as df.")
+        }
+        nObservations > 0
+      } else {
+        !is.na(df)
+      }
+
+      hasAnyObs <- rowSums(obsMat) > 0
       df <- df[hasAnyObs, , drop = FALSE]
+      obsMat <- obsMat[hasAnyObs, , drop = FALSE]
       if (nrow(df) == 0) {
         return(df)
       }
@@ -1131,7 +927,7 @@ setMethod(
         if (length(cols) == 0) {
           next
         }
-        counts <- rowSums(!is.na(df[, cols, drop = FALSE]))
+        counts <- rowSums(obsMat[, cols, drop = FALSE])
         maxCount <- pmax(maxCount, counts)
       }
 
@@ -1163,64 +959,238 @@ setMethod(
       invisible(NULL)
     }
 
-    limpaProteinIdColUsed <- if (type == "limpa") {
+    resolveLimpaCachedRowMap <- function(
+      dataRowIds,
+      originalRowIds,
+      cachedRowIds
+    ) {
+      dataRowIds <- as.character(dataRowIds)
+      cachedRowIds <- as.character(cachedRowIds)
+
+      if (all(dataRowIds %in% cachedRowIds)) {
+        return(stats::setNames(dataRowIds, dataRowIds))
+      }
+
+      if (!is.null(originalRowIds)) {
+        originalRowIds <- as.character(originalRowIds)
+        if (
+          length(originalRowIds) == length(dataRowIds) &&
+            anyDuplicated(originalRowIds) == 0 &&
+            all(originalRowIds %in% cachedRowIds)
+        ) {
+          return(stats::setNames(originalRowIds, dataRowIds))
+        }
+      }
+
+      if (
+        length(dataRowIds) == length(cachedRowIds) &&
+          anyDuplicated(cachedRowIds) == 0
+      ) {
+        warning(
+          "Could not match limpaQuantifiedRds row identifiers by name; assuming row order matches the input matrix.",
+          call. = FALSE
+        )
+        return(stats::setNames(cachedRowIds, dataRowIds))
+      }
+
+      stop(
+        "limpaQuantifiedRds row identifiers could not be matched to the data matrix. ",
+        "Ensure the quantified EList was generated from the same matrix (rows), ",
+        "or provide matching row names."
+      )
+    }
+
+    limpaCachedRowMap <- NULL
+    limpaQuantifiedCached <- NULL
+    if (type == "limpa" && !is.null(limpaQuantifiedRds)) {
+      limpaQuantifiedCached <- readRDS(limpaQuantifiedRds)
+      if (!inherits(limpaQuantifiedCached, "EList")) {
+        stop(
+          "limpaQuantifiedRds must contain a limma EList object, got: ",
+          paste(class(limpaQuantifiedCached), collapse = ", ")
+        )
+      }
+      if (
+        is.null(limpaQuantifiedCached$E) || !is.matrix(limpaQuantifiedCached$E)
+      ) {
+        stop("limpaQuantifiedRds EList must contain a matrix element 'E'.")
+      }
+      if (is.null(colnames(limpaQuantifiedCached$E))) {
+        stop("limpaQuantifiedRds EList$E must contain sample column names.")
+      }
+
+      cachedRowIds <- rownames(limpaQuantifiedCached$E)
+      if (is.null(cachedRowIds)) {
+        cachedRowIds <- as.character(seq_len(nrow(limpaQuantifiedCached$E)))
+      }
+      cachedRowIds <- as.character(cachedRowIds)
+      if (
+        anyNA(cachedRowIds) ||
+          any(!nzchar(cachedRowIds)) ||
+          anyDuplicated(cachedRowIds) > 0
+      ) {
+        stop(
+          "limpaQuantifiedRds EList$E must have unique, non-empty row names."
+        )
+      }
+      rownames(limpaQuantifiedCached$E) <- cachedRowIds
+
+      if (
+        is.null(limpaQuantifiedCached$other$n.observations) ||
+          !is.matrix(limpaQuantifiedCached$other$n.observations)
+      ) {
+        stop(
+          "limpaQuantifiedRds EList must contain other$n.observations (matrix). ",
+          "Use an EList returned by limpa::dpcQuant() or limpa::dpcQuantByRow()."
+        )
+      }
+      if (
+        !all(
+          dim(limpaQuantifiedCached$other$n.observations) ==
+            dim(limpaQuantifiedCached$E)
+        )
+      ) {
+        stop(
+          "limpaQuantifiedRds other$n.observations must have the same dimensions as EList$E."
+        )
+      }
+      rownames(limpaQuantifiedCached$other$n.observations) <- cachedRowIds
+      if (is.null(colnames(limpaQuantifiedCached$other$n.observations))) {
+        colnames(limpaQuantifiedCached$other$n.observations) <- colnames(
+          limpaQuantifiedCached$E
+        )
+      }
+
+      if (
+        is.null(limpaQuantifiedCached$other$standard.error) ||
+          !is.matrix(limpaQuantifiedCached$other$standard.error)
+      ) {
+        stop(
+          "limpaQuantifiedRds EList must contain other$standard.error (matrix). ",
+          "Use an EList returned by limpa::dpcQuant() or limpa::dpcQuantByRow()."
+        )
+      }
+      if (
+        !all(
+          dim(limpaQuantifiedCached$other$standard.error) ==
+            dim(limpaQuantifiedCached$E)
+        )
+      ) {
+        stop(
+          "limpaQuantifiedRds other$standard.error must have the same dimensions as EList$E."
+        )
+      }
+      rownames(limpaQuantifiedCached$other$standard.error) <- cachedRowIds
+      if (is.null(colnames(limpaQuantifiedCached$other$standard.error))) {
+        colnames(limpaQuantifiedCached$other$standard.error) <- colnames(
+          limpaQuantifiedCached$E
+        )
+      }
+
+      if (anyNA(dataMat)) {
+        stop(
+          "limpaQuantifiedRds requires a completed expression matrix without NA values. ",
+          "Use the post-quant matrix (for example the 'log2' output from normalyzer(preQuant='limpa'))."
+        )
+      }
+    }
+
+    limpaProteinIdColUsed <- if (
+      type == "limpa" && is.null(limpaQuantifiedCached)
+    ) {
       inferLimpaProteinIdCol(annotMat(nst), limpaProteinIdCol)
     } else {
       NULL
     }
 
-    if (type == "limpa") {
+    if (type == "limpa" && is.null(limpaQuantifiedCached)) {
       warnIfLimpaProteinSummarizationWillBeSkipped(
         annotMat(nst),
         limpaProteinIdColUsed
       )
     }
 
-    limpaQuantified <- if (type == "limpa" && !is.null(limpaProteinIdColUsed)) {
+    limpaQuantified <- if (type != "limpa") {
+      NULL
+    } else if (!is.null(limpaQuantifiedCached)) {
+      limpaQuantifiedCached
+    } else if (!is.null(limpaProteinIdColUsed)) {
       prepareLimpaQuantified(dataMat, annotMat(nst), limpaProteinIdColUsed)
     } else {
       NULL
     }
 
+    if (type == "limpa" && !is.null(limpaQuantifiedCached)) {
+      missingCols <- setdiff(colnames(dataMat), colnames(limpaQuantified$E))
+      if (length(missingCols) > 0) {
+        stop(
+          "limpaQuantifiedRds is missing sample columns required by the data matrix: ",
+          paste(missingCols, collapse = ", ")
+        )
+      }
+
+      limpaCachedRowMap <- resolveLimpaCachedRowMap(
+        dataRowIds = rownames(dataMat),
+        originalRowIds = dataMatOriginalRowNames,
+        cachedRowIds = rownames(limpaQuantified$E)
+      )
+    }
+
     if (!is.null(limpaBackend)) {
       limpaBackend$proteinIdCol <- limpaProteinIdColUsed
-      limpaBackend$usedDpcQuant <- !is.null(limpaQuantified)
+      limpaBackend$usedDpcQuant <- !is.null(limpaQuantified) &&
+        is.null(limpaQuantifiedCached)
+      if (!is.null(limpaQuantifiedCached)) {
+        limpaBackend$quantifiedRds <- limpaQuantifiedRds
+      }
       if (!is.null(limpaQuantified) && limpaKeep %in% c("elist", "all")) {
         limpaBackend$quantifiedEList <- limpaQuantified
       }
     }
 
-	    if (!is.null(limpaQuantified)) {
-	      dataMat <- as.matrix(limpaQuantified$E)
-	      slot(nst, "dataMat") <- dataMat
-	      slot(nst, "annotMat") <- as.matrix(limpaQuantified$genes)
-	    }
+    if (!is.null(limpaQuantified) && is.null(limpaQuantifiedCached)) {
+      dataMat <- as.matrix(limpaQuantified$E)
+      slot(nst, "dataMat") <- dataMat
+      slot(nst, "annotMat") <- as.matrix(limpaQuantified$genes)
+    }
 
-	    applyLimpaPostQuantNorm <- function(y) {
-	      if (identical(limpaPostQuantNormUse, "none")) {
-	        return(y)
-	      }
+    applyLimpaPostQuantNorm <- function(y) {
+      if (identical(limpaPostQuantNormUse, "none")) {
+        return(y)
+      }
 
-	      if (!is.null(y$E) && anyNA(y$E)) {
-	        stop(
-	          "limpaPostQuantNorm='",
-	          limpaPostQuantNormUse,
-	          "' requires a completed expression matrix without NA values."
-	        )
-	      }
+      if (!is.null(y$E) && anyNA(y$E)) {
+        stop(
+          "limpaPostQuantNorm='",
+          limpaPostQuantNormUse,
+          "' requires a completed expression matrix without NA values."
+        )
+      }
 
-	      if (identical(limpaPostQuantNormUse, "quantile")) {
-	        y$E <- limma::normalizeQuantiles(y$E)
-	      }
+      if (identical(limpaPostQuantNormUse, "GI")) {
+        y$E <- globalIntensityNormalization(y$E, noLogTransform = TRUE)
+      } else if (identical(limpaPostQuantNormUse, "median")) {
+        y$E <- medianNormalization(y$E, noLogTransform = TRUE)
+      } else if (identical(limpaPostQuantNormUse, "mean")) {
+        y$E <- meanNormalization(y$E, noLogTransform = TRUE)
+      } else if (limpaPostQuantNormUse %in% c("Quantile", "quantile")) {
+        y$E <- performQuantileNormalization(y$E, noLogTransform = TRUE)
+      } else if (identical(limpaPostQuantNormUse, "CycLoess")) {
+        y$E <- performCyclicLoessNormalization(y$E, noLogTransform = TRUE)
+      } else if (identical(limpaPostQuantNormUse, "RLR")) {
+        y$E <- performGlobalRLRNormalization(y$E, noLogTransform = TRUE)
+      } else {
+        stop("Unknown limpaPostQuantNorm value: ", limpaPostQuantNormUse)
+      }
 
-	      y
-	    }
+      y
+    }
 
-	    calculateLimpaFit <- function(
-	      dataMat,
-	      limmaDesign,
-	      backendKey = ".global"
-	    ) {
+    calculateLimpaFit <- function(
+      dataMat,
+      limmaDesign,
+      backendKey = ".global"
+    ) {
       if (is.null(limpaQuantified)) {
         yImputed <- do.call(
           limpa::dpcQuantByRow,
@@ -1229,15 +1199,15 @@ setMethod(
               y = dataMat,
               dpc = limpaDpcUse
             ),
-	            limpaQuantArgsUse
-	          )
-	        )
-	        yImputed <- applyLimpaPostQuantNorm(yImputed)
+            limpaQuantArgsUse
+          )
+        )
+        yImputed <- applyLimpaPostQuantNorm(yImputed)
 
-	        limpaDEArgsUse <-
-	          applyLimpaDEDefaultsAndValidate(sanitizeLimpaDEArgs(limpaDEArgs))
-	        fit <- do.call(
-	          limpa::dpcDE,
+        limpaDEArgsUse <-
+          applyLimpaDEDefaultsAndValidate(sanitizeLimpaDEArgs(limpaDEArgs))
+        fit <- do.call(
+          limpa::dpcDE,
           c(
             list(y = yImputed, design = limmaDesign, plot = FALSE),
             limpaDEArgsUse
@@ -1258,43 +1228,117 @@ setMethod(
       yUse$E <- yUse$E[, cols, drop = FALSE]
 
       if (!is.null(yUse$other$n.observations)) {
-        yUse$other$n.observations <- yUse$other$n.observations[, cols, drop = FALSE]
+        yUse$other$n.observations <- yUse$other$n.observations[,
+          cols,
+          drop = FALSE
+        ]
       }
       if (!is.null(yUse$other$standard.error)) {
-        yUse$other$standard.error <- yUse$other$standard.error[, cols, drop = FALSE]
+        yUse$other$standard.error <- yUse$other$standard.error[,
+          cols,
+          drop = FALSE
+        ]
       }
 
       rows <- rownames(dataMat)
-      yUse$E <- yUse$E[rows, , drop = FALSE]
+      rowsInQuant <- if (!is.null(limpaCachedRowMap)) {
+        unname(limpaCachedRowMap[rows])
+      } else {
+        rows
+      }
+      if (anyNA(rowsInQuant)) {
+        stop(
+          "Failed to map data matrix rows to limpaQuantifiedRds rows. ",
+          "Please ensure both inputs come from the same quantified matrix."
+        )
+      }
+
+      yUse$E <- yUse$E[rowsInQuant, , drop = FALSE]
+      rownames(yUse$E) <- rows
 
       if (!is.null(yUse$other$n.observations)) {
         yUse$other$n.observations <- yUse$other$n.observations[
-          rows,
+          rowsInQuant,
           ,
           drop = FALSE
         ]
+        rownames(yUse$other$n.observations) <- rows
       }
       if (!is.null(yUse$other$standard.error)) {
         yUse$other$standard.error <- yUse$other$standard.error[
-          rows,
+          rowsInQuant,
           ,
           drop = FALSE
         ]
+        rownames(yUse$other$standard.error) <- rows
       }
-	      if (!is.null(yUse$genes)) {
-	        yUse$genes <- yUse$genes[rows, , drop = FALSE]
-	      }
+      if (!is.null(yUse$genes)) {
+        genesDf <- as.data.frame(yUse$genes, check.names = FALSE)
+        geneRows <- rownames(genesDf)
+        if (!is.null(geneRows) && all(rowsInQuant %in% geneRows)) {
+          genesDf <- genesDf[rowsInQuant, , drop = FALSE]
+        } else if (nrow(genesDf) == nrow(limpaQuantified$E)) {
+          genesDf <- genesDf[
+            match(rowsInQuant, rownames(limpaQuantified$E)),
+            ,
+            drop = FALSE
+          ]
+        } else {
+          stop(
+            "limpaQuantifiedRds genes rows could not be aligned to EList rows."
+          )
+        }
+        rownames(genesDf) <- rows
+        yUse$genes <- genesDf
+      }
 
-	      yUse <- applyLimpaPostQuantNorm(yUse)
+      if (!is.null(limpaQuantifiedCached)) {
+        if (anyNA(dataMat)) {
+          stop(
+            "limpaQuantifiedRds requires a completed expression matrix without NA values. ",
+            "Use the post-quant matrix (for example the 'log2' output from normalyzer(preQuant='limpa'))."
+          )
+        }
+        yUse$E <- dataMat
+      }
 
-	      limpaDEArgsUse <-
-	        applyLimpaDEDefaultsAndValidate(sanitizeLimpaDEArgs(limpaDEArgs))
-	      fit <- do.call(
-	        limpa::dpcDE,
+      yUse <- applyLimpaPostQuantNorm(yUse)
+
+      limpaDEArgsUse <-
+        applyLimpaDEDefaultsAndValidate(sanitizeLimpaDEArgs(limpaDEArgs))
+      fit <- do.call(
+        limpa::dpcDE,
         c(list(y = yUse, design = limmaDesign, plot = FALSE), limpaDEArgsUse)
       )
       recordLimpaBackend(backendKey, y = yUse, fit = fit, design = limmaDesign)
       fit
+    }
+
+    subsetLimpaNObservations <- function(dataMatSubset) {
+      if (
+        is.null(limpaQuantified) ||
+          is.null(limpaQuantified$other$n.observations)
+      ) {
+        return(NULL)
+      }
+
+      rowIds <- rownames(dataMatSubset)
+      if (!is.null(limpaCachedRowMap)) {
+        rowIds <- unname(limpaCachedRowMap[rowIds])
+      }
+      if (anyNA(rowIds)) {
+        stop(
+          "Failed to map filtered data rows to limpaQuantifiedRds n.observations rows."
+        )
+      }
+
+      obs <- limpaQuantified$other$n.observations[
+        rowIds,
+        colnames(dataMatSubset),
+        drop = FALSE
+      ]
+      rownames(obs) <- rownames(dataMatSubset)
+      obs
     }
 
     compLists <- list()
@@ -1352,7 +1396,8 @@ setMethod(
           filterLowRepLimpa(
             dataMat,
             conditionCombsOVR,
-            leastRep = leastRepCount
+            leastRep = leastRepCount,
+            nObservations = subsetLimpaNObservations(dataMat)
           )
         } else {
           filterLowRep(
@@ -1450,7 +1495,8 @@ setMethod(
           filterLowRepLimpa(
             dataMat,
             conditionCombs,
-            leastRep = leastRepCount
+            leastRep = leastRepCount,
+            nObservations = subsetLimpaNObservations(dataMat)
           )
         } else {
           filterLowRep(
@@ -1588,7 +1634,8 @@ setMethod(
             filterLowRepLimpa(
               dataMatComp,
               conditionCombsComp,
-              leastRep = leastRepCount
+              leastRep = leastRepCount,
+              nObservations = subsetLimpaNObservations(dataMatComp)
             )
           } else {
             filterLowRep(

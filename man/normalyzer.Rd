@@ -30,7 +30,14 @@ normalyzer(
   rtStepSizeMinutes = 1,
   rtWindowMinCount = 100,
   rtWindowShifts = 1,
-  rtWindowMergeMethod = "mean"
+  rtWindowMergeMethod = "mean",
+  preQuant = c("none", "limpa"),
+  limpaProteinIdCol = "auto",
+  limpaByRow = FALSE,
+  limpaDpc = NULL,
+  limpaDpcMethod = c("none", "dpc", "dpcCN"),
+  limpaDpcArgs = NULL,
+  limpaQuantArgs = NULL
 )
 }
 \arguments{
@@ -97,6 +104,58 @@ segment.}
 \item{rtWindowShifts}{Number of layered retention time normalized windows.}
 
 \item{rtWindowMergeMethod}{Merge approach for layered retention time windows.}
+
+\item{preQuant}{Optional pre-quantification step applied before running the
+Normalyzer normalization evaluation. Use \code{"limpa"} to first complete
+the data matrix with \code{limpa::dpcQuant()} / \code{limpa::dpcQuantByRow()}
+and then evaluate Normalyzer normalizations on the post-quant log2 matrix.
+This follows the recommended way to use limpa (quantify first, then
+normalize). When enabled, the quantified \code{EList} is saved as
+an RDS file \code{<jobDir>/<basename(jobDir)>_limpa_quantified.rds} for reuse with
+\code{\link{normalyzerDE}} via \code{limpaQuantifiedRds}.}
+
+\item{limpaProteinIdCol}{For \code{preQuant="limpa"}, optionally summarize
+peptide/precursor rows to protein-level using \code{limpa::dpcQuant()}.
+Set to a column name in the row annotation (for example
+\code{"Protein.Group"}) to use as the protein identifier. Use
+\code{"auto"} (default) to try common identifiers. If the chosen column
+contains duplicate identifiers, the data are summarized once across all
+samples and the output rows correspond to proteins. Set to \code{NULL} to
+disable protein summarization and quantify each row separately as one feature via
+\code{limpa::dpcQuantByRow()} (recommended for PTM-level data such as
+phosphoproteomics where each row corresponds to a modified site).}
+
+\item{limpaByRow}{For \code{preQuant="limpa"}, treat each input row as a
+separate feature and always use \code{limpa::dpcQuantByRow()} instead of
+summarizing via \code{limpa::dpcQuant()}. This is recommended for PTM-level
+matrices (e.g., phosphosites). Equivalent to setting
+\code{limpaProteinIdCol=NULL}.}
+
+\item{limpaDpc}{For \code{preQuant="limpa"}, optional DPC parameters to pass
+to \code{limpa::dpcQuant()} / \code{limpa::dpcQuantByRow()}. Can be a list as
+returned by \code{limpa::dpc()}, or a numeric vector \code{c(beta0, beta1)}.}
+
+\item{limpaDpcMethod}{For \code{preQuant="limpa"}, optional method to estimate
+the DPC parameters from the data when \code{limpaDpc} is not supplied.
+\code{"none"} (default) uses a fixed slope (\code{limpaQuantArgs$dpc.slope},
+default \code{0.8}) and lets limpa estimate the intercept internally.
+\code{"dpc"} estimates both DPC parameters from the observed-normal model
+via \code{limpa::dpc()}. \code{"dpcCN"} estimates the DPC from the
+complete-normal model via \code{limpa::dpcCN()}, which can be more robust
+for datasets with very large fold-changes.}
+
+\item{limpaDpcArgs}{For \code{preQuant="limpa"}, optional named list of
+additional arguments forwarded to \code{limpa::dpc()} or \code{limpa::dpcCN()}
+when \code{limpaDpcMethod} is not \code{"none"}. Argument \code{y} is ignored.
+For \code{limpaDpcMethod="dpcCN"}, \code{dpc.slope.start} defaults to
+\code{limpaQuantArgs$dpc.slope}.}
+
+\item{limpaQuantArgs}{For \code{preQuant="limpa"}, optional named list of
+additional arguments forwarded to \code{limpa::dpcQuant()} /
+\code{limpa::dpcQuantByRow()}. Use this to set \code{dpc.slope} (default
+\code{0.8}), \code{chunk} (default \code{1000L}), and \code{verbose} (default
+\code{FALSE}), plus any additional \code{...} arguments supported by limpa.
+Arguments \code{y}, \code{protein.id}, and \code{dpc} are ignored.}
 }
 \value{
 None
