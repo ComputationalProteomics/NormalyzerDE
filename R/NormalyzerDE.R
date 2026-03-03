@@ -84,19 +84,23 @@
 #'   \code{limpaProteinIdCol=NULL}.
 #' @param limpaDpc For \code{preQuant="limpa"}, optional DPC parameters to pass
 #'   to \code{limpa::dpcQuant()} / \code{limpa::dpcQuantByRow()}. Can be a list as
-#'   returned by \code{limpa::dpc()}, or a numeric vector \code{c(beta0, beta1)}.
+#'   returned by \code{limpa::dpc()}/\code{limpa::dpcON()}/\code{limpa::dpcCN()},
+#'   or a numeric vector \code{c(beta0, beta1)}.
 #' @param limpaDpcMethod For \code{preQuant="limpa"}, optional method to estimate
 #'   the DPC parameters from the data when \code{limpaDpc} is not supplied.
 #'   \code{"none"} (default) uses a fixed slope (\code{limpaQuantArgs$dpc.slope},
 #'   default \code{0.8}) and lets limpa estimate the intercept internally.
 #'   \code{"dpc"} estimates both DPC parameters from the observed-normal model
-#'   via \code{limpa::dpc()}. \code{"dpcCN"} estimates the DPC from the
+#'   via \code{limpa::dpc()}. \code{"dpcON"} estimates the DPC from the
+#'   observed-normal model via the newer \code{limpa::dpcON()} (for a robust fit,
+#'   set \code{limpaDpcArgs=list(robust=TRUE)}). \code{"dpcCN"} estimates the DPC from the
 #'   complete-normal model via \code{limpa::dpcCN()}, which can be more robust
 #'   for datasets with very large fold-changes.
 #' @param limpaDpcArgs For \code{preQuant="limpa"}, optional named list of
-#'   additional arguments forwarded to \code{limpa::dpc()} or \code{limpa::dpcCN()}
+#'   additional arguments forwarded to \code{limpa::dpc()}, \code{limpa::dpcON()},
+#'   or \code{limpa::dpcCN()}
 #'   when \code{limpaDpcMethod} is not \code{"none"}. Argument \code{y} is ignored.
-#'   For \code{limpaDpcMethod="dpcCN"}, \code{dpc.slope.start} defaults to
+#'   For \code{limpaDpcMethod="dpcON"} and \code{"dpcCN"}, \code{dpc.slope.start} defaults to
 #'   \code{limpaQuantArgs$dpc.slope}.
 #' @param limpaQuantArgs For \code{preQuant="limpa"}, optional named list of
 #'   additional arguments forwarded to \code{limpa::dpcQuant()} /
@@ -153,7 +157,7 @@ normalyzer <- function(
   limpaProteinIdCol = "auto",
   limpaByRow = FALSE,
   limpaDpc = NULL,
-  limpaDpcMethod = c("none", "dpc", "dpcCN"),
+  limpaDpcMethod = c("none", "dpc", "dpcON", "dpcCN"),
   limpaDpcArgs = NULL,
   limpaQuantArgs = NULL
 ) {
@@ -614,8 +618,8 @@ normalyzer <- function(
 #' By default, NormalyzerDE uses a fixed DPC slope
 #' (\code{limpaQuantArgs$dpc.slope}, default \code{0.8}) and lets limpa estimate
 #' the intercept. To estimate both DPC parameters from your data, set
-#' \code{limpaDpcMethod="dpc"} (or \code{"dpcCN"} for a complete-normal estimate,
-#' which can be more robust for datasets with very large fold-changes).
+#' \code{limpaDpcMethod="dpc"} (or \code{"dpcON"} / \code{"dpcCN"} for more robust estimates,
+#' especially in datasets with very large fold-changes).
 #'
 #' @param jobName Name of job
 #' @param designPath File path to design matrix
@@ -667,19 +671,22 @@ normalyzer <- function(
 #'   (e.g., phosphosites). Equivalent to setting \code{limpaProteinIdCol=NULL}.
 #' @param limpaDpc For \code{type="limpa"}, optional DPC parameters to pass to
 #'   \code{limpa::dpcQuant()} / \code{limpa::dpcQuantByRow()}. Can be a list as
-#'   returned by \code{limpa::dpc()}, or a numeric vector \code{c(beta0, beta1)}.
+#'   returned by \code{limpa::dpc()}/\code{limpa::dpcON()}/\code{limpa::dpcCN()},
+#'   or a numeric vector \code{c(beta0, beta1)}.
 #' @param limpaDpcMethod For \code{type="limpa"}, optional method to estimate the
 #'   DPC parameters from the data when \code{limpaDpc} is not supplied.
 #'   \code{"none"} (default) uses a fixed slope (\code{limpaQuantArgs$dpc.slope},
 #'   default \code{0.8}) and lets limpa estimate the intercept internally.
 #'   \code{"dpc"} estimates both DPC parameters from the observed-normal model
-#'   via \code{limpa::dpc()}. \code{"dpcCN"} estimates the DPC from the
+#'   via \code{limpa::dpc()}. \code{"dpcON"} estimates the DPC from the
+#'   observed-normal model via the newer \code{limpa::dpcON()} (for a robust fit,
+#'   set \code{limpaDpcArgs=list(robust=TRUE)}). \code{"dpcCN"} estimates the DPC from the
 #'   complete-normal model via \code{limpa::dpcCN()}, which can be more robust
 #'   for datasets with very large fold-changes.
 #' @param limpaDpcArgs For \code{type="limpa"}, optional named list of additional
-#'   arguments forwarded to \code{limpa::dpc()} or \code{limpa::dpcCN()} when
+#'   arguments forwarded to \code{limpa::dpc()}, \code{limpa::dpcON()}, or \code{limpa::dpcCN()} when
 #'   \code{limpaDpcMethod} is not \code{"none"}. Argument \code{y} is ignored.
-#'   For \code{limpaDpcMethod="dpcCN"}, \code{dpc.slope.start} defaults to
+#'   For \code{limpaDpcMethod="dpcON"} and \code{"dpcCN"}, \code{dpc.slope.start} defaults to
 #'   \code{limpaQuantArgs$dpc.slope}.
 #' @param limpaQuantArgs For \code{type="limpa"}, optional named list of
 #'   additional arguments forwarded to \code{limpa::dpcQuant()} /
@@ -773,7 +780,7 @@ normalyzerDE <- function(
   writeReportAsPngs = FALSE,
   limpaProteinIdCol = "auto",
   limpaDpc = NULL,
-  limpaDpcMethod = c("none", "dpc", "dpcCN"),
+  limpaDpcMethod = c("none", "dpc", "dpcON", "dpcCN"),
   limpaDpcArgs = NULL,
   limpaQuantArgs = NULL,
   limpaQuantifiedRds = NULL,

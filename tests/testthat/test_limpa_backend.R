@@ -489,6 +489,31 @@ test_that("limpa backend can auto-estimate DPC via limpaDpcMethod", {
   expect_true(".global" %in% names(backend$fits))
   expect_true(inherits(backend$fits[[".global"]], "MArrayLM"))
   expect_true(is.matrix(backend$designs[[".global"]]))
+
+  if (exists("dpcON", envir = asNamespace("limpa"), inherits = FALSE)) {
+    out_on <- calculateContrasts(
+      nst,
+      comparisons = "A-B",
+      condCol = "group",
+      type = "limpa",
+      leastRepCount = 1,
+      limpaQuantArgs = list(chunk = 10L),
+      limpaKeep = "fit",
+      limpaDpcMethod = "dpcON",
+      limpaDpcArgs = list(robust = TRUE)
+    )
+
+    backend_on <- backendData(out_on)[["limpa"]]
+    expect_type(backend_on, "list")
+    expect_equal(backend_on$dpcMethod, "dpcON")
+    expect_true(is.numeric(backend_on$dpc))
+    expect_length(backend_on$dpc, 2)
+    expect_true(isTRUE(backend_on$dpcArgs$robust))
+
+    expect_true(".global" %in% names(backend_on$fits))
+    expect_true(inherits(backend_on$fits[[".global"]], "MArrayLM"))
+    expect_true(is.matrix(backend_on$designs[[".global"]]))
+  }
 })
 
 test_that("limpa backend validates limpaDpcArgs by method", {
@@ -561,6 +586,20 @@ test_that("limpa backend validates limpaDpcArgs by method", {
     ),
     "limpaDpcArgs"
   )
+
+  if (exists("dpcON", envir = asNamespace("limpa"), inherits = FALSE)) {
+    expect_error(
+      calculateContrasts(
+        NormalyzerStatistics(se, logTrans = FALSE),
+        comparisons = "A-B",
+        condCol = "group",
+        type = "limpa",
+        limpaDpcMethod = "dpcON",
+        limpaDpcArgs = list(maxit = 10)
+      ),
+      "limpaDpcArgs"
+    )
+  }
 })
 
 test_that("limpa backend accepts and records limpaQuantArgs", {

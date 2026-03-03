@@ -14,7 +14,7 @@ validateLimpaDpc <- function(limpaDpc) {
       !(is.list(limpaDpc) || (is.numeric(limpaDpc) && length(limpaDpc) == 2))
   ) {
     stop(
-      "limpaDpc must be NULL, a list returned by limpa::dpc(), or a numeric vector c(beta0, beta1)."
+      "limpaDpc must be NULL, a list returned by limpa::dpc()/dpcON()/dpcCN(), or a numeric vector c(beta0, beta1)."
     )
   }
 
@@ -246,7 +246,7 @@ inferStableProteinAnnotationCols <- function(genesDf, proteinId, proteinIdCol) {
 
 estimateLimpaDpcFromData <- function(
   dataMat,
-  limpaDpcMethod = c("none", "dpc", "dpcCN"),
+  limpaDpcMethod = c("none", "dpc", "dpcON", "dpcCN"),
   limpaDpcArgs = list(),
   dpcSlope = 0.8,
   verbose = FALSE
@@ -268,6 +268,33 @@ estimateLimpaDpcFromData <- function(
       return(suppressMessages(do.call(limpa::dpc, dpcCall)))
     }
     return(do.call(limpa::dpc, dpcCall))
+  }
+
+  if (identical(method, "dpcON")) {
+    limpaNs <- asNamespace("limpa")
+    if (!exists("dpcON", envir = limpaNs, inherits = FALSE)) {
+      stop(
+        "limpaDpcMethod='dpcON' requires limpa::dpcON(), but it was not found in the installed limpa version. ",
+        "Update limpa or use limpaDpcMethod='dpc'."
+      )
+    }
+    dpcON <- get("dpcON", envir = limpaNs, inherits = FALSE)
+
+    dpcArgsUse <- validateLimpaArgsByFormals(
+      limpaDpcArgs,
+      fn = dpcON,
+      methodLabel = method,
+      argsLabel = "limpaDpcArgs"
+    )
+    if (!("dpc.slope.start" %in% names(dpcArgsUse))) {
+      dpcArgsUse[["dpc.slope.start"]] <- dpcSlope
+    }
+    if (!("verbose" %in% names(dpcArgsUse))) {
+      dpcArgsUse[["verbose"]] <- isTRUE(verbose)
+    }
+
+    dpcCall <- c(list(y = dataMat), dpcArgsUse)
+    return(do.call(dpcON, dpcCall))
   }
 
   dpcArgsUse <- validateLimpaArgsByFormals(
