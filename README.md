@@ -21,54 +21,156 @@ Alternatively:
 
 https://normalyzerde.serve.scilifelab.se
 
-NormalyzerDE is a software designed to ease the process of selecting an optimal normalization approach for your dataset and to perform subsequent differential expression analysis.
+NormalyzerDE is designed to evaluate normalization strategies for expression
+data and to perform differential expression analysis in the same workflow.
 
-NormalyzerDE includes several normalization approaches, a empirical Bayes-based statistical approach implemented as part of Limma and a newly implemented retention-time segmented normalization approach inspired by previously outlined approaches. The emprical-based based statistics has been shown to increase sensitivity over ANOVA when detecting differentially expressed features.
+NormalyzerDE supports delimited matrices, `SummarizedExperiment` objects, and
+DIA-NN reports. It can evaluate normalization methods and perform differential
+expression analysis using limma or limpa. limpa models
+intensity-dependent missingness and propagates quantification uncertainty into
+differential testing.
+
+## Choose your workflow
+
+- Use `normalyzer()` to compare normalization methods and write normalized matrices.
+- Use `normalyzerDE()` to test differential expression on a chosen matrix.
+
+For `limpa` workflows, ambiguous DIA-NN reports default to precursor-level
+input unless `inputOptions` specify the level or columns explicitly.
 
 ## Citation
 
 NormalyzerDE is published [here](https://pubs.acs.org/doi/10.1021/acs.jproteome.8b00523)
 
 Willforss, J., Chawade, A., Levander, F. 
-NormalyzerDE: Online tool for improved normalization of omics expression data and high-sensitivity differential expression analysis. *Journal of Proteome Research* **2018**, 10.1021/acs.jproteome.8b00523.
+NormalyzerDE: Online Tool for Improved Normalization of Omics Expression Data and High-Sensitivity Differential Expression Analysis. *Journal of Proteome Research* **2018**, 10.1021/acs.jproteome.8b00523.
 
 ## Installation
 
-NormalyzerDE can be installed from [Bioconductor](https://www.bioconductor.org/packages/release/bioc/html/NormalyzerDE.html), or directly from GitHub:
+We recommend installation from Bioconductor with
+[BiocManager](https://cran.r-project.org/package=BiocManager):
 
 ```
-install.packages("devtools")
-devtools::install_github("ComputationalProteomics/NormalyzerDE")
+install.packages("BiocManager")
+BiocManager::install("NormalyzerDE")
 ```
 
-## Running NormalyzerDE (minimal example)
+Development versions can also be installed directly from GitHub:
+
+```
+pak::pak("ComputationalProteomics/NormalyzerDE")
+```
+
+## Common workflows
+
+The examples below use simple job names and a temporary output directory.
 
 ```
 library(NormalyzerDE)
+out_dir <- tempdir()
+design_path <- system.file(package="NormalyzerDE", "extdata", "tiny_design.tsv")
+data_path <- system.file(package="NormalyzerDE", "extdata", "tiny_data.tsv")
+norm_job <- "norm_example"
+de_job <- "de_example"
+limpa_norm_job <- "limpa_norm_example"
+limpa_de_job <- "limpa_de_example"
 ```
 
-Generate normalizations and normalization performance report.
+Generate normalized matrices and an evaluation report:
 
 ```
-normalyzer(jobName="rscript_norm", designPath="test_design.tsv", dataPath="test_data.tsv")
+normalyzer(
+  jobName = norm_job,
+  designPath = design_path,
+  dataPath = data_path,
+  outputDir = out_dir
+)
 ```
 
-Calculate differential expression between groups 1-2 and 1-3 (defined in the design matrix).
+Run differential expression on a selected normalized matrix:
 
 ```
-normalyzerDE(jobName="rscript_de", designPath="test_design.tsv", dataPath="test_data.tsv", comparisons=c("1-2", "1-3"))
+norm_matrix_path <- file.path(out_dir, norm_job, "CycLoess-normalized.txt")
+
+normalyzerDE(
+  jobName = de_job,
+  comparisons = "4-5",
+  designPath = design_path,
+  dataPath = norm_matrix_path,
+  outputDir = out_dir,
+  condCol = "group"
+)
 ```
 
-For more comprehensive documentation, check the [Vignette](https://bioconductor.org/packages/devel/bioc/vignettes/NormalyzerDE/inst/doc/vignette.pdf) at NormalyzerDE's [Bioconductor page](https://bioconductor.org/packages/devel/bioc/html/NormalyzerDE.html). More information about required input formats is available [here](https://quantitativeproteomics.org/normalyzerde/help).
-
-## Executing from command line
-
-If you want to run NormalyzerDE directly from the command line this is possible by executing it through the `Rscript` command.
+Use `limpaOptions()` to configure `limpa` workflows:
 
 ```
-Rscript -e 'NormalyzerDE::normalyzer(jobName="rscript_norm", designPath="test_design.tsv", dataPath="test_data.tsv")'
-Rscript -e 'NormalyzerDE::normalyzerDE(jobName="rscript_de", designPath="test_design.tsv", dataPath="test_data.tsv", comparisons=c("1-2", "1-3"))'
+prequant_opts <- limpaOptions(
+  byRow = TRUE,
+  quantArgs = list(chunk = 1000L, verbose = FALSE)
+)
+
+de_opts <- limpaOptions(
+  quantifiedRds = file.path(
+    out_dir,
+    limpa_norm_job,
+    paste0(limpa_norm_job, "_limpa_quantified.rds")
+  ),
+  postQuantNorm = "median",
+  deArgs = list(sample.weights = TRUE)
+)
+
+normalyzer(
+  jobName = limpa_norm_job,
+  designPath = design_path,
+  dataPath = data_path,
+  outputDir = out_dir,
+  preQuant = "limpa",
+  limpaOptions = prequant_opts,
+  normalizeRetentionTime = FALSE
+)
+
+normalyzerDE(
+  jobName = limpa_de_job,
+  comparisons = "4-5",
+  designPath = design_path,
+  dataPath = file.path(out_dir, limpa_norm_job, "log2-normalized.txt"),
+  outputDir = out_dir,
+  condCol = "group",
+  type = "limpa",
+  logTrans = FALSE,
+  limpaOptions = de_opts
+)
 ```
+
+Here, `log2-normalized.txt` is the completed log2 matrix written by
+`normalyzer(preQuant = "limpa")`. Any optional between-sample normalization for
+the differential testing step is controlled by
+`limpaOptions(postQuantNorm = ...)`. Reusing the quantified `EList` is also
+explicit: pass `limpaOptions(quantifiedRds = ...)` when you want `normalyzerDE()`
+to use the saved cache.
+
+In `limpaOptions()`, `postQuantNorm` accepts `"none"`, `"GI"`, `"median"`,
+`"mean"`, `"Quantile"`/`"quantile"`, `"CycLoess"`, and `"RLR"`.
+
+For a fuller walk-through, see the [Vignette](https://bioconductor.org/packages/devel/bioc/vignettes/NormalyzerDE/inst/doc/vignette.pdf) on NormalyzerDE's [Bioconductor page](https://bioconductor.org/packages/devel/bioc/html/NormalyzerDE.html). More information about required input formats is available [here](https://quantitativeproteomics.org/normalyzerde/help).
+
+By default, `normalyzer()` and `normalyzerDE()` stop if the target output
+directory already exists and contains files. This avoids mixing outputs from
+different runs. You can still reuse an existing output directory, but you must
+opt in explicitly with `reuseOutputDir = TRUE`.
+
+## Command-line usage
+
+You can run NormalyzerDE directly from the command line via `Rscript`:
+
+```
+Rscript -e 'NormalyzerDE::normalyzer(jobName="rscript_norm", designPath="test_design.tsv", dataPath="test_data.tsv", outputDir="results")'
+Rscript -e 'NormalyzerDE::normalyzerDE(jobName="rscript_de", designPath="test_design.tsv", dataPath="results/rscript_norm/CycLoess-normalized.txt", outputDir="results", comparisons=c("1-2", "1-3"))'
+```
+
+If you rerun the same command, use a fresh job name or set
+`reuseOutputDir = TRUE`.
 
 ## References
 
@@ -101,16 +203,17 @@ second is for performing differential expression analysis. Classes are contained
 The standard workflow for the normalization is the following:
 
 * The `normalyzer` function in the `NormalyzerDE.R` script is called, starting the process.
-* If applicable (that is, input is in Proteois or MaxQuant format), the dataset is preprocessed into the standard format using code in `preparsers.R`.
+* If applicable, the dataset is preprocessed into the standard format using code in `preparsers.R` or `diann.R`.
 * The input is verified to capture standard errors early on using code in `inputVerification.R`. This results in an instance of the `NormalyzerDataset` class.
 * The data is normalized using several normalization methods present in `normMethods.R`. This yields an instance of `NormalyzerResults` which links to the original `NormalyzerDataset` instance and also contains all the resulting normalized datasets.
+* If `preQuant = "limpa"` is used, helper code in `limpa_utils.R` is used to quantify the input matrix before the Normalyzer normalization step.
 * If specified (and if a column with retention time values is present) retention-time segmented approaches are performed by applying normalizations from `normMethods.R` over retention time using functions present in `higherOrderNormMethods.R`.
 * The results are analyzed using functions present in `analyzeResults.R`. This yields an instance of `NormalyzerEvaluationResults` containing the evaluation results. This instance is attached to the `NormalyzerResults` object.
 * The final results are sent to `outputUtils.R` where the normalizations are written to an output directory, and to `generatePlots.R` which contains visualizations for the performance measures. It also uses code in `printMeta.R` and `printPlots.R` to output the results in a desired format.
 
 When a normalized matrix is selected the analysis proceeds to the statistical analysis.
 
-* The `normalyzerde` function in the `NormalyzerDE.R` script is called starting the differential expression analysis pipeline.
+* The `normalyzerDE` function in the `NormalyzerDE.R` script is called starting the differential expression analysis pipeline.
 * An instance of `NormalyzerStatistics` is prepared containing the input data.
-* Code in the `calculateStatistics.R` script is used to calculate the statistical contrasts. The results are attached to the `NormalyzerStatistics` object.
+* Code in `calculateStatistics.R`, `NormalyzerStatistics.R`, and `limpa_utils.R` is used to calculate the statistical contrasts. The results are attached to the `NormalyzerStatistics` object.
 * The resulting statistics are used to generate a report and an annotated output matrix where key statistical measures are attached to the original matrix.

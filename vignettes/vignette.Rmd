@@ -25,7 +25,7 @@ vignette: >
 
 # Installation
 
-Installation is preferably performed using BiocManager (requires R version >= 3.5):
+We recommend installation from Bioconductor with BiocManager:
 
 ```
 install.packages("BiocManager")
@@ -36,7 +36,10 @@ BiocManager::install("NormalyzerDE")
 
 ## Citing
 
-Willforss, J., Chawade, A., Levander, F. Submitted article.
+Willforss, J., Chawade, A., Levander, F.
+NormalyzerDE: Online Tool for Improved Normalization of Omics Expression Data
+and High-Sensitivity Differential Expression Analysis. *Journal of Proteome
+Research* **2018**, 10.1021/acs.jproteome.8b00523.
 
 ## Input format
 
@@ -99,7 +102,7 @@ an instance of `SummarizedExperiment` sent to the `experimentObj` argument.
 
 ```{r run-normalyzerde}
 normMatrixPath <- paste(outDir, "vignette_run/CycLoess-normalized.txt", sep="/")
-normalyzerDE("vignette_run", 
+normalyzerDE("vignette_run_de", 
              comparisons=c("4-5"),
              designPath=designFp, 
              dataPath=normMatrixPath,
@@ -174,7 +177,10 @@ print("Number of retention times")
 length(retentionTimes)
 ```
 
-The normalization function is expected to take a raw intensity matrix and return log transformed values. We borrow the wrapper function for Loess normalization from NormalyzerDE. It can be replaced with any custom function as long as the wrapper has the same input/output format.
+The normalization function is expected to take a raw intensity matrix and return
+log2-transformed values. We borrow the wrapper function for Loess
+normalization from NormalyzerDE. It can be replaced with any custom function
+as long as the wrapper has the same input/output format.
 
 ```{r rt-define-loess}
 performCyclicLoessNormalization <- function(rawMatrix) {
@@ -232,7 +238,7 @@ NormalyzerDE consists of a set of steps. The workflow can be run as a whole, or 
 This step performs input validation of the data, and generates an object of the class NormalyzerDataset.
 
 ```{r step1-setup-rawdata}
-jobName <- "vignette_run"
+jobName <- "vignette_stepwise"
 experimentObj <- setupRawDataObject(dataFp, designFp, "default", TRUE, "sample", "group")
 normObj <- getVerifiedNormalyzerObject(jobName, experimentObj)
 ```
@@ -263,7 +269,7 @@ normResultsWithEval <- analyzeNormalizations(normResults)
 Generated normalization matrices are written to the provided folder.
 
 ```{r step4-write-matrices}
-jobDir <- setupJobDir("vignette_run", tempdir())
+jobDir <- setupJobDir(jobName, tempdir())
 writeNormalizedDatasets(normResultsWithEval, jobDir)
 ```
 

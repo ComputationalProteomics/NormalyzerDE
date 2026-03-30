@@ -35,8 +35,8 @@ generateStatsReport(
 
 \item{plotCols}{Number of plot columns.}
 
-\item{writeAsPngs}{Output the report as separate PNG files instead of a
-single PDF file}
+\item{writeAsPngs}{Write the report as separate PNG files instead of a
+single PDF}
 }
 \value{
 None

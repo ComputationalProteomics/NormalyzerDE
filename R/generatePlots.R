@@ -5,12 +5,12 @@
 #' They include:
 #'
 #' "Total intensity"
-#' Barplot showing the summed intensity in each sample for thelog2-transformed
+#' Barplot showing the summed intensity in each sample for the log2-transformed
 #' data
 #'
 #' "Total missing"
 #' Barplot showing the number of missing values found in each sample for the
-#' log2-tranformed data
+#' log2-transformed data
 #'
 #' Log2-MDS plot: MDS plot where data is reduced to two dimensions allowing
 #' inspection of the main global changes in the data
@@ -94,7 +94,8 @@
 #' @param jobdir Path to output directory for run.
 #' @param plotRows Number of plot rows.
 #' @param plotCols Number of plot columns.
-#' @param writeAsPngs Output the report as PNG-plots instead of a single PDF
+#' @param writeAsPngs Write the report as separate PNG files instead of a single
+#'   PDF
 #' @return None
 #' @export
 #' @examples
@@ -464,8 +465,8 @@ plotFrontPage <- function(currentjob, currentFont) {
 
   grid::grid.text(
     paste(
-      "Documentation for interpreting this report can be found at",
-      "http://quantitativeproteomics.org/normalyzerde/help"
+      "Documentation for this report is available at",
+      "https://quantitativeproteomics.org/normalyzerde/help"
     ),
     vp = grid::viewport(layout.pos.row = 7),
     just = c("center", "center"),
@@ -518,9 +519,9 @@ plotSampleMappingPage <- function(
   groupStringsWHead <- c(
     list(
       list(
-        groupNbr = "Group nbr.",
+        groupNbr = "Group",
         groupString = "Design group",
-        groupCount = "Nbr. samples in cond."
+        groupCount = "Samples in group"
       ),
       list(groupNbr = "", groupString = "", groupCount = "")
     ),

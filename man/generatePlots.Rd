@@ -17,7 +17,8 @@ generatePlots(nr, jobdir, plotRows = 3, plotCols = 4, writeAsPngs = FALSE)
 
 \item{plotCols}{Number of plot columns.}
 
-\item{writeAsPngs}{Output the report as PNG-plots instead of a single PDF}
+\item{writeAsPngs}{Write the report as separate PNG files instead of a single
+PDF}
 }
 \value{
 None
@@ -27,12 +28,12 @@ They include:
 }
 \details{
 "Total intensity"
-Barplot showing the summed intensity in each sample for thelog2-transformed
+Barplot showing the summed intensity in each sample for the log2-transformed
 data
 
 "Total missing"
 Barplot showing the number of missing values found in each sample for the
-log2-tranformed data
+log2-transformed data
 
 Log2-MDS plot: MDS plot where data is reduced to two dimensions allowing
 inspection of the main global changes in the data
