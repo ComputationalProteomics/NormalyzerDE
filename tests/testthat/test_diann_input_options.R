@@ -23,8 +23,14 @@ test_that("diannInputOptions returns a validated inputOptions list", {
 test_that("diannInputOptions validates arguments and blocks typos", {
   expect_error(diannInputOptions(level = "bad"))
   expect_error(diannInputOptions(sep = ""), class = "normalyzerde_error")
-  expect_error(diannInputOptions(minPositive = -1), class = "normalyzerde_error")
-  expect_error(diannInputOptions(rt = list(column = "RT")), class = "normalyzerde_error")
+  expect_error(
+    diannInputOptions(minPositive = -1),
+    class = "normalyzerde_error"
+  )
+  expect_error(
+    diannInputOptions(rt = list(column = "RT")),
+    class = "normalyzerde_error"
+  )
   expect_error(diannInputOptions(qCutoff = 0.01), class = "normalyzerde_error")
 })
 
@@ -43,10 +49,31 @@ test_that("diannInputOptions validates edge cases for columns/filters/rt", {
     diannInputOptions(qCols = c("Q.Value", "")),
     class = "normalyzerde_error"
   )
-  expect_error(diannInputOptions(qCutoffs = "0.01"), class = "normalyzerde_error")
+  expect_error(
+    diannInputOptions(qCutoffs = "0.01"),
+    class = "normalyzerde_error"
+  )
+  expect_error(
+    diannInputOptions(qCutoffs = c(0.01, NA_real_)),
+    class = "normalyzerde_error"
+  )
+  expect_error(
+    diannInputOptions(qCutoffs = -0.01),
+    class = "normalyzerde_error"
+  )
+  expect_error(
+    diannInputOptions(qCutoffs = 1.01),
+    class = "normalyzerde_error"
+  )
 
-  expect_error(diannInputOptions(rt = c(TRUE, FALSE)), class = "normalyzerde_error")
-  expect_error(diannInputOptions(rt = list(col = "")), class = "normalyzerde_error")
+  expect_error(
+    diannInputOptions(rt = c(TRUE, FALSE)),
+    class = "normalyzerde_error"
+  )
+  expect_error(
+    diannInputOptions(rt = list(col = "")),
+    class = "normalyzerde_error"
+  )
   expect_error(diannInputOptions(rt = 1), class = "normalyzerde_error")
 })
 
@@ -70,6 +97,36 @@ test_that("diannNormalizeInputOptions validates nested list structure", {
     NormalyzerDE:::diannNormalizeInputOptions(list(filters = list(q = 1))),
     class = "normalyzerde_error"
   )
+  expect_error(
+    NormalyzerDE:::diannNormalizeInputOptions(
+      list(filters = list(decoy = "yes"))
+    ),
+    class = "normalyzerde_error"
+  )
+  expect_error(
+    NormalyzerDE:::diannNormalizeInputOptions(
+      list(filters = list(q = list(enable = "yes")))
+    ),
+    class = "normalyzerde_error"
+  )
+  expect_error(
+    NormalyzerDE:::diannNormalizeInputOptions(
+      list(filters = list(q = list(cols = c("Q.Value", ""))))
+    ),
+    class = "normalyzerde_error"
+  )
+  expect_error(
+    NormalyzerDE:::diannNormalizeInputOptions(
+      list(filters = list(q = list(cutoffs = c(0.01, NA_real_))))
+    ),
+    class = "normalyzerde_error"
+  )
+  expect_error(
+    NormalyzerDE:::diannNormalizeInputOptions(
+      list(filters = list(q = list(cutoffs = -0.01)))
+    ),
+    class = "normalyzerde_error"
+  )
 
   expect_error(
     NormalyzerDE:::diannNormalizeInputOptions(list(rt = 1)),
@@ -77,10 +134,31 @@ test_that("diannNormalizeInputOptions validates nested list structure", {
   )
 })
 
+test_that("diannPrecursor preference keeps explicit auto but upgrades implicit defaults", {
+  expect_equal(
+    NormalyzerDE:::diannPreferPrecursorInputOptionsForLimpa(
+      diannInputOptions()
+    )$level,
+    "precursor"
+  )
+
+  expect_equal(
+    NormalyzerDE:::diannPreferPrecursorInputOptionsForLimpa(
+      diannInputOptions(level = "auto")
+    )$level,
+    "auto"
+  )
+
+  expect_equal(
+    NormalyzerDE:::diannPreferPrecursorInputOptionsForLimpa(
+      list(level = "auto")
+    )$level,
+    "auto"
+  )
+})
+
 test_that("diannInputOptions works end-to-end with DIANN q filtering", {
   tmpDir <- withr::local_tempdir(pattern = "diann_input_opts_")
-  dataPath <- file.path(tmpDir, "diann_report_qfilter_opts.tsv")
-  designPath <- file.path(tmpDir, "diann_design_qfilter_opts.tsv")
 
   diannReport <- data.frame(
     Run = c("S1", "S2", "S1", "S2"),
@@ -92,8 +170,12 @@ test_that("diannInputOptions works end-to-end with DIANN q filtering", {
     check.names = FALSE
   )
 
-  nd_write_table(diannReport, dataPath)
-  nd_write_table(nd_two_sample_design(), designPath)
+  paths <- nd_write_data_and_design(
+    tmp_dir = tmpDir,
+    data = diannReport,
+    data_name = "diann_report_qfilter_opts.tsv",
+    design_name = "diann_design_qfilter_opts.tsv"
+  )
 
   opts <- diannInputOptions(
     level = "precursor",
@@ -104,8 +186,8 @@ test_that("diannInputOptions works end-to-end with DIANN q filtering", {
   )
 
   se <- setupRawContrastObject(
-    dataPath = dataPath,
-    designPath = designPath,
+    dataPath = paths$dataPath,
+    designPath = paths$designPath,
     sampleColName = "sample",
     inputFormat = "diann",
     inputOptions = opts

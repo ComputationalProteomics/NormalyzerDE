@@ -110,7 +110,10 @@ Normalyzer normalization evaluation. Use \code{"limpa"} to first complete
 the data matrix with \code{limpa::dpcQuant()} / \code{limpa::dpcQuantByRow()}
 and then evaluate Normalyzer normalizations on the post-quant log2 matrix.
 This follows the recommended way to use limpa (quantify first, then
-normalize). When enabled, the quantified \code{EList} is saved as
+normalize). For \code{preQuant="limpa"} with \code{inputFormat="diann"},
+ambiguous DIA-NN reports default to precursor-level input unless
+\code{inputOptions} explicitly sets the level or columns. When enabled, the
+quantified \code{EList} is saved as
 an RDS file \code{<jobDir>/<basename(jobDir)>_limpa_quantified.rds} for reuse with
 \code{\link{normalyzerDE}} via \code{limpaQuantifiedRds}.}
 

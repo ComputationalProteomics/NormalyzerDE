@@ -1019,21 +1019,10 @@ setMethod(
         }
       }
 
-      if (
-        length(dataRowIds) == length(cachedRowIds) &&
-          anyDuplicated(cachedRowIds) == 0
-      ) {
-        cli::cli_warn(
-          "Could not match {.arg limpaQuantifiedRds} row identifiers by name; assuming row order matches the input matrix.",
-          class = "normalyzerde_warning",
-          call = NULL
-        )
-        return(stats::setNames(cachedRowIds, dataRowIds))
-      }
-
       cli::cli_abort(
         c(
-          "{.arg limpaQuantifiedRds} row identifiers could not be matched to the data matrix.",
+          "{.arg quantifiedRds} row identifiers could not be matched to the data matrix.",
+          i = "Row-order fallback is not allowed because it can silently misalign cached missingness metadata.",
           i = "Ensure the quantified {.code EList} was generated from the same matrix (rows), or provide matching row names."
         ),
         class = "normalyzerde_error",

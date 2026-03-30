@@ -64,7 +64,10 @@
 #'   the data matrix with \code{limpa::dpcQuant()} / \code{limpa::dpcQuantByRow()}
 #'   and then evaluate Normalyzer normalizations on the post-quant log2 matrix.
 #'   This follows the recommended way to use limpa (quantify first, then
-#'   normalize). When enabled, the quantified \code{EList} is saved as
+#'   normalize). For \code{preQuant="limpa"} with \code{inputFormat="diann"},
+#'   ambiguous DIA-NN reports default to precursor-level input unless
+#'   \code{inputOptions} explicitly sets the level or columns. When enabled, the
+#'   quantified \code{EList} is saved as
 #'   an RDS file \code{<jobDir>/<basename(jobDir)>_limpa_quantified.rds} for reuse with
 #'   \code{\link{normalyzerDE}} via \code{limpaQuantifiedRds}.
 #' @param limpaProteinIdCol For \code{preQuant="limpa"}, optionally summarize
@@ -187,7 +190,23 @@ normalyzer <- function(
   }
 
   if (is.null(experimentObj)) {
+    inputOptionsUse <- inputOptions
     if (identical(preQuantUse, "limpa") && identical(inputFormat, "diann")) {
+      inputOptionsResolved <- diannPreferPrecursorInputOptionsForLimpa(
+        inputOptionsUse
+      )
+      if (
+        !quiet &&
+          diannWasDefaultedToPrecursorForLimpa(
+            inputOptionsUse,
+            inputOptionsResolved
+          )
+      ) {
+        cli::cli_alert_info(
+          "For {.arg inputFormat}={.val diann} with {.arg preQuant}={.val limpa}, defaulting to precursor-level DIA-NN columns because {.arg inputOptions} did not specify the level or columns explicitly."
+        )
+      }
+      inputOptionsUse <- inputOptionsResolved
       oldWarn <- getOption("NormalyzerDE.warnDiannAutoAmbiguous")
       options(NormalyzerDE.warnDiannAutoAmbiguous = TRUE)
       on.exit(
@@ -202,7 +221,7 @@ normalyzer <- function(
       zeroToNA = zeroToNA,
       sampleColName = sampleColName,
       groupColName = groupColName,
-      inputOptions = inputOptions
+      inputOptions = inputOptionsUse
     )
   } else {
     verifySummarizedExperiment(experimentObj, sampleColName)
@@ -595,7 +614,9 @@ normalyzer <- function(
 #' can be performed upstream (for example by the quantification tool or via
 #' \code{\link{normalyzer}}) or after \code{limpa::dpcQuant()} using
 #' \code{limpaPostQuantNorm}. Avoid applying multiple normalizations
-#' unintentionally.
+#' unintentionally. For \code{type="limpa"} with \code{inputFormat="diann"},
+#' ambiguous DIA-NN reports default to precursor-level input unless
+#' \code{inputOptions} explicitly sets the level or columns.
 #'
 #' For PTM-level data (e.g., phosphoproteomics) where each row corresponds to a
 #' modified site, set \code{limpaByRow=TRUE} (or \code{limpaProteinIdCol=NULL})
@@ -883,12 +904,36 @@ normalyzerDE <- function(
   safeJobName <- basename(jobDir)
 
   if (is.null(experimentObj)) {
+    inputOptionsUse <- inputOptions
+    if (isLimpa && identical(inputFormat, "diann")) {
+      inputOptionsResolved <- diannPreferPrecursorInputOptionsForLimpa(
+        inputOptionsUse
+      )
+      if (
+        !quiet &&
+          diannWasDefaultedToPrecursorForLimpa(
+            inputOptionsUse,
+            inputOptionsResolved
+          )
+      ) {
+        cli::cli_alert_info(
+          "For {.arg inputFormat}={.val diann} with {.arg type}={.val limpa}, defaulting to precursor-level DIA-NN columns because {.arg inputOptions} did not specify the level or columns explicitly."
+        )
+      }
+      inputOptionsUse <- inputOptionsResolved
+      oldWarn <- getOption("NormalyzerDE.warnDiannAutoAmbiguous")
+      options(NormalyzerDE.warnDiannAutoAmbiguous = TRUE)
+      on.exit(
+        options(NormalyzerDE.warnDiannAutoAmbiguous = oldWarn),
+        add = TRUE
+      )
+    }
     experimentObj <- setupRawContrastObject(
       dataPath,
       designPath,
       sampleCol,
       inputFormat = inputFormat,
-      inputOptions = inputOptions
+      inputOptions = inputOptionsUse
     )
   } else {
     verifySummarizedExperiment(experimentObj, sampleCol)

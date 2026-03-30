@@ -39,7 +39,9 @@ carry along as row annotation.}
 \item{decoy}{Whether to filter out decoys when the DIA-NN report includes a
 `"Decoy"` column.}
 
-\item{qEnable}{Whether to filter rows by q-values when available.}
+\item{qEnable}{Whether to filter rows by q-values when available. Rows are
+filtered when one or more q-values exceed their cutoffs; missing q-values
+are retained.}
 
 \item{qCols}{Character vector of q-value columns to use. Use `NULL` or
 `"auto"` to select reasonable defaults, or `"none"` to disable q-value
@@ -59,9 +61,8 @@ name, or `list(col = "<name>")`.}
 A list suitable to pass as `inputOptions`.
 }
 \description{
-Helper to construct an `inputOptions` list for `inputFormat = "diann"`. This
-keeps DIA-NN-specific parameters out of the main entrypoint signatures while
-still providing a typo-safe, validated API.
+Helper to construct an `inputOptions` list for `inputFormat = "diann"` and
+validate the supplied fields.
 }
 \examples{
 diannInputOptions(

@@ -2,8 +2,6 @@ context("DIANN input")
 
 test_that("setupRawDataObject reads DIANN pg_matrix and aligns sample names", {
   tmpDir <- withr::local_tempdir(pattern = "diann_pg_matrix_")
-  dataPath <- file.path(tmpDir, "diann_pg_matrix.tsv")
-  designPath <- file.path(tmpDir, "diann_design.tsv")
 
   diannMatrix <- data.frame(
     `Protein.Group` = c("P1", "P2"),
@@ -19,12 +17,17 @@ test_that("setupRawDataObject reads DIANN pg_matrix and aligns sample names", {
 
   design <- nd_two_sample_design()
 
-  nd_write_table(diannMatrix, dataPath)
-  nd_write_table(design, designPath)
+  paths <- nd_write_data_and_design(
+    tmp_dir = tmpDir,
+    data = diannMatrix,
+    design = design,
+    data_name = "diann_pg_matrix.tsv",
+    design_name = "diann_design.tsv"
+  )
 
   se <- setupRawDataObject(
-    dataPath = dataPath,
-    designPath = designPath,
+    dataPath = paths$dataPath,
+    designPath = paths$designPath,
     inputFormat = "diann",
     sampleColName = "sample",
     groupColName = "group"
@@ -41,8 +44,6 @@ test_that("setupRawDataObject reads DIANN pg_matrix and aligns sample names", {
 
 test_that("setupRawDataObject reads DIANN report.tsv and aggregates duplicates", {
   tmpDir <- withr::local_tempdir(pattern = "diann_report_")
-  dataPath <- file.path(tmpDir, "diann_report.tsv")
-  designPath <- file.path(tmpDir, "diann_design_report.tsv")
 
   diannReport <- data.frame(
     `File.Name` = c(
@@ -62,12 +63,17 @@ test_that("setupRawDataObject reads DIANN report.tsv and aggregates duplicates",
 
   design <- nd_two_sample_design()
 
-  nd_write_table(diannReport, dataPath)
-  nd_write_table(design, designPath)
+  paths <- nd_write_data_and_design(
+    tmp_dir = tmpDir,
+    data = diannReport,
+    design = design,
+    data_name = "diann_report.tsv",
+    design_name = "diann_design_report.tsv"
+  )
 
   se <- setupRawDataObject(
-    dataPath = dataPath,
-    designPath = designPath,
+    dataPath = paths$dataPath,
+    designPath = paths$designPath,
     inputFormat = "diann",
     sampleColName = "sample",
     groupColName = "group"
@@ -90,8 +96,6 @@ test_that("setupRawDataObject reads DIANN report.tsv and aggregates duplicates",
 
 test_that("DIANN report q-value filtering removes failing rows/features", {
   tmpDir <- withr::local_tempdir(pattern = "diann_qfilter_")
-  dataPath <- file.path(tmpDir, "diann_report_qfilter.tsv")
-  designPath <- file.path(tmpDir, "diann_design_qfilter.tsv")
 
   diannReport <- data.frame(
     Run = c("S1", "S2", "S1", "S2"),
@@ -105,12 +109,17 @@ test_that("DIANN report q-value filtering removes failing rows/features", {
 
   design <- nd_two_sample_design()
 
-  nd_write_table(diannReport, dataPath)
-  nd_write_table(design, designPath)
+  paths <- nd_write_data_and_design(
+    tmp_dir = tmpDir,
+    data = diannReport,
+    design = design,
+    data_name = "diann_report_qfilter.tsv",
+    design_name = "diann_design_qfilter.tsv"
+  )
 
   se <- setupRawContrastObject(
-    dataPath = dataPath,
-    designPath = designPath,
+    dataPath = paths$dataPath,
+    designPath = paths$designPath,
     sampleColName = "sample",
     inputFormat = "diann",
     inputOptions = list(
@@ -132,10 +141,58 @@ test_that("DIANN report q-value filtering removes failing rows/features", {
   expect_true(ann$Precursor.Id[1] == "pep1")
 })
 
+test_that("DIANN q-value filtering keeps rows with missing q-values", {
+  tmpDir <- withr::local_tempdir(pattern = "diann_qfilter_missing_q_")
+
+  diannReport <- data.frame(
+    Run = c("S1", "S2", "S1", "S2"),
+    `Precursor.Id` = c("pep1", "pep1", "pep2", "pep2"),
+    `Protein.Group` = c("P1", "P1", "P2", "P2"),
+    `Precursor.Quantity` = c(100, 200, 300, 400),
+    `Q.Value` = c(NA_real_, NA_real_, 0.005, 0.005),
+    stringsAsFactors = FALSE,
+    check.names = FALSE
+  )
+
+  paths <- nd_write_data_and_design(
+    tmp_dir = tmpDir,
+    data = diannReport,
+    data_name = "diann_report_qfilter_missing_q.tsv",
+    design_name = "diann_design_qfilter_missing_q.tsv"
+  )
+
+  se <- setupRawContrastObject(
+    dataPath = paths$dataPath,
+    designPath = paths$designPath,
+    sampleColName = "sample",
+    inputFormat = "diann",
+    inputOptions = diannInputOptions(
+      level = "precursor",
+      quantityCol = "Precursor.Quantity",
+      qCols = "Q.Value",
+      qCutoffs = 0.01,
+      rt = FALSE
+    )
+  )
+
+  mat <- SummarizedExperiment::assay(se)
+  ann <- as.data.frame(
+    SummarizedExperiment::rowData(se),
+    stringsAsFactors = FALSE
+  )
+
+  expect_equal(nrow(mat), 2)
+  expect_equal(ann$Precursor.Id, c("pep1", "pep2"))
+
+  pep1 <- which(ann$Precursor.Id == "pep1")
+  pep2 <- which(ann$Precursor.Id == "pep2")
+
+  expect_equal(as.numeric(mat[pep1, ]), c(100, 200))
+  expect_equal(as.numeric(mat[pep2, ]), c(300, 400))
+})
+
 test_that("DIANN report precursor-level reading adds median RT annotation", {
   tmpDir <- withr::local_tempdir(pattern = "diann_rt_")
-  dataPath <- file.path(tmpDir, "diann_report_rt.tsv")
-  designPath <- file.path(tmpDir, "diann_design_rt.tsv")
 
   diannReport <- data.frame(
     Run = c("S1", "S1", "S2", "S2"),
@@ -150,12 +207,17 @@ test_that("DIANN report precursor-level reading adds median RT annotation", {
 
   design <- nd_two_sample_design()
 
-  nd_write_table(diannReport, dataPath)
-  nd_write_table(design, designPath)
+  paths <- nd_write_data_and_design(
+    tmp_dir = tmpDir,
+    data = diannReport,
+    design = design,
+    data_name = "diann_report_rt.tsv",
+    design_name = "diann_design_rt.tsv"
+  )
 
   se <- setupRawDataObject(
-    dataPath = dataPath,
-    designPath = designPath,
+    dataPath = paths$dataPath,
+    designPath = paths$designPath,
     inputFormat = "diann",
     sampleColName = "sample",
     groupColName = "group",
@@ -183,8 +245,6 @@ test_that("DIANN report precursor-level reading adds median RT annotation", {
 
 test_that("DIANN min-positive threshold converts tiny values to NA", {
   tmpDir <- withr::local_tempdir(pattern = "diann_minpos_")
-  dataPath <- file.path(tmpDir, "diann_report_minpos.tsv")
-  designPath <- file.path(tmpDir, "diann_design_minpos.tsv")
 
   diannReport <- data.frame(
     Run = c("S1", "S2"),
@@ -198,12 +258,17 @@ test_that("DIANN min-positive threshold converts tiny values to NA", {
 
   design <- nd_two_sample_design()
 
-  nd_write_table(diannReport, dataPath)
-  nd_write_table(design, designPath)
+  paths <- nd_write_data_and_design(
+    tmp_dir = tmpDir,
+    data = diannReport,
+    design = design,
+    data_name = "diann_report_minpos.tsv",
+    design_name = "diann_design_minpos.tsv"
+  )
 
   se <- setupRawContrastObject(
-    dataPath = dataPath,
-    designPath = designPath,
+    dataPath = paths$dataPath,
+    designPath = paths$designPath,
     sampleColName = "sample",
     inputFormat = "diann",
     inputOptions = list(
@@ -230,8 +295,6 @@ test_that("DIANN min-positive threshold converts tiny values to NA", {
 
 test_that("DIANN level option selects precursor vs protein", {
   tmpDir <- withr::local_tempdir(pattern = "diann_level_")
-  dataPath <- file.path(tmpDir, "diann_report_level.tsv")
-  designPath <- file.path(tmpDir, "diann_design_level.tsv")
 
   diannReport <- data.frame(
     Run = c("S1", "S1", "S2", "S2"),
@@ -247,12 +310,17 @@ test_that("DIANN level option selects precursor vs protein", {
 
   design <- nd_two_sample_design()
 
-  nd_write_table(diannReport, dataPath)
-  nd_write_table(design, designPath)
+  paths <- nd_write_data_and_design(
+    tmp_dir = tmpDir,
+    data = diannReport,
+    design = design,
+    data_name = "diann_report_level.tsv",
+    design_name = "diann_design_level.tsv"
+  )
 
   seProtein <- setupRawContrastObject(
-    dataPath = dataPath,
-    designPath = designPath,
+    dataPath = paths$dataPath,
+    designPath = paths$designPath,
     sampleColName = "sample",
     inputFormat = "diann",
     inputOptions = list(level = "protein")
@@ -269,8 +337,8 @@ test_that("DIANN level option selects precursor vs protein", {
   expect_equal(as.numeric(protMat[1, "S2"]), 200)
 
   sePrec <- setupRawContrastObject(
-    dataPath = dataPath,
-    designPath = designPath,
+    dataPath = paths$dataPath,
+    designPath = paths$designPath,
     sampleColName = "sample",
     inputFormat = "diann",
     inputOptions = list(level = "precursor")
@@ -391,7 +459,9 @@ test_that("diannChooseReportSpec validates and infers sample/feature/quantity co
   expect_equal(inferredProtein$sampleCol, "Run")
   expect_equal(inferredProtein$featureCol, "Protein.Group")
   expect_equal(inferredProtein$quantityCol, "PG.Quantity")
-  expect_true(all(c("Protein.Group", "Protein.Names") %in% inferredProtein$extraCols))
+  expect_true(all(
+    c("Protein.Group", "Protein.Names") %in% inferredProtein$extraCols
+  ))
   expect_equal(inferredProtein$decoyCol, "Decoy")
 
   inferredPrec <- NormalyzerDE:::diannChooseReportSpec(
@@ -408,6 +478,61 @@ test_that("diannChooseReportSpec validates and infers sample/feature/quantity co
   expect_equal(inferredPrec$featureCol, "Precursor.Id")
   expect_equal(inferredPrec$quantityCol, "Precursor.Quantity")
   expect_true("Precursor.Id" %in% inferredPrec$extraCols)
+
+  inferredFromQuantity <- NormalyzerDE:::diannChooseReportSpec(
+    c(
+      "Run",
+      "Protein.Group",
+      "Precursor.Id",
+      "Precursor.Quantity"
+    ),
+    diannLevel = "auto",
+    diannQuantityCol = "Precursor.Quantity"
+  )
+  expect_equal(inferredFromQuantity$featureCol, "Precursor.Id")
+  expect_equal(inferredFromQuantity$quantityCol, "Precursor.Quantity")
+
+  expect_error(
+    NormalyzerDE:::diannChooseReportSpec(
+      c(
+        "Run",
+        "Protein.Group",
+        "Precursor.Id",
+        "Precursor.Quantity"
+      ),
+      diannFeatureCol = "Protein.Group",
+      diannQuantityCol = "Precursor.Quantity"
+    ),
+    class = "normalyzerde_error"
+  )
+
+  expect_error(
+    NormalyzerDE:::diannChooseReportSpec(
+      c(
+        "Run",
+        "Protein.Group",
+        "Precursor.Id",
+        "Precursor.Quantity"
+      ),
+      diannLevel = "protein",
+      diannQuantityCol = "Precursor.Quantity"
+    ),
+    class = "normalyzerde_error"
+  )
+
+  expect_error(
+    NormalyzerDE:::diannChooseReportSpec(
+      c(
+        "Run",
+        "Protein.Group",
+        "Precursor.Id",
+        "CustomQuantity"
+      ),
+      diannLevel = "auto",
+      diannQuantityCol = "CustomQuantity"
+    ),
+    class = "normalyzerde_error"
+  )
 })
 
 test_that("readDiannToDataFrame warns when requested extra columns are missing", {
@@ -438,6 +563,35 @@ test_that("readDiannToDataFrame warns when requested extra columns are missing",
   expect_true("Protein.Group" %in% colnames(wide))
   expect_true("Protein.Names" %in% colnames(wide))
   expect_false("MissingExtra" %in% colnames(wide))
+})
+
+test_that("readDiannToDataFrame errors for ambiguous custom quantity columns", {
+  tmpDir <- withr::local_tempdir(pattern = "diann_custom_quantity_")
+
+  reportPath <- file.path(tmpDir, "diann_report.tsv")
+  diannReport <- data.frame(
+    Run = c("S1", "S2"),
+    `Protein.Group` = c("P1", "P1"),
+    `Precursor.Id` = c("prec1", "prec1"),
+    CustomQuantity = c(100, 200),
+    stringsAsFactors = FALSE,
+    check.names = FALSE
+  )
+  nd_write_table(diannReport, reportPath)
+
+  expect_error(
+    readDiannToDataFrame(
+      reportPath,
+      designSampleNames = c("S1", "S2"),
+      inputOptions = diannInputOptions(
+        level = "auto",
+        quantityCol = "CustomQuantity",
+        qEnable = FALSE,
+        rt = FALSE
+      )
+    ),
+    class = "normalyzerde_error"
+  )
 })
 
 test_that("readDiannToDataFrame supports empty extraCols and disabling q filtering", {
@@ -495,8 +649,214 @@ test_that("readDiannToDataFrame warns about ambiguous auto inference only when e
   )
 })
 
-test_that("normalyzer preQuant=limpa warns when DIANN auto inference is ambiguous", {
+test_that("normalyzer preQuant=limpa warns for an explicit DIANN auto request", {
   tmpDir <- withr::local_tempdir(pattern = "normalyzer_limpa_diann_auto_ambig_")
+
+  reportPath <- file.path(tmpDir, "diann_report.tsv")
+  designPath <- file.path(tmpDir, "design.tsv")
+
+  diannReport <- data.frame(
+    Run = c("S1", "S2"),
+    `Protein.Group` = c("P1", "P1"),
+    `PG.MaxLFQ` = c(1000, 2000),
+    `Precursor.Id` = c("pep1", "pep1"),
+    `Precursor.Quantity` = c(10000, 20000),
+    stringsAsFactors = FALSE,
+    check.names = FALSE
+  )
+  nd_write_table(diannReport, reportPath)
+
+  design <- data.frame(
+    sample = c("S1", "S2"),
+    group = c("A", "B"),
+    stringsAsFactors = FALSE
+  )
+  nd_write_table(design, designPath)
+
+  warnings <- character()
+  out <- tryCatch(
+    withCallingHandlers(
+      normalyzer(
+        jobName = "diann_auto_ambig",
+        designPath = designPath,
+        dataPath = reportPath,
+        outputDir = tmpDir,
+        inputFormat = "diann",
+        inputOptions = diannInputOptions(level = "auto", rt = FALSE),
+        preQuant = "limpa",
+        skipAnalysis = TRUE,
+        normalizeRetentionTime = FALSE,
+        requireReplicates = FALSE,
+        sampleAbundThres = 1,
+        quiet = TRUE
+      ),
+      warning = function(w) {
+        warnings <<- c(warnings, conditionMessage(w))
+        invokeRestart("muffleWarning")
+      }
+    ),
+    error = identity
+  )
+
+  expect_true(inherits(out, "error"))
+  expect_true(any(grepl("both protein-level and precursor-level", warnings)))
+})
+
+test_that("normalyzer preQuant=limpa prefers precursor-level DIANN input by default", {
+  testthat::skip_if_not_installed("limpa")
+
+  tmpDir <- withr::local_tempdir(
+    pattern = "normalyzer_limpa_diann_precursor_default_"
+  )
+
+  reportPath <- file.path(tmpDir, "diann_report.tsv")
+  designPath <- file.path(tmpDir, "design.tsv")
+  design <- nd_balanced_diann_design()
+
+  nd_write_table(nd_make_ambiguous_diann_report(design = design), reportPath)
+  nd_write_table(design, designPath)
+
+  outDefault <- file.path(tmpDir, "default")
+  outExplicit <- file.path(tmpDir, "explicit")
+  defaultWarnings <- character()
+  explicitWarnings <- character()
+
+  withCallingHandlers(
+    normalyzer(
+      jobName = "diann_limpa_default",
+      designPath = designPath,
+      dataPath = reportPath,
+      outputDir = outDefault,
+      inputFormat = "diann",
+      preQuant = "limpa",
+      skipAnalysis = TRUE,
+      normalizeRetentionTime = FALSE,
+      requireReplicates = FALSE,
+      sampleAbundThres = 1,
+      quiet = TRUE
+    ),
+    warning = function(w) {
+      defaultWarnings <<- c(defaultWarnings, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  )
+
+  withCallingHandlers(
+    normalyzer(
+      jobName = "diann_limpa_explicit",
+      designPath = designPath,
+      dataPath = reportPath,
+      outputDir = outExplicit,
+      inputFormat = "diann",
+      inputOptions = diannInputOptions(level = "precursor", rt = FALSE),
+      preQuant = "limpa",
+      skipAnalysis = TRUE,
+      normalizeRetentionTime = FALSE,
+      requireReplicates = FALSE,
+      sampleAbundThres = 1,
+      quiet = TRUE
+    ),
+    warning = function(w) {
+      explicitWarnings <<- c(explicitWarnings, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  )
+
+  defaultRds <- readRDS(file.path(
+    outDefault,
+    "diann_limpa_default",
+    "diann_limpa_default_limpa_quantified.rds"
+  ))
+  explicitRds <- readRDS(file.path(
+    outExplicit,
+    "diann_limpa_explicit",
+    "diann_limpa_explicit_limpa_quantified.rds"
+  ))
+
+  expect_equal(defaultRds$E, explicitRds$E)
+  expect_equal(defaultRds$genes, explicitRds$genes)
+  expect_false(any(grepl(
+    "both protein-level and precursor-level",
+    defaultWarnings
+  )))
+  expect_false(any(grepl(
+    "both protein-level and precursor-level",
+    explicitWarnings
+  )))
+})
+
+test_that("normalyzerDE type=limpa prefers precursor-level DIANN input by default", {
+  testthat::skip_if_not_installed("limpa")
+
+  tmpDir <- withr::local_tempdir(
+    pattern = "normalyzerde_limpa_diann_precursor_default_"
+  )
+
+  reportPath <- file.path(tmpDir, "diann_report.tsv")
+  designPath <- file.path(tmpDir, "design.tsv")
+  design <- nd_balanced_diann_design()
+
+  nd_write_table(nd_make_ambiguous_diann_report(design = design), reportPath)
+  nd_write_table(design, designPath)
+
+  outDefault <- file.path(tmpDir, "default")
+  outExplicit <- file.path(tmpDir, "explicit")
+
+  suppressWarnings(normalyzerDE(
+    jobName = "diann_limpa_default",
+    comparisons = "A-B",
+    designPath = designPath,
+    dataPath = reportPath,
+    outputDir = outDefault,
+    inputFormat = "diann",
+    type = "limpa",
+    limpaProteinIdCol = "Protein.Group",
+    logTrans = TRUE,
+    quiet = TRUE
+  ))
+
+  suppressWarnings(normalyzerDE(
+    jobName = "diann_limpa_explicit",
+    comparisons = "A-B",
+    designPath = designPath,
+    dataPath = reportPath,
+    outputDir = outExplicit,
+    inputFormat = "diann",
+    inputOptions = diannInputOptions(level = "precursor", rt = FALSE),
+    type = "limpa",
+    limpaProteinIdCol = "Protein.Group",
+    logTrans = TRUE,
+    quiet = TRUE
+  ))
+
+  defaultStats <- utils::read.delim(
+    file.path(
+      outDefault,
+      "diann_limpa_default",
+      "diann_limpa_default_stats.tsv"
+    ),
+    check.names = FALSE,
+    stringsAsFactors = FALSE
+  )
+  explicitStats <- utils::read.delim(
+    file.path(
+      outExplicit,
+      "diann_limpa_explicit",
+      "diann_limpa_explicit_stats.tsv"
+    ),
+    check.names = FALSE,
+    stringsAsFactors = FALSE
+  )
+
+  expect_equal(defaultStats, explicitStats)
+})
+
+test_that("normalyzerDE type=limpa preserves an explicit DIANN auto request", {
+  testthat::skip_if_not_installed("limpa")
+
+  tmpDir <- withr::local_tempdir(
+    pattern = "normalyzerde_limpa_diann_explicit_auto_"
+  )
 
   reportPath <- file.path(tmpDir, "diann_report.tsv")
   designPath <- file.path(tmpDir, "design.tsv")
@@ -522,13 +882,17 @@ test_that("normalyzer preQuant=limpa warns when DIANN auto inference is ambiguou
   warnings <- character()
   err <- tryCatch(
     withCallingHandlers(
-      normalyzer(
-        jobName = "diann_auto_ambig",
+      normalyzerDE(
+        jobName = "diann_limpa_auto",
+        comparisons = "A-B",
         designPath = designPath,
         dataPath = reportPath,
         outputDir = tmpDir,
         inputFormat = "diann",
-        preQuant = "limpa",
+        inputOptions = diannInputOptions(level = "auto", rt = FALSE),
+        type = "limpa",
+        limpaProteinIdCol = "Protein.Group",
+        logTrans = TRUE,
         quiet = TRUE
       ),
       warning = function(w) {
@@ -631,6 +995,42 @@ test_that("readDiannToDataFrame errors on duplicate sample names after stripping
   )
 })
 
+test_that("readDiannToDataFrame maps repeated DIA-NN report rows to cleaned design sample names", {
+  tmpDir <- withr::local_tempdir(pattern = "diann_report_clean_names_")
+
+  reportPath <- file.path(tmpDir, "diann_report.tsv")
+  diannReport <- data.frame(
+    `File.Name` = c(
+      "/path/S1.raw",
+      "/path/S1.raw",
+      "/path/S2.raw",
+      "/path/S2.raw"
+    ),
+    `Precursor.Id` = c("pep1", "pep2", "pep1", "pep2"),
+    `Precursor.Quantity` = c(100, 150, 200, 250),
+    `Q.Value` = c(0.001, 0.001, 0.001, 0.001),
+    stringsAsFactors = FALSE,
+    check.names = FALSE
+  )
+  nd_write_table(diannReport, reportPath)
+
+  out <- readDiannToDataFrame(
+    reportPath,
+    designSampleNames = c("S1", "S2"),
+    inputOptions = diannInputOptions(
+      level = "precursor",
+      sampleCol = "File.Name",
+      quantityCol = "Precursor.Quantity",
+      qCols = "Q.Value",
+      rt = FALSE
+    )
+  )
+
+  expect_true(all(c("S1", "S2") %in% colnames(out)))
+  expect_equal(out$S1, c(100, 150))
+  expect_equal(out$S2, c(200, 250))
+})
+
 test_that("readDiannToDataFrame applies min_positive filtering for DIA-NN matrices", {
   tmpDir <- withr::local_tempdir(pattern = "diann_matrix_minpos_")
 
@@ -686,7 +1086,10 @@ test_that("diannFilterDecoys supports logical, numeric and string decoy columns"
     Decoy = c(TRUE, FALSE, NA),
     stringsAsFactors = FALSE
   )
-  outLogical <- NormalyzerDE:::diannFilterDecoys(reportLogical, decoyCol = "Decoy")
+  outLogical <- NormalyzerDE:::diannFilterDecoys(
+    reportLogical,
+    decoyCol = "Decoy"
+  )
   expect_equal(nrow(outLogical), 2)
 
   reportNumeric <- data.frame(
@@ -694,7 +1097,10 @@ test_that("diannFilterDecoys supports logical, numeric and string decoy columns"
     Decoy = c(1, 0, NA),
     stringsAsFactors = FALSE
   )
-  outNumeric <- NormalyzerDE:::diannFilterDecoys(reportNumeric, decoyCol = "Decoy")
+  outNumeric <- NormalyzerDE:::diannFilterDecoys(
+    reportNumeric,
+    decoyCol = "Decoy"
+  )
   expect_equal(nrow(outNumeric), 2)
 
   reportString <- data.frame(
@@ -702,7 +1108,10 @@ test_that("diannFilterDecoys supports logical, numeric and string decoy columns"
     Decoy = c("TRUE", "false", "1", "0", "yes", "no", NA),
     stringsAsFactors = FALSE
   )
-  outString <- NormalyzerDE:::diannFilterDecoys(reportString, decoyCol = "Decoy")
+  outString <- NormalyzerDE:::diannFilterDecoys(
+    reportString,
+    decoyCol = "Decoy"
+  )
   expect_equal(nrow(outString), 4)
   expect_true(all(outString$x %in% c(2, 4, 6, 7)))
 })

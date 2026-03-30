@@ -232,7 +232,9 @@ missing values encoded as \code{NA}. Between-sample normalization (if desired)
 can be performed upstream (for example by the quantification tool or via
 \code{\link{normalyzer}}) or after \code{limpa::dpcQuant()} using
 \code{limpaPostQuantNorm}. Avoid applying multiple normalizations
-unintentionally.
+unintentionally. For \code{type="limpa"} with \code{inputFormat="diann"},
+ambiguous DIA-NN reports default to precursor-level input unless
+\code{inputOptions} explicitly sets the level or columns.
 
 For PTM-level data (e.g., phosphoproteomics) where each row corresponds to a
 modified site, set \code{limpaByRow=TRUE} (or \code{limpaProteinIdCol=NULL})

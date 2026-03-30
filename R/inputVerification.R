@@ -559,8 +559,12 @@ verifyValidNumbers <- function(
   }
 
   if (!noLogTransform) {
-    belowOnePattern <- c("^0.\\d+$")
-    belowOneMatches <- grep(belowOnePattern, rawDataOnly, perl = TRUE)
+    numericVals <- suppressWarnings(as.numeric(rawDataOnly))
+    belowOneMatches <- which(
+      is.finite(numericVals) &
+        numericVals > 0 &
+        numericVals < 1
+    )
 
     if (length(belowOneMatches) > 0) {
       rowsWithIssues <- unique((belowOneMatches - 1) %% nrow(rawDataOnly) + 1)

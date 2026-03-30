@@ -39,16 +39,9 @@ test_that("calculateContrasts supports type='limpa'", {
   )
   colnames(test_data) <- paste0("s", seq_len(ncol(test_data)))
 
-  design <- data.frame(
-    sample = colnames(test_data),
-    group = c("A", "A", "A", "B", "B", "B")
-  )
-  rownames(design) <- design$sample
-
-  se <- SummarizedExperiment::SummarizedExperiment(
+  se <- nd_make_summarized_experiment(
     assay = test_data,
-    colData = design,
-    rowData = data.frame(feature = paste0("f", seq_len(nrow(test_data))))
+    groups = c("A", "A", "A", "B", "B", "B")
   )
 
   nst <- NormalyzerStatistics(se, logTrans = FALSE)
@@ -125,16 +118,9 @@ test_that("limpa backend warns when input does not look log2-transformed", {
   )
   colnames(test_data) <- paste0("s", seq_len(ncol(test_data)))
 
-  design <- data.frame(
-    sample = colnames(test_data),
-    group = c("A", "A", "A", "B", "B", "B")
-  )
-  rownames(design) <- design$sample
-
-  se <- SummarizedExperiment::SummarizedExperiment(
+  se <- nd_make_summarized_experiment(
     assay = test_data,
-    colData = design,
-    rowData = data.frame(feature = paste0("f", seq_len(nrow(test_data))))
+    groups = c("A", "A", "A", "B", "B", "B")
   )
   nst <- NormalyzerStatistics(se, logTrans = FALSE)
 
@@ -188,16 +174,12 @@ test_that("limpa backend warns when input looks protein-level", {
   )
   colnames(test_data) <- paste0("s", seq_len(ncol(test_data)))
 
-  design <- data.frame(
-    sample = colnames(test_data),
-    group = c("A", "A", "A", "B", "B", "B")
-  )
-  rownames(design) <- design$sample
-
-  se <- SummarizedExperiment::SummarizedExperiment(
+  se <- nd_make_summarized_experiment(
     assay = test_data,
-    colData = design,
-    rowData = data.frame(`Protein.Group` = paste0("P", seq_len(nrow(test_data))))
+    groups = c("A", "A", "A", "B", "B", "B"),
+    row_data = data.frame(
+      `Protein.Group` = paste0("P", seq_len(nrow(test_data)))
+    )
   )
 
   out <- testthat::expect_warning(
@@ -253,16 +235,9 @@ test_that("limpa backend supports one-vs-rest contrasts", {
   )
   colnames(test_data) <- paste0("s", seq_len(ncol(test_data)))
 
-  design <- data.frame(
-    sample = colnames(test_data),
-    group = c("A", "A", "B", "B", "C", "C")
-  )
-  rownames(design) <- design$sample
-
-  se <- SummarizedExperiment::SummarizedExperiment(
+  se <- nd_make_summarized_experiment(
     assay = test_data,
-    colData = design,
-    rowData = data.frame(feature = paste0("f", seq_len(nrow(test_data))))
+    groups = c("A", "A", "B", "B", "C", "C")
   )
 
   nst <- NormalyzerStatistics(se, logTrans = FALSE)
@@ -314,9 +289,6 @@ test_that("limpa backend can summarize peptides to proteins via dpcQuant", {
 
   colnames(test_data) <- paste0("s", seq_len(n_samples))
 
-  design <- data.frame(sample = colnames(test_data), group = group)
-  rownames(design) <- design$sample
-
   row_anno <- data.frame(
     `Protein.Group` = peptide_protein,
     `Protein.Names` = rep(
@@ -328,10 +300,10 @@ test_that("limpa backend can summarize peptides to proteins via dpcQuant", {
     check.names = FALSE
   )
 
-  se <- SummarizedExperiment::SummarizedExperiment(
+  se <- nd_make_summarized_experiment(
     assay = test_data,
-    colData = design,
-    rowData = row_anno
+    groups = group,
+    row_data = row_anno
   )
 
   nst <- NormalyzerStatistics(se, logTrans = FALSE)
@@ -386,15 +358,12 @@ test_that("limpaByRow keeps duplicate protein IDs as separate rows", {
 
   colnames(test_data) <- paste0("s", seq_len(n_samples))
 
-  design <- data.frame(sample = colnames(test_data), group = group)
-  rownames(design) <- design$sample
-
   row_anno <- data.frame(`Protein.Group` = peptide_protein)
 
-  se <- SummarizedExperiment::SummarizedExperiment(
+  se <- nd_make_summarized_experiment(
     assay = test_data,
-    colData = design,
-    rowData = row_anno
+    groups = group,
+    row_data = row_anno
   )
 
   nst <- NormalyzerStatistics(se, logTrans = FALSE)

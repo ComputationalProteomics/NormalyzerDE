@@ -44,6 +44,39 @@ diannResolveMinPositive <- function(diannMinPositive) {
   diannMinPositive
 }
 
+diannValidateQCutoffs <- function(qCutoffs, arg_name = "qCutoffs") {
+  if (is.null(qCutoffs)) {
+    return(NULL)
+  }
+  if (!is.numeric(qCutoffs)) {
+    cli::cli_abort(
+      "{.arg {arg_name}} must be numeric.",
+      class = "normalyzerde_error",
+      call = NULL
+    )
+  }
+
+  qCutoffs <- as.numeric(qCutoffs)
+  if (length(qCutoffs) == 0) {
+    return(qCutoffs)
+  }
+
+  if (
+    anyNA(qCutoffs) ||
+      any(!is.finite(qCutoffs)) ||
+      any(qCutoffs < 0) ||
+      any(qCutoffs > 1)
+  ) {
+    cli::cli_abort(
+      "{.arg {arg_name}} must contain finite values between 0 and 1.",
+      class = "normalyzerde_error",
+      call = NULL
+    )
+  }
+
+  qCutoffs
+}
+
 diannNormalizeInputOptions <- function(inputOptions, sep = "\t") {
   if (is.null(inputOptions)) {
     inputOptions <- list()
@@ -94,6 +127,15 @@ diannNormalizeInputOptions <- function(inputOptions, sep = "\t") {
   if (is.null(filterDecoy)) {
     filterDecoy <- TRUE
   }
+  if (
+    !is.logical(filterDecoy) || length(filterDecoy) != 1 || is.na(filterDecoy)
+  ) {
+    cli::cli_abort(
+      "{.arg inputOptions$filters$decoy} must be TRUE or FALSE.",
+      class = "normalyzerde_error",
+      call = NULL
+    )
+  }
   filterDecoy <- isTRUE(filterDecoy)
 
   q <- filters$q
@@ -103,16 +145,41 @@ diannNormalizeInputOptions <- function(inputOptions, sep = "\t") {
   if (is.null(q)) {
     filterQValue <- TRUE
   } else if (is.logical(q)) {
+    if (length(q) != 1 || is.na(q)) {
+      cli::cli_abort(
+        "{.arg inputOptions$filters$q} must be a single TRUE/FALSE value, a list, or NULL.",
+        class = "normalyzerde_error",
+        call = NULL
+      )
+    }
     filterQValue <- isTRUE(q)
   } else if (is.list(q)) {
     if (!is.null(q$enable)) {
+      if (!is.logical(q$enable) || length(q$enable) != 1 || is.na(q$enable)) {
+        cli::cli_abort(
+          "{.arg inputOptions$filters$q$enable} must be TRUE or FALSE.",
+          class = "normalyzerde_error",
+          call = NULL
+        )
+      }
       filterQValue <- isTRUE(q$enable)
     }
     if (!is.null(q$cols)) {
+      q$cols <- as.character(q$cols)
+      if (anyNA(q$cols) || any(q$cols == "")) {
+        cli::cli_abort(
+          "{.arg inputOptions$filters$q$cols} must be a character vector of non-empty column names.",
+          class = "normalyzerde_error",
+          call = NULL
+        )
+      }
       qCols <- q$cols
     }
     if (!is.null(q$cutoffs)) {
-      qCutoffs <- q$cutoffs
+      qCutoffs <- diannValidateQCutoffs(
+        q$cutoffs,
+        arg_name = "inputOptions$filters$q$cutoffs"
+      )
     }
   } else {
     cli::cli_abort(
@@ -181,11 +248,63 @@ diannNormalizeInputOptions <- function(inputOptions, sep = "\t") {
   )
 }
 
+diannPreferPrecursorInputOptionsForLimpa <- function(inputOptions) {
+  if (is.null(inputOptions)) {
+    return(list(level = "precursor"))
+  }
+  if (!is.list(inputOptions)) {
+    return(inputOptions)
+  }
+
+  explicitLevel <- inputOptions$._normalyzerde_explicit_level
+  if (is.null(explicitLevel)) {
+    explicitLevel <- "level" %in% names(inputOptions)
+  } else {
+    explicitLevel <- isTRUE(explicitLevel)
+  }
+  if (explicitLevel) {
+    return(inputOptions)
+  }
+
+  level <- inputOptions$level
+  if (!is.null(level)) {
+    level <- as.character(level)[1]
+    if (!is.na(level) && nzchar(level) && !identical(level, "auto")) {
+      return(inputOptions)
+    }
+  }
+
+  columns <- inputOptions$columns
+  if (!is.null(columns) && !is.list(columns)) {
+    return(inputOptions)
+  }
+  if (
+    !is.null(columns) &&
+      (!is.null(columns$feature) || !is.null(columns$quantity))
+  ) {
+    return(inputOptions)
+  }
+
+  inputOptions$level <- "precursor"
+  inputOptions
+}
+
+diannWasDefaultedToPrecursorForLimpa <- function(
+  originalInputOptions,
+  resolvedInputOptions
+) {
+  if (identical(originalInputOptions, resolvedInputOptions)) {
+    return(FALSE)
+  }
+
+  is.list(resolvedInputOptions) &&
+    identical(as.character(resolvedInputOptions$level)[1], "precursor")
+}
+
 #' Create validated DIA-NN input options
 #'
-#' Helper to construct an `inputOptions` list for `inputFormat = "diann"`. This
-#' keeps DIA-NN-specific parameters out of the main entrypoint signatures while
-#' still providing a typo-safe, validated API.
+#' Helper to construct an `inputOptions` list for `inputFormat = "diann"` and
+#' validate the supplied fields.
 #'
 #' @param level One of `"auto"`, `"protein"`, or `"precursor"`. If `"auto"`,
 #'   NormalyzerDE tries to infer whether the DIA-NN file is protein- or
@@ -199,7 +318,9 @@ diannNormalizeInputOptions <- function(inputOptions, sep = "\t") {
 #'   carry along as row annotation.
 #' @param decoy Whether to filter out decoys when the DIA-NN report includes a
 #'   `"Decoy"` column.
-#' @param qEnable Whether to filter rows by q-values when available.
+#' @param qEnable Whether to filter rows by q-values when available. Rows are
+#'   filtered when one or more q-values exceed their cutoffs; missing q-values
+#'   are retained.
 #' @param qCols Character vector of q-value columns to use. Use `NULL` or
 #'   `"auto"` to select reasonable defaults, or `"none"` to disable q-value
 #'   filtering.
@@ -317,6 +438,7 @@ diannInputOptions <- function(
       call = NULL
     )
   }
+  qCutoffs <- diannValidateQCutoffs(qCutoffs)
 
   minPositive <- as.numeric(minPositive)[1]
   if (is.na(minPositive) || minPositive < 0) {
@@ -386,7 +508,8 @@ diannInputOptions <- function(
       q = q,
       min_positive = minPositive
     ),
-    rt = rt
+    rt = rt,
+    ._normalyzerde_explicit_level = "level" %in% argNames
   )
 }
 
@@ -406,6 +529,40 @@ diannCandidateSampleColumns <- function(columnNames) {
   grepl("[\\\\/]|\\.(raw|mzml|d|wiff)$", columnNames, ignore.case = TRUE)
 }
 
+diannMaybeMapSamplesToDesign <- function(sampleNames, designSampleNames) {
+  sampleNames <- as.character(sampleNames)
+  if (is.null(designSampleNames) || length(designSampleNames) == 0) {
+    return(sampleNames)
+  }
+
+  designSampleNames <- as.character(designSampleNames)
+  rawUnique <- unique(sampleNames)
+  cleanedUnique <- diannCleanSampleName(rawUnique)
+
+  rawOverlap <- sum(designSampleNames %in% rawUnique)
+  cleanedOverlap <- sum(designSampleNames %in% cleanedUnique)
+
+  if (cleanedOverlap <= rawOverlap) {
+    return(sampleNames)
+  }
+
+  dupNames <- unique(cleanedUnique[duplicated(cleanedUnique)])
+  if (length(dupNames) > 0) {
+    cli::cli_abort(
+      c(
+        "DIA-NN sample columns are not unique after stripping paths/extensions.",
+        i = "Duplicate sample names include: {paste(utils::head(dupNames, 10), collapse = \", \")}.",
+        i = "Provide unique sample names in DIA-NN export, or use full file paths in the design matrix."
+      ),
+      class = "normalyzerde_error",
+      call = NULL
+    )
+  }
+
+  sampleMap <- stats::setNames(cleanedUnique, rawUnique)
+  unname(sampleMap[sampleNames])
+}
+
 diannRenameSampleColumnsForDesign <- function(dataFrame, designSampleNames) {
   if (is.null(designSampleNames) || length(designSampleNames) == 0) {
     return(dataFrame)
@@ -422,20 +579,10 @@ diannRenameSampleColumnsForDesign <- function(dataFrame, designSampleNames) {
   }
 
   cleaned <- colnames(dataFrame)
-  cleaned[candidateCols] <- diannCleanSampleName(cleaned[candidateCols])
-
-  dupNames <- unique(cleaned[candidateCols][duplicated(cleaned[candidateCols])])
-  if (length(dupNames) > 0) {
-    cli::cli_abort(
-      c(
-        "DIA-NN sample columns are not unique after stripping paths/extensions.",
-        i = "Duplicate sample names include: {paste(utils::head(dupNames, 10), collapse = \", \")}.",
-        i = "Provide unique sample names in DIA-NN export, or use full file paths in the design matrix."
-      ),
-      class = "normalyzerde_error",
-      call = NULL
-    )
-  }
+  cleaned[candidateCols] <- diannMaybeMapSamplesToDesign(
+    cleaned[candidateCols],
+    designSampleNames
+  )
 
   if (all(designSampleNames %in% cleaned)) {
     colnames(dataFrame) <- cleaned
@@ -483,6 +630,49 @@ diannChooseReportSpec <- function(
     "Precursor.Translated"
   )
 
+  inferFeatureType <- function(featureCol) {
+    if (identical(featureCol, proteinFeatureCol)) {
+      return("protein")
+    }
+    if (identical(featureCol, precursorFeatureCol)) {
+      return("precursor")
+    }
+    NULL
+  }
+
+  inferQuantityType <- function(quantityCol) {
+    if (quantityCol %in% proteinQuantityCandidates) {
+      return("protein")
+    }
+    if (quantityCol %in% precursorQuantityCandidates) {
+      return("precursor")
+    }
+    NULL
+  }
+
+  validateFeatureQuantityPair <- function(featureCol, quantityCol) {
+    featureType <- inferFeatureType(featureCol)
+    quantityType <- inferQuantityType(quantityCol)
+
+    if (
+      !is.null(featureType) &&
+        !is.null(quantityType) &&
+        !identical(featureType, quantityType)
+    ) {
+      cli::cli_abort(
+        c(
+          "Requested DIA-NN feature and quantity columns are inconsistent.",
+          i = "Feature column {.val {featureCol}} is {featureType}-level.",
+          i = "Quantity column {.val {quantityCol}} is {quantityType}-level."
+        ),
+        class = "normalyzerde_error",
+        call = NULL
+      )
+    }
+
+    invisible(NULL)
+  }
+
   inferQuantity <- function(featureCol) {
     if (identical(featureCol, proteinFeatureCol)) {
       diannSelectFirstPresent(proteinQuantityCandidates, reportColumns)
@@ -514,6 +704,7 @@ diannChooseReportSpec <- function(
         )
       }
       quantityCol <- diannQuantityCol
+      validateFeatureQuantityPair(featureCol, quantityCol)
     } else {
       quantityCol <- inferQuantity(featureCol)
       if (is.null(quantityCol)) {
@@ -537,7 +728,55 @@ diannChooseReportSpec <- function(
     }
 
     quantityCol <- diannQuantityCol
-    featureCol <- if (identical(diannLevel, "protein")) {
+    quantityType <- inferQuantityType(quantityCol)
+    if (
+      identical(diannLevel, "auto") &&
+        is.null(quantityType) &&
+        proteinFeatureCol %in% reportColumns &&
+        precursorFeatureCol %in% reportColumns
+    ) {
+      cli::cli_abort(
+        c(
+          "Could not infer DIA-NN feature column from requested quantity column {.val {quantityCol}}.",
+          i = "This report contains both protein-level and precursor-level features.",
+          i = "Set {.arg level} or {.arg featureCol} explicitly when using a custom quantity column."
+        ),
+        class = "normalyzerde_error",
+        call = NULL
+      )
+    }
+    if (
+      identical(diannLevel, "protein") &&
+        identical(quantityType, "precursor")
+    ) {
+      cli::cli_abort(
+        c(
+          "Requested DIA-NN quantity column is incompatible with {.arg level}={.val protein}.",
+          i = "Quantity column {.val {quantityCol}} is precursor-level."
+        ),
+        class = "normalyzerde_error",
+        call = NULL
+      )
+    }
+    if (
+      identical(diannLevel, "precursor") &&
+        identical(quantityType, "protein")
+    ) {
+      cli::cli_abort(
+        c(
+          "Requested DIA-NN quantity column is incompatible with {.arg level}={.val precursor}.",
+          i = "Quantity column {.val {quantityCol}} is protein-level."
+        ),
+        class = "normalyzerde_error",
+        call = NULL
+      )
+    }
+
+    featureCol <- if (identical(quantityType, "protein")) {
+      proteinFeatureCol
+    } else if (identical(quantityType, "precursor")) {
+      precursorFeatureCol
+    } else if (identical(diannLevel, "protein")) {
       proteinFeatureCol
     } else if (identical(diannLevel, "precursor")) {
       precursorFeatureCol
@@ -554,6 +793,7 @@ diannChooseReportSpec <- function(
         call = NULL
       )
     }
+    validateFeatureQuantityPair(featureCol, quantityCol)
   } else {
     if (identical(diannLevel, "protein") || identical(diannLevel, "auto")) {
       if (proteinFeatureCol %in% reportColumns) {
@@ -762,11 +1002,7 @@ diannResolveQValueCutoffs <- function(diannQValueCols, diannQValueCutoffs) {
   if (is.null(diannQValueCutoffs) || length(diannQValueCutoffs) == 0) {
     return(rep(0.01, length(diannQValueCols)))
   }
-  diannQValueCutoffs <- as.numeric(diannQValueCutoffs)
-  diannQValueCutoffs <- diannQValueCutoffs[!is.na(diannQValueCutoffs)]
-  if (length(diannQValueCutoffs) == 0) {
-    return(rep(0.01, length(diannQValueCols)))
-  }
+  diannQValueCutoffs <- diannValidateQCutoffs(diannQValueCutoffs)
   if (length(diannQValueCutoffs) != length(diannQValueCols)) {
     diannQValueCutoffs <- rep_len(
       diannQValueCutoffs[1],
@@ -787,7 +1023,8 @@ diannFilterByQValue <- function(reportDf, qCols, qCutoffs) {
     if (!is.numeric(q)) {
       q <- suppressWarnings(as.numeric(q))
     }
-    keep[q > qCutoffs[i]] <- FALSE
+    tooHigh <- !is.na(q) & q > qCutoffs[i]
+    keep[tooHigh] <- FALSE
   }
 
   reportDf[keep, , drop = FALSE]
@@ -831,9 +1068,11 @@ diannWarnIfAutoInferenceIsAmbiguous <- function(reportColumns, opts, spec) {
     "Precursor.Translated"
   )
 
-  proteinPossible <- proteinFeatureCol %in% reportColumns &&
+  proteinPossible <- proteinFeatureCol %in%
+    reportColumns &&
     any(proteinQuantityCandidates %in% reportColumns)
-  precursorPossible <- precursorFeatureCol %in% reportColumns &&
+  precursorPossible <- precursorFeatureCol %in%
+    reportColumns &&
     any(precursorQuantityCandidates %in% reportColumns)
 
   if (!proteinPossible || !precursorPossible) {
@@ -863,10 +1102,15 @@ diannReportToWide <- function(
   extraCols,
   designSampleNames = NULL,
   diannMinPositive = 0,
-  rtCol = NULL
+  rtCol = NULL,
+  inputSampleNames = NULL
 ) {
   reportDf[[sampleCol]] <- as.character(reportDf[[sampleCol]])
   reportDf[[featureCol]] <- as.character(reportDf[[featureCol]])
+  reportDf[[sampleCol]] <- diannMaybeMapSamplesToDesign(
+    reportDf[[sampleCol]],
+    designSampleNames
+  )
 
   diannMinPositive <- diannResolveMinPositive(diannMinPositive)
 
@@ -879,18 +1123,22 @@ diannReportToWide <- function(
     quantities[!is.na(quantities) & quantities < diannMinPositive] <- NA_real_
   }
 
-  samples <- unique(reportDf[[sampleCol]])
-  if (!is.null(designSampleNames) && !all(designSampleNames %in% samples)) {
-    cleanedSamples <- diannCleanSampleName(samples)
-    sampleMap <- stats::setNames(cleanedSamples, samples)
-    mapped <- sampleMap[reportDf[[sampleCol]]]
-    mapped <- as.character(mapped)
-    mapped[is.na(mapped)] <- reportDf[[sampleCol]][is.na(mapped)]
+  if (is.null(inputSampleNames)) {
+    inputSampleNames <- reportDf[[sampleCol]]
+  }
+  inputSampleNames <- diannMaybeMapSamplesToDesign(
+    inputSampleNames,
+    designSampleNames
+  )
 
-    mappedUnique <- unique(mapped)
-    if (all(designSampleNames %in% mappedUnique)) {
-      reportDf[[sampleCol]] <- mapped
-      samples <- unique(reportDf[[sampleCol]])
+  samples <- unique(reportDf[[sampleCol]])
+  if (!is.null(designSampleNames) && length(inputSampleNames) > 0) {
+    samplesPresentInInput <- unique(as.character(inputSampleNames))
+    designPresentInInput <- as.character(designSampleNames)[
+      as.character(designSampleNames) %in% samplesPresentInInput
+    ]
+    if (length(designPresentInInput) > 0) {
+      samples <- designPresentInInput
     }
   }
 
@@ -1016,6 +1264,7 @@ readDiannToDataFrame <- function(
       rtCol
     ))
     reportDf <- diannReadReportParquet(filePath, selectCols = selectCols)
+    inputSampleNames <- reportDf[[spec$sampleCol]]
     if (isTRUE(opts$filterDecoy)) {
       reportDf <- diannFilterDecoys(reportDf, spec$decoyCol)
     }
@@ -1035,7 +1284,8 @@ readDiannToDataFrame <- function(
         extraCols = extraCols,
         designSampleNames = designSampleNames,
         diannMinPositive = opts$minPositive,
-        rtCol = rtCol
+        rtCol = rtCol,
+        inputSampleNames = inputSampleNames
       )
     )
   }
@@ -1093,6 +1343,7 @@ readDiannToDataFrame <- function(
       rtCol
     ))
     reportDf <- diannReadReportTSV(filePath, sep = sep, selectCols = selectCols)
+    inputSampleNames <- reportDf[[spec$sampleCol]]
     if (isTRUE(opts$filterDecoy)) {
       reportDf <- diannFilterDecoys(reportDf, spec$decoyCol)
     }
@@ -1112,7 +1363,8 @@ readDiannToDataFrame <- function(
         extraCols = extraCols,
         designSampleNames = designSampleNames,
         diannMinPositive = opts$minPositive,
-        rtCol = rtCol
+        rtCol = rtCol,
+        inputSampleNames = inputSampleNames
       )
     )
   }

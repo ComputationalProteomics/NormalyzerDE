@@ -73,6 +73,19 @@ test_that("verifyValidNumbers errors for below-one values when log transforming"
   )
 })
 
+test_that("verifyValidNumbers errors for below-one scientific notation", {
+  mat <- matrix(c("2", "1e-3"), nrow = 1)
+  expect_error(
+    NormalyzerDE:::verifyValidNumbers(
+      mat,
+      groups = c("A", "B"),
+      noLogTransform = FALSE,
+      quiet = TRUE
+    ),
+    class = "normalyzerde_error"
+  )
+})
+
 test_that("verifyValidNumbers warns when data looks already log2", {
   mat <- matrix(c("10", "12"), nrow = 1)
   expect_warning(

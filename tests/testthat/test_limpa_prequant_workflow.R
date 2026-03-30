@@ -8,18 +8,10 @@ test_that("normalyzer preQuant='limpa' writes quantified RDS (by-row)", {
   colnames(mat) <- paste0("s", seq_len(ncol(mat)))
   mat[sample.int(length(mat), 8)] <- NA_real_
 
-  design <- data.frame(
-    sample = colnames(mat),
-    group = c("A", "A", "B", "B"),
-    stringsAsFactors = FALSE,
-    check.names = FALSE
-  )
-  rownames(design) <- design$sample
-
-  se <- SummarizedExperiment::SummarizedExperiment(
+  se <- nd_make_summarized_experiment(
     assay = mat,
-    colData = design,
-    rowData = data.frame(`Protein.Group` = paste0("P", seq_len(nrow(mat))))
+    groups = c("A", "A", "B", "B"),
+    row_data = data.frame(`Protein.Group` = paste0("P", seq_len(nrow(mat))))
   )
 
   outDir <- withr::local_tempdir(pattern = "prequant_byrow_")
@@ -76,14 +68,6 @@ test_that("normalyzer preQuant='limpa' can summarize peptides to proteins", {
   colnames(mat) <- paste0("s", seq_len(ncol(mat)))
   mat[sample.int(length(mat), 6)] <- NA_real_
 
-  design <- data.frame(
-    sample = colnames(mat),
-    group = c("A", "A", "B", "B"),
-    stringsAsFactors = FALSE,
-    check.names = FALSE
-  )
-  rownames(design) <- design$sample
-
   rowAnno <- data.frame(
     `Protein.Group` = peptide_protein,
     `Protein.Names` = rep(
@@ -93,10 +77,10 @@ test_that("normalyzer preQuant='limpa' can summarize peptides to proteins", {
     check.names = FALSE
   )
 
-  se <- SummarizedExperiment::SummarizedExperiment(
+  se <- nd_make_summarized_experiment(
     assay = mat,
-    colData = design,
-    rowData = rowAnno
+    groups = c("A", "A", "B", "B"),
+    row_data = rowAnno
   )
 
   outDir <- withr::local_tempdir(pattern = "prequant_protein_")
@@ -166,13 +150,7 @@ test_that("calculateContrasts can reuse quantified EList from limpaQuantifiedRds
   colnames(raw) <- paste0("s", seq_len(ncol(raw)))
   rownames(raw) <- paste0("f", seq_len(nrow(raw)))
 
-  design <- data.frame(
-    sample = colnames(raw),
-    group = c("A", "A", "A", "B", "B", "B"),
-    stringsAsFactors = FALSE,
-    check.names = FALSE
-  )
-  rownames(design) <- design$sample
+  design <- nd_make_design(c("A", "A", "A", "B", "B", "B"))
 
   yQuant <- limpa::dpcQuantByRow(
     y = raw,
@@ -185,10 +163,10 @@ test_that("calculateContrasts can reuse quantified EList from limpaQuantifiedRds
   rdsPath <- withr::local_tempfile(pattern = "limpa_quant_", fileext = ".rds")
   saveRDS(yQuant, file = rdsPath)
 
-  se <- SummarizedExperiment::SummarizedExperiment(
+  se <- nd_make_summarized_experiment(
     assay = yQuant$E,
-    colData = design,
-    rowData = data.frame(feature = rownames(yQuant$E))
+    groups = design$group,
+    row_data = data.frame(feature = rownames(yQuant$E))
   )
 
   nst <- NormalyzerStatistics(se, logTrans = FALSE)
@@ -219,6 +197,61 @@ test_that("calculateContrasts can reuse quantified EList from limpaQuantifiedRds
   expect_lt(max(linearMedians) - min(linearMedians), 1e-6)
 })
 
+test_that("calculateContrasts errors when quantifiedRds rows cannot be matched safely", {
+  testthat::skip_if_not_installed("limpa")
+
+  raw <- matrix(
+    c(
+      10, NA, NA, 10, NA, NA,
+      10, 10, 10, 11, 11, 11,
+      9, 9, NA, 9, 9, NA,
+      NA, NA, NA, 8, 8, 8,
+      7, 7, 7, 7, 7, 7,
+      6, 6, 6, 6, 6, 6
+    ),
+    nrow = 6,
+    byrow = TRUE,
+    dimnames = list(paste0("orig", seq_len(6)), paste0("s", seq_len(6)))
+  )
+
+  yQuant <- limpa::dpcQuantByRow(
+    y = raw,
+    chunk = 10L,
+    verbose = FALSE
+  )
+  colnames(yQuant$other$n.observations) <- colnames(yQuant$E)
+  colnames(yQuant$other$standard.error) <- colnames(yQuant$E)
+
+  completed <- yQuant$E[6:1, , drop = FALSE]
+  rownames(completed) <- paste0("different", seq_len(nrow(completed)))
+
+  se <- nd_make_summarized_experiment(
+    assay = completed,
+    groups = c("A", "A", "A", "B", "B", "B"),
+    row_data = data.frame(
+      feature = paste0("feat", seq_len(nrow(completed))),
+      row.names = rownames(completed),
+      check.names = FALSE
+    )
+  )
+
+  rdsPath <- withr::local_tempfile(pattern = "limpa_quant_", fileext = ".rds")
+  saveRDS(yQuant, file = rdsPath)
+
+  nst <- NormalyzerStatistics(se, logTrans = FALSE)
+  expect_error(
+    calculateContrasts(
+      nst,
+      comparisons = "A-B",
+      condCol = "group",
+      type = "limpa",
+      leastRepCount = 1,
+      limpaOptions = limpaOptions(quantifiedRds = rdsPath, keep = "elist")
+    ),
+    class = "normalyzerde_error"
+  )
+})
+
 test_that("normalyzerDE auto-detects quantified RDS next to Normalyzer output matrix", {
   testthat::skip_if_not_installed("limpa")
 
@@ -232,18 +265,12 @@ test_that("normalyzerDE auto-detects quantified RDS next to Normalyzer output ma
   raw[2, ] <- c(11, NA, 11, 11)
   colnames(raw) <- paste0("s", seq_len(ncol(raw)))
 
-  design <- data.frame(
-    sample = colnames(raw),
-    group = c("A", "A", "B", "B"),
-    stringsAsFactors = FALSE,
-    check.names = FALSE
-  )
-  rownames(design) <- design$sample
+  design <- nd_make_design(c("A", "A", "B", "B"))
 
-  se <- SummarizedExperiment::SummarizedExperiment(
+  se <- nd_make_summarized_experiment(
     assay = raw,
-    colData = design,
-    rowData = data.frame(
+    groups = design$group,
+    row_data = data.frame(
       feature = c("sparse", paste0("f", seq_len(nFeatures - 1))),
       check.names = FALSE
     )

@@ -33,17 +33,10 @@ test_that("normalyzerDE can compute one-vs-rest without explicit comparisons", {
   mat <- matrix(stats::rnorm(20 * 4, mean = 10, sd = 1), nrow = 20)
   colnames(mat) <- paste0("s", seq_len(ncol(mat)))
 
-  design <- data.frame(
-    sample = colnames(mat),
-    group = c("A", "A", "B", "B"),
-    stringsAsFactors = FALSE
-  )
-  rownames(design) <- design$sample
-
-  se <- SummarizedExperiment::SummarizedExperiment(
+  design <- nd_make_design(c("A", "A", "B", "B"))
+  se <- nd_make_summarized_experiment(
     assay = mat,
-    colData = design,
-    rowData = data.frame(feature = paste0("f", seq_len(nrow(mat))))
+    groups = design$group
   )
 
   outDir <- withr::local_tempdir(pattern = "onevsrest_")
@@ -82,8 +75,6 @@ test_that("normalyzerDE can compute one-vs-rest without explicit comparisons", {
 
 test_that("normalyzer supports DIANN report precursors with RT normalization", {
   tmpDir <- withr::local_tempdir(pattern = "diann_normalyzer_")
-  dataPath <- file.path(tmpDir, "diann_report_for_normalyzer.tsv")
-  designPath <- file.path(tmpDir, "diann_design_for_normalyzer.tsv")
 
   nFeatures <- 120
   precursors <- paste0("pep", seq_len(nFeatures))
@@ -103,16 +94,20 @@ test_that("normalyzer supports DIANN report precursors with RT normalization", {
     check.names = FALSE
   )
 
-  nd_write_table(diannReport, dataPath)
-  nd_write_table(nd_two_sample_design(), designPath)
+  paths <- nd_write_data_and_design(
+    tmp_dir = tmpDir,
+    data = diannReport,
+    data_name = "diann_report_for_normalyzer.tsv",
+    design_name = "diann_design_for_normalyzer.tsv"
+  )
 
   jobName <- "entry_diann_norm"
   expectedDir <- file.path(tmpDir, NormalyzerDE:::sanitizeJobName(jobName))
 
   out <- suppressWarnings(normalyzer(
     jobName = jobName,
-    designPath = designPath,
-    dataPath = dataPath,
+    designPath = paths$designPath,
+    dataPath = paths$dataPath,
     outputDir = tmpDir,
     sampleAbundThres = 5,
     requireReplicates = FALSE,
@@ -194,17 +189,9 @@ test_that("normalyzerDE errors when comparisons are missing and oneVsRest=FALSE"
   mat <- matrix(stats::rnorm(20 * 4, mean = 10, sd = 1), nrow = 20)
   colnames(mat) <- paste0("s", seq_len(ncol(mat)))
 
-  design <- data.frame(
-    sample = colnames(mat),
-    group = c("A", "A", "B", "B"),
-    stringsAsFactors = FALSE
-  )
-  rownames(design) <- design$sample
-
-  se <- SummarizedExperiment::SummarizedExperiment(
+  se <- nd_make_summarized_experiment(
     assay = mat,
-    colData = design,
-    rowData = data.frame(feature = paste0("f", seq_len(nrow(mat))))
+    groups = c("A", "A", "B", "B")
   )
 
   expect_error(

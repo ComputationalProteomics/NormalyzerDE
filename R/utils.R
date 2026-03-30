@@ -16,6 +16,20 @@ setupJobDir <- function(jobName, outputDir) {
   } else {
     jobDir <- file.path(outputDir, sanitizedJobName)
   }
+
+  if (
+    dir.exists(jobDir) &&
+      length(list.files(jobDir, all.files = TRUE, no.. = TRUE)) > 0
+  ) {
+    cli::cli_warn(
+      c(
+        "Reusing existing non-empty output directory: {.path {jobDir}}.",
+        i = "Files from previous runs may remain alongside the new outputs."
+      ),
+      class = "normalyzerde_warning",
+      call = NULL
+    )
+  }
   createDirectory(jobDir)
 
   jobDir
