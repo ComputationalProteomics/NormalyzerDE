@@ -21,7 +21,7 @@ test_that("NormalyzerStatistics logTrans replaces non-finite values with NA", {
 
   expect_warning(
     nst <- NormalyzerStatistics(se, logTrans = TRUE),
-    "Non-finite values produced by log2 transform"
+    class = "normalyzerde_warning"
   )
 
   dm <- dataMat(nst)

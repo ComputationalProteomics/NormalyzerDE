@@ -33,11 +33,13 @@ loadData <- function(dataPath, inputFormat = "default", inputOptions = NULL) {
     rawData <- maxQuantToNormalyzer(dataPath, protLevel = TRUE, sep = sep)
   } else {
     valids <- c("default", "proteios", "maxquantpep", "maxquantprot")
-    stop(
-      "Unknown inputFormat: ",
-      inputFormat,
-      " valids are: ",
-      paste(valids, collapse = ", ")
+    cli::cli_abort(
+      c(
+        "Unknown {.arg inputFormat}: {.val {inputFormat}}.",
+        i = "Valid values: {paste(valids, collapse = \", \")}."
+      ),
+      class = "normalyzerde_error",
+      call = NULL
     )
   }
 
@@ -60,11 +62,19 @@ defaultInputOptions <- function(sep = "\t") {
   argNames <- argNames[nzchar(argNames)]
   unknown <- setdiff(argNames, names(formals(sys.function())))
   if (length(unknown) > 0) {
-    stop("Unknown argument(s): ", paste(unknown, collapse = ", "))
+    cli::cli_abort(
+      "Unknown argument(s): {paste(unknown, collapse = \", \")}.",
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
 
   if (!is.character(sep) || length(sep) != 1 || is.na(sep) || sep == "") {
-    stop("sep must be a single non-empty character value.")
+    cli::cli_abort(
+      "{.arg sep} must be a single non-empty character value.",
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
   list(sep = sep)
 }
@@ -96,14 +106,15 @@ loadDesign <- function(designPath, sampleCol = "sample", groupCol = "group") {
     !(sampleCol %in% colnames(designMatrix)) ||
       !(groupCol %in% colnames(designMatrix))
   ) {
-    stop(
-      "Both sampleCol value and groupCol value must be present in the design matrix header.",
-      "\nsampleCol: ",
-      sampleCol,
-      "\ngroupCol: ",
-      groupCol,
-      "\nDesign matrix header: ",
-      paste(colnames(designMatrix), collapse = ", ")
+    cli::cli_abort(
+      c(
+        "Both {.arg sampleCol} and {.arg groupCol} must be present in the design matrix header.",
+        i = "{.arg sampleCol}: {.val {sampleCol}}",
+        i = "{.arg groupCol}: {.val {groupCol}}",
+        i = "Design matrix header: {paste(colnames(designMatrix), collapse = \", \")}."
+      ),
+      class = "normalyzerde_error",
+      call = NULL
     )
   }
 
@@ -112,8 +123,7 @@ loadDesign <- function(designPath, sampleCol = "sample", groupCol = "group") {
   designMatrix
 }
 
-#' Prepare SummarizedExperiment object for raw data to be normalized containing
-#' data, design and annotation information
+#' Prepare a SummarizedExperiment object for normalization
 #'
 #' @param dataPath File path to data matrix.
 #' @param designPath File path to design matrix.
@@ -127,7 +137,8 @@ loadDesign <- function(designPath, sampleCol = "sample", groupCol = "group") {
 #'   \code{\link{diannInputOptions}}. For delimited inputs, use
 #'   \code{\link{defaultInputOptions}}, \code{\link{proteiosInputOptions}}, or
 #'   \code{\link{maxQuantInputOptions}} to configure the delimiter.
-#' @return experimentObj SummarizedExperiment object loaded with the data
+#' @return experimentObj SummarizedExperiment object containing the data, design
+#'   and annotation information
 #' @export
 #' @examples
 #' data_path <- system.file(package="NormalyzerDE", "extdata", "tiny_data.tsv")
@@ -208,29 +219,65 @@ setupRawContrastObject <- function(
   inputFormat = "default",
   inputOptions = NULL
 ) {
-  designDf <- utils::read.csv(
-    designPath,
-    sep = "\t",
-    stringsAsFactors = FALSE,
-    quote = "",
-    comment.char = "",
-    check.names = FALSE
-  )
-
-  if (identical(inputFormat, "diann")) {
-    fullDf <- readDiannToDataFrame(
-      dataPath,
-      designSampleNames = designDf[[sampleColName]],
-      inputOptions = inputOptions
-    )
-  } else {
-    fullDf <- utils::read.csv(
-      dataPath,
+  designDf <- tryCatch(
+    utils::read.csv(
+      designPath,
       sep = "\t",
       stringsAsFactors = FALSE,
       quote = "",
       comment.char = "",
       check.names = FALSE
+    ),
+    error = function(e) {
+      cli::cli_abort(
+        c(
+          "Failed to read {.arg designPath}: {.path {designPath}}.",
+          i = "{conditionMessage(e)}"
+        ),
+        class = "normalyzerde_error",
+        call = NULL
+      )
+    }
+  )
+
+  if (identical(inputFormat, "diann")) {
+    fullDf <- tryCatch(
+      readDiannToDataFrame(
+        dataPath,
+        designSampleNames = designDf[[sampleColName]],
+        inputOptions = inputOptions
+      ),
+      error = function(e) {
+        cli::cli_abort(
+          c(
+            "Failed to read {.arg dataPath}: {.path {dataPath}}.",
+            i = "{conditionMessage(e)}"
+          ),
+          class = "normalyzerde_error",
+          call = NULL
+        )
+      }
+    )
+  } else {
+    fullDf <- tryCatch(
+      utils::read.csv(
+        dataPath,
+        sep = "\t",
+        stringsAsFactors = FALSE,
+        quote = "",
+        comment.char = "",
+        check.names = FALSE
+      ),
+      error = function(e) {
+        cli::cli_abort(
+          c(
+            "Failed to read {.arg dataPath}: {.path {dataPath}}.",
+            i = "{conditionMessage(e)}"
+          ),
+          class = "normalyzerde_error",
+          call = NULL
+        )
+      }
     )
   }
 
@@ -300,10 +347,10 @@ getVerifiedNormalyzerObject <- function(
   )
 
   if (!groupCol %in% colnames(designMatrix)) {
-    stop(
-      "Given groupCol: '",
-      groupCol,
-      "' was not present among design matrix columns"
+    cli::cli_abort(
+      "Given {.arg groupCol} {.val {groupCol}} was not present among design matrix columns.",
+      class = "normalyzerde_error",
+      call = NULL
     )
   }
 
@@ -379,10 +426,10 @@ filterOnlyNARows <- function(summarizedExp) {
     summarizedExp
   ))) !=
     ncol(summarizedExp)
-  if (length(which(!nonFullNAContr)) > 0) {
-    message(
-      length(which(!nonFullNAContr)),
-      " entries with only NA values omitted"
+  omittedCount <- sum(!nonFullNAContr)
+  if (omittedCount > 0) {
+    cli::cli_inform(
+      c(i = "{omittedCount} entries with only NA values omitted")
     )
     summarizedExp <- summarizedExp[nonFullNAContr, ]
   }
@@ -420,14 +467,14 @@ loadRawDataFromFile <- function(inputPath, sep = "\t") {
   )
 
   if (!is.null(warningEnv$condition)) {
-    stop(
-      "An issue was encountered when attempting to load: ",
-      inputPath,
-      "\n",
-      conditionMessage(warningEnv$condition),
-      "\n",
-      "Please investigate and provide a valid input file.",
-      call. = FALSE
+    cli::cli_abort(
+      c(
+        "An issue was encountered when attempting to load {.path {inputPath}}.",
+        i = "{conditionMessage(warningEnv$condition)}",
+        i = "Please investigate and provide a valid input file."
+      ),
+      class = "normalyzerde_error",
+      call = NULL
     )
   }
 
@@ -439,14 +486,14 @@ loadRawDataFromFile <- function(inputPath, sep = "\t") {
       as.character(rawData)
     }
 
-    stop(
-      "Failed to read input file: ",
-      inputPath,
-      "\n",
-      errorMessage,
-      "\n",
-      "Please provide a valid input file.",
-      call. = FALSE
+    cli::cli_abort(
+      c(
+        "Failed to read input file {.path {inputPath}}.",
+        i = "{errorMessage}",
+        i = "Please provide a valid input file."
+      ),
+      class = "normalyzerde_error",
+      call = NULL
     )
   }
 
@@ -456,7 +503,7 @@ loadRawDataFromFile <- function(inputPath, sep = "\t") {
 
 #' Verify that input fields conform to the expected formats
 #'
-#' @param rawDataOnly Dataframe with input data.
+#' @param rawDataOnly Data frame with input data.
 #' @param groups Condition levels for comparisons.
 #' @return None
 #' @keywords internal
@@ -494,45 +541,44 @@ verifyValidNumbers <- function(
   rowsWithIssues <- unique((invalidNonNAIndices - 1) %% nrow(rawDataOnly) + 1)
 
   if (length(invalidNonNAIndices) > 0) {
-    errorString <- paste(
-      "Invalid values encountered in input data.",
-      "Only valid data is numeric (dot-decimal, not comma) and NA- or na-fields",
-      "Invalid fields: ",
-      paste(rawDataOnly[unique(invalidNonNAIndices)], collapse = " "),
-      "These were encountered for row numbers (showing max 10 first):",
-      paste(utils::head(rowsWithIssues, 10), collapse = ", "),
-      "Content of the first row with issues: ",
-      paste(rawDataOnly[rowsWithIssues[1], ], collapse = ", "),
-      "Aborting...",
-      sep = "\n"
-    )
+    invalidValues <- unique(rawDataOnly[unique(invalidNonNAIndices)])
+    rowsPreview <- utils::head(rowsWithIssues, 10)
+    firstIssueRow <- rawDataOnly[rowsWithIssues[1], ]
 
-    stop(errorString)
+    cli::cli_abort(
+      c(
+        "Invalid values encountered in input data.",
+        x = "Expected numeric values (dot-decimal, not comma) or NA/null fields.",
+        x = "Invalid field values: {.val {invalidValues}}",
+        i = "Rows with issues (showing up to 10): {.val {rowsPreview}}",
+        i = "Content of the first row with issues: {.val {firstIssueRow}}"
+      ),
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
 
   if (!noLogTransform) {
     belowOnePattern <- c("^0.\\d+$")
     belowOneMatches <- grep(belowOnePattern, rawDataOnly, perl = TRUE)
-    rowsWithIssues <- unique((belowOneMatches - 1) %% nrow(rawDataOnly) + 1)
-    firstIssueRow <- rawDataOnly[rowsWithIssues[1], ]
 
     if (length(belowOneMatches) > 0) {
-      errorString <- paste(
-        "Encountered below-one values in raw data. As the data is log-transformed ",
-        "during processing this will lead to negative values which in turn will ",
-        "crash processing. Consider using the 'noLogTransform' option if your data ",
-        "already is normally distributed or scaling all values if appropriate.",
-        "First ten row numbers where this issue was encountered, excluding header row: ",
-        paste(utils::head(rowsWithIssues, 10), collapse = ", "),
-        paste0(
-          "Content of first row (row ",
-          rowsWithIssues[1],
-          ") with issues: "
+      rowsWithIssues <- unique((belowOneMatches - 1) %% nrow(rawDataOnly) + 1)
+      rowsPreview <- utils::head(rowsWithIssues, 10)
+      firstIssueRow <- rawDataOnly[rowsWithIssues[1], ]
+
+      cli::cli_abort(
+        c(
+          "Encountered below-one values in raw data.",
+          x = "NormalyzerDE log2-transforms input by default; below-one values can yield negative values and may crash downstream processing.",
+          x = "Rows with issues (showing up to 10): {.val {rowsPreview}}",
+          i = "Content of the first row with issues (row {.val {rowsWithIssues[1]}}): {.val {firstIssueRow}}",
+          i = "If your input is already on the log2 scale, set {.arg noLogTransform}={.val TRUE}.",
+          i = "Otherwise, consider scaling values upstream if appropriate."
         ),
-        paste(firstIssueRow, collapse = ", "),
-        sep = "\n"
+        class = "normalyzerde_error",
+        call = NULL
       )
-      stop(errorString)
     }
 
     warnIfLooksAlreadyLog2 <- function(mat, threshold = 50) {
@@ -544,12 +590,15 @@ verifyValidNumbers <- function(
 
       maxVal <- max(finiteVals)
       if (is.finite(maxVal) && maxVal < threshold) {
-        warning(
-          "Input values look small for linear-scale intensity data (max finite value = ",
-          format(signif(maxVal, 4), trim = TRUE),
-          "). NormalyzerDE will log2-transform input by default. ",
-          "If your input is already on the log2 scale, set `noLogTransform=TRUE`.",
-          call. = FALSE
+        maxValDisp <- signif(maxVal, 4)
+        cli::cli_warn(
+          c(
+            "Input values look small for linear-scale intensity data (max finite value = {.val {maxValDisp}}).",
+            i = "NormalyzerDE will log2-transform input by default.",
+            i = "If your input is already on the log2 scale, set {.arg noLogTransform}={.val TRUE}."
+          ),
+          class = "normalyzerde_warning",
+          call = NULL
         )
       }
 
@@ -559,7 +608,9 @@ verifyValidNumbers <- function(
     warnIfLooksAlreadyLog2(rawDataOnly)
   }
 
-  if (!quiet) message("Input data checked. All fields are valid.")
+  if (!quiet) {
+    cli::cli_inform(c(v = "Input data checked. All fields are valid."))
+  }
 }
 
 
@@ -590,64 +641,67 @@ verifySummarizedExperiment <- function(summarizedExp, sampleCol) {
 
 #' Verify that design matrix setup matches the data matrix
 #'
-#' @param fullMatrix Dataframe with input data.
-#' @param designMatrix Dataframe with design setup.
+#' @param fullMatrix Data frame with input data.
+#' @param designMatrix Data frame with design setup.
 #' @param sampleCol Column in design matrix containing sample IDs.
 #'
 #' @return None
 #' @keywords internal
 verifyDesignMatrix <- function(fullMatrix, designMatrix, sampleCol) {
   if (!(sampleCol %in% colnames(designMatrix))) {
-    stop(
-      "Design matrix header must contain sampleCol name. \n",
-      "Provided sampleCol was: ",
-      sampleCol,
-      " \n",
-      "Following header was found in the design matrix: ",
-      paste(colnames(designMatrix), collapse = ", ")
+    cli::cli_abort(
+      c(
+        "Design matrix header must contain {.arg sampleCol} name.",
+        i = "Provided {.arg sampleCol}: {.val {sampleCol}}",
+        i = "Design matrix header: {paste(colnames(designMatrix), collapse = \", \")}."
+      ),
+      class = "normalyzerde_error",
+      call = NULL
     )
   }
 
-  designColnames <- designMatrix[, sampleCol]
+  designColnames <- as.character(designMatrix[, sampleCol])
 
   if (!all(designColnames %in% colnames(fullMatrix))) {
-    errorString <- paste(
-      "Not all columns present in design matrix are present in data matrix. \n",
-      " The following elements were not found in the data matrix header: \n\n",
-      paste(
-        base::setdiff(designColnames, colnames(fullMatrix)),
-        collapse = ", "
+    missing <- base::setdiff(designColnames, colnames(fullMatrix))
+    cli::cli_abort(
+      c(
+        "Not all samples in the design matrix are present in the data matrix.",
+        x = "Missing from data matrix header: {.val {missing}}",
+        i = "Check that the data matrix column names match {.arg sampleCol} in the design matrix."
       ),
-      " \n",
-      "\n Please carefully check that the column names in your data matrix",
-      "matches the sample column in the design matrix"
+      class = "normalyzerde_error",
+      call = NULL
     )
-    stop(errorString)
   }
 
-  dataMatrix <- fullMatrix[, designMatrix[, sampleCol], drop = FALSE]
+  dataMatrix <- fullMatrix[, designColnames, drop = FALSE]
   dataColumns <- dataMatrix[, designColnames, drop = FALSE]
 
   if (length(designColnames) != ncol(dataColumns)) {
-    errorString <- paste(
-      "Number of samples does not match number of selected columns",
-      "Found number of columns:",
-      ncol(dataColumns),
-      "Expected number of columns:",
-      length(designColnames),
-      "Are all columns in the design matrix present in the data matrix?"
+    cli::cli_abort(
+      c(
+        "Number of samples does not match the number of selected columns.",
+        x = "Found {ncol(dataColumns)} column{?s}.",
+        x = "Expected {length(designColnames)} column{?s}.",
+        i = "Are all columns in the design matrix present in the data matrix?"
+      ),
+      class = "normalyzerde_error",
+      call = NULL
     )
-    stop(errorString)
   }
 
   if (length(unique(designColnames)) != length(designColnames)) {
-    errorString <- paste(
-      "Sample labels must be unique, found: ",
-      length(unique(designColnames)),
-      "unique, expected:",
-      length(designColnames)
+    duplicatedSamples <- unique(designColnames[duplicated(designColnames)])
+    cli::cli_abort(
+      c(
+        "Sample labels must be unique.",
+        x = "Duplicated sample labels: {.val {duplicatedSamples}}",
+        i = "Found {length(unique(designColnames))} unique labels; expected {length(designColnames)}."
+      ),
+      class = "normalyzerde_error",
+      call = NULL
     )
-    stop(errorString)
   }
 }
 
@@ -665,21 +719,27 @@ preprocessData <- function(dataMatrix, quiet = FALSE) {
 
   if (zeroFields != 0) {
     if (!quiet) {
-      message(zeroFields, " fields with '0' were replaced by 'NA'")
+      cli::cli_inform(
+        c(i = "{zeroFields} fields with '0' were replaced by 'NA'")
+      )
     }
     dataMatrix[dataMatrix == 0] <- NA
   }
 
   if (emptyFields != 0) {
     if (!quiet) {
-      message(emptyFields, " empty fields were replaced by 'NA'")
+      cli::cli_inform(
+        c(i = "{emptyFields} empty fields were replaced by 'NA'")
+      )
     }
     dataMatrix[dataMatrix == ""] <- NA
   }
 
   if (nullFields != 0) {
     if (!quiet) {
-      message(nullFields, " 'null' fields were replaced by 'NA'")
+      cli::cli_inform(
+        c(i = "{nullFields} 'null' fields were replaced by 'NA'")
+      )
     }
     dataMatrix[dataMatrix == "null"] <- NA
   }
@@ -689,7 +749,7 @@ preprocessData <- function(dataMatrix, quiet = FALSE) {
 
 #' Verify that samples contain at least a lowest number of values
 #'
-#' @param dataMatrix Dataframe with processed input data.
+#' @param dataMatrix Data frame with processed input data.
 #' @param groups Vector containing condition levels.
 #' @param threshold Lowest number of allowed values in a column.
 #' @param stopIfTooFew Abort run if lower than threshold number of values in
@@ -703,38 +763,61 @@ getLowCountSampleFiltered <- function(
   stopIfTooFew = TRUE
 ) {
   sampleIndices <- seq_along(groups)
+  sampleLabels <- colnames(dataMatrix)
+  if (is.null(sampleLabels)) {
+    sampleLabels <- as.character(sampleIndices)
+  }
+
   numberOfValues <- colSums(!is.na(dataMatrix))
   notPassingThreshold <- which(numberOfValues < threshold)
 
   if (length(notPassingThreshold) == length(numberOfValues)) {
-    errorString <- paste(
-      "None of the samples had enough valid non-NA values",
-      "Found number of non-NA values:",
-      paste(numberOfValues[notPassingThreshold], collapse = " "),
-      "Current threshold: ",
-      threshold,
-      "You could try lowering the threshold by adjusting \"sampleAbundThres\"",
-      "Be aware that this will likely lead to downstream crashes.",
-      sep = "\n"
-    )
-    stop(errorString)
-  } else if (length(notPassingThreshold) > 0) {
-    errorString <- paste(
-      "Following samples does not contain enough non-NA values:",
-      paste(sampleIndices[notPassingThreshold], collapse = " "),
-      "Found number of values:",
-      paste(numberOfValues[notPassingThreshold], collapse = " "),
-      "Current threshold:",
-      threshold,
-      "You can force processing without this sample by specifying the",
-      "option \"omitLowAbundSamples\"",
-      sep = "\n"
-    )
+    failingSamples <- sampleLabels[notPassingThreshold]
+    failingCounts <- numberOfValues[notPassingThreshold]
+    countSummary <- paste0(failingSamples, "=", failingCounts, collapse = ", ")
 
+    cli::cli_abort(
+      c(
+        "None of the samples had enough valid non-NA values.",
+        x = "Threshold: {.val {threshold}} non-NA value{?s} per sample.",
+        x = "Non-NA counts (sample=count): {countSummary}.",
+        i = "You can try lowering the threshold via {.arg sampleAbundThres}.",
+        i = "Be aware that this may lead to downstream crashes."
+      ),
+      class = "normalyzerde_error",
+      call = NULL
+    )
+  } else if (length(notPassingThreshold) > 0) {
     if (stopIfTooFew) {
-      stop(errorString)
+      failingSamples <- sampleLabels[notPassingThreshold]
+      failingCounts <- numberOfValues[notPassingThreshold]
+      countSummary <- paste0(failingSamples, "=", failingCounts, collapse = ", ")
+
+      cli::cli_abort(
+        c(
+          "Some samples do not contain enough non-NA values.",
+          x = "Threshold: {.val {threshold}} non-NA value{?s} per sample.",
+          x = "Non-NA counts (sample=count): {countSummary}.",
+          i = "You can force processing without these samples by setting {.arg omitLowAbundSamples}={.val TRUE}."
+        ),
+        class = "normalyzerde_error",
+        call = NULL
+      )
     } else {
-      warning(errorString)
+      failingSamples <- sampleLabels[notPassingThreshold]
+      failingCounts <- numberOfValues[notPassingThreshold]
+      countSummary <- paste0(failingSamples, "=", failingCounts, collapse = ", ")
+
+      cli::cli_warn(
+        c(
+          "Some samples do not contain enough non-NA values.",
+          "!" = "Threshold: {.val {threshold}} non-NA value{?s} per sample.",
+          "!" = "Non-NA counts (sample=count): {countSummary}.",
+          i = "You can force processing without these samples by setting {.arg omitLowAbundSamples}={.val TRUE}."
+        ),
+        class = "normalyzerde_warning",
+        call = NULL
+      )
     }
   }
 
@@ -764,22 +847,33 @@ validateSampleReplication <- function(
   nonReplicatedSamples <- names(headerCounts[headerCounts == 1])
 
   if (length(nonReplicatedSamples) > 0) {
-    errorString <- paste(
-      "Following group conditions does not have replicates:",
-      paste(nonReplicatedSamples, collapse = " "),
-      "By default this is not allowed.",
-      "You can force limited processing of non-replicated data by",
-      "setting the \"requireReplicates\" option to FALSE",
-      sep = "\n"
-    )
-
     if (requireReplicates) {
-      stop(errorString)
+      cli::cli_abort(
+        c(
+          "Some group conditions have no replicates.",
+          x = "Group conditions without replicates: {.val {nonReplicatedSamples}}",
+          i = "Set {.arg requireReplicates}={.val FALSE} to continue with limited processing."
+        ),
+        class = "normalyzerde_error",
+        call = NULL
+      )
     } else if (!quiet) {
-      warning(errorString)
+      cli::cli_warn(
+        c(
+          "Some group conditions have no replicates.",
+          "!" = "Group conditions without replicates: {.val {nonReplicatedSamples}}",
+          i = "Continuing with limited processing because {.arg requireReplicates}={.val FALSE}."
+        ),
+        class = "normalyzerde_warning",
+        call = NULL
+      )
     }
   } else {
-    if (!quiet) message("Sample replication check: All samples have replicates")
+    if (!quiet) {
+      cli::cli_inform(
+        c(v = "Sample replication check: All samples have replicates")
+      )
+    }
   }
 }
 
@@ -802,38 +896,48 @@ verifyMultipleSamplesPresent <- function(
   distinctSamples <- unique(samples)
 
   if (length(samples) < 2) {
-    errorString <- paste(
-      "At least two samples are required to run Normalyzer",
-      "Here, we found:",
-      paste(samples, collapse = " "),
-      sep = "\n"
+    cli::cli_abort(
+      c(
+        "At least two samples are required to run Normalyzer.",
+        x = "Found {length(samples)} sample(s): {.val {samples}}."
+      ),
+      class = "normalyzerde_error",
+      call = NULL
     )
-
-    stop(errorString)
   }
 
   if (length(distinctSamples) == 1) {
-    errorString <- paste(
-      "Found less than two distinct sample groups. Following was found:",
-      paste(distinctSamples, collapse = " "),
-      "For full processing two or more sample groups are required",
-      "You can force limited processing for one sample group by setting the",
-      "\"requireReplicates\" option to FALSE\n",
-      sep = "\n"
-    )
-
     if (requireReplicates) {
-      stop(errorString)
+      cli::cli_abort(
+        c(
+          "Less than two distinct sample groups found.",
+          x = "Found group: {.val {distinctSamples}}.",
+          i = "For full processing, two or more sample groups are required.",
+          i = "Set {.arg requireReplicates}={.val FALSE} to continue with limited processing."
+        ),
+        class = "normalyzerde_error",
+        call = NULL
+      )
     } else if (!quiet) {
-      warning(errorString)
+      cli::cli_warn(
+        c(
+          "Less than two distinct sample groups found.",
+          "!" = "Found group: {.val {distinctSamples}}.",
+          i = "Continuing with limited processing because {.arg requireReplicates}={.val FALSE}."
+        ),
+        class = "normalyzerde_warning",
+        call = NULL
+      )
     }
   } else if (length(distinctSamples) == 0) {
-    stop(
-      "No replicate groups found. Double check your input file,
-             and check that your data haven't been filtered out in preceeding
-             input validation steps."
+    cli::cli_abort(
+      "No replicate groups found. Double check your input file and that your data haven't been filtered out in preceding input validation steps.",
+      class = "normalyzerde_error",
+      call = NULL
     )
   } else {
-    if (!quiet) message("Sample check: More than one sample group found")
+    if (!quiet) {
+      cli::cli_inform(c(v = "Sample check: More than one sample group found"))
+    }
   }
 }

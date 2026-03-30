@@ -333,7 +333,7 @@ test_that("setupRawContrastObject reads DIANN report.parquet", {
 test_that("diannChooseReportSpec validates and infers sample/feature/quantity columns", {
   expect_error(
     NormalyzerDE:::diannChooseReportSpec(c("Protein.Group", "PG.Quantity")),
-    "missing both 'Run' and 'File.Name'"
+    class = "normalyzerde_error"
   )
 
   expect_error(
@@ -341,7 +341,7 @@ test_that("diannChooseReportSpec validates and infers sample/feature/quantity co
       c("Run", "Protein.Group", "PG.Quantity"),
       diannSampleCol = "Missing.Sample"
     ),
-    "missing requested sample column"
+    class = "normalyzerde_error"
   )
 
   expect_error(
@@ -349,7 +349,7 @@ test_that("diannChooseReportSpec validates and infers sample/feature/quantity co
       c("Run", "Protein.Group", "PG.Quantity"),
       diannFeatureCol = "Missing.Feature"
     ),
-    "missing requested feature column"
+    class = "normalyzerde_error"
   )
 
   expect_error(
@@ -357,7 +357,7 @@ test_that("diannChooseReportSpec validates and infers sample/feature/quantity co
       c("Run", "Protein.Group", "PG.Quantity"),
       diannQuantityCol = "Missing.Quantity"
     ),
-    "missing requested quantity column"
+    class = "normalyzerde_error"
   )
 
   expect_error(
@@ -365,7 +365,7 @@ test_that("diannChooseReportSpec validates and infers sample/feature/quantity co
       c("Run", "CustomFeature"),
       diannFeatureCol = "CustomFeature"
     ),
-    "Could not infer DIANN quantity column"
+    class = "normalyzerde_error"
   )
 
   expect_error(
@@ -374,7 +374,7 @@ test_that("diannChooseReportSpec validates and infers sample/feature/quantity co
       diannLevel = "protein",
       diannQuantityCol = "Precursor.Quantity"
     ),
-    "missing requested feature column"
+    class = "normalyzerde_error"
   )
 
   inferredProtein <- NormalyzerDE:::diannChooseReportSpec(
@@ -432,7 +432,7 @@ test_that("readDiannToDataFrame warns when requested extra columns are missing",
         columns = list(extra = c("Protein.Names", "MissingExtra"))
       )
     ),
-    "missing some requested extra columns"
+    class = "normalyzerde_warning"
   )
 
   expect_true("Protein.Group" %in% colnames(wide))
@@ -490,7 +490,8 @@ test_that("readDiannToDataFrame warns about ambiguous auto inference only when e
   withr::local_options(list(NormalyzerDE.warnDiannAutoAmbiguous = TRUE))
   expect_warning(
     readDiannToDataFrame(reportPath, inputOptions = NULL),
-    "both protein-level and precursor-level"
+    "both protein-level and precursor-level",
+    class = "normalyzerde_warning"
   )
 })
 
@@ -564,7 +565,7 @@ test_that("diannReadReportParquet errors when requested columns are missing", {
       dataPath,
       selectCols = c("Run", "Protein.Group", "PG.Quantity", "MissingCol")
     ),
-    "missing expected columns"
+    class = "normalyzerde_error"
   )
 })
 
@@ -604,7 +605,7 @@ test_that("readDiannToDataFrame reads parquet DIANN reports and applies filters"
         filters = list(q = list(enable = TRUE, cutoffs = 0.01))
       )
     ),
-    "missing some requested extra columns"
+    class = "normalyzerde_warning"
   )
 
   expect_equal(as.character(wideFiltered$Protein.Group), "P1")
@@ -626,7 +627,7 @@ test_that("readDiannToDataFrame errors on duplicate sample names after stripping
 
   expect_error(
     readDiannToDataFrame(matrixPath, designSampleNames = c("S1")),
-    "not unique after stripping paths/extensions"
+    class = "normalyzerde_error"
   )
 })
 

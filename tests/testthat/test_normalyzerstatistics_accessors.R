@@ -67,7 +67,10 @@ test_that("chooseOneVsRestLabel selects an unused label", {
   used <- c("rest", "others", "all_other", "all_others")
   expect_equal(chooseOneVsRestLabel(used), "rest1")
 
-  expect_error(chooseOneVsRestLabel("A", candidates = character()), "candidate")
+  expect_error(
+    chooseOneVsRestLabel("A", candidates = character()),
+    class = "normalyzerde_error"
+  )
 })
 
 test_that("sanitizeLimmaDesign and calculateLimmaContrast work with coefMap", {
@@ -113,7 +116,6 @@ test_that("sanitizeLimmaDesign and calculateLimmaContrast work with coefMap", {
       useIntensityTrend = FALSE,
       coefMap = coefMap[1]
     ),
-    "Could not find limma coefficient name"
+    class = "normalyzerde_error"
   )
 })
-

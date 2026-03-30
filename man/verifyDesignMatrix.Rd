@@ -7,9 +7,9 @@
 verifyDesignMatrix(fullMatrix, designMatrix, sampleCol)
 }
 \arguments{
-\item{fullMatrix}{Dataframe with input data.}
+\item{fullMatrix}{Data frame with input data.}
 
-\item{designMatrix}{Dataframe with design setup.}
+\item{designMatrix}{Data frame with design setup.}
 
 \item{sampleCol}{Column in design matrix containing sample IDs.}
 }

@@ -5,13 +5,13 @@ test_that("input option helpers validate sep and block typos", {
   expect_true(is.list(proteiosInputOptions()))
   expect_true(is.list(maxQuantInputOptions()))
 
-  expect_error(defaultInputOptions(sep = ""), "sep")
-  expect_error(proteiosInputOptions(sep = NA), "sep")
-  expect_error(maxQuantInputOptions(sep = ""), "sep")
+  expect_error(defaultInputOptions(sep = ""), class = "normalyzerde_error")
+  expect_error(proteiosInputOptions(sep = NA), class = "normalyzerde_error")
+  expect_error(maxQuantInputOptions(sep = ""), class = "normalyzerde_error")
 
-  expect_error(defaultInputOptions(s = ","), "Unknown argument")
-  expect_error(proteiosInputOptions(s = ","), "Unknown argument")
-  expect_error(maxQuantInputOptions(s = ","), "Unknown argument")
+  expect_error(defaultInputOptions(s = ","), class = "normalyzerde_error")
+  expect_error(proteiosInputOptions(s = ","), class = "normalyzerde_error")
+  expect_error(maxQuantInputOptions(s = ","), class = "normalyzerde_error")
 })
 
 test_that("setupRawDataObject supports custom delimiter for default input", {

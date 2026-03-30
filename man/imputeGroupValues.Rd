@@ -2,21 +2,23 @@
 % Please edit documentation in R/utils.R
 \name{imputeGroupValues}
 \alias{imputeGroupValues}
-\title{Impute one value in groups with only NAs if any group has more than fraction non-NA values}
+\title{Impute missing groups when another group has sufficient observations}
 \usage{
 imputeGroupValues(df, groups, minFraction = 0.75)
 }
 \arguments{
-\item{df}{Dataframe with expression data}
+\item{df}{Data frame with expression data}
 
-\item{groups}{Condition groups header}
+\item{groups}{Condition-group labels}
 
-\item{minFraction}{Minimum fraction with values in one group before imputing low value in other groups}
+\item{minFraction}{Minimum observed fraction required in one group before
+imputing a low value in other groups}
 }
 \value{
 imputedDf Imputed data frame
 }
 \description{
-Impute one value in groups with only NAs if any group has more than fraction non-NA values
+Imputes one low value in groups containing only missing values when at least
+one group for the same feature has a sufficient fraction of observed values.
 }
 \keyword{internal}

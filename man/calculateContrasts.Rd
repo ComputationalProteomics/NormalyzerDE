@@ -72,13 +72,13 @@ Ignored if \code{oneVsRest=TRUE}.}
 
 \item{batchCol}{Column name in design matrix containing batch information.}
 
-\item{splitter}{Character dividing contrast conditions.}
+\item{splitter}{Delimiter used to separate contrast groups.}
 
 \item{type}{Type of statistical test ("limma", "limma_intensity", "welch" or
 "limpa"). "limpa" uses the optional Bioconductor package \pkg{limpa} to
 handle missing values via a detection probability curve (DPC) model.}
 
-\item{leastRepCount}{Least replicates in each group to be retained for
+\item{leastRepCount}{Minimum number of replicates required in each group for
 contrast calculations. For \code{type="limpa"}, a feature is retained if at
 least one group has \code{leastRepCount} observed samples (and features
 entirely missing across all samples are removed).}
@@ -89,10 +89,13 @@ entirely missing across all samples are removed).}
 group to impute in other groups (ignored for \code{type="limpa"}).}
 
 \item{subsetByComparison}{If TRUE, subset data and design to each comparison
-before NA-filtering, imputation and model fitting.}
+before NA-filtering, imputation and model fitting. Use this when filtering
+or imputation should depend only on the samples in each comparison, not the
+full dataset.}
 
-\item{oneVsRest}{If TRUE, compute one-vs-rest contrasts for each group in
-\code{condCol} (or the subset in \code{oneVsRestGroups}).}
+\item{oneVsRest}{If TRUE, create one comparison per selected group against
+all remaining samples (for all groups in \code{condCol}, or the subset in
+\code{oneVsRestGroups}).}
 
 \item{oneVsRestGroups}{Optional character vector specifying which groups in
 \code{condCol} to compare against all other samples.}

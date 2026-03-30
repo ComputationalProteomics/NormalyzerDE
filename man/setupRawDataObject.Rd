@@ -2,8 +2,7 @@
 % Please edit documentation in R/inputVerification.R
 \name{setupRawDataObject}
 \alias{setupRawDataObject}
-\title{Prepare SummarizedExperiment object for raw data to be normalized containing
-data, design and annotation information}
+\title{Prepare a SummarizedExperiment object for normalization}
 \usage{
 setupRawDataObject(
   dataPath,
@@ -36,11 +35,11 @@ NA values}
 \code{\link{maxQuantInputOptions}} to configure the delimiter.}
 }
 \value{
-experimentObj SummarizedExperiment object loaded with the data
+experimentObj SummarizedExperiment object containing the data, design
+  and annotation information
 }
 \description{
-Prepare SummarizedExperiment object for raw data to be normalized containing
-data, design and annotation information
+Prepare a SummarizedExperiment object for normalization
 }
 \examples{
 data_path <- system.file(package="NormalyzerDE", "extdata", "tiny_data.tsv")

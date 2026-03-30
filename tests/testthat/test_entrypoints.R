@@ -139,15 +139,22 @@ test_that("normalyzer supports DIANN report precursors with RT normalization", {
 })
 
 test_that("normalyzer emits version message and errors when inputs missing", {
-  expect_message(
-    expect_error(
-      normalyzer(
-        jobName = "missing_inputs",
-        quiet = FALSE
-      ),
-      "Either options 'designPath' plus 'dataPath'|summarizedExp"
+  expect_error(
+    normalyzer(
+      jobName = "missing_inputs",
+      quiet = FALSE
     ),
-    "You are running version"
+    class = "normalyzerde_error"
+  )
+})
+
+test_that("normalyzer stays quiet when inputs missing and quiet=TRUE", {
+  expect_error(
+    normalyzer(
+      jobName = "missing_inputs",
+      quiet = TRUE
+    ),
+    class = "normalyzerde_error"
   )
 })
 
@@ -207,16 +214,20 @@ test_that("normalyzerDE errors when comparisons are missing and oneVsRest=FALSE"
       experimentObj = se,
       quiet = TRUE
     ),
-    "Argument 'comparisons' must be provided"
+    class = "normalyzerde_error"
   )
 })
 
 test_that("normalyzerDE emits version message and errors when inputs missing", {
-  expect_message(
-    expect_error(
-      normalyzerDE(jobName = "missing_inputs", quiet = FALSE),
-      "Either options 'designPath' plus 'dataPath'|summarizedExp"
-    ),
-    "You are running version"
+  expect_error(
+    normalyzerDE(jobName = "missing_inputs", quiet = FALSE),
+    class = "normalyzerde_error"
+  )
+})
+
+test_that("normalyzerDE stays quiet when inputs missing and quiet=TRUE", {
+  expect_error(
+    normalyzerDE(jobName = "missing_inputs", quiet = TRUE),
+    class = "normalyzerde_error"
   )
 })

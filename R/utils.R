@@ -23,7 +23,11 @@ setupJobDir <- function(jobName, outputDir) {
 
 sanitizeJobName <- function(jobName) {
   if (length(jobName) < 1 || is.null(jobName) || is.na(jobName[1])) {
-    stop("Invalid jobName: must be a non-empty character value")
+    cli::cli_abort(
+      "Invalid {.arg jobName}: must be a non-empty character value.",
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
 
   originalJobName <- as.character(jobName[1])
@@ -35,19 +39,18 @@ sanitizeJobName <- function(jobName) {
   sanitizedJobName <- sub("[. ]+$", "", sanitizedJobName)
 
   if (!nzchar(sanitizedJobName)) {
-    stop(
-      "Invalid jobName: must contain at least one character after sanitization"
+    cli::cli_abort(
+      "Invalid {.arg jobName}: must contain at least one character after sanitization.",
+      class = "normalyzerde_error",
+      call = NULL
     )
   }
 
   if (!identical(originalJobName, sanitizedJobName)) {
-    warning(
-      "jobName was sanitized from '",
-      originalJobName,
-      "' to '",
-      sanitizedJobName,
-      "' for filesystem compatibility.",
-      call. = FALSE
+    cli::cli_warn(
+      "{.arg jobName} was sanitized from {.val {originalJobName}} to {.val {sanitizedJobName}} for filesystem compatibility.",
+      class = "normalyzerde_warning",
+      call = NULL
     )
   }
 
@@ -56,7 +59,7 @@ sanitizeJobName <- function(jobName) {
 
 #' Get dataframe with raw data column sorted on replicates
 #'
-#' @param rawDataOnly Dataframe with unparsed input data matrix.
+#' @param rawDataOnly Data frame with unparsed input data matrix.
 #' @param groups Vector containing condition levels.
 #' @return rawData sorted on replicate
 #' @keywords internal
@@ -78,16 +81,20 @@ createDirectory <- function(targetPath) {
   }
 
   if (file.exists(targetPath)) {
-    stop(
-      "Path already exists and is not a directory: ",
-      targetPath,
-      call. = FALSE
+    cli::cli_abort(
+      "Path already exists and is not a directory: {.path {targetPath}}.",
+      class = "normalyzerde_error",
+      call = NULL
     )
   }
 
   created <- dir.create(targetPath, recursive = TRUE, showWarnings = FALSE)
   if (!isTRUE(created) && !dir.exists(targetPath)) {
-    stop("Failed to create directory: ", targetPath, call. = FALSE)
+    cli::cli_abort(
+      "Failed to create directory: {.path {targetPath}}.",
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
 
   invisible(NULL)
@@ -211,7 +218,7 @@ calculatePercentageAvgDiffInMat <- function(targetMat) {
 
 #' Filter rows with lower than given number of replicates for any condition
 #'
-#' @param df Dataframe with expression data to filter
+#' @param df Data frame with expression data to filter
 #' @param groups Condition groups header
 #' @param leastRep Minimum number of replicates in each group
 #'   to retain
@@ -238,11 +245,15 @@ filterLowRep <- function(df, groups, leastRep = 2) {
   filteredDf
 }
 
-#' Impute one value in groups with only NAs if any group has more than fraction non-NA values
+#' Impute missing groups when another group has sufficient observations
 #'
-#' @param df Dataframe with expression data
-#' @param groups Condition groups header
-#' @param minFraction Minimum fraction with values in one group before imputing low value in other groups
+#' Imputes one low value in groups containing only missing values when at least
+#' one group for the same feature has a sufficient fraction of observed values.
+#'
+#' @param df Data frame with expression data
+#' @param groups Condition-group labels
+#' @param minFraction Minimum observed fraction required in one group before
+#'   imputing a low value in other groups
 #' @return imputedDf Imputed data frame
 #' @keywords internal
 imputeGroupValues <- function(df, groups, minFraction = 0.75) {

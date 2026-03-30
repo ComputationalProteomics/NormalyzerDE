@@ -113,7 +113,7 @@ test_that("getSigs errors for unknown threshold type", {
       sigThres = 0.1,
       log2FoldThres = 0
     ),
-    "Unknown significance threshold type"
+    class = "normalyzerde_error"
   )
 })
 

@@ -332,7 +332,7 @@ test_that("autoDetectLimpaQuantifiedRds warns for single non-canonical cache fil
     NormalyzerDE:::autoDetectLimpaQuantifiedRds(
       file.path(tmpDir, "log2-normalized.txt")
     ),
-    "does not match the expected canonical filename"
+    class = "normalyzerde_warning"
   )
   expect_null(out)
 })
@@ -352,7 +352,7 @@ test_that("normalyzerDE stops when multiple quantified RDS files are found", {
       type = "limpa",
       quiet = TRUE
     ),
-    "Multiple '\\*\\_limpa\\_quantified\\.rds'"
+    class = "normalyzerde_error"
   )
 })
 
@@ -367,7 +367,7 @@ test_that("normalyzerDE prevents same-method double normalization for limpa", {
       limpaPostQuantNorm = "median",
       quiet = TRUE
     ),
-    "already be normalized"
+    class = "normalyzerde_error"
   )
 })
 
@@ -385,8 +385,9 @@ test_that("normalyzerDE warns for potential double normalization for limpa", {
         type = "limpa",
         limpaPostQuantNorm = "GI",
         quiet = TRUE
-      )
+      ),
+      class = "normalyzerde_error"
     ),
-    "double-normalization"
+    class = "normalyzerde_warning"
   )
 })

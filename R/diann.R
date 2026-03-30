@@ -5,7 +5,11 @@ diannIsParquet <- function(filePath) {
 diannReadHeader <- function(filePath, sep = "\t") {
   headerLine <- readLines(filePath, n = 1, warn = FALSE)
   if (length(headerLine) < 1) {
-    stop("DIANN input file was empty: ", filePath)
+    cli::cli_abort(
+      "DIA-NN input file was empty: {.path {filePath}}.",
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
   strsplit(headerLine, sep, fixed = TRUE)[[1]]
 }
@@ -30,7 +34,11 @@ diannResolveMinPositive <- function(diannMinPositive) {
 
   diannMinPositive <- as.numeric(diannMinPositive)[1]
   if (is.na(diannMinPositive) || diannMinPositive < 0) {
-    stop("diannMinPositive must be a single non-negative numeric value.")
+    cli::cli_abort(
+      "{.arg diannMinPositive} must be a single non-negative numeric value.",
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
 
   diannMinPositive
@@ -41,7 +49,11 @@ diannNormalizeInputOptions <- function(inputOptions, sep = "\t") {
     inputOptions <- list()
   }
   if (!is.list(inputOptions)) {
-    stop("inputOptions must be a list (or NULL).")
+    cli::cli_abort(
+      "{.arg inputOptions} must be a list (or NULL).",
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
 
   level <- inputOptions$level
@@ -59,7 +71,11 @@ diannNormalizeInputOptions <- function(inputOptions, sep = "\t") {
     columns <- list()
   }
   if (!is.list(columns)) {
-    stop("inputOptions$columns must be a list (or NULL).")
+    cli::cli_abort(
+      "{.arg inputOptions$columns} must be a list (or NULL).",
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
 
   filters <- inputOptions$filters
@@ -67,7 +83,11 @@ diannNormalizeInputOptions <- function(inputOptions, sep = "\t") {
     filters <- list()
   }
   if (!is.list(filters)) {
-    stop("inputOptions$filters must be a list (or NULL).")
+    cli::cli_abort(
+      "{.arg inputOptions$filters} must be a list (or NULL).",
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
 
   filterDecoy <- filters$decoy
@@ -95,7 +115,11 @@ diannNormalizeInputOptions <- function(inputOptions, sep = "\t") {
       qCutoffs <- q$cutoffs
     }
   } else {
-    stop("inputOptions$filters$q must be logical, a list, or NULL.")
+    cli::cli_abort(
+      "{.arg inputOptions$filters$q} must be logical, a list, or NULL.",
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
 
   minPositive <- filters$min_positive
@@ -134,7 +158,11 @@ diannNormalizeInputOptions <- function(inputOptions, sep = "\t") {
   } else if (is.character(rt)) {
     rtCol <- as.character(rt)[1]
   } else {
-    stop("inputOptions$rt must be a list, logical, character, or NULL.")
+    cli::cli_abort(
+      "{.arg inputOptions$rt} must be a list, logical, character, or NULL.",
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
 
   list(
@@ -211,12 +239,20 @@ diannInputOptions <- function(
   argNames <- argNames[nzchar(argNames)]
   unknown <- setdiff(argNames, names(formals(sys.function())))
   if (length(unknown) > 0) {
-    stop("Unknown argument(s): ", paste(unknown, collapse = ", "))
+    cli::cli_abort(
+      "Unknown argument(s): {paste(unknown, collapse = \", \")}.",
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
 
   level <- match.arg(level)
   if (!is.character(sep) || length(sep) != 1 || is.na(sep) || sep == "") {
-    stop("sep must be a single non-empty character value.")
+    cli::cli_abort(
+      "{.arg sep} must be a single non-empty character value.",
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
 
   validateColName <- function(x, argName) {
@@ -225,7 +261,11 @@ diannInputOptions <- function(
     }
     x <- as.character(x)
     if (length(x) != 1 || is.na(x) || x == "") {
-      stop(argName, " must be a single non-empty character value (or NULL).")
+      cli::cli_abort(
+        "{.arg {argName}} must be a single non-empty character value (or NULL).",
+        class = "normalyzerde_error",
+        call = NULL
+      )
     }
     x
   }
@@ -237,56 +277,92 @@ diannInputOptions <- function(
   if (!is.null(extraCols)) {
     extraCols <- as.character(extraCols)
     if (anyNA(extraCols) || any(extraCols == "")) {
-      stop(
-        "extraCols must be a character vector of non-empty column names (or NULL)."
+      cli::cli_abort(
+        "{.arg extraCols} must be a character vector of non-empty column names (or NULL).",
+        class = "normalyzerde_error",
+        call = NULL
       )
     }
   }
 
   if (!is.logical(decoy) || length(decoy) != 1 || is.na(decoy)) {
-    stop("decoy must be TRUE or FALSE.")
+    cli::cli_abort(
+      "{.arg decoy} must be TRUE or FALSE.",
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
 
   if (!is.logical(qEnable) || length(qEnable) != 1 || is.na(qEnable)) {
-    stop("qEnable must be TRUE or FALSE.")
+    cli::cli_abort(
+      "{.arg qEnable} must be TRUE or FALSE.",
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
   if (!is.null(qCols)) {
     qCols <- as.character(qCols)
     if (anyNA(qCols) || any(qCols == "")) {
-      stop(
-        "qCols must be a character vector of non-empty column names (or NULL)."
+      cli::cli_abort(
+        "{.arg qCols} must be a character vector of non-empty column names (or NULL).",
+        class = "normalyzerde_error",
+        call = NULL
       )
     }
   }
   if (!is.numeric(qCutoffs)) {
-    stop("qCutoffs must be numeric.")
+    cli::cli_abort(
+      "{.arg qCutoffs} must be numeric.",
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
 
   minPositive <- as.numeric(minPositive)[1]
   if (is.na(minPositive) || minPositive < 0) {
-    stop("minPositive must be a single non-negative numeric value.")
+    cli::cli_abort(
+      "{.arg minPositive} must be a single non-negative numeric value.",
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
 
   if (!is.null(rt)) {
     if (is.logical(rt)) {
       if (length(rt) != 1 || is.na(rt)) {
-        stop("rt must be a single logical value (or NULL).")
+        cli::cli_abort(
+          "{.arg rt} must be a single logical value (or NULL).",
+          class = "normalyzerde_error",
+          call = NULL
+        )
       }
     } else if (is.character(rt)) {
       if (length(rt) != 1 || is.na(rt) || rt == "") {
-        stop("rt must be a single non-empty character value (or NULL).")
+        cli::cli_abort(
+          "{.arg rt} must be a single non-empty character value (or NULL).",
+          class = "normalyzerde_error",
+          call = NULL
+        )
       }
     } else if (is.list(rt)) {
       allowed <- c("col")
       extra <- setdiff(names(rt), allowed)
       if (length(extra) > 0) {
-        stop("rt list only supports the field: col")
+        cli::cli_abort(
+          "{.arg rt} list only supports the field {.val col}.",
+          class = "normalyzerde_error",
+          call = NULL
+        )
       }
       if (!is.null(rt$col)) {
         rt$col <- validateColName(rt$col, "rt$col")
       }
     } else {
-      stop("rt must be NULL, logical, character, or list(col = \"...\").")
+      cli::cli_abort(
+        "{.arg rt} must be NULL, logical, character, or list(col = \"...\").",
+        class = "normalyzerde_error",
+        call = NULL
+      )
     }
   }
 
@@ -350,12 +426,14 @@ diannRenameSampleColumnsForDesign <- function(dataFrame, designSampleNames) {
 
   dupNames <- unique(cleaned[candidateCols][duplicated(cleaned[candidateCols])])
   if (length(dupNames) > 0) {
-    stop(
-      "DIANN sample columns are not unique after stripping paths/extensions. ",
-      "Duplicate sample names include: ",
-      paste(utils::head(dupNames, 10), collapse = ", "),
-      "\n",
-      "Provide unique sample names in DIA-NN export, or use full file paths in the design matrix."
+    cli::cli_abort(
+      c(
+        "DIA-NN sample columns are not unique after stripping paths/extensions.",
+        i = "Duplicate sample names include: {paste(utils::head(dupNames, 10), collapse = \", \")}.",
+        i = "Provide unique sample names in DIA-NN export, or use full file paths in the design matrix."
+      ),
+      class = "normalyzerde_error",
+      call = NULL
     )
   }
 
@@ -377,9 +455,10 @@ diannChooseReportSpec <- function(
 
   sampleCol <- if (!is.null(diannSampleCol)) {
     if (!(diannSampleCol %in% reportColumns)) {
-      stop(
-        "DIANN report file is missing requested sample column: ",
-        diannSampleCol
+      cli::cli_abort(
+        "DIA-NN report file is missing requested sample column: {.val {diannSampleCol}}.",
+        class = "normalyzerde_error",
+        call = NULL
       )
     }
     diannSampleCol
@@ -388,7 +467,11 @@ diannChooseReportSpec <- function(
   } else if ("File.Name" %in% reportColumns) {
     "File.Name"
   } else {
-    stop("DIANN report file is missing both 'Run' and 'File.Name' columns")
+    cli::cli_abort(
+      "DIA-NN report file is missing both {.val Run} and {.val File.Name} columns.",
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
 
   proteinFeatureCol <- "Protein.Group"
@@ -415,36 +498,41 @@ diannChooseReportSpec <- function(
 
   if (!is.null(diannFeatureCol)) {
     if (!(diannFeatureCol %in% reportColumns)) {
-      stop(
-        "DIANN report file is missing requested feature column: ",
-        diannFeatureCol
+      cli::cli_abort(
+        "DIA-NN report file is missing requested feature column: {.val {diannFeatureCol}}.",
+        class = "normalyzerde_error",
+        call = NULL
       )
     }
     featureCol <- diannFeatureCol
     if (!is.null(diannQuantityCol)) {
       if (!(diannQuantityCol %in% reportColumns)) {
-        stop(
-          "DIANN report file is missing requested quantity column: ",
-          diannQuantityCol
+        cli::cli_abort(
+          "DIA-NN report file is missing requested quantity column: {.val {diannQuantityCol}}.",
+          class = "normalyzerde_error",
+          call = NULL
         )
       }
       quantityCol <- diannQuantityCol
     } else {
       quantityCol <- inferQuantity(featureCol)
       if (is.null(quantityCol)) {
-        stop(
-          "Could not infer DIANN quantity column for feature column '",
-          featureCol,
-          "'. ",
-          "Provide diannQuantityCol explicitly."
+        cli::cli_abort(
+          c(
+            "Could not infer DIA-NN quantity column for feature column {.val {featureCol}}.",
+            i = "Provide {.arg quantityCol} explicitly via {.fn diannInputOptions}."
+          ),
+          class = "normalyzerde_error",
+          call = NULL
         )
       }
     }
   } else if (!is.null(diannQuantityCol)) {
     if (!(diannQuantityCol %in% reportColumns)) {
-      stop(
-        "DIANN report file is missing requested quantity column: ",
-        diannQuantityCol
+      cli::cli_abort(
+        "DIA-NN report file is missing requested quantity column: {.val {diannQuantityCol}}.",
+        class = "normalyzerde_error",
+        call = NULL
       )
     }
 
@@ -460,9 +548,10 @@ diannChooseReportSpec <- function(
     }
 
     if (!(featureCol %in% reportColumns)) {
-      stop(
-        "DIANN report file is missing requested feature column: ",
-        featureCol
+      cli::cli_abort(
+        "DIA-NN report file is missing requested feature column: {.val {featureCol}}.",
+        class = "normalyzerde_error",
+        call = NULL
       )
     }
   } else {
@@ -490,10 +579,13 @@ diannChooseReportSpec <- function(
     }
 
     if (is.null(quantityCol) || !(featureCol %in% reportColumns)) {
-      stop(
-        "Could not infer DIANN report feature/quantity columns. ",
-        "Expected protein-level columns like 'Protein.Group' + 'PG.Quantity'/'PG.MaxLFQ' ",
-        "or precursor-level columns like 'Precursor.Id' + 'Precursor.Quantity'."
+      cli::cli_abort(
+        c(
+          "Could not infer DIA-NN report feature/quantity columns.",
+          i = "Expected protein-level columns like {.val Protein.Group} + {.val PG.Quantity}/{.val PG.MaxLFQ}, or precursor-level columns like {.val Precursor.Id} + {.val Precursor.Quantity}."
+        ),
+        class = "normalyzerde_error",
+        call = NULL
       )
     }
   }
@@ -564,9 +656,13 @@ diannReadReportTSV <- function(filePath, sep = "\t", selectCols) {
 
 diannReadReportParquet <- function(filePath, selectCols) {
   if (!requireNamespace("arrow", quietly = TRUE)) {
-    stop(
-      "Reading DIANN parquet files requires the optional 'arrow' package. ",
-      "Install it, or export DIANN output as TSV instead."
+    cli::cli_abort(
+      c(
+        "Reading DIA-NN parquet files requires the optional {.pkg arrow} package.",
+        i = "Install it, or export DIA-NN output as TSV instead."
+      ),
+      class = "normalyzerde_error",
+      call = NULL
     )
   }
   reader <- arrow::ParquetFileReader$create(filePath)
@@ -576,9 +672,13 @@ diannReadReportParquet <- function(filePath, selectCols) {
   selectIndices <- match(selectCols, schemaNames)
   missing <- selectCols[is.na(selectIndices)]
   if (length(missing) > 0) {
-    stop(
-      "DIANN parquet file is missing expected columns: ",
-      paste(utils::head(missing, 10), collapse = ", ")
+    cli::cli_abort(
+      c(
+        "DIA-NN parquet file is missing expected columns.",
+        i = "Missing: {paste(utils::head(missing, 10), collapse = \", \")}."
+      ),
+      class = "normalyzerde_error",
+      call = NULL
     )
   }
 
@@ -643,9 +743,13 @@ diannResolveQValueCols <- function(diannQValueCols, reportColumns, featureCol) {
 
   missing <- setdiff(diannQValueCols, reportColumns)
   if (length(missing) > 0) {
-    stop(
-      "DIANN report file is missing requested q-value columns: ",
-      paste(utils::head(missing, 10), collapse = ", ")
+    cli::cli_abort(
+      c(
+        "DIA-NN report file is missing requested q-value columns.",
+        i = "Missing: {paste(utils::head(missing, 10), collapse = \", \")}."
+      ),
+      class = "normalyzerde_error",
+      call = NULL
     )
   }
   diannQValueCols
@@ -738,13 +842,14 @@ diannWarnIfAutoInferenceIsAmbiguous <- function(reportColumns, opts, spec) {
 
   inferred <- paste0(spec$featureCol, " + ", spec$quantityCol)
 
-  warning(
-    "DIANN report contains both protein-level and precursor-level quantities. ",
-    "Using inferred columns by default: ",
-    inferred,
-    ". If you intended precursor-level analysis, set `inputOptions=diannInputOptions(level=\"precursor\", quantityCol=\"Precursor.Quantity\")` ",
-    "(or set level/feature/quantity explicitly).",
-    call. = FALSE
+  cli::cli_warn(
+    c(
+      "DIA-NN report contains both protein-level and precursor-level quantities.",
+      i = "Using inferred columns by default: {.val {inferred}}.",
+      i = "If you intended precursor-level analysis, set {.code inputOptions = diannInputOptions(level = 'precursor', quantityCol = 'Precursor.Quantity')} (or set level/feature/quantity explicitly)."
+    ),
+    class = "normalyzerde_warning",
+    call = NULL
   )
 
   invisible(NULL)
@@ -849,9 +954,13 @@ readDiannToDataFrame <- function(
 
   if (diannIsParquet(filePath)) {
     if (!requireNamespace("arrow", quietly = TRUE)) {
-      stop(
-        "Reading DIANN parquet files requires the optional 'arrow' package. ",
-        "Install it, or export DIANN output as TSV instead."
+      cli::cli_abort(
+        c(
+          "Reading DIA-NN parquet files requires the optional {.pkg arrow} package.",
+          i = "Install it, or export DIA-NN output as TSV instead."
+        ),
+        class = "normalyzerde_error",
+        call = NULL
       )
     }
 
@@ -875,9 +984,13 @@ readDiannToDataFrame <- function(
       } else {
         missingExtra <- setdiff(requested, reportColumns)
         if (length(missingExtra) > 0) {
-          warning(
-            "DIANN report file is missing some requested extra columns: ",
-            paste(utils::head(missingExtra, 10), collapse = ", ")
+          cli::cli_warn(
+            c(
+              "DIA-NN report file is missing some requested extra columns.",
+              i = "Missing: {paste(utils::head(missingExtra, 10), collapse = \", \")}."
+            ),
+            class = "normalyzerde_warning",
+            call = NULL
           )
         }
         extraCols <- intersect(requested, reportColumns)
@@ -948,9 +1061,13 @@ readDiannToDataFrame <- function(
       } else {
         missingExtra <- setdiff(requested, header)
         if (length(missingExtra) > 0) {
-          warning(
-            "DIANN report file is missing some requested extra columns: ",
-            paste(utils::head(missingExtra, 10), collapse = ", ")
+          cli::cli_warn(
+            c(
+              "DIA-NN report file is missing some requested extra columns.",
+              i = "Missing: {paste(utils::head(missingExtra, 10), collapse = \", \")}."
+            ),
+            class = "normalyzerde_warning",
+            call = NULL
           )
         }
         extraCols <- intersect(requested, header)

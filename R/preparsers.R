@@ -15,11 +15,19 @@ proteiosInputOptions <- function(sep = "\t") {
   argNames <- argNames[nzchar(argNames)]
   unknown <- setdiff(argNames, names(formals(sys.function())))
   if (length(unknown) > 0) {
-    stop("Unknown argument(s): ", paste(unknown, collapse = ", "))
+    cli::cli_abort(
+      "Unknown argument(s): {paste(unknown, collapse = \", \")}.",
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
 
   if (!is.character(sep) || length(sep) != 1 || is.na(sep) || sep == "") {
-    stop("sep must be a single non-empty character value.")
+    cli::cli_abort(
+      "{.arg sep} must be a single non-empty character value.",
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
   list(sep = sep)
 }
@@ -41,11 +49,19 @@ maxQuantInputOptions <- function(sep = "\t") {
   argNames <- argNames[nzchar(argNames)]
   unknown <- setdiff(argNames, names(formals(sys.function())))
   if (length(unknown) > 0) {
-    stop("Unknown argument(s): ", paste(unknown, collapse = ", "))
+    cli::cli_abort(
+      "Unknown argument(s): {paste(unknown, collapse = \", \")}.",
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
 
   if (!is.character(sep) || length(sep) != 1 || is.na(sep) || sep == "") {
-    stop("sep must be a single non-empty character value.")
+    cli::cli_abort(
+      "{.arg sep} must be a single non-empty character value.",
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
   list(sep = sep)
 }
@@ -97,14 +113,14 @@ maxQuantToNormalyzer <- function(maxQuantFp, protLevel, sep = "\t") {
   headerNamesTrimmed <- gsub("Intensity.", "", headerNames)
 
   if (!(all(annotCols %in% colnames(fullDf)))) {
-    stop(
-      "Performing MaxQuant processing for the ",
-      matrixType,
-      " matrix\n",
-      "Didn't find all of the following expected columns (with spaces instead of dots): \n",
-      paste(annotCols, collapse = ", "),
-      "\nColumns in the input data:\n",
-      paste(colnames(fullDf), collapse = ", ")
+    cli::cli_abort(
+      c(
+        "Missing expected columns when processing MaxQuant {.val {matrixType}}.",
+        i = "Expected columns (spaces instead of dots): {paste(annotCols, collapse = \", \")}.",
+        i = "Columns in input data: {paste(colnames(fullDf), collapse = \", \")}."
+      ),
+      class = "normalyzerde_error",
+      call = NULL
     )
   }
 

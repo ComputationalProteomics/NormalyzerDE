@@ -49,9 +49,9 @@
 #'   \code{\link{maxQuantInputOptions}} to configure the delimiter.
 #' @param skipAnalysis Only perform normalization steps.
 #' @param quiet Omit status messages printed during run.
-#' @param noLogTransform Don't log-transform the input.
-#' @param writeReportAsPngs Output the evaluation report as PNG files instead of
-#'  a single PDF
+#' @param noLogTransform Don't log2-transform the input.
+#' @param writeReportAsPngs Write the evaluation report as separate PNG files
+#'   instead of a single PDF
 #'
 #' @param rtStepSizeMinutes Retention time normalization window size.
 #' @param rtWindowMinCount Minimum number of datapoints in each retention-time
@@ -162,25 +162,28 @@ normalyzer <- function(
   limpaQuantArgs = NULL
 ) {
   if (!quiet) {
-    message(
-      "You are running version ",
-      utils::packageVersion("NormalyzerDE"),
-      " of NormalyzerDE"
-    )
+    version <- utils::packageVersion("NormalyzerDE")
+    cli::cli_alert_info("You are running version {version} of NormalyzerDE")
   }
 
   if (is.null(experimentObj) && (is.null(designPath) || is.null(dataPath))) {
-    stop(
-      "Either options 'designPath' plus 'dataPath' or 'summarizedExp' need to be provided"
+    cli::cli_abort(
+      "Provide {.arg designPath} + {.arg dataPath}, or provide {.arg experimentObj}.",
+      class = "normalyzerde_error",
+      call = NULL
     )
   }
 
   startTime <- Sys.time()
   preQuantUse <- match.arg(preQuant)
-  totalSteps <- if (identical(preQuantUse, "limpa")) 6 else 5
+  totalSteps <- if (identical(preQuantUse, "limpa")) 6L else 5L
+
+  stepTag <- function(step) {
+    sprintf("[Step %d/%d]", step, totalSteps)
+  }
 
   if (!quiet) {
-    message("[Step 1/", totalSteps, "] Load data and verify input")
+    cli::cli_alert_info("{.strong {stepTag(1)}} Load data and verify input")
   }
 
   if (is.null(experimentObj)) {
@@ -226,18 +229,17 @@ normalyzer <- function(
 
   jobDir <- setupJobDir(jobName, outputDir)
   if (!quiet) {
-    message(
-      "[Step 1/",
-      totalSteps,
-      "] Input verified, job directory prepared at:",
-      jobDir
+    cli::cli_alert_success(
+      "{.strong {stepTag(1)}} Input verified; output directory prepared at {.path {jobDir}}"
     )
   }
 
   noLogTransformUse <- noLogTransform
   if (identical(preQuantUse, "limpa")) {
     if (!quiet) {
-      message("[Step 2/", totalSteps, "] Running limpa pre-quantification")
+      cli::cli_alert_info(
+        "{.strong {stepTag(2)}} Running limpa pre-quantification"
+      )
     }
 
     requireLimpaPackageInternal("preQuant='limpa'")
@@ -265,9 +267,10 @@ normalyzer <- function(
       out <- log2(mat)
       nonFinite <- !is.finite(out) & !wasMissing
       if (any(nonFinite)) {
-        warning(
-          "Non-finite values produced by log2 transform (e.g. zeros or negative values) ",
-          "were treated as missing (set to NA)."
+        cli::cli_warn(
+          "Non-finite values produced by log2 transform (e.g. zeros or negative values) were treated as missing (set to NA).",
+          class = "normalyzerde_warning",
+          call = NULL
         )
         out[nonFinite] <- NA_real_
       }
@@ -296,11 +299,9 @@ normalyzer <- function(
     )
 
     limpaDpcUse <- if (!is.null(limpaDpc)) {
-      if (limpaDpcMethod != "none" && isTRUE(verboseUse)) {
-        message(
-          "limpaDpc was supplied; ignoring limpaDpcMethod='",
-          limpaDpcMethod,
-          "'."
+      if (!quiet && limpaDpcMethod != "none" && isTRUE(verboseUse)) {
+        cli::cli_alert_info(
+          "{.arg limpaDpc} was supplied; ignoring {.arg limpaDpcMethod}={.val {limpaDpcMethod}}."
         )
       }
       limpaDpc
@@ -327,19 +328,18 @@ normalyzer <- function(
       proteinId <- as.character(proteinId)
 
       if (length(proteinId) != nrow(mat)) {
-        stop(
-          "Row annotation column '",
-          proteinIdCol,
-          "' does not match the number of rows in the data matrix."
+        cli::cli_abort(
+          "Row annotation column {.val {proteinIdCol}} does not match the number of rows in the data matrix.",
+          class = "normalyzerde_error",
+          call = NULL
         )
       }
 
       if (anyNA(proteinId) || any(proteinId == "")) {
-        stop(
-          "Row annotation column '",
-          proteinIdCol,
-          "' contains missing or empty protein identifiers. ",
-          "Remove these rows or choose another column."
+        cli::cli_abort(
+          "Row annotation column {.val {proteinIdCol}} contains missing or empty protein identifiers. Remove these rows or choose another column.",
+          class = "normalyzerde_error",
+          call = NULL
         )
       }
 
@@ -406,11 +406,8 @@ normalyzer <- function(
         )
       } else {
         if (!quiet) {
-          message(
-            "limpaProteinIdCol '",
-            limpaProteinIdColUsed,
-            "' contains no duplicated identifiers, so no peptide/precursor-to-protein summarization ",
-            "will be performed."
+          cli::cli_alert_info(
+            "{.arg limpaProteinIdCol} {.val {limpaProteinIdColUsed}} contains no duplicated identifiers; skipping peptide/precursor-to-protein summarization."
           )
         }
         yQuant <- quantifyByRow(log2Mat, genesDf = genesInputAll)
@@ -439,11 +436,8 @@ normalyzer <- function(
     saveRDS(yQuant, file = quantifiedRds)
 
     if (!quiet) {
-      message(
-        "[Step 2/",
-        totalSteps,
-        "] Saved quantified EList to: ",
-        quantifiedRds
+      cli::cli_alert_info(
+        "{.strong {stepTag(2)}} Saved quantified EList to {.path {quantifiedRds}}"
       )
     }
 
@@ -472,13 +466,17 @@ normalyzer <- function(
     )
 
     if (!quiet) {
-      message("[Step 2/", totalSteps, "] Done!")
+      cli::cli_alert_success(
+        "{.strong {stepTag(2)}} limpa quantification completed"
+      )
     }
   }
 
+  stepLabel <- if (identical(preQuantUse, "limpa")) 3 else 2
   if (!quiet) {
-    stepLabel <- if (identical(preQuantUse, "limpa")) 3 else 2
-    message("[Step ", stepLabel, "/", totalSteps, "] Performing normalizations")
+    cli::cli_alert_info(
+      "{.strong {stepTag(stepLabel)}} Performing normalizations"
+    )
   }
   normalyzerResultsObject <- normMethods(
     normObj,
@@ -492,58 +490,51 @@ normalyzer <- function(
     noLogTransform = noLogTransformUse
   )
   if (!quiet) {
-    stepLabel <- if (identical(preQuantUse, "limpa")) 3 else 2
-    message("[Step ", stepLabel, "/", totalSteps, "] Done!")
+    cli::cli_alert_success(
+      "{.strong {stepTag(stepLabel)}} Normalizations completed"
+    )
   }
 
+  analysisStepLabel <- if (identical(preQuantUse, "limpa")) 4 else 3
   if (!skipAnalysis) {
     if (!quiet) {
-      stepLabel <- if (identical(preQuantUse, "limpa")) 4 else 3
-      message(
-        "[Step ",
-        stepLabel,
-        "/",
-        totalSteps,
-        "] Generating evaluation measures..."
+      cli::cli_alert_info(
+        "{.strong {stepTag(analysisStepLabel)}} Generating evaluation measures..."
       )
     }
     normalyzerResultsObject <- analyzeNormalizations(normalyzerResultsObject)
     if (!quiet) {
-      stepLabel <- if (identical(preQuantUse, "limpa")) 4 else 3
-      message("[Step ", stepLabel, "/", totalSteps, "] Done!")
+      cli::cli_alert_success(
+        "{.strong {stepTag(analysisStepLabel)}} Evaluation measures generated"
+      )
     }
   } else {
     if (!quiet) {
-      message(
-        "[Step ",
-        if (identical(preQuantUse, "limpa")) 4 else 3,
-        "/",
-        totalSteps,
-        "] skipAnalysis flag set so no analysis performed"
+      cli::cli_alert_success(
+        "{.strong {stepTag(analysisStepLabel)}} Skipped evaluation measures (skipAnalysis=TRUE)"
       )
     }
   }
 
+  writeStepLabel <- if (identical(preQuantUse, "limpa")) 5 else 4
   if (!quiet) {
-    stepLabel <- if (identical(preQuantUse, "limpa")) 5 else 4
-    message("[Step ", stepLabel, "/", totalSteps, "] Writing matrices to file")
+    cli::cli_alert_info(
+      "{.strong {stepTag(writeStepLabel)}} Writing matrices to file"
+    )
   }
   writeNormalizedDatasets(normalyzerResultsObject, jobDir)
   if (!quiet) {
-    stepLabel <- if (identical(preQuantUse, "limpa")) 5 else 4
-    message(
-      "[Step ",
-      stepLabel,
-      "/",
-      totalSteps,
-      "] Matrices successfully written"
+    cli::cli_alert_success(
+      "{.strong {stepTag(writeStepLabel)}} Matrices successfully written"
     )
   }
 
+  plotStepLabel <- if (identical(preQuantUse, "limpa")) 6 else 5
   if (!skipAnalysis) {
     if (!quiet) {
-      stepLabel <- if (identical(preQuantUse, "limpa")) 6 else 5
-      message("[Step ", stepLabel, "/", totalSteps, "] Generating plots...")
+      cli::cli_alert_info(
+        "{.strong {stepTag(plotStepLabel)}} Generating plots..."
+      )
     }
     generatePlots(
       normalyzerResultsObject,
@@ -553,23 +544,14 @@ normalyzer <- function(
       writeAsPngs = writeReportAsPngs
     )
     if (!quiet) {
-      stepLabel <- if (identical(preQuantUse, "limpa")) 6 else 5
-      message(
-        "[Step ",
-        stepLabel,
-        "/",
-        totalSteps,
-        "] Plots successfully generated"
+      cli::cli_alert_success(
+        "{.strong {stepTag(plotStepLabel)}} Plots successfully generated"
       )
     }
   } else {
     if (!quiet) {
-      message(
-        "[Step ",
-        if (identical(preQuantUse, "limpa")) 6 else 5,
-        "/",
-        totalSteps,
-        "] skipAnalysis flag set so no plots generated"
+      cli::cli_alert_success(
+        "{.strong {stepTag(plotStepLabel)}} Skipped plot generation (skipAnalysis=TRUE)"
       )
     }
   }
@@ -577,12 +559,8 @@ normalyzer <- function(
   endTime <- Sys.time()
   totTime <- difftime(endTime, startTime, units = "mins")
   if (!quiet) {
-    message(
-      "All done! Results are stored in: ",
-      jobDir,
-      ", processing time was ",
-      round(totTime, 1),
-      " minutes"
+    cli::cli_alert_success(
+      "All done! Results are saved in {.path {jobDir}}; processing time was {round(totTime, 1)} minutes"
     )
   }
 }
@@ -638,8 +616,8 @@ normalyzer <- function(
 #'   If comparing condA with condB, then the vector would be c("condA-condB").
 #'   Ignored if \code{oneVsRest=TRUE}.
 #' @param outputDir Path to output directory
-#' @param logTrans Log transform the input (needed if providing non-logged
-#'   input)
+#' @param logTrans Log2-transform the input (needed if providing non-log2
+#'   input).
 #' @param type Type of statistical comparison, "limma", "limma_intensity" or
 #'  "welch" or "limpa", where "limma_intensity" allows the prior to be fit
 #'  according to intensity rather than using a flat prior. "limpa" uses the
@@ -659,9 +637,12 @@ normalyzer <- function(
 #' @param imputeMinFraction Minimum fraction non-NA values for an analyte in
 #'   any group to impute in other groups (ignored for \code{type="limpa"}).
 #' @param subsetByComparison If TRUE, subset data and design to each comparison
-#'   before NA-filtering, imputation and model fitting.
-#' @param oneVsRest If TRUE, compute one-vs-rest contrasts for each group in
-#'   \code{condCol} (or the subset in \code{oneVsRestGroups}).
+#'   before NA-filtering, imputation and model fitting. Use this when filtering
+#'   or imputation should depend only on the samples in each comparison, not the
+#'   full dataset.
+#' @param oneVsRest If TRUE, create one comparison per selected group against
+#'   all remaining samples (for all groups in \code{condCol}, or the subset in
+#'   \code{oneVsRestGroups}).
 #' @param oneVsRestGroups Optional character vector specifying which groups in
 #'   \code{condCol} to compare against all other samples.
 #' @param limpaProteinIdCol For \code{type="limpa"}, optionally summarize
@@ -809,24 +790,27 @@ normalyzerDE <- function(
   )
 ) {
   if (!quiet) {
-    message(
-      "You are running version ",
-      utils::packageVersion("NormalyzerDE"),
-      " of NormalyzerDE"
-    )
+    version <- utils::packageVersion("NormalyzerDE")
+    cli::cli_alert_info("You are running version {version} of NormalyzerDE")
   }
 
   if (is.null(experimentObj) && (is.null(designPath) || is.null(dataPath))) {
-    stop(
-      "Either options 'designPath' plus 'dataPath' or 'summarizedExp' need to be provided"
+    cli::cli_abort(
+      "Provide {.arg designPath} + {.arg dataPath}, or provide {.arg experimentObj}.",
+      class = "normalyzerde_error",
+      call = NULL
     )
   }
 
   if (!oneVsRest && is.null(comparisons)) {
-    stop(
-      "Argument 'comparisons' must be provided. Specify one or more comparisons as a vector.\n",
-      "Example, one comparison between group 1 and 2: c('1-2')\n",
-      "Example, two comparisons between groups 1 and 2, and groups 2 and 3: c('1-2', '2-3')"
+    cli::cli_abort(
+      c(
+        "Argument {.arg comparisons} must be provided (unless {.arg oneVsRest}=TRUE).",
+        i = "Example (one comparison): {.code comparisons = c('1-2')}",
+        i = "Example (two comparisons): {.code comparisons = c('1-2', '2-3')}"
+      ),
+      class = "normalyzerde_error",
+      call = NULL
     )
   }
 
@@ -834,8 +818,10 @@ normalyzerDE <- function(
     identical(as.character(type)[1], "limpa") && is.null(limpaQuantifiedRds)
   ) {
     limpaQuantifiedRds <- autoDetectLimpaQuantifiedRds(dataPath)
-    if (!is.null(limpaQuantifiedRds) && !quiet) {
-      message("Auto-detected limpaQuantifiedRds: ", limpaQuantifiedRds)
+    if (!quiet && !is.null(limpaQuantifiedRds)) {
+      cli::cli_alert_info(
+        "Auto-detected {.arg limpaQuantifiedRds}: {.path {limpaQuantifiedRds}}"
+      )
     }
   }
 
@@ -859,29 +845,24 @@ normalyzerDE <- function(
         if (!identical(prefixLower, "log2")) {
           normLower <- tolower(limpaPostQuantNormUse)
           if (identical(prefixLower, normLower)) {
-            stop(
-              "The input file '",
-              base,
-              "' appears to already be normalized with '",
-              normPrefix,
-              "', but `limpaPostQuantNorm='",
-              limpaPostQuantNormUse,
-              "'` would apply the same normalization again.\n",
-              "Use `limpaPostQuantNorm='none'` when supplying a pre-normalized matrix, ",
-              "or use the 'log2-normalized' matrix and set `limpaPostQuantNorm` to the desired method."
+            cli::cli_abort(
+              c(
+                "The input file {.path {base}} appears to already be normalized with {.val {normPrefix}}, but {.arg limpaPostQuantNorm}={.val {limpaPostQuantNormUse}} would apply the same normalization again.",
+                i = "Use {.arg limpaPostQuantNorm}={.val none} when supplying a pre-normalized matrix.",
+                i = "Or use the {.val log2-normalized} matrix and set {.arg limpaPostQuantNorm} to the desired method."
+              ),
+              class = "normalyzerde_error",
+              call = NULL
             )
           }
 
-          warning(
-            "The input file '",
-            base,
-            "' appears to already be normalized with '",
-            normPrefix,
-            "', but `limpaPostQuantNorm='",
-            limpaPostQuantNormUse,
-            "'` will apply an additional normalization. ",
-            "This may be unintended double-normalization.",
-            call. = FALSE
+          cli::cli_warn(
+            c(
+              "The input file {.path {base}} appears to already be normalized with {.val {normPrefix}}, but {.arg limpaPostQuantNorm}={.val {limpaPostQuantNormUse}} will apply an additional normalization.",
+              i = "This may be unintended double-normalization."
+            ),
+            class = "normalyzerde_warning",
+            call = NULL
           )
         }
       }
@@ -889,12 +870,18 @@ normalyzerDE <- function(
   }
 
   startTime <- Sys.time()
+  totalSteps <- 6L
+
+  stepTag <- function(step) {
+    sprintf("[Step %d/%d]", step, totalSteps)
+  }
+
+  if (!quiet) {
+    cli::cli_alert_info("{.strong {stepTag(1)}} Load data and verify input")
+  }
   jobDir <- setupJobDir(jobName, outputDir)
   safeJobName <- basename(jobDir)
 
-  if (!quiet) {
-    message("Setting up statistics object")
-  }
   if (is.null(experimentObj)) {
     experimentObj <- setupRawContrastObject(
       dataPath,
@@ -906,25 +893,53 @@ normalyzerDE <- function(
   } else {
     verifySummarizedExperiment(experimentObj, sampleCol)
   }
+  if (!quiet) {
+    cli::cli_alert_success(
+      "{.strong {stepTag(1)}} Input verified; output directory prepared at {.path {jobDir}}"
+    )
+  }
 
-  if (!is.null(techRepCol)) {
+  if (is.null(techRepCol)) {
     if (!quiet) {
-      message("Reducing technical replicates")
+      cli::cli_alert_success(
+        "{.strong {stepTag(2)}} Skipped technical replicate reduction (techRepCol is NULL)"
+      )
+    }
+  } else {
+    if (!quiet) {
+      cli::cli_alert_info(
+        "{.strong {stepTag(2)}} Reducing technical replicates"
+      )
     }
     experimentObj <- reduceTechnicalReplicates(
       experimentObj,
       techRepCol,
       sampleCol
     )
+    if (!quiet) {
+      cli::cli_alert_success(
+        "{.strong {stepTag(2)}} Technical replicates reduced"
+      )
+    }
   }
 
+  if (!quiet) {
+    cli::cli_alert_info("{.strong {stepTag(3)}} Setting up statistics object")
+  }
   nst <- NormalyzerStatistics(
     experimentObj,
     logTrans = logTrans
   )
+  if (!quiet) {
+    cli::cli_alert_success(
+      "{.strong {stepTag(3)}} Statistics object prepared"
+    )
+  }
 
   if (!quiet) {
-    message("Calculating statistical contrasts...")
+    cli::cli_alert_info(
+      "{.strong {stepTag(4)}} Calculating statistical contrasts..."
+    )
   }
   nst <- calculateContrasts(
     nst,
@@ -950,14 +965,18 @@ normalyzerDE <- function(
     limpaKeep = limpaKeep
   )
   if (!quiet) {
-    message("Contrast calculations done!")
+    cli::cli_alert_success(
+      "{.strong {stepTag(4)}} Contrast calculations done!"
+    )
   }
 
   annotDf <- generateAnnotatedMatrix(nst)
   outPath <- paste0(jobDir, "/", safeJobName, "_stats.tsv")
 
   if (!quiet) {
-    message("Writing ", nrow(annotDf), " annotated rows to ", outPath)
+    cli::cli_alert_info(
+      "{.strong {stepTag(5)}} Writing {nrow(annotDf)} annotated rows to {.path {outPath}}"
+    )
   }
   utils::write.table(
     annotDf,
@@ -967,7 +986,11 @@ normalyzerDE <- function(
     quote = FALSE
   )
   if (!quiet) {
-    message("Writing statistics report")
+    cli::cli_alert_success("{.strong {stepTag(5)}} Annotated matrix written")
+  }
+
+  if (!quiet) {
+    cli::cli_alert_info("{.strong {stepTag(6)}} Writing statistics report")
   }
   generateStatsReport(
     nst,
@@ -982,12 +1005,9 @@ normalyzerDE <- function(
   endTime <- Sys.time()
   totTime <- difftime(endTime, startTime, units = "mins")
   if (!quiet) {
-    message(
-      "All done! Results are stored in: ",
-      jobDir,
-      ", processing time was ",
-      round(totTime, 1),
-      " minutes"
+    cli::cli_alert_success("{.strong {stepTag(6)}} Statistics report written")
+    cli::cli_alert_success(
+      "All done! Results are saved in {.path {jobDir}}; processing time was {round(totTime, 1)} minutes"
     )
   }
 }

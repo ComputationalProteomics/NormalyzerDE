@@ -12,7 +12,7 @@ getLowCountSampleFiltered(
 )
 }
 \arguments{
-\item{dataMatrix}{Dataframe with processed input data.}
+\item{dataMatrix}{Data frame with processed input data.}
 
 \item{groups}{Vector containing condition levels.}
 

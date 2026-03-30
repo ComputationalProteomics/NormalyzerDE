@@ -7,7 +7,7 @@
 getReplicateSortedData(rawDataOnly, groups)
 }
 \arguments{
-\item{rawDataOnly}{Dataframe with unparsed input data matrix.}
+\item{rawDataOnly}{Data frame with unparsed input data matrix.}
 
 \item{groups}{Vector containing condition levels.}
 }

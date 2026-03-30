@@ -7,7 +7,7 @@
 verifyValidNumbers(rawDataOnly, groups, noLogTransform = FALSE, quiet = FALSE)
 }
 \arguments{
-\item{rawDataOnly}{Dataframe with input data.}
+\item{rawDataOnly}{Data frame with input data.}
 
 \item{groups}{Condition levels for comparisons.}
 }

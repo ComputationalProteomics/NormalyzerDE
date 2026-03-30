@@ -89,11 +89,11 @@ generateAnnotatedMatrix <- function(nst, prefixSep = "_", compLabels = NULL) {
     contrastBase <- names(pairwiseCompsP(nst))
   } else {
     if (length(compLabels) != length(pairwiseCompsP(nst))) {
-      stop(sprintf(
-        "Number of assigned labels compLabels (found %s) needs to be same as number of contrasts (found %s)",
-        length(compLabels),
-        length(pairwiseCompsP(nst))
-      ))
+      cli::cli_abort(
+        "Number of assigned labels {.arg compLabels} (found {length(compLabels)}) must match the number of contrasts (found {length(pairwiseCompsP(nst))}).",
+        class = "normalyzerde_error",
+        call = NULL
+      )
     }
     contrastBase <- compLabels
   }
@@ -323,7 +323,11 @@ getSigs <- function(nst, sigThresType, sigThres, log2FoldThres) {
     } else if (sigThresType == "p") {
       statSig <- (pVals < sigThres)
     } else {
-      stop("Unknown significance threshold type: ", sigThresType)
+      cli::cli_abort(
+        "Unknown significance threshold type: {.val {sigThresType}}.",
+        class = "normalyzerde_error",
+        call = NULL
+      )
     }
 
     if (log2FoldThres != 0) {
@@ -531,7 +535,11 @@ plotSigScatter <- function(
       stat_sig <- (pVals < sigThres)
       legend_label <- paste("P <", sigThres)
     } else {
-      stop("Unknown significance threshold type: ", sigThresType)
+      cli::cli_abort(
+        "Unknown significance threshold type: {.val {sigThresType}}.",
+        class = "normalyzerde_error",
+        call = NULL
+      )
     }
 
     if (log2FoldThres != 0) {
@@ -567,7 +575,11 @@ plotSigScatter <- function(
         ggplot2::xlab("Expression (log2)") +
         ggplot2::ylab("Fold (log2)")
     } else {
-      stop("Unknown plot type: ", type)
+      cli::cli_abort(
+        "Unknown plot type: {.val {type}}.",
+        class = "normalyzerde_error",
+        call = NULL
+      )
     }
 
     plots[[i]] <- plots[[i]] +

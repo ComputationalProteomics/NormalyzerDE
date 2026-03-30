@@ -127,6 +127,6 @@ test_that("maxQuantToNormalyzer errors when required columns are missing", {
 
   expect_error(
     NormalyzerDE:::maxQuantToNormalyzer(fp, protLevel = FALSE, sep = "\t"),
-    "Didn't find all of the following expected columns"
+    class = "normalyzerde_error"
   )
 })

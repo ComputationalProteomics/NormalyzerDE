@@ -524,7 +524,7 @@ test_that("calculateContrasts_oneVsRest_welch_rejects_batch", {
       type = "welch",
       oneVsRest = TRUE
     ),
-    "Batch compensation only compatible with Limma"
+    class = "normalyzerde_error"
   )
 })
 

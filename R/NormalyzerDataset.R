@@ -84,13 +84,11 @@ NormalyzerDataset <- function(
   if (nrow(filterrawdata) < tinyRunThres) {
     isTinyRun <- TRUE
     if (!quiet) {
-      message(
-        "Number of features (",
-        nrow(filterrawdata),
-        ") is less than the theshold for normal run (",
-        tinyRunThres,
-        "), a limited run is performed ",
-        "\nExact settings can be adjusted using the 'tinyRunThreshold' setting"
+      cli::cli_inform(
+        c(
+          "!" = "Number of features ({nrow(filterrawdata)}) is less than the threshold for normal run ({tinyRunThres}); performing a limited run.",
+          i = "Exact settings can be adjusted using the {.arg tinyRunThreshold} setting."
+        )
       )
     }
   } else {
@@ -303,10 +301,10 @@ setMethod(
       singleReplicateRun <- TRUE
 
       if (!quiet) {
-        message(
-          "Non replicated samples in dataset: ",
-          paste(nonReplicatedSamples, collapse = " "),
-          " performing limited single-replicate run\n"
+        cli::cli_inform(
+          c(
+            "!" = "Non-replicated samples in dataset: {paste(nonReplicatedSamples, collapse = \" \")}; performing limited single-replicate run."
+          )
         )
       }
     } else {
@@ -340,14 +338,18 @@ setMethod(
     if (length(distinctSamples) == 1) {
       singletonSamplePresent <- TRUE
       if (!quiet) {
-        message(
-          "Only one replicate group present. Group: ",
-          distinctSamples[1],
-          " Proceeding with limited processing\n"
+        cli::cli_inform(
+          c(
+            "!" = "Only one replicate group present (group {.val {distinctSamples[1]}}); proceeding with limited processing."
+          )
         )
       }
     } else if (length(distinctSamples) == 0) {
-      stop("No sample replicate groups found - Aborting.\n")
+      cli::cli_abort(
+        "No sample replicate groups found - aborting.",
+        class = "normalyzerde_error",
+        call = NULL
+      )
     }
 
     singletonSamplePresent
@@ -381,10 +383,12 @@ getRTColumn <- function(annotData, quiet = FALSE) {
       "Only able to handle single RT column (name containing RT standing by itself) ",
       "Please change name or remove unwanted RT columns\n"
     )
-    stop(errorMessage)
+    cli::cli_abort(errorMessage, class = "normalyzerde_error", call = NULL)
   } else if (length(rtColumns) == 1) {
     if (!quiet) {
-      message("RT annotation column found (", rtColumns, ")")
+      cli::cli_inform(
+        c(i = "RT annotation column found ({paste(rtColumns, collapse = \", \")}).")
+      )
     }
 
     rtValues <- annotData[, rtColumns]
@@ -392,7 +396,7 @@ getRTColumn <- function(annotData, quiet = FALSE) {
     return(retentionTimes)
   } else {
     if (!quiet) {
-      message("No RT column found, skipping RT processing\n")
+      cli::cli_inform(c(i = "No RT column found; skipping RT processing."))
     }
     return(NULL)
   }

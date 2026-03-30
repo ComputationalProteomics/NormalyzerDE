@@ -158,10 +158,10 @@ setMethod(
         normResults[["VSN"]] <- performVSNNormalization(rawMatrix)
       } else {
         if (!quiet) {
-          message(
-            "Skipping VSN normalization due to small number of features, ",
-            nrow(rawMatrix),
-            " features found"
+          cli::cli_inform(
+            c(
+              i = "Skipping VSN normalization due to small number of features ({nrow(rawMatrix)} features found)."
+            )
           )
         }
       }
@@ -169,10 +169,10 @@ setMethod(
       log2Matrix <- rawMatrix
       normResults[["log2"]] <- rawMatrix
       if (!quiet) {
-        message(
-          "VSN normalization assumes non log-transformed data, as the option ",
-          "noLogTransform is specified it is assumed to not need log2-transformation ",
-          "and thus the VSN normalization is skipped\n"
+        cli::cli_inform(
+          c(
+            i = "VSN normalization assumes non log-transformed data; {.arg noLogTransform} is specified, so VSN normalization is skipped."
+          )
         )
       }
     }
@@ -207,9 +207,10 @@ setMethod(
 
     if (!enoughDataForRT) {
       if (!quiet) {
-        warning(
-          "Number of features in data matrix is smaller than minimum normalization window (set by option 'rtWindowMinCount') ",
-          "for RT normalization - skipping RT normalizations.\n"
+        cli::cli_warn(
+          "Number of features in the data matrix is smaller than the minimum normalization window ({.arg rtWindowMinCount}) for retention-time normalization; skipping retention-time normalizations.",
+          class = "normalyzerde_warning",
+          call = NULL
         )
       }
     } else if (rtNorm && rtColPresent) {
@@ -259,16 +260,17 @@ setMethod(
         )
       } else {
         if (!quiet) {
-          message(
-            "Skipping RT-VSN, only available for non log-transformed data\n"
+          cli::cli_inform(
+            c(i = "Skipping RT-VSN; only available for non log-transformed data.")
           )
         }
       }
     } else {
       if (!quiet) {
-        message(
-          "No RT column specified (column named 'RT') or option not specified",
-          " Skipping RT normalization.\n"
+        cli::cli_inform(
+          c(
+            i = "No RT column specified (column named 'RT') or option not specified; skipping RT normalization."
+          )
         )
       }
     }

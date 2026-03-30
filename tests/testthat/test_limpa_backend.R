@@ -61,7 +61,7 @@ test_that("calculateContrasts supports type='limpa'", {
         condCol = "group",
         type = "limpa"
       ),
-      "requires.*limpa"
+      class = "normalyzerde_error"
     )
     return()
   }
@@ -147,9 +147,9 @@ test_that("limpa backend warns when input does not look log2-transformed", {
         type = "limpa",
         limpaProteinIdCol = NULL
       ),
-      "issues in your contrast"
+      class = "normalyzerde_error"
     ),
-    "log2"
+    class = "normalyzerde_warning"
   )
 })
 
@@ -209,7 +209,7 @@ test_that("limpa backend warns when input looks protein-level", {
       leastRepCount = 1,
       limpaQuantArgs = list(chunk = 10L)
     ),
-    "no peptide/precursor-to-protein summarization"
+    class = "normalyzerde_warning"
   )
 
   expect_equal(nrow(dataMat(out)), nrow(test_data))
@@ -572,7 +572,7 @@ test_that("limpa backend validates limpaDpcArgs by method", {
       limpaDpcMethod = "dpc",
       limpaDpcArgs = list(verbose = FALSE)
     ),
-    "limpaDpcArgs"
+    class = "normalyzerde_error"
   )
 
   expect_error(
@@ -584,7 +584,7 @@ test_that("limpa backend validates limpaDpcArgs by method", {
       limpaDpcMethod = "dpcCN",
       limpaDpcArgs = list(maxit = 10)
     ),
-    "limpaDpcArgs"
+    class = "normalyzerde_error"
   )
 
   if (exists("dpcON", envir = asNamespace("limpa"), inherits = FALSE)) {
@@ -597,7 +597,7 @@ test_that("limpa backend validates limpaDpcArgs by method", {
         limpaDpcMethod = "dpcON",
         limpaDpcArgs = list(maxit = 10)
       ),
-      "limpaDpcArgs"
+      class = "normalyzerde_error"
     )
   }
 })

@@ -91,10 +91,10 @@ validation.}
 
 \item{quiet}{Omit status messages printed during run.}
 
-\item{noLogTransform}{Don't log-transform the input.}
+\item{noLogTransform}{Don't log2-transform the input.}
 
-\item{writeReportAsPngs}{Output the evaluation report as PNG files instead of
-a single PDF}
+\item{writeReportAsPngs}{Write the evaluation report as separate PNG files
+instead of a single PDF}
 
 \item{rtStepSizeMinutes}{Retention time normalization window size.}
 

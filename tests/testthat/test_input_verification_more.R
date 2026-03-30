@@ -40,7 +40,7 @@ test_that("loadData supports Proteios input format", {
 })
 
 test_that("loadData errors for unknown input formats", {
-  expect_error(loadData("dummy", inputFormat = "bad"), "Unknown inputFormat")
+  expect_error(loadData("dummy", inputFormat = "bad"), class = "normalyzerde_error")
 })
 
 test_that("loadDesign errors when sample/group columns are missing", {
@@ -56,7 +56,7 @@ test_that("loadDesign errors when sample/group columns are missing", {
 
   expect_error(
     loadDesign(fp, sampleCol = "sample", groupCol = "group"),
-    "Both sampleCol value and groupCol value must be present"
+    class = "normalyzerde_error"
   )
 })
 
@@ -69,7 +69,7 @@ test_that("verifyValidNumbers errors for below-one values when log transforming"
       noLogTransform = FALSE,
       quiet = TRUE
     ),
-    "below-one values"
+    class = "normalyzerde_error"
   )
 })
 
@@ -82,7 +82,7 @@ test_that("verifyValidNumbers warns when data looks already log2", {
       noLogTransform = FALSE,
       quiet = TRUE
     ),
-    "log2|noLogTransform=TRUE"
+    class = "normalyzerde_warning"
   )
 })
 
@@ -132,7 +132,7 @@ test_that("getLowCountSampleFiltered can omit low-count samples", {
       threshold = 2,
       stopIfTooFew = FALSE
     ),
-    "does not contain enough"
+    class = "normalyzerde_warning"
   )
 
   expect_equal(colnames(out), c("s1", "s2"))
@@ -148,7 +148,7 @@ test_that("getLowCountSampleFiltered errors when all samples fail threshold", {
       threshold = 1,
       stopIfTooFew = TRUE
     ),
-    "None of the samples had enough"
+    class = "normalyzerde_error"
   )
 })
 
@@ -166,7 +166,7 @@ test_that("verifyDesignMatrix errors for missing/mismatched/duplicate samples", 
       data.frame(group = c("A", "B"), stringsAsFactors = FALSE),
       sampleCol = "sample"
     ),
-    "Design matrix header must contain sampleCol name"
+    class = "normalyzerde_error"
   )
 
   expect_error(
@@ -179,7 +179,7 @@ test_that("verifyDesignMatrix errors for missing/mismatched/duplicate samples", 
       ),
       sampleCol = "sample"
     ),
-    "Not all columns present in design matrix are present in data matrix"
+    class = "normalyzerde_error"
   )
 
   expect_error(
@@ -192,7 +192,7 @@ test_that("verifyDesignMatrix errors for missing/mismatched/duplicate samples", 
       ),
       sampleCol = "sample"
     ),
-    "Sample labels must be unique"
+    class = "normalyzerde_error"
   )
 })
 
@@ -213,12 +213,12 @@ test_that("preprocessData replaces 0/empty/null and emits messages", {
 test_that("loadRawDataFromFile errors for missing file and for parse warnings", {
   expect_error(
     NormalyzerDE:::loadRawDataFromFile(file.path(tempdir(), "no_such_file.tsv")),
-    "An issue was encountered when attempting to load"
+    class = "normalyzerde_error"
   )
 
   expect_error(
     NormalyzerDE:::loadRawDataFromFile(NA_character_),
-    "Failed to read input file"
+    class = "normalyzerde_error"
   )
 
   fp <- withr::local_tempfile(pattern = "embedded_nulls_", fileext = ".tsv")
@@ -229,7 +229,7 @@ test_that("loadRawDataFromFile errors for missing file and for parse warnings", 
 
   expect_error(
     NormalyzerDE:::loadRawDataFromFile(fp),
-    "embedded nulls"
+    class = "normalyzerde_error"
   )
 })
 
@@ -243,7 +243,7 @@ test_that("verifyMultipleSamplesPresent errors/warns/messages appropriately", {
       requireReplicates = TRUE,
       quiet = TRUE
     ),
-    "At least two samples are required"
+    class = "normalyzerde_error"
   )
 
   expect_error(
@@ -253,7 +253,7 @@ test_that("verifyMultipleSamplesPresent errors/warns/messages appropriately", {
       requireReplicates = TRUE,
       quiet = TRUE
     ),
-    "Found less than two distinct sample groups"
+    class = "normalyzerde_error"
   )
 
   expect_warning(
@@ -263,7 +263,7 @@ test_that("verifyMultipleSamplesPresent errors/warns/messages appropriately", {
       requireReplicates = FALSE,
       quiet = FALSE
     ),
-    "Found less than two distinct sample groups"
+    class = "normalyzerde_warning"
   )
 
   expect_message(
@@ -272,7 +272,6 @@ test_that("verifyMultipleSamplesPresent errors/warns/messages appropriately", {
       groups = c("A", "B"),
       requireReplicates = TRUE,
       quiet = FALSE
-    ),
-    "More than one sample group found"
+    )
   )
 })

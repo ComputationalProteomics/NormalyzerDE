@@ -48,14 +48,22 @@ writeNormalizedDatasets <- function(
     designDf <- designMatrix(nds)
     groupCol <- groupNameCol(nds)
     if (!(groupCol %in% colnames(designDf))) {
-      stop("Group column '", groupCol, "' not found in design matrix")
+      cli::cli_abort(
+        "Group column {.val {groupCol}} not found in design matrix.",
+        class = "normalyzerde_error",
+        call = NULL
+      )
     }
 
     groupFactor <- as.factor(as.character(designDf[[groupCol]]))
     groupLevels <- levels(base::droplevels(groupFactor))
 
     if (length(groupLevels) < 2) {
-      stop("At least two groups are required for pairwise comparisons")
+      cli::cli_abort(
+        "At least two groups are required for pairwise comparisons.",
+        class = "normalyzerde_error",
+        call = NULL
+      )
     }
 
     safeGroupLevels <- make.names(groupLevels, unique = TRUE)
@@ -101,11 +109,10 @@ writeNormalizedDatasets <- function(
       anovaP <- anovaP(ner)[, sampleIndex]
 
       if (nrow(outputTable) != length(anovaP)) {
-        stop(
-          "Table row count: ",
-          nrow(outputTable),
-          " must match p-value vector length for anova: ",
-          length(anovaP)
+        cli::cli_abort(
+          "Table row count ({nrow(outputTable)}) must match ANOVA p-value vector length ({length(anovaP)}).",
+          class = "normalyzerde_error",
+          call = NULL
         )
       }
 

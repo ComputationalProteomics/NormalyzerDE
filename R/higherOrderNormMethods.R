@@ -50,9 +50,10 @@ getRTNormalizedMatrix <- function(
   #        Target indices within the normalization slice window
 
   if (!is(rawMatrix, "matrix")) {
-    stop(
-      "Type of rawMatrix is expected to be matrix, received: ",
-      class(rawMatrix)
+    cli::cli_abort(
+      "Type of {.arg rawMatrix} is expected to be {.val matrix}, received: {paste(class(rawMatrix), collapse = \", \")}.",
+      class = "normalyzerde_error",
+      call = NULL
     )
   }
 
@@ -163,16 +164,21 @@ getWidenedRTRange <- function(
   currentRTSlice <- sortedRts[sortedRts >= rtStart & sortedRts < rtEnd]
 
   if (length(currentRTSlice) == 0) {
-    stop("Selected retention time slice doesn't contain any data")
+    cli::cli_abort(
+      "Selected retention time slice doesn't contain any data.",
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
 
   if (length(currentRTSlice) > minimumDatapoints) {
     if (allowTooWideData) {
       return(c(rtStart, rtEnd))
     } else {
-      stop(
-        "Number of datapoints exceed minimum, add option ",
-        "'allowTooWideData' to process anyway"
+      cli::cli_abort(
+        "Number of datapoints exceeds the minimum; set {.arg allowTooWideData}=TRUE to process anyway.",
+        class = "normalyzerde_error",
+        call = NULL
       )
     }
   }
@@ -196,9 +202,10 @@ getWidenedRTRange <- function(
   )
 
   if (pickBefore > totalBefore && pickAfter > totalAfter) {
-    stop(
-      "Not enough values in dataset to do RT normalization with current 
-             minimum datapoints setting - Please adjust settings"
+    cli::cli_abort(
+      "Not enough values in dataset to do retention-time normalization with the current minimum datapoints setting. Please adjust settings.",
+      class = "normalyzerde_error",
+      call = NULL
     )
   } else if (pickBefore > totalBefore) {
     diff <- pickBefore - totalBefore
@@ -214,19 +221,21 @@ getWidenedRTRange <- function(
   newEndRtIndex <- endIndex + pickAfter
 
   if (newEndRtIndex - newStartRtIndex + 1 > length(sortedRts)) {
-    stop(
-      "Requested minimum window size (",
-      newEndRtIndex - newStartRtIndex + 1,
-      ") exceeds total number of datapoints (",
-      length(sortedRts),
-      ")"
+    cli::cli_abort(
+      "Requested minimum window size ({newEndRtIndex - newStartRtIndex + 1}) exceeds total number of datapoints ({length(sortedRts)}).",
+      class = "normalyzerde_error",
+      call = NULL
     )
   }
 
   widenedSlice <- sortedRts[newStartRtIndex:newEndRtIndex]
 
   if (length(widenedSlice) != minimumDatapoints) {
-    stop("Widened slice should equal to minimum number of data points")
+    cli::cli_abort(
+      "Widened slice should equal to the minimum number of data points.",
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
 
   stopifnot(length(widenedSlice) == minimumDatapoints)
@@ -302,7 +311,11 @@ getSmoothedRTNormalizedMatrix <- function(
   } else if (mergeMethod == "median") {
     combinedMatrices <- getCombinedMatrix(matrices, stats::median)
   } else {
-    stop("Unknown merge method: ", mergeMethod)
+    cli::cli_abort(
+      "Unknown merge method: {.val {mergeMethod}}.",
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
 
   colnames(combinedMatrices) <- colnames(rawMatrix)
@@ -319,7 +332,11 @@ getCombinedMatrix <- function(mList, combFunc) {
   matrixCount <- length(mList)
 
   if (matrixCount == 0) {
-    stop("Expected at least one matrix to merge")
+    cli::cli_abort(
+      "Expected at least one matrix to merge.",
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
   if (matrixCount == 1) {
     return(mList[[1]])
@@ -337,7 +354,11 @@ getCombinedMatrix <- function(mList, combFunc) {
       logical(1)
     ))
   ) {
-    stop("All matrices must have the same dimensions to merge")
+    cli::cli_abort(
+      "All matrices must have the same dimensions to merge.",
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
 
   if (identical(combFunc, mean)) {
@@ -348,7 +369,11 @@ getCombinedMatrix <- function(mList, combFunc) {
 
   isMedian <- identical(combFunc, stats::median)
   if (!isMedian) {
-    stop("Unknown merge function. Only mean and median are supported.")
+    cli::cli_abort(
+      "Unknown merge function. Only mean and median are supported.",
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
 
   if (matrixCount == 2) {

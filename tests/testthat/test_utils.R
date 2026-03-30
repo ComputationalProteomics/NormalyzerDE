@@ -251,7 +251,7 @@ test_that("setupJobDir sanitizes jobName", {
 
   jobDir <- expect_warning(
     setupJobDir("../my job", parentDir),
-    "sanitized"
+    class = "normalyzerde_warning"
   )
 
   expect_true(startsWith(normalizePath(jobDir), normalizePath(parentDir)))

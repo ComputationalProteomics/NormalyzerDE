@@ -23,6 +23,7 @@ Imports:
     car,
     ggplot2,
     ggforce,
+    cli,
     methods,
     utils,
     stats,

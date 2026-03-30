@@ -1,9 +1,12 @@
 requireLimpaPackageInternal <- function(context = "type='limpa'") {
   if (!requireNamespace("limpa", quietly = TRUE)) {
-    stop(
-      context,
-      " requires the optional Bioconductor package 'limpa'.\n",
-      "Install it with `BiocManager::install(\"limpa\")`."
+    cli::cli_abort(
+      c(
+        "{context} requires the optional Bioconductor package {.pkg limpa}.",
+        i = "Install it with {.code BiocManager::install('limpa')}."
+      ),
+      class = "normalyzerde_error",
+      call = NULL
     )
   }
 }
@@ -13,8 +16,10 @@ validateLimpaDpc <- function(limpaDpc) {
     !is.null(limpaDpc) &&
       !(is.list(limpaDpc) || (is.numeric(limpaDpc) && length(limpaDpc) == 2))
   ) {
-    stop(
-      "limpaDpc must be NULL, a list returned by limpa::dpc()/dpcON()/dpcCN(), or a numeric vector c(beta0, beta1)."
+    cli::cli_abort(
+      "{.arg limpaDpc} must be NULL, a list returned by limpa::dpc()/dpcON()/dpcCN(), or a numeric vector c(beta0, beta1).",
+      class = "normalyzerde_error",
+      call = NULL
     )
   }
 
@@ -26,10 +31,18 @@ sanitizeLimpaDpcArgs <- function(args) {
     return(list())
   }
   if (!is.list(args)) {
-    stop("limpaDpcArgs must be a named list (or NULL).")
+    cli::cli_abort(
+      "{.arg limpaDpcArgs} must be a named list (or NULL).",
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
   if (is.null(names(args))) {
-    stop("limpaDpcArgs must be a named list.")
+    cli::cli_abort(
+      "{.arg limpaDpcArgs} must be a named list.",
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
 
   args[["y"]] <- NULL
@@ -41,10 +54,18 @@ sanitizeLimpaQuantArgs <- function(args) {
     return(list())
   }
   if (!is.list(args)) {
-    stop("limpaQuantArgs must be a named list (or NULL).")
+    cli::cli_abort(
+      "{.arg limpaQuantArgs} must be a named list (or NULL).",
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
   if (is.null(names(args))) {
-    stop("limpaQuantArgs must be a named list.")
+    cli::cli_abort(
+      "{.arg limpaQuantArgs} must be a named list.",
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
 
   forbidden <- c("y", "protein.id", "dpc")
@@ -57,10 +78,18 @@ sanitizeLimpaDEArgs <- function(args) {
     return(list())
   }
   if (!is.list(args)) {
-    stop("limpaDEArgs must be a list (or NULL).")
+    cli::cli_abort(
+      "{.arg limpaDEArgs} must be a list (or NULL).",
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
   if (is.null(names(args))) {
-    stop("limpaDEArgs must be a named list.")
+    cli::cli_abort(
+      "{.arg limpaDEArgs} must be a named list.",
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
 
   forbidden <- c("y", "design", "plot")
@@ -81,19 +110,31 @@ applyLimpaQuantDefaultsAndValidate <- function(args) {
 
   slope <- as.numeric(args[["dpc.slope"]])[1]
   if (is.na(slope) || !is.finite(slope) || slope <= 0) {
-    stop("limpaQuantArgs$dpc.slope must be a single positive numeric value.")
+    cli::cli_abort(
+      "{.arg limpaQuantArgs$dpc.slope} must be a single positive numeric value.",
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
   args[["dpc.slope"]] <- slope
 
   chunk <- as.integer(args[["chunk"]])[1]
   if (is.na(chunk) || chunk < 1) {
-    stop("limpaQuantArgs$chunk must be a positive integer.")
+    cli::cli_abort(
+      "{.arg limpaQuantArgs$chunk} must be a positive integer.",
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
   args[["chunk"]] <- chunk
 
   verbose <- as.logical(args[["verbose"]])[1]
   if (is.na(verbose)) {
-    stop("limpaQuantArgs$verbose must be TRUE or FALSE.")
+    cli::cli_abort(
+      "{.arg limpaQuantArgs$verbose} must be TRUE or FALSE.",
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
   args[["verbose"]] <- verbose
 
@@ -106,7 +147,11 @@ applyLimpaDEDefaultsAndValidate <- function(args) {
   }
   sampleWeights <- as.logical(args[["sample.weights"]])[1]
   if (is.na(sampleWeights)) {
-    stop("limpaDEArgs$sample.weights must be TRUE or FALSE.")
+    cli::cli_abort(
+      "{.arg limpaDEArgs$sample.weights} must be TRUE or FALSE.",
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
   args[["sample.weights"]] <- sampleWeights
   args
@@ -128,15 +173,14 @@ validateLimpaArgsByFormals <- function(
 
   unknown <- setdiff(names(args), allowed)
   if (length(unknown) > 0) {
-    stop(
-      argsLabel,
-      " contains unsupported argument names for limpaDpcMethod='",
-      methodLabel,
-      "': ",
-      paste(unknown, collapse = ", "),
-      ". Allowed: ",
-      paste(allowed, collapse = ", "),
-      "."
+    cli::cli_abort(
+      c(
+        "{.arg {argsLabel}} contains unsupported argument names for {.arg limpaDpcMethod}={.val {methodLabel}}.",
+        i = "Unsupported: {paste(unknown, collapse = \", \")}.",
+        i = "Allowed: {paste(allowed, collapse = \", \")}."
+      ),
+      class = "normalyzerde_error",
+      call = NULL
     )
   }
 
@@ -146,7 +190,11 @@ validateLimpaArgsByFormals <- function(
 normalizeLimpaByRowConfig <- function(limpaByRow, limpaProteinIdCol) {
   limpaByRowUse <- as.logical(limpaByRow)[1]
   if (is.na(limpaByRowUse)) {
-    stop("limpaByRow must be TRUE or FALSE.")
+    cli::cli_abort(
+      "{.arg limpaByRow} must be TRUE or FALSE.",
+      class = "normalyzerde_error",
+      call = NULL
+    )
   }
 
   if (isTRUE(limpaByRowUse)) {
@@ -156,9 +204,10 @@ normalizeLimpaByRowConfig <- function(limpaByRow, limpaProteinIdCol) {
       as.character(limpaProteinIdCol)[1]
     }
     if (!is.null(proteinIdColValue) && !identical(proteinIdColValue, "auto")) {
-      stop(
-        "limpaByRow=TRUE is incompatible with a non-default limpaProteinIdCol. ",
-        "Set limpaProteinIdCol=NULL (or leave it as 'auto')."
+      cli::cli_abort(
+        "{.arg limpaByRow}=TRUE is incompatible with a non-default {.arg limpaProteinIdCol}. Set {.arg limpaProteinIdCol}=NULL (or leave it as {.val auto}).",
+        class = "normalyzerde_error",
+        call = NULL
       )
     }
     limpaProteinIdCol <- NULL
@@ -191,12 +240,13 @@ inferLimpaProteinIdCol <- function(annotationMat, proteinIdCol) {
   }
 
   if (!(proteinIdCol %in% annotationCols)) {
-    stop(
-      "limpaProteinIdCol '",
-      proteinIdCol,
-      "' was not found in the row annotation.\n",
-      "Available columns: ",
-      paste(annotationCols, collapse = ", ")
+    cli::cli_abort(
+      c(
+        "{.arg limpaProteinIdCol} {.val {proteinIdCol}} was not found in the row annotation.",
+        i = "Available columns: {paste(annotationCols, collapse = \", \")}."
+      ),
+      class = "normalyzerde_error",
+      call = NULL
     )
   }
 
@@ -273,9 +323,13 @@ estimateLimpaDpcFromData <- function(
   if (identical(method, "dpcON")) {
     limpaNs <- asNamespace("limpa")
     if (!exists("dpcON", envir = limpaNs, inherits = FALSE)) {
-      stop(
-        "limpaDpcMethod='dpcON' requires limpa::dpcON(), but it was not found in the installed limpa version. ",
-        "Update limpa or use limpaDpcMethod='dpc'."
+      cli::cli_abort(
+        c(
+          "{.arg limpaDpcMethod}={.val dpcON} requires limpa::dpcON(), but it was not found in the installed limpa version.",
+          i = "Update limpa or use {.arg limpaDpcMethod}={.val dpc}."
+        ),
+        class = "normalyzerde_error",
+        call = NULL
       )
     }
     dpcON <- get("dpcON", envir = limpaNs, inherits = FALSE)
@@ -348,24 +402,23 @@ autoDetectLimpaQuantifiedRds <- function(dataPath) {
   }
 
   if (length(candidates) > 1) {
-    stop(
-      "Multiple '*_limpa_quantified.rds' files were found in ",
-      dataDir,
-      ", and no canonical file named '",
-      basename(canonical),
-      "' was present. Please specify `limpaQuantifiedRds` explicitly."
+    cli::cli_abort(
+      c(
+        "Multiple {.path '*_limpa_quantified.rds'} files were found in {.path {dataDir}}, and no canonical file named {.path {basename(canonical)}} was present.",
+        i = "Please specify {.arg limpaQuantifiedRds} explicitly."
+      ),
+      class = "normalyzerde_error",
+      call = NULL
     )
   }
 
-  warning(
-    "Found a single '*_limpa_quantified.rds' file in ",
-    dataDir,
-    " (",
-    basename(candidates[[1]]),
-    "), but it does not match the expected canonical filename '",
-    basename(canonical),
-    "'. Auto-detection was skipped; please set `limpaQuantifiedRds` explicitly.",
-    call. = FALSE
+  cli::cli_warn(
+    c(
+      "Found a single {.path '*_limpa_quantified.rds'} file in {.path {dataDir}} ({.path {basename(candidates[[1]])}}), but it does not match the expected canonical filename {.path {basename(canonical)}}.",
+      i = "Auto-detection was skipped; please set {.arg limpaQuantifiedRds} explicitly."
+    ),
+    class = "normalyzerde_warning",
+    call = NULL
   )
   NULL
 }

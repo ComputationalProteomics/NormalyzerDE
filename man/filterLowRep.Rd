@@ -7,7 +7,7 @@
 filterLowRep(df, groups, leastRep = 2)
 }
 \arguments{
-\item{df}{Dataframe with expression data to filter}
+\item{df}{Data frame with expression data to filter}
 
 \item{groups}{Condition groups header}
 

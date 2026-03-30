@@ -21,50 +21,59 @@ test_that("diannInputOptions returns a validated inputOptions list", {
 })
 
 test_that("diannInputOptions validates arguments and blocks typos", {
-  expect_error(diannInputOptions(level = "bad"), "should be one of")
-  expect_error(diannInputOptions(sep = ""), "sep")
-  expect_error(diannInputOptions(minPositive = -1), "minPositive")
-  expect_error(diannInputOptions(rt = list(column = "RT")), "rt")
-  expect_error(diannInputOptions(qCutoff = 0.01), "Unknown argument")
+  expect_error(diannInputOptions(level = "bad"))
+  expect_error(diannInputOptions(sep = ""), class = "normalyzerde_error")
+  expect_error(diannInputOptions(minPositive = -1), class = "normalyzerde_error")
+  expect_error(diannInputOptions(rt = list(column = "RT")), class = "normalyzerde_error")
+  expect_error(diannInputOptions(qCutoff = 0.01), class = "normalyzerde_error")
 })
 
 test_that("diannInputOptions validates edge cases for columns/filters/rt", {
-  expect_error(diannInputOptions(sampleCol = c("Run", "File.Name")), "sampleCol")
-  expect_error(diannInputOptions(extraCols = c("Protein.Group", "")), "extraCols")
-  expect_error(diannInputOptions(decoy = NA), "decoy")
-  expect_error(diannInputOptions(qEnable = NA), "qEnable")
-  expect_error(diannInputOptions(qCols = c("Q.Value", "")), "qCols")
-  expect_error(diannInputOptions(qCutoffs = "0.01"), "qCutoffs must be numeric")
+  expect_error(
+    diannInputOptions(sampleCol = c("Run", "File.Name")),
+    class = "normalyzerde_error"
+  )
+  expect_error(
+    diannInputOptions(extraCols = c("Protein.Group", "")),
+    class = "normalyzerde_error"
+  )
+  expect_error(diannInputOptions(decoy = NA), class = "normalyzerde_error")
+  expect_error(diannInputOptions(qEnable = NA), class = "normalyzerde_error")
+  expect_error(
+    diannInputOptions(qCols = c("Q.Value", "")),
+    class = "normalyzerde_error"
+  )
+  expect_error(diannInputOptions(qCutoffs = "0.01"), class = "normalyzerde_error")
 
-  expect_error(diannInputOptions(rt = c(TRUE, FALSE)), "rt must be a single")
-  expect_error(diannInputOptions(rt = list(col = "")), "rt\\$col")
-  expect_error(diannInputOptions(rt = 1), "rt must be NULL")
+  expect_error(diannInputOptions(rt = c(TRUE, FALSE)), class = "normalyzerde_error")
+  expect_error(diannInputOptions(rt = list(col = "")), class = "normalyzerde_error")
+  expect_error(diannInputOptions(rt = 1), class = "normalyzerde_error")
 })
 
 test_that("diannNormalizeInputOptions validates nested list structure", {
   expect_error(
     NormalyzerDE:::diannNormalizeInputOptions("not_a_list"),
-    "inputOptions must be a list"
+    class = "normalyzerde_error"
   )
 
   expect_error(
     NormalyzerDE:::diannNormalizeInputOptions(list(columns = "oops")),
-    "inputOptions\\$columns must be a list"
+    class = "normalyzerde_error"
   )
 
   expect_error(
     NormalyzerDE:::diannNormalizeInputOptions(list(filters = "oops")),
-    "inputOptions\\$filters must be a list"
+    class = "normalyzerde_error"
   )
 
   expect_error(
     NormalyzerDE:::diannNormalizeInputOptions(list(filters = list(q = 1))),
-    "inputOptions\\$filters\\$q must be logical"
+    class = "normalyzerde_error"
   )
 
   expect_error(
     NormalyzerDE:::diannNormalizeInputOptions(list(rt = 1)),
-    "inputOptions\\$rt must be a list"
+    class = "normalyzerde_error"
   )
 })
 

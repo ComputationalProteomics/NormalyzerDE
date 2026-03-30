@@ -12,7 +12,7 @@ NormalyzerStatistics(experimentObj, logTrans = FALSE)
 \item{experimentObj}{Instance of SummarizedExperiment containing matrix
 and design information as column data}
 
-\item{logTrans}{Whether the input data should be log transformed. When
+\item{logTrans}{Whether the input data should be log2-transformed. When
 \code{TRUE}, non-finite values produced by the transform (e.g.
 \code{log2(0)} returning \code{-Inf}) are treated as missing (set to
 \code{NA}).}
@@ -51,13 +51,13 @@ information as well as a graphical report of the comparisons.
 \item{\code{pairwiseCompsFold}}{List with log2 fold-change values for pairwise
 comparisons}
 
-\item{\code{comparisons}}{Spot for saving vector of last used contrasts}
+\item{\code{comparisons}}{Character vector of the most recently used comparisons}
 
 \item{\code{condCol}}{Column containing last used conditions}
 
 \item{\code{batchCol}}{Column containing last used batch conditions}
 
-\item{\code{splitter}}{Character dividing contrast conditions}
+\item{\code{splitter}}{Delimiter separating contrast groups}
 }}
 
 \examples{

@@ -62,9 +62,10 @@ calculateReplicateCV <- function(methodList, sampleReplicateGroups) {
       featureCondCVs <- data.frame(cvPerFeatureAndGroup)
       colnames(featureCondCVs) <- groups[1]
     } else {
-      stop(
-        "Unknown state encountered for groups:",
-        paste(groups, collapse = ", ")
+      cli::cli_abort(
+        "Unknown state encountered for {.arg groups}: {paste(groups, collapse = \", \")}.",
+        class = "normalyzerde_error",
+        call = NULL
       )
     }
 
@@ -219,11 +220,13 @@ calculateSummarizedCorrelationVector <- function(
 ) {
   validCorrTypes <- c("pearson", "spearman")
   if (!corrType %in% validCorrTypes) {
-    stop(
-      "Unknown correlation type: ",
-      corrType,
-      " valid are: ",
-      paste(validCorrTypes, collapse = ", ")
+    cli::cli_abort(
+      c(
+        "Unknown correlation type: {.val {corrType}}.",
+        i = "Valid values: {paste(validCorrTypes, collapse = \", \")}."
+      ),
+      class = "normalyzerde_error",
+      call = NULL
     )
   }
 
@@ -367,9 +370,10 @@ findLowlyVariableFeaturesCVs <- function(referenceFDR, methodList) {
   nbrAbovePThres <- sum(referenceFDRWoNA >= pThresLowVal)
 
   if (is.infinite(pThresLowVal) || nbrAbovePThres == 0) {
-    warning(
-      "Too few successful ANOVA calculations to generate lowly ",
-      "variable features, skipping"
+    cli::cli_warn(
+      "Too few successful ANOVA calculations to generate lowly variable features; skipping.",
+      class = "normalyzerde_warning",
+      call = NULL
     )
     return(NULL)
   }
@@ -377,9 +381,10 @@ findLowlyVariableFeaturesCVs <- function(referenceFDR, methodList) {
   lowlyVariableFeatures <- referenceFDR >= pThresLowVal
 
   if (length(lowlyVariableFeatures) != nrow(methodList[[1]])) {
-    stop(
-      "Lowly variable features contrast needs to be same length as ",
-      "number of rows in matrix"
+    cli::cli_abort(
+      "Lowly variable features contrast must be the same length as the number of rows in the matrix.",
+      class = "normalyzerde_error",
+      call = NULL
     )
   }
 

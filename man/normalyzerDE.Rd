@@ -59,8 +59,8 @@ as alternative to 'designPath' and 'dataPath'}
 
 \item{outputDir}{Path to output directory}
 
-\item{logTrans}{Log transform the input (needed if providing non-logged
-input)}
+\item{logTrans}{Log2-transform the input (needed if providing non-log2
+input).}
 
 \item{type}{Type of statistical comparison, "limma", "limma_intensity" or
 "welch" or "limpa", where "limma_intensity" allows the prior to be fit
@@ -89,10 +89,13 @@ observed samples (features entirely missing across all samples are removed).}
 any group to impute in other groups (ignored for \code{type="limpa"}).}
 
 \item{subsetByComparison}{If TRUE, subset data and design to each comparison
-before NA-filtering, imputation and model fitting.}
+before NA-filtering, imputation and model fitting. Use this when filtering
+or imputation should depend only on the samples in each comparison, not the
+full dataset.}
 
-\item{oneVsRest}{If TRUE, compute one-vs-rest contrasts for each group in
-\code{condCol} (or the subset in \code{oneVsRestGroups}).}
+\item{oneVsRest}{If TRUE, create one comparison per selected group against
+all remaining samples (for all groups in \code{condCol}, or the subset in
+\code{oneVsRestGroups}).}
 
 \item{oneVsRestGroups}{Optional character vector specifying which groups in
 \code{condCol} to compare against all other samples.}
