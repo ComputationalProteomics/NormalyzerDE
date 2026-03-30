@@ -4,12 +4,14 @@
 \alias{setupJobDir}
 \title{Create empty directory for run}
 \usage{
-setupJobDir(jobName, outputDir)
+setupJobDir(jobName, outputDir, reuseOutputDir = FALSE)
 }
 \arguments{
 \item{jobName}{Name of the run.}
 
 \item{outputDir}{Path to directory where to create the output directory.}
+
+\item{reuseOutputDir}{Reuse an existing non-empty output directory.}
 }
 \value{
 Path to newly created directory.

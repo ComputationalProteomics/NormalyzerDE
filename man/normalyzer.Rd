@@ -10,6 +10,7 @@ normalyzer(
   dataPath = NULL,
   experimentObj = NULL,
   outputDir = ".",
+  reuseOutputDir = FALSE,
   forceAllMethods = FALSE,
   omitLowAbundSamples = FALSE,
   sampleAbundThres = 5,
@@ -32,12 +33,7 @@ normalyzer(
   rtWindowShifts = 1,
   rtWindowMergeMethod = "mean",
   preQuant = c("none", "limpa"),
-  limpaProteinIdCol = "auto",
-  limpaByRow = FALSE,
-  limpaDpc = NULL,
-  limpaDpcMethod = c("none", "dpc", "dpcON", "dpcCN"),
-  limpaDpcArgs = NULL,
-  limpaQuantArgs = NULL
+  limpaOptions = NULL
 )
 }
 \arguments{
@@ -51,6 +47,9 @@ normalyzer(
 as alternative to 'designPath' and 'dataPath'}
 
 \item{outputDir}{Directory where results folder is created.}
+
+\item{reuseOutputDir}{Reuse an existing non-empty output directory. By default,
+NormalyzerDE errors to avoid mixing outputs from different runs.}
 
 \item{forceAllMethods}{Debugging function. Run all normalizations even if
 they aren't in the recommended range of number of values}
@@ -115,54 +114,18 @@ ambiguous DIA-NN reports default to precursor-level input unless
 \code{inputOptions} explicitly sets the level or columns. When enabled, the
 quantified \code{EList} is saved as
 an RDS file \code{<jobDir>/<basename(jobDir)>_limpa_quantified.rds} for reuse with
-\code{\link{normalyzerDE}} via \code{limpaQuantifiedRds}.}
+\code{\link{normalyzerDE}} via \code{limpaOptions(quantifiedRds = ...)}.
+Reuse is explicit: \code{\link{normalyzerDE}} does not pick up nearby
+quantified caches automatically. The saved \code{EList} can also be
+filtered after quantification using
+\code{y$other$n.observations} and normalized in a study-specific way before
+differential testing.}
 
-\item{limpaProteinIdCol}{For \code{preQuant="limpa"}, optionally summarize
-peptide/precursor rows to protein-level using \code{limpa::dpcQuant()}.
-Set to a column name in the row annotation (for example
-\code{"Protein.Group"}) to use as the protein identifier. Use
-\code{"auto"} (default) to try common identifiers. If the chosen column
-contains duplicate identifiers, the data are summarized once across all
-samples and the output rows correspond to proteins. Set to \code{NULL} to
-disable protein summarization and quantify each row separately as one feature via
-\code{limpa::dpcQuantByRow()} (recommended for PTM-level data such as
-phosphoproteomics where each row corresponds to a modified site).}
-
-\item{limpaByRow}{For \code{preQuant="limpa"}, treat each input row as a
-separate feature and always use \code{limpa::dpcQuantByRow()} instead of
-summarizing via \code{limpa::dpcQuant()}. This is recommended for PTM-level
-matrices (e.g., phosphosites). Equivalent to setting
-\code{limpaProteinIdCol=NULL}.}
-
-\item{limpaDpc}{For \code{preQuant="limpa"}, optional DPC parameters to pass
-to \code{limpa::dpcQuant()} / \code{limpa::dpcQuantByRow()}. Can be a list as
-returned by \code{limpa::dpc()}/\code{limpa::dpcON()}/\code{limpa::dpcCN()},
-or a numeric vector \code{c(beta0, beta1)}.}
-
-\item{limpaDpcMethod}{For \code{preQuant="limpa"}, optional method to estimate
-the DPC parameters from the data when \code{limpaDpc} is not supplied.
-\code{"none"} (default) uses a fixed slope (\code{limpaQuantArgs$dpc.slope},
-default \code{0.8}) and lets limpa estimate the intercept internally.
-\code{"dpc"} estimates both DPC parameters from the observed-normal model
-via \code{limpa::dpc()}. \code{"dpcON"} estimates the DPC from the
-observed-normal model via the newer \code{limpa::dpcON()} (for a robust fit,
-set \code{limpaDpcArgs=list(robust=TRUE)}). \code{"dpcCN"} estimates the DPC from the
-complete-normal model via \code{limpa::dpcCN()}, which can be more robust
-for datasets with very large fold-changes.}
-
-\item{limpaDpcArgs}{For \code{preQuant="limpa"}, optional named list of
-additional arguments forwarded to \code{limpa::dpc()}, \code{limpa::dpcON()},
-or \code{limpa::dpcCN()}
-when \code{limpaDpcMethod} is not \code{"none"}. Argument \code{y} is ignored.
-For \code{limpaDpcMethod="dpcON"} and \code{"dpcCN"}, \code{dpc.slope.start} defaults to
-\code{limpaQuantArgs$dpc.slope}.}
-
-\item{limpaQuantArgs}{For \code{preQuant="limpa"}, optional named list of
-additional arguments forwarded to \code{limpa::dpcQuant()} /
-\code{limpa::dpcQuantByRow()}. Use this to set \code{dpc.slope} (default
-\code{0.8}), \code{chunk} (default \code{1000L}), and \code{verbose} (default
-\code{FALSE}), plus any additional \code{...} arguments supported by limpa.
-Arguments \code{y}, \code{protein.id}, and \code{dpc} are ignored.}
+\item{limpaOptions}{Optional helper created by \code{\link{limpaOptions}}.
+For \code{preQuant = "limpa"}, use this to configure \pkg{limpa}
+quantification settings such as \code{proteinIdCol}, \code{byRow},
+\code{dpc}, \code{dpcMethod}, \code{dpcArgs}, and \code{quantArgs}.
+See \code{\link{limpaOptions}} for the available fields.}
 }
 \value{
 None

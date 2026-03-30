@@ -4,11 +4,12 @@
 #'
 #' @param jobName Name of the run.
 #' @param outputDir Path to directory where to create the output directory.
+#' @param reuseOutputDir Reuse an existing non-empty output directory.
 #' @return Path to newly created directory.
 #' @export
 #' @examples
 #' setupJobDir("job_name", "path/to/outdir")
-setupJobDir <- function(jobName, outputDir) {
+setupJobDir <- function(jobName, outputDir, reuseOutputDir = FALSE) {
   sanitizedJobName <- sanitizeJobName(jobName)
 
   if (is.null(outputDir)) {
@@ -21,10 +22,21 @@ setupJobDir <- function(jobName, outputDir) {
     dir.exists(jobDir) &&
       length(list.files(jobDir, all.files = TRUE, no.. = TRUE)) > 0
   ) {
+    if (!isTRUE(reuseOutputDir)) {
+      cli::cli_abort(
+        c(
+          "Output directory already exists and is not empty: {.path {jobDir}}.",
+          i = "Choose a new {.arg jobName} or {.arg outputDir}, or set {.arg reuseOutputDir}={.val TRUE} to reuse it explicitly."
+        ),
+        class = "normalyzerde_error",
+        call = NULL
+      )
+    }
+
     cli::cli_warn(
       c(
-        "Reusing existing non-empty output directory: {.path {jobDir}}.",
-        i = "Files from previous runs may remain alongside the new outputs."
+        "Reusing existing output directory: {.path {jobDir}}.",
+        i = "Existing files may be mixed with new outputs."
       ),
       class = "normalyzerde_warning",
       call = NULL

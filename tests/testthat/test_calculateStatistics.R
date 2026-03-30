@@ -435,6 +435,68 @@ test_that("calculateContrasts_subsetByComparison_impute_scope", {
   expect_true(is.na(subsetFolds[["B-C"]][1]))
 })
 
+test_that("generateAnnotatedMatrix keeps comparison-specific averages", {
+  test_data <- matrix(
+    c(
+      10,
+      11,
+      NA,
+      NA,
+      NA,
+      NA
+    ),
+    nrow = 1,
+    byrow = TRUE
+  )
+  colnames(test_data) <- c("A1", "A2", "B1", "B2", "C1", "C2")
+
+  test_df <- data.frame(
+    sample = colnames(test_data),
+    group = c(rep("A", 2), rep("B", 2), rep("C", 2))
+  )
+  rownames(test_df) <- test_df$sample
+
+  se <- SummarizedExperiment::SummarizedExperiment(
+    assay = test_data,
+    colData = test_df,
+    rowData = data.frame(annot = "Pep1")
+  )
+
+  nst_multi <- NormalyzerStatistics(se)
+  out_multi <- calculateContrasts(
+    nst_multi,
+    comparisons = c("A-B", "B-C"),
+    condCol = "group",
+    type = "welch",
+    leastRepCount = 0,
+    impute = TRUE,
+    imputeMinFraction = 1,
+    subsetByComparison = TRUE
+  )
+  annot_multi <- generateAnnotatedMatrix(out_multi)
+
+  expect_false("featureAvg" %in% colnames(annot_multi))
+  expect_true(all(c("A-B_featureAvg", "B-C_featureAvg") %in% colnames(annot_multi)))
+  expect_equal(annot_multi[["A-B_featureAvg"]], pairwiseCompsAve(out_multi)[["A-B"]])
+  expect_equal(annot_multi[["B-C_featureAvg"]], pairwiseCompsAve(out_multi)[["B-C"]])
+
+  nst_single <- NormalyzerStatistics(se)
+  out_single <- calculateContrasts(
+    nst_single,
+    comparisons = "A-B",
+    condCol = "group",
+    type = "welch",
+    leastRepCount = 0,
+    impute = TRUE,
+    imputeMinFraction = 1,
+    subsetByComparison = TRUE
+  )
+  annot_single <- generateAnnotatedMatrix(out_single)
+
+  expect_true("featureAvg" %in% colnames(annot_single))
+  expect_equal(annot_single[["featureAvg"]], pairwiseCompsAve(out_single)[["A-B"]])
+})
+
 test_that("calculateContrasts_oneVsRest_welch", {
   test_data <- matrix(
     c(

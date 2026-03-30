@@ -23,17 +23,7 @@ calculateContrasts(
   subsetByComparison = FALSE,
   oneVsRest = FALSE,
   oneVsRestGroups = NULL,
-  limpaProteinIdCol = "auto",
-  limpaDpc = NULL,
-  limpaDpcMethod = c("none", "dpc", "dpcON", "dpcCN"),
-  limpaDpcArgs = NULL,
-  limpaQuantArgs = NULL,
-  limpaQuantifiedRds = NULL,
-  limpaDEArgs = NULL,
-  limpaKeep = c("none", "elist", "fit", "all"),
-  limpaByRow = FALSE,
-  limpaPostQuantNorm = c("none", "GI", "median", "mean", "Quantile", "CycLoess", "RLR",
-    "quantile")
+  limpaOptions = NULL
 )
 
 \S4method{calculateContrasts}{NormalyzerStatistics}(
@@ -49,17 +39,7 @@ calculateContrasts(
   subsetByComparison = FALSE,
   oneVsRest = FALSE,
   oneVsRestGroups = NULL,
-  limpaProteinIdCol = "auto",
-  limpaDpc = NULL,
-  limpaDpcMethod = c("none", "dpc", "dpcON", "dpcCN"),
-  limpaDpcArgs = NULL,
-  limpaQuantArgs = NULL,
-  limpaQuantifiedRds = NULL,
-  limpaDEArgs = NULL,
-  limpaKeep = c("none", "elist", "fit", "all"),
-  limpaByRow = FALSE,
-  limpaPostQuantNorm = c("none", "GI", "median", "mean", "Quantile", "CycLoess", "RLR",
-    "quantile")
+  limpaOptions = NULL
 )
 }
 \arguments{
@@ -75,7 +55,7 @@ Ignored if \code{oneVsRest=TRUE}.}
 \item{splitter}{Delimiter used to separate contrast groups.}
 
 \item{type}{Type of statistical test ("limma", "limma_intensity", "welch" or
-"limpa"). "limpa" uses the optional Bioconductor package \pkg{limpa} to
+"limpa"). "limpa" uses the Bioconductor package \pkg{limpa} to
 handle missing values via a detection probability curve (DPC) model.}
 
 \item{leastRepCount}{Minimum number of replicates required in each group for
@@ -100,77 +80,14 @@ all remaining samples (for all groups in \code{condCol}, or the subset in
 \item{oneVsRestGroups}{Optional character vector specifying which groups in
 \code{condCol} to compare against all other samples.}
 
-\item{limpaProteinIdCol}{For \code{type="limpa"}, optionally summarize
-peptide/precursor rows to protein-level using \code{limpa::dpcQuant()}.
-Set to a column name in the row annotation (for example \code{"Protein.Group"})
-to use as the protein identifier. Use \code{"auto"} (default) to try common
-identifiers. If the chosen column contains duplicate identifiers, the data
-are summarized once across all samples and the output rows correspond to
-proteins. Set to \code{NULL} to disable protein summarization and treat each
-row as one feature (recommended for PTM-level data such as phosphoproteomics
-where each row corresponds to a modified site).}
-
-\item{limpaDpc}{For \code{type="limpa"}, optional DPC parameters to pass to
-\code{limpa::dpcQuant()} / \code{limpa::dpcQuantByRow()}. Can be a list as
-returned by \code{limpa::dpc()}/\code{limpa::dpcON()}/\code{limpa::dpcCN()},
-or a numeric vector \code{c(beta0, beta1)}.}
-
-\item{limpaDpcMethod}{For \code{type="limpa"}, optional method to estimate the
-DPC parameters from the data when \code{limpaDpc} is not supplied.
-\code{"none"} (default) uses a fixed slope (\code{limpaQuantArgs$dpc.slope},
-default \code{0.8}) and lets limpa estimate the intercept internally.
-\code{"dpc"} estimates both DPC parameters from the observed-normal model
-via \code{limpa::dpc()}. \code{"dpcON"} estimates the DPC from the
-observed-normal model via the newer \code{limpa::dpcON()} (for a robust fit,
-set \code{limpaDpcArgs=list(robust=TRUE)}). \code{"dpcCN"} estimates the DPC from the
-complete-normal model via \code{limpa::dpcCN()}, which can be more robust
-for datasets with very large fold-changes.}
-
-\item{limpaDpcArgs}{For \code{type="limpa"}, optional named list of additional
-arguments forwarded to \code{limpa::dpc()}, \code{limpa::dpcON()}, or \code{limpa::dpcCN()} when
-\code{limpaDpcMethod} is not \code{"none"}. Argument \code{y} is ignored.
-For \code{limpaDpcMethod="dpcON"} and \code{"dpcCN"}, \code{dpc.slope.start} defaults to
-\code{limpaQuantArgs$dpc.slope}.}
-
-\item{limpaQuantArgs}{For \code{type="limpa"}, optional named list of
-additional arguments forwarded to \code{limpa::dpcQuant()} /
-\code{limpa::dpcQuantByRow()}. Use this to set \code{dpc.slope} (default
-\code{0.8}), \code{chunk} (default \code{1000L}), and \code{verbose} (default
-\code{FALSE}), plus any additional \code{...} arguments supported by limpa.
-Arguments \code{y}, \code{protein.id}, and \code{dpc} are ignored.}
-
-\item{limpaQuantifiedRds}{For \code{type="limpa"}, optional path to an RDS
-file containing a quantified \code{EList} object (as returned by
-\code{limpa::dpcQuant()} or \code{limpa::dpcQuantByRow()}). When provided,
-NormalyzerDE skips the internal \code{dpcQuant*()} step and reuses the
-cached quantification (including \code{standard.error} and
-\code{n.observations}) for differential expression. This is required to
-preserve quantification uncertainty when you first ran \code{dpcQuant*()}
-upstream (for example via \code{normalyzer(preQuant=\"limpa\")}).}
-
-\item{limpaDEArgs}{For \code{type="limpa"}, optional named list of additional
-arguments forwarded to \code{limpa::dpcDE()} (and then to
-\code{limpa::voomaLmFitWithImputation()}). To enable limma sample weights,
-set \code{limpaDEArgs = list(sample.weights = TRUE)}.}
-
-\item{limpaKeep}{For \code{type="limpa"}, optionally store intermediate limpa
-objects in \code{backendData(nst)$limpa} for reuse/debugging. Set to
-\code{"elist"} to keep the \code{EList} object (completed expression matrix
-plus uncertainty estimates), \code{"fit"} to keep the fitted \code{MArrayLM}
-object(s), or \code{"all"} to keep both. Default is \code{"none"}.}
-
-\item{limpaByRow}{For \code{type="limpa"}, treat each input row as a separate
-feature and always use \code{limpa::dpcQuantByRow()} instead of summarizing
-via \code{limpa::dpcQuant()}. This is recommended for PTM-level matrices
-(e.g., phosphosites). Equivalent to setting \code{limpaProteinIdCol=NULL}.}
-
-\item{limpaPostQuantNorm}{For \code{type="limpa"}, optional between-sample
-normalization applied to the quantified expression matrix after
-\code{limpa::dpcQuant()} / \code{limpa::dpcQuantByRow()} and before
-\code{limpa::dpcDE()}. One of \code{"none"} (default), \code{"GI"},
-\code{"median"}, \code{"mean"}, \code{"Quantile"} (or \code{"quantile"}),
-\code{"CycLoess"}, or \code{"RLR"}.
-Avoid double-normalization if your input was already normalized upstream.}
+\item{limpaOptions}{Optional helper created by \code{\link{limpaOptions}}.
+For \code{type = "limpa"}, use this to configure protein-level
+summarization (\code{proteinIdCol}, \code{byRow}), DPC estimation
+(\code{dpc}, \code{dpcMethod}, \code{dpcArgs}), quantification
+(\code{quantArgs}, \code{quantifiedRds}), differential expression
+(\code{deArgs}), optional post-quantification normalization
+(\code{postQuantNorm}), and retained backend objects (\code{keep}).
+See \code{\link{limpaOptions}} for the available fields.}
 }
 \value{
 nst Statistics object with statistical measures calculated

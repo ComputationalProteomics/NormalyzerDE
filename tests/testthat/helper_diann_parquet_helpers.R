@@ -143,9 +143,11 @@ nd_run_diann_contrast <- function(
     leastRepCount = 1
   )
   if (identical(type, "limpa")) {
-    args$limpaProteinIdCol <- "Protein.Group"
-    args$limpaKeep <- "elist"
-    args$limpaQuantArgs <- list(chunk = 10L, verbose = FALSE)
+    args$limpaOptions <- limpaOptions(
+      proteinIdCol = "Protein.Group",
+      keep = "elist",
+      quantArgs = list(chunk = 10L, verbose = FALSE)
+    )
   }
 
   calculateContrasts(
@@ -154,9 +156,7 @@ nd_run_diann_contrast <- function(
     condCol = args$condCol,
     type = args$type,
     leastRepCount = args$leastRepCount,
-    limpaProteinIdCol = args$limpaProteinIdCol,
-    limpaKeep = args$limpaKeep,
-    limpaQuantArgs = args$limpaQuantArgs
+    limpaOptions = args$limpaOptions
   )
 }
 

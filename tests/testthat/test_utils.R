@@ -259,7 +259,7 @@ test_that("setupJobDir sanitizes jobName", {
   expect_false(grepl("\\.\\.", basename(jobDir)))
 })
 
-test_that("setupJobDir reuses existing directory by default", {
+test_that("setupJobDir reuses an existing empty directory", {
   parentDir <- tempfile()
   dir.create(parentDir)
   on.exit(unlink(parentDir, recursive = TRUE), add = TRUE)
@@ -274,7 +274,22 @@ test_that("setupJobDir reuses existing directory by default", {
   expect_identical(normalizePath(jobDir), normalizePath(existingDir))
 })
 
-test_that("setupJobDir warns when reusing a non-empty directory", {
+test_that("setupJobDir errors when reusing a non-empty directory by default", {
+  parentDir <- tempfile()
+  dir.create(parentDir)
+  on.exit(unlink(parentDir, recursive = TRUE), add = TRUE)
+
+  existingDir <- file.path(parentDir, "my_job")
+  dir.create(existingDir)
+  writeLines("old output", file.path(existingDir, "stale.txt"))
+
+  expect_error(
+    setupJobDir("my_job", parentDir),
+    class = "normalyzerde_error"
+  )
+})
+
+test_that("setupJobDir can reuse a non-empty directory when explicitly requested", {
   parentDir <- tempfile()
   dir.create(parentDir)
   on.exit(unlink(parentDir, recursive = TRUE), add = TRUE)
@@ -284,7 +299,7 @@ test_that("setupJobDir warns when reusing a non-empty directory", {
   writeLines("old output", file.path(existingDir, "stale.txt"))
 
   jobDir <- expect_warning(
-    setupJobDir("my_job", parentDir),
+    setupJobDir("my_job", parentDir, reuseOutputDir = TRUE),
     class = "normalyzerde_warning"
   )
 

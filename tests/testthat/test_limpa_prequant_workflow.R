@@ -23,8 +23,10 @@ test_that("normalyzer preQuant='limpa' writes quantified RDS (by-row)", {
     experimentObj = se,
     outputDir = outDir,
     preQuant = "limpa",
-    limpaByRow = TRUE,
-    limpaQuantArgs = list(chunk = 10L, verbose = FALSE),
+    limpaOptions = limpaOptions(
+      byRow = TRUE,
+      quantArgs = list(chunk = 10L, verbose = FALSE)
+    ),
     noLogTransform = TRUE,
     normalizeRetentionTime = FALSE,
     skipAnalysis = TRUE,
@@ -48,6 +50,49 @@ test_that("normalyzer preQuant='limpa' writes quantified RDS (by-row)", {
   expect_equal(nrow(y$E), sum(keepRows))
   expect_equal(ncol(y$E), ncol(mat))
   expect_false(anyNA(y$E))
+})
+
+test_that("normalyzer preQuant='limpa' accepts limpaOptions helper", {
+  testthat::skip_if_not_installed("limpa")
+
+  set.seed(1)
+  mat <- matrix(stats::rnorm(20 * 4, mean = 10, sd = 1), nrow = 20)
+  colnames(mat) <- paste0("s", seq_len(ncol(mat)))
+  mat[sample.int(length(mat), 8)] <- NA_real_
+
+  se <- nd_make_summarized_experiment(
+    assay = mat,
+    groups = c("A", "A", "B", "B"),
+    row_data = data.frame(`Protein.Group` = paste0("P", seq_len(nrow(mat))))
+  )
+
+  outDir <- withr::local_tempdir(pattern = "prequant_opts_")
+  jobName <- "prequant_opts"
+  expectedDir <- file.path(outDir, NormalyzerDE:::sanitizeJobName(jobName))
+
+  out <- suppressWarnings(normalyzer(
+    jobName = jobName,
+    experimentObj = se,
+    outputDir = outDir,
+    preQuant = "limpa",
+    limpaOptions = limpaOptions(
+      byRow = TRUE,
+      quantArgs = list(chunk = 10L, verbose = FALSE)
+    ),
+    noLogTransform = TRUE,
+    normalizeRetentionTime = FALSE,
+    skipAnalysis = TRUE,
+    quiet = TRUE,
+    sampleAbundThres = 1,
+    requireReplicates = FALSE
+  ))
+
+  expect_null(out)
+  expect_true(file.exists(file.path(expectedDir, "log2-normalized.txt")))
+  expect_true(file.exists(file.path(
+    expectedDir,
+    paste0(basename(expectedDir), "_limpa_quantified.rds")
+  )))
 })
 
 test_that("normalyzer preQuant='limpa' can summarize peptides to proteins", {
@@ -92,8 +137,10 @@ test_that("normalyzer preQuant='limpa' can summarize peptides to proteins", {
     experimentObj = se,
     outputDir = outDir,
     preQuant = "limpa",
-    limpaProteinIdCol = "Protein.Group",
-    limpaQuantArgs = list(chunk = 10L, verbose = FALSE),
+    limpaOptions = limpaOptions(
+      proteinIdCol = "Protein.Group",
+      quantArgs = list(chunk = 10L, verbose = FALSE)
+    ),
     noLogTransform = TRUE,
     normalizeRetentionTime = FALSE,
     skipAnalysis = TRUE,
@@ -114,7 +161,7 @@ test_that("normalyzer preQuant='limpa' can summarize peptides to proteins", {
   expect_true("Protein.Group" %in% colnames(y$genes))
 })
 
-test_that("calculateContrasts can reuse quantified EList from limpaQuantifiedRds", {
+test_that("calculateContrasts can reuse quantified EList from limpaOptions(quantifiedRds)", {
   testthat::skip_if_not_installed("limpa")
 
   raw <- matrix(
@@ -176,9 +223,11 @@ test_that("calculateContrasts can reuse quantified EList from limpaQuantifiedRds
     condCol = "group",
     type = "limpa",
     leastRepCount = 2,
-    limpaQuantifiedRds = rdsPath,
-    limpaKeep = "elist",
-    limpaPostQuantNorm = "median"
+    limpaOptions = limpaOptions(
+      quantifiedRds = rdsPath,
+      keep = "elist",
+      postQuantNorm = "median"
+    )
   )
 
   pvals <- pairwiseCompsP(out)[["A-B"]]
@@ -252,135 +301,96 @@ test_that("calculateContrasts errors when quantifiedRds rows cannot be matched s
   )
 })
 
-test_that("normalyzerDE auto-detects quantified RDS next to Normalyzer output matrix", {
+test_that("normalyzerDE ignores nearby quantified RDS files unless requested explicitly", {
   testthat::skip_if_not_installed("limpa")
 
-  set.seed(1)
-  nFeatures <- 30
-  raw <- matrix(
-    stats::rnorm(nFeatures * 4, mean = 10, sd = 1),
-    nrow = nFeatures
+  test_data <- matrix(
+    c(
+      10,
+      11,
+      10,
+      13,
+      12,
+      11,
+      NA,
+      NA,
+      NA,
+      9,
+      9,
+      10,
+      5,
+      5,
+      5,
+      NA,
+      NA,
+      NA,
+      7,
+      8,
+      7,
+      7,
+      7,
+      7
+    ),
+    nrow = 4,
+    byrow = TRUE
   )
-  raw[1, ] <- c(10, NA, 15, NA)
-  raw[2, ] <- c(11, NA, 11, 11)
-  colnames(raw) <- paste0("s", seq_len(ncol(raw)))
+  colnames(test_data) <- paste0("s", seq_len(ncol(test_data)))
 
-  design <- nd_make_design(c("A", "A", "B", "B"))
-
-  se <- nd_make_summarized_experiment(
-    assay = raw,
-    groups = design$group,
-    row_data = data.frame(
-      feature = c("sparse", paste0("f", seq_len(nFeatures - 1))),
-      check.names = FALSE
-    )
+  design <- nd_make_design(c("A", "A", "A", "B", "B", "B"))
+  data_df <- data.frame(
+    feature = paste0("f", seq_len(nrow(test_data))),
+    as.data.frame(test_data, check.names = FALSE),
+    check.names = FALSE
   )
 
-  outDir <- withr::local_tempdir(pattern = "prequant_autodetect_")
-  jobNameNorm <- "prequant_autodetect"
-  expectedDirNorm <- file.path(
+  outDir <- withr::local_tempdir(pattern = "prequant_no_autodetect_")
+  paths <- nd_write_data_and_design(
+    tmp_dir = outDir,
+    data = data_df,
+    design = design,
+    data_name = "limpa_data.tsv",
+    design_name = "limpa_design.tsv"
+  )
+
+  file.create(file.path(outDir, "a_limpa_quantified.rds"))
+  file.create(file.path(outDir, "b_limpa_quantified.rds"))
+
+  jobNameImplicit <- "de_no_quantified_rds"
+  expectedDirImplicit <- file.path(
     outDir,
-    NormalyzerDE:::sanitizeJobName(jobNameNorm)
+    NormalyzerDE:::sanitizeJobName(jobNameImplicit)
   )
 
-  out <- suppressWarnings(normalyzer(
-    jobName = jobNameNorm,
-    experimentObj = se,
-    outputDir = outDir,
-    preQuant = "limpa",
-    limpaByRow = TRUE,
-    limpaQuantArgs = list(chunk = 10L, verbose = FALSE),
-    noLogTransform = TRUE,
-    normalizeRetentionTime = FALSE,
-    skipAnalysis = TRUE,
-    quiet = TRUE,
-    sampleAbundThres = 1,
-    requireReplicates = FALSE
-  ))
-  expect_null(out)
-
-  log2Path <- file.path(expectedDirNorm, "log2-normalized.txt")
-  expect_true(file.exists(log2Path))
-
-  extraRds <- file.path(expectedDirNorm, "unrelated_limpa_quantified.rds")
-  file.create(extraRds)
-
-  designPath <- withr::local_tempfile(
-    pattern = "design_autodetect_",
-    fileext = ".tsv"
-  )
-  nd_write_table(design, designPath)
-
-  jobNameDE <- "de_autodetect"
-  expectedDirDE <- file.path(
-    outDir,
-    NormalyzerDE:::sanitizeJobName(jobNameDE)
-  )
-
-  outDE <- suppressWarnings(normalyzerDE(
-    jobName = jobNameDE,
+  outImplicit <- suppressWarnings(normalyzerDE(
+    jobName = jobNameImplicit,
     comparisons = "A-B",
-    designPath = designPath,
-    dataPath = log2Path,
+    designPath = paths$designPath,
+    dataPath = paths$dataPath,
     outputDir = outDir,
     type = "limpa",
-    leastRepCount = 2,
-    limpaPostQuantNorm = "median",
+    logTrans = FALSE,
+    leastRepCount = 1,
+    limpaOptions = limpaOptions(
+      byRow = TRUE,
+      quantArgs = list(chunk = 10L, verbose = FALSE)
+    ),
     quiet = TRUE
   ))
-  expect_null(outDE)
+  expect_null(outImplicit)
 
-  outStatsPath <- file.path(
-    expectedDirDE,
-    paste0(basename(expectedDirDE), "_stats.tsv")
+  implicitStatsPath <- file.path(
+    expectedDirImplicit,
+    paste0(basename(expectedDirImplicit), "_stats.tsv")
   )
-  expect_true(file.exists(outStatsPath))
+  expect_true(file.exists(implicitStatsPath))
 
-  outDf <- utils::read.table(
-    outStatsPath,
+  implicitDf <- utils::read.table(
+    implicitStatsPath,
     sep = "\t",
     header = TRUE,
     check.names = FALSE
   )
-  pCol <- "A-B_PValue"
-  expect_true(pCol %in% colnames(outDf))
-
-  sparseRow <- outDf$feature == "sparse"
-  expect_equal(sum(sparseRow), 1)
-  expect_true(is.na(outDf[sparseRow, pCol]))
-  expect_false(is.na(outDf[outDf$feature == "f1", pCol]))
-})
-
-test_that("autoDetectLimpaQuantifiedRds warns for single non-canonical cache file", {
-  tmpDir <- withr::local_tempdir(pattern = "limpa_autodetect_warn_")
-  file.create(file.path(tmpDir, "unrelated_limpa_quantified.rds"))
-
-  out <- expect_warning(
-    NormalyzerDE:::autoDetectLimpaQuantifiedRds(
-      file.path(tmpDir, "log2-normalized.txt")
-    ),
-    class = "normalyzerde_warning"
-  )
-  expect_null(out)
-})
-
-test_that("normalyzerDE stops when multiple quantified RDS files are found", {
-  tmpDir <- withr::local_tempdir(pattern = "multirds_")
-
-  file.create(file.path(tmpDir, "a_limpa_quantified.rds"))
-  file.create(file.path(tmpDir, "b_limpa_quantified.rds"))
-
-  expect_error(
-    normalyzerDE(
-      jobName = "multirds_de",
-      comparisons = "A-B",
-      designPath = file.path(tmpDir, "design.tsv"),
-      dataPath = file.path(tmpDir, "log2-normalized.txt"),
-      type = "limpa",
-      quiet = TRUE
-    ),
-    class = "normalyzerde_error"
-  )
+  expect_true("A-B_PValue" %in% colnames(implicitDf))
 })
 
 test_that("normalyzerDE prevents same-method double normalization for limpa", {
@@ -391,7 +401,7 @@ test_that("normalyzerDE prevents same-method double normalization for limpa", {
       designPath = "design.tsv",
       dataPath = file.path("some_dir", "median-normalized.txt"),
       type = "limpa",
-      limpaPostQuantNorm = "median",
+      limpaOptions = limpaOptions(postQuantNorm = "median"),
       quiet = TRUE
     ),
     class = "normalyzerde_error"
@@ -410,7 +420,7 @@ test_that("normalyzerDE warns for potential double normalization for limpa", {
         dataPath = file.path(outDir, "median-normalized.tsv"),
         outputDir = outDir,
         type = "limpa",
-        limpaPostQuantNorm = "GI",
+        limpaOptions = limpaOptions(postQuantNorm = "GI"),
         quiet = TRUE
       ),
       class = "normalyzerde_error"

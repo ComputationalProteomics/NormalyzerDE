@@ -73,6 +73,33 @@ test_that("chooseOneVsRestLabel selects an unused label", {
   )
 })
 
+test_that("batchCol accessor preserves labels", {
+  mat <- matrix(
+    c(1, 2, 3, 4),
+    nrow = 2,
+    dimnames = list(c("f1", "f2"), c("s1", "s2"))
+  )
+
+  design <- data.frame(
+    sample = c("s1", "s2"),
+    group = c("A", "B"),
+    stringsAsFactors = FALSE,
+    check.names = FALSE
+  )
+
+  se <- SummarizedExperiment::SummarizedExperiment(
+    assay = mat,
+    colData = design,
+    rowData = data.frame(id = rownames(mat), check.names = FALSE)
+  )
+
+  nst <- NormalyzerStatistics(se, logTrans = FALSE)
+  nst <- `batchCol<-`(nst, c("batch1", "batch2"))
+
+  expect_type(batchCol(nst), "character")
+  expect_equal(batchCol(nst), c("batch1", "batch2"))
+})
+
 test_that("sanitizeLimmaDesign and calculateLimmaContrast work with coefMap", {
   set.seed(1)
   dataMat <- matrix(stats::rnorm(20), nrow = 5)

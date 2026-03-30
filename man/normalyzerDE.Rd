@@ -11,6 +11,7 @@ normalyzerDE(
   dataPath = NULL,
   experimentObj = NULL,
   outputDir = ".",
+  reuseOutputDir = FALSE,
   logTrans = FALSE,
   type = "limma",
   sampleCol = "sample",
@@ -28,19 +29,9 @@ normalyzerDE(
   sigThresType = "fdr",
   log2FoldThres = 0,
   writeReportAsPngs = FALSE,
-  limpaProteinIdCol = "auto",
-  limpaDpc = NULL,
-  limpaDpcMethod = c("none", "dpc", "dpcON", "dpcCN"),
-  limpaDpcArgs = NULL,
-  limpaQuantArgs = NULL,
-  limpaQuantifiedRds = NULL,
-  limpaDEArgs = NULL,
-  limpaKeep = c("none", "elist", "fit", "all"),
+  limpaOptions = NULL,
   inputFormat = "default",
-  inputOptions = NULL,
-  limpaByRow = FALSE,
-  limpaPostQuantNorm = c("none", "GI", "median", "mean", "Quantile", "CycLoess", "RLR",
-    "quantile")
+  inputOptions = NULL
 )
 }
 \arguments{
@@ -52,12 +43,15 @@ Ignored if \code{oneVsRest=TRUE}.}
 
 \item{designPath}{File path to design matrix}
 
-\item{dataPath}{File path to normalized matrix}
+\item{dataPath}{File path to normalized matrix or completed log2 matrix.}
 
 \item{experimentObj}{SummarizedExperiment object, can be provided as input
 as alternative to 'designPath' and 'dataPath'}
 
 \item{outputDir}{Path to output directory}
+
+\item{reuseOutputDir}{Reuse an existing non-empty output directory. By default,
+NormalyzerDE errors to avoid mixing outputs from different runs.}
 
 \item{logTrans}{Log2-transform the input (needed if providing non-log2
 input).}
@@ -65,7 +59,7 @@ input).}
 \item{type}{Type of statistical comparison, "limma", "limma_intensity" or
 "welch" or "limpa", where "limma_intensity" allows the prior to be fit
 according to intensity rather than using a flat prior. "limpa" uses the
-optional Bioconductor package \pkg{limpa} to handle missing values via a
+Bioconductor package \pkg{limpa} to handle missing values via a
 detection probability curve (DPC) model.}
 
 \item{sampleCol}{Design matrix column header for column containing sample IDs}
@@ -111,72 +105,17 @@ strongly recommended (Benjamini-Hochberg corrected p-values)}
 \item{log2FoldThres}{Fold-size cutoff for being considered significant in
 diagnostic plots}
 
-\item{writeReportAsPngs}{Output report as separate PNG files instead of a
+\item{writeReportAsPngs}{Write the report as separate PNG files instead of a
 single PDF}
 
-\item{limpaProteinIdCol}{For \code{type="limpa"}, optionally summarize
-peptide/precursor rows to protein-level using \code{limpa::dpcQuant()}.
-Set to a column name in the row annotation (for example \code{"Protein.Group"})
-to use as the protein identifier. Use \code{"auto"} (default) to try common
-identifiers. If the chosen column contains duplicate identifiers, the data
-are summarized once across all samples and the output rows correspond to
-proteins. Set to \code{NULL} to disable protein summarization and treat each
-row as one feature (recommended for PTM-level data such as phosphoproteomics
-where each row corresponds to a modified site).}
-
-\item{limpaDpc}{For \code{type="limpa"}, optional DPC parameters to pass to
-\code{limpa::dpcQuant()} / \code{limpa::dpcQuantByRow()}. Can be a list as
-returned by \code{limpa::dpc()}/\code{limpa::dpcON()}/\code{limpa::dpcCN()},
-or a numeric vector \code{c(beta0, beta1)}.}
-
-\item{limpaDpcMethod}{For \code{type="limpa"}, optional method to estimate the
-DPC parameters from the data when \code{limpaDpc} is not supplied.
-\code{"none"} (default) uses a fixed slope (\code{limpaQuantArgs$dpc.slope},
-default \code{0.8}) and lets limpa estimate the intercept internally.
-\code{"dpc"} estimates both DPC parameters from the observed-normal model
-via \code{limpa::dpc()}. \code{"dpcON"} estimates the DPC from the
-observed-normal model via the newer \code{limpa::dpcON()} (for a robust fit,
-set \code{limpaDpcArgs=list(robust=TRUE)}). \code{"dpcCN"} estimates the DPC from the
-complete-normal model via \code{limpa::dpcCN()}, which can be more robust
-for datasets with very large fold-changes.}
-
-\item{limpaDpcArgs}{For \code{type="limpa"}, optional named list of additional
-arguments forwarded to \code{limpa::dpc()}, \code{limpa::dpcON()}, or \code{limpa::dpcCN()} when
-\code{limpaDpcMethod} is not \code{"none"}. Argument \code{y} is ignored.
-For \code{limpaDpcMethod="dpcON"} and \code{"dpcCN"}, \code{dpc.slope.start} defaults to
-\code{limpaQuantArgs$dpc.slope}.}
-
-\item{limpaQuantArgs}{For \code{type="limpa"}, optional named list of
-additional arguments forwarded to \code{limpa::dpcQuant()} /
-\code{limpa::dpcQuantByRow()}. Use this to set \code{dpc.slope} (default
-\code{0.8}), \code{chunk} (default \code{1000L}), and \code{verbose} (default
-\code{FALSE}), plus any additional \code{...} arguments supported by limpa.
-Arguments \code{y}, \code{protein.id}, and \code{dpc} are ignored.}
-
-\item{limpaQuantifiedRds}{For \code{type="limpa"}, optional path to an RDS
-file containing a quantified \code{EList} object (as returned by
-\code{limpa::dpcQuant()} or \code{limpa::dpcQuantByRow()}). When provided,
-NormalyzerDE skips the internal \code{dpcQuant*()} step and reuses the
-cached quantification (including \code{standard.error} and
-\code{n.observations}) for differential expression. This is required to
-preserve quantification uncertainty when you first ran \code{dpcQuant*()}
-upstream (for example via \code{normalyzer(preQuant=\"limpa\")}).
-If \code{NULL}, NormalyzerDE first looks for a canonical cache file named
-\code{"<basename(dataDir)>_limpa_quantified.rds"} next to \code{dataPath}.
-If that canonical file is not present and multiple cache candidates match
-\code{"*_limpa_quantified.rds"}, specify \code{limpaQuantifiedRds}
-explicitly.}
-
-\item{limpaDEArgs}{For \code{type="limpa"}, optional named list of additional
-arguments forwarded to \code{limpa::dpcDE()} (and then to
-\code{limpa::voomaLmFitWithImputation()}). To enable limma sample weights,
-set \code{limpaDEArgs = list(sample.weights = TRUE)}.}
-
-\item{limpaKeep}{For \code{type="limpa"}, optionally store intermediate limpa
-objects in \code{backendData(nst)$limpa} for reuse/debugging. Set to
-\code{"elist"} to keep the \code{EList} object (completed expression matrix
-plus uncertainty estimates), \code{"fit"} to keep the fitted \code{MArrayLM}
-object(s), or \code{"all"} to keep both. Default is \code{"none"}.}
+\item{limpaOptions}{Optional helper created by \code{\link{limpaOptions}}.
+For \code{type = "limpa"}, use this to configure protein-level
+summarization (\code{proteinIdCol}, \code{byRow}), DPC estimation
+(\code{dpc}, \code{dpcMethod}, \code{dpcArgs}), quantification
+(\code{quantArgs}, \code{quantifiedRds}), differential expression
+(\code{deArgs}), optional post-quantification normalization
+(\code{postQuantNorm}), and retained backend objects (\code{keep}).
+See \code{\link{limpaOptions}} for the available fields.}
 
 \item{inputFormat}{Type of input format for \code{dataPath} when reading from
 files. Supports \code{"default"} and \code{"diann"}.}
@@ -185,19 +124,6 @@ files. Supports \code{"default"} and \code{"diann"}.}
 \code{\link{diannInputOptions}}. For delimited inputs, use
 \code{\link{defaultInputOptions}}, \code{\link{proteiosInputOptions}}, or
 \code{\link{maxQuantInputOptions}} to configure the delimiter.}
-
-\item{limpaByRow}{For \code{type="limpa"}, treat each input row as a separate
-feature and always use \code{limpa::dpcQuantByRow()} instead of summarizing
-via \code{limpa::dpcQuant()}. This is recommended for PTM-level matrices
-(e.g., phosphosites). Equivalent to setting \code{limpaProteinIdCol=NULL}.}
-
-\item{limpaPostQuantNorm}{For \code{type="limpa"}, optional between-sample
-normalization applied to the quantified expression matrix after
-\code{limpa::dpcQuant()} / \code{limpa::dpcQuantByRow()} and before
-\code{limpa::dpcDE()}. One of \code{"none"} (default), \code{"GI"},
-\code{"median"}, \code{"mean"}, \code{"Quantile"} (or \code{"quantile"}),
-\code{"CycLoess"}, or \code{"RLR"}.
-Avoid double-normalization if your input was already normalized upstream.}
 }
 \value{
 None
@@ -231,20 +157,42 @@ differential expression analysis. The input should be on the log2 scale with
 missing values encoded as \code{NA}. Between-sample normalization (if desired)
 can be performed upstream (for example by the quantification tool or via
 \code{\link{normalyzer}}) or after \code{limpa::dpcQuant()} using
-\code{limpaPostQuantNorm}. Avoid applying multiple normalizations
-unintentionally. For \code{type="limpa"} with \code{inputFormat="diann"},
+\code{limpaOptions(postQuantNorm = ...)}. Whether normalization is appropriate is
+dataset-dependent; for studies with expected global shifts between groups,
+extra normalization can remove the biological signal of interest. Avoid
+applying multiple normalizations unintentionally. For \code{type="limpa"}
+with \code{inputFormat="diann"},
 ambiguous DIA-NN reports default to precursor-level input unless
 \code{inputOptions} explicitly sets the level or columns.
+In \code{limpaOptions()}, \code{postQuantNorm} accepts \code{"none"},
+\code{"GI"}, \code{"median"}, \code{"mean"}, \code{"Quantile"} (or
+\code{"quantile"}), \code{"CycLoess"}, and \code{"RLR"}.
+
+A common \pkg{limpa} workflow is to keep all samples through
+\code{dpcQuant()}, then filter sparse proteins using
+\code{y$other$n.observations} before differential testing (or, within
+NormalyzerDE, use \code{leastRepCount} or pass a filtered quantified object
+via \code{limpaOptions(quantifiedRds = ...)}). Reuse is explicit:
+\code{\link{normalyzerDE}} does not auto-detect nearby quantified caches.
+Outlier samples are often
+better assessed with sample-specific
+weights and QC/MDS plots than with density plots alone. To estimate sample
+weights in NormalyzerDE, set
+\code{limpaOptions(deArgs = list(sample.weights = TRUE))} and extract them with
+\code{\link{getLimpaSampleWeights}} or from the sample-weights TSV written by
+\code{\link{normalyzerDE}}.
 
 For PTM-level data (e.g., phosphoproteomics) where each row corresponds to a
-modified site, set \code{limpaByRow=TRUE} (or \code{limpaProteinIdCol=NULL})
-to keep each row separate rather than summarizing to protein-level.
+modified site, set \code{limpaOptions(byRow = TRUE)} (or
+\code{limpaOptions(proteinIdCol = NULL)}) to keep each row separate rather
+than summarizing to protein-level.
 
 By default, NormalyzerDE uses a fixed DPC slope
-(\code{limpaQuantArgs$dpc.slope}, default \code{0.8}) and lets limpa estimate
-the intercept. To estimate both DPC parameters from your data, set
-\code{limpaDpcMethod="dpc"} (or \code{"dpcON"} / \code{"dpcCN"} for more robust estimates,
-especially in datasets with very large fold-changes).
+(\code{limpaOptions(quantArgs = list(dpc.slope = 0.8))}) and lets limpa
+estimate the intercept. To estimate both DPC parameters from your data, set
+\code{limpaOptions(dpcMethod = "dpc")} (or \code{"dpcON"} /
+\code{"dpcCN"} for more robust estimates, especially in datasets with very
+large fold-changes).
 }
 \examples{
 data_path <- system.file(package="NormalyzerDE", "extdata", "tiny_data.tsv")

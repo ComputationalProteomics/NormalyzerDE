@@ -340,7 +340,7 @@ setMethod(
       if (!quiet) {
         cli::cli_inform(
           c(
-            "!" = "Only one replicate group present (group {.val {distinctSamples[1]}}); proceeding with limited processing."
+            "!" = "Only one replicate group present (group {.val {distinctSamples[1]}}); some evaluation steps will be skipped."
           )
         )
       }

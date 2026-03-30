@@ -810,7 +810,7 @@ test_that("normalyzerDE type=limpa prefers precursor-level DIANN input by defaul
     outputDir = outDefault,
     inputFormat = "diann",
     type = "limpa",
-    limpaProteinIdCol = "Protein.Group",
+    limpaOptions = limpaOptions(proteinIdCol = "Protein.Group"),
     logTrans = TRUE,
     quiet = TRUE
   ))
@@ -824,7 +824,7 @@ test_that("normalyzerDE type=limpa prefers precursor-level DIANN input by defaul
     inputFormat = "diann",
     inputOptions = diannInputOptions(level = "precursor", rt = FALSE),
     type = "limpa",
-    limpaProteinIdCol = "Protein.Group",
+    limpaOptions = limpaOptions(proteinIdCol = "Protein.Group"),
     logTrans = TRUE,
     quiet = TRUE
   ))
@@ -891,7 +891,7 @@ test_that("normalyzerDE type=limpa preserves an explicit DIANN auto request", {
         inputFormat = "diann",
         inputOptions = diannInputOptions(level = "auto", rt = FALSE),
         type = "limpa",
-        limpaProteinIdCol = "Protein.Group",
+        limpaOptions = limpaOptions(proteinIdCol = "Protein.Group"),
         logTrans = TRUE,
         quiet = TRUE
       ),

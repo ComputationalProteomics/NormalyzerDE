@@ -1,5 +1,34 @@
 context("limpa backend")
 
+test_that("resolveLimpaQuantByRowFn supports old and new limpa APIs", {
+  new_ns <- new.env(parent = emptyenv())
+  new_ns$dpcQuantByRow <- function(...) "new"
+
+  old_ns <- new.env(parent = emptyenv())
+  old_ns$dpcImpute <- function(...) "old"
+
+  both_ns <- new.env(parent = emptyenv())
+  both_ns$dpcQuantByRow <- function(...) "new"
+  both_ns$dpcImpute <- function(...) "old"
+
+  expect_identical(
+    NormalyzerDE:::resolveLimpaQuantByRowFn(new_ns),
+    new_ns$dpcQuantByRow
+  )
+  expect_identical(
+    NormalyzerDE:::resolveLimpaQuantByRowFn(old_ns),
+    old_ns$dpcImpute
+  )
+  expect_identical(
+    NormalyzerDE:::resolveLimpaQuantByRowFn(both_ns),
+    both_ns$dpcQuantByRow
+  )
+  expect_error(
+    NormalyzerDE:::resolveLimpaQuantByRowFn(new.env(parent = emptyenv())),
+    class = "normalyzerde_error"
+  )
+})
+
 test_that("calculateContrasts supports type='limpa'", {
   test_data <- matrix(
     c(
@@ -65,8 +94,10 @@ test_that("calculateContrasts supports type='limpa'", {
     condCol = "group",
     type = "limpa",
     leastRepCount = 1,
-    limpaQuantArgs = list(dpc.slope = 0.7, chunk = 10L),
-    limpaDEArgs = list(prior.n = 5)
+    limpaOptions = limpaOptions(
+      quantArgs = list(dpc.slope = 0.7, chunk = 10L),
+      deArgs = list(prior.n = 5)
+    )
   )
 
   pvals <- pairwiseCompsP(out)[["A-B"]]
@@ -131,7 +162,7 @@ test_that("limpa backend warns when input does not look log2-transformed", {
         comparisons = "A-C",
         condCol = "group",
         type = "limpa",
-        limpaProteinIdCol = NULL
+        limpaOptions = limpaOptions(proteinIdCol = NULL)
       ),
       class = "normalyzerde_error"
     ),
@@ -189,7 +220,7 @@ test_that("limpa backend warns when input looks protein-level", {
       condCol = "group",
       type = "limpa",
       leastRepCount = 1,
-      limpaQuantArgs = list(chunk = 10L)
+      limpaOptions = limpaOptions(quantArgs = list(chunk = 10L))
     ),
     class = "normalyzerde_warning"
   )
@@ -312,8 +343,10 @@ test_that("limpa backend can summarize peptides to proteins via dpcQuant", {
     comparisons = "A-B",
     condCol = "group",
     type = "limpa",
-    limpaProteinIdCol = "Protein.Group",
-    limpaQuantArgs = list(dpc.slope = 0.7, chunk = 10L)
+    limpaOptions = limpaOptions(
+      proteinIdCol = "Protein.Group",
+      quantArgs = list(dpc.slope = 0.7, chunk = 10L)
+    )
   )
 
   expect_equal(nrow(dataMat(out)), n_proteins)
@@ -324,7 +357,7 @@ test_that("limpa backend can summarize peptides to proteins via dpcQuant", {
   expect_length(pairwiseCompsP(out)[["A-B"]], n_proteins)
 })
 
-test_that("limpaByRow keeps duplicate protein IDs as separate rows", {
+test_that("limpaOptions(byRow = TRUE) keeps duplicate protein IDs as separate rows", {
   testthat::skip_if_not_installed("limpa")
 
   set.seed(1)
@@ -372,9 +405,11 @@ test_that("limpaByRow keeps duplicate protein IDs as separate rows", {
     comparisons = "A-B",
     condCol = "group",
     type = "limpa",
-    limpaByRow = TRUE,
-    limpaKeep = "elist",
-    limpaQuantArgs = list(dpc.slope = 0.7, chunk = 10L)
+    limpaOptions = limpaOptions(
+      byRow = TRUE,
+      keep = "elist",
+      quantArgs = list(dpc.slope = 0.7, chunk = 10L)
+    )
   )
 
   backend <- backendData(out)[["limpa"]]
@@ -384,7 +419,7 @@ test_that("limpaByRow keeps duplicate protein IDs as separate rows", {
   expect_equal(nrow(dataMat(out)), nrow(test_data))
 })
 
-test_that("limpa backend can auto-estimate DPC via limpaDpcMethod", {
+test_that("limpa backend can auto-estimate DPC via limpaOptions(dpcMethod = ...)", {
   testthat::skip_if_not_installed("limpa")
 
   test_data <- matrix(
@@ -444,9 +479,11 @@ test_that("limpa backend can auto-estimate DPC via limpaDpcMethod", {
     condCol = "group",
     type = "limpa",
     leastRepCount = 1,
-    limpaQuantArgs = list(chunk = 10L),
-    limpaKeep = "fit",
-    limpaDpcMethod = "dpc"
+    limpaOptions = limpaOptions(
+      quantArgs = list(chunk = 10L),
+      keep = "fit",
+      dpcMethod = "dpc"
+    )
   )
 
   backend <- backendData(out)[["limpa"]]
@@ -466,10 +503,12 @@ test_that("limpa backend can auto-estimate DPC via limpaDpcMethod", {
       condCol = "group",
       type = "limpa",
       leastRepCount = 1,
-      limpaQuantArgs = list(chunk = 10L),
-      limpaKeep = "fit",
-      limpaDpcMethod = "dpcON",
-      limpaDpcArgs = list(robust = TRUE)
+      limpaOptions = limpaOptions(
+        quantArgs = list(chunk = 10L),
+        keep = "fit",
+        dpcMethod = "dpcON",
+        dpcArgs = list(robust = TRUE)
+      )
     )
 
     backend_on <- backendData(out_on)[["limpa"]]
@@ -485,7 +524,84 @@ test_that("limpa backend can auto-estimate DPC via limpaDpcMethod", {
   }
 })
 
-test_that("limpa backend validates limpaDpcArgs by method", {
+test_that("limpa sample weights are accessible without keeping full fits", {
+  testthat::skip_if_not_installed("limpa")
+
+  test_data <- matrix(
+    c(
+      10,
+      11,
+      10,
+      13,
+      12,
+      11,
+      NA,
+      NA,
+      NA,
+      9,
+      9,
+      10,
+      5,
+      5,
+      5,
+      NA,
+      NA,
+      NA,
+      7,
+      8,
+      7,
+      7,
+      7,
+      7
+    ),
+    nrow = 4,
+    byrow = TRUE
+  )
+  colnames(test_data) <- paste0("s", seq_len(ncol(test_data)))
+
+  design <- data.frame(
+    sample = colnames(test_data),
+    group = c("A", "A", "A", "B", "B", "B")
+  )
+  rownames(design) <- design$sample
+
+  se <- SummarizedExperiment::SummarizedExperiment(
+    assay = test_data,
+    colData = design,
+    rowData = data.frame(feature = paste0("f", seq_len(nrow(test_data))))
+  )
+
+  out <- calculateContrasts(
+    NormalyzerStatistics(se, logTrans = FALSE),
+    comparisons = "A-B",
+    condCol = "group",
+    type = "limpa",
+    leastRepCount = 1,
+    limpaOptions = limpaOptions(
+      deArgs = list(sample.weights = TRUE),
+      quantArgs = list(chunk = 10L)
+    )
+  )
+
+  backend <- backendData(out)[["limpa"]]
+  expect_type(backend, "list")
+  expect_true(is.list(backend$sampleWeights))
+  expect_true(".global" %in% names(backend$sampleWeights))
+  expect_length(backend$fits, 0)
+
+  weights <- getLimpaSampleWeights(out)
+  expect_s3_class(weights, "data.frame")
+  expect_equal(colnames(weights), c("comparison", "sample", "sampleWeight"))
+  expect_equal(weights$comparison, rep(".global", ncol(test_data)))
+  expect_equal(weights$sample, colnames(test_data))
+  expect_equal(
+    weights$sampleWeight,
+    as.numeric(backend$sampleWeights[[".global"]])
+  )
+  expect_equal(names(backend$sampleWeights[[".global"]]), colnames(test_data))
+})
+
+test_that("limpa backend validates limpaOptions(dpcArgs = ...) by method", {
   testthat::skip_if_not_installed("limpa")
 
   test_data <- matrix(
@@ -538,8 +654,10 @@ test_that("limpa backend validates limpaDpcArgs by method", {
       comparisons = "A-B",
       condCol = "group",
       type = "limpa",
-      limpaDpcMethod = "dpc",
-      limpaDpcArgs = list(verbose = FALSE)
+      limpaOptions = limpaOptions(
+        dpcMethod = "dpc",
+        dpcArgs = list(verbose = FALSE)
+      )
     ),
     class = "normalyzerde_error"
   )
@@ -550,8 +668,10 @@ test_that("limpa backend validates limpaDpcArgs by method", {
       comparisons = "A-B",
       condCol = "group",
       type = "limpa",
-      limpaDpcMethod = "dpcCN",
-      limpaDpcArgs = list(maxit = 10)
+      limpaOptions = limpaOptions(
+        dpcMethod = "dpcCN",
+        dpcArgs = list(maxit = 10)
+      )
     ),
     class = "normalyzerde_error"
   )
@@ -563,15 +683,17 @@ test_that("limpa backend validates limpaDpcArgs by method", {
         comparisons = "A-B",
         condCol = "group",
         type = "limpa",
-        limpaDpcMethod = "dpcON",
-        limpaDpcArgs = list(maxit = 10)
+        limpaOptions = limpaOptions(
+          dpcMethod = "dpcON",
+          dpcArgs = list(maxit = 10)
+        )
       ),
       class = "normalyzerde_error"
     )
   }
 })
 
-test_that("limpa backend accepts and records limpaQuantArgs", {
+test_that("limpa backend accepts and records limpaOptions(quantArgs = ...)", {
   testthat::skip_if_not_installed("limpa")
 
   test_data <- matrix(
@@ -624,11 +746,13 @@ test_that("limpa backend accepts and records limpaQuantArgs", {
     condCol = "group",
     type = "limpa",
     leastRepCount = 1,
-    limpaKeep = "fit",
-    limpaQuantArgs = list(
-      sd.quantile.for.logFC = 0.8,
-      dpc.slope = 0.1,
-      chunk = 1L
+    limpaOptions = limpaOptions(
+      keep = "fit",
+      quantArgs = list(
+        sd.quantile.for.logFC = 0.8,
+        dpc.slope = 0.1,
+        chunk = 1L
+      )
     )
   )
 
@@ -696,9 +820,11 @@ test_that("limpa backend can apply quantile normalization after dpcQuant", {
     condCol = "group",
     type = "limpa",
     leastRepCount = 1,
-    limpaKeep = "elist",
-    limpaPostQuantNorm = "quantile",
-    limpaQuantArgs = list(chunk = 10L)
+    limpaOptions = limpaOptions(
+      keep = "elist",
+      postQuantNorm = "quantile",
+      quantArgs = list(chunk = 10L)
+    )
   )
 
   backend <- backendData(out)[["limpa"]]
@@ -767,7 +893,7 @@ test_that("limpa backend keeps fits keyed by one-vs-rest comparisons", {
     condCol = "group",
     type = "limpa",
     oneVsRest = TRUE,
-    limpaKeep = "fit"
+    limpaOptions = limpaOptions(keep = "fit")
   )
 
   backend <- backendData(out)[["limpa"]]
@@ -826,9 +952,11 @@ test_that("limpa backend can keep the quantified EList when summarizing peptides
     comparisons = "A-B",
     condCol = "group",
     type = "limpa",
-    limpaProteinIdCol = "Protein.Group",
-    limpaKeep = "elist",
-    limpaQuantArgs = list(chunk = 10L)
+    limpaOptions = limpaOptions(
+      proteinIdCol = "Protein.Group",
+      keep = "elist",
+      quantArgs = list(chunk = 10L)
+    )
   )
 
   backend <- backendData(out)[["limpa"]]

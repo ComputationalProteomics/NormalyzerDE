@@ -22,6 +22,6 @@ Named list of backend-specific objects.
 \description{
 Some backends can optionally store intermediate objects for reuse or
 debugging. For example, \code{calculateContrasts(..., type="limpa")} can keep
-the completed expression matrix (as a limma \code{EList}) and/or the fitted
-\code{MArrayLM} object(s) when \code{limpaKeep} is enabled.
+the completed expression matrix (as a limma \code{EList}), fitted
+\code{MArrayLM} object(s), and estimated sample weights when available.
 }

@@ -180,3 +180,13 @@ writeNormalizedDatasets <- function(
     quote = FALSE
   )
 }
+
+writeLimpaSampleWeights <- function(sampleWeightsDf, filePath) {
+  utils::write.table(
+    sampleWeightsDf,
+    file = filePath,
+    sep = "\t",
+    row.names = FALSE,
+    quote = FALSE
+  )
+}

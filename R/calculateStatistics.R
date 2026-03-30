@@ -111,13 +111,20 @@ generateAnnotatedMatrix <- function(nst, prefixSep = "_", compLabels = NULL) {
   colnames(foldMat) <- pairwiseHeadFold
 
   aveMat <- data.frame(pairwiseCompsAve(nst))
+  aveDf <- if (ncol(aveMat) == 1) {
+    data.frame(featureAvg = aveMat[[1]], check.names = FALSE)
+  } else {
+    pairwiseHeadAve <- paste(contrastBase, "featureAvg", sep = prefixSep)
+    colnames(aveMat) <- pairwiseHeadAve
+    aveMat
+  }
   outDf <- data.frame(
     cbind(
       annotMat(nst),
       pMat,
       fdrMat,
       foldMat,
-      featureAvg = aveMat[, 1],
+      aveDf,
       dataMat(nst)
     ),
     check.names = FALSE
@@ -137,8 +144,8 @@ generateAnnotatedMatrix <- function(nst, prefixSep = "_", compLabels = NULL) {
 #' @param log2FoldThres log2 fold-change required for being counted as significant
 #' @param plotRows Number of plot rows.
 #' @param plotCols Number of plot columns.
-#' @param writeAsPngs Output the report as separate PNG files instead of a
-#'   single PDF file
+#' @param writeAsPngs Write the report as separate PNG files instead of a
+#'   single PDF
 #' @return None
 #' @export
 #' @examples

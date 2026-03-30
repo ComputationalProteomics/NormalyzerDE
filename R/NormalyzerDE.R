@@ -25,6 +25,8 @@
 #' @param experimentObj SummarizedExperiment object, can be provided as input
 #'  as alternative to 'designPath' and 'dataPath'
 #' @param outputDir Directory where results folder is created.
+#' @param reuseOutputDir Reuse an existing non-empty output directory. By default,
+#'   NormalyzerDE errors to avoid mixing outputs from different runs.
 #' @param forceAllMethods Debugging function. Run all normalizations even if
 #'  they aren't in the recommended range of number of values
 #' @param omitLowAbundSamples Automatically remove samples with fewer non-NA
@@ -59,6 +61,11 @@
 #' @param rtWindowShifts Number of layered retention time normalized windows.
 #' @param rtWindowMergeMethod Merge approach for layered retention time windows.
 #'
+#' @param limpaOptions Optional helper created by \code{\link{limpaOptions}}.
+#'   For \code{preQuant = "limpa"}, use this to configure \pkg{limpa}
+#'   quantification settings such as \code{proteinIdCol}, \code{byRow},
+#'   \code{dpc}, \code{dpcMethod}, \code{dpcArgs}, and \code{quantArgs}.
+#'   See \code{\link{limpaOptions}} for the available fields.
 #' @param preQuant Optional pre-quantification step applied before running the
 #'   Normalyzer normalization evaluation. Use \code{"limpa"} to first complete
 #'   the data matrix with \code{limpa::dpcQuant()} / \code{limpa::dpcQuantByRow()}
@@ -69,48 +76,12 @@
 #'   \code{inputOptions} explicitly sets the level or columns. When enabled, the
 #'   quantified \code{EList} is saved as
 #'   an RDS file \code{<jobDir>/<basename(jobDir)>_limpa_quantified.rds} for reuse with
-#'   \code{\link{normalyzerDE}} via \code{limpaQuantifiedRds}.
-#' @param limpaProteinIdCol For \code{preQuant="limpa"}, optionally summarize
-#'   peptide/precursor rows to protein-level using \code{limpa::dpcQuant()}.
-#'   Set to a column name in the row annotation (for example
-#'   \code{"Protein.Group"}) to use as the protein identifier. Use
-#'   \code{"auto"} (default) to try common identifiers. If the chosen column
-#'   contains duplicate identifiers, the data are summarized once across all
-#'   samples and the output rows correspond to proteins. Set to \code{NULL} to
-#'   disable protein summarization and quantify each row separately as one feature via
-#'   \code{limpa::dpcQuantByRow()} (recommended for PTM-level data such as
-#'   phosphoproteomics where each row corresponds to a modified site).
-#' @param limpaByRow For \code{preQuant="limpa"}, treat each input row as a
-#'   separate feature and always use \code{limpa::dpcQuantByRow()} instead of
-#'   summarizing via \code{limpa::dpcQuant()}. This is recommended for PTM-level
-#'   matrices (e.g., phosphosites). Equivalent to setting
-#'   \code{limpaProteinIdCol=NULL}.
-#' @param limpaDpc For \code{preQuant="limpa"}, optional DPC parameters to pass
-#'   to \code{limpa::dpcQuant()} / \code{limpa::dpcQuantByRow()}. Can be a list as
-#'   returned by \code{limpa::dpc()}/\code{limpa::dpcON()}/\code{limpa::dpcCN()},
-#'   or a numeric vector \code{c(beta0, beta1)}.
-#' @param limpaDpcMethod For \code{preQuant="limpa"}, optional method to estimate
-#'   the DPC parameters from the data when \code{limpaDpc} is not supplied.
-#'   \code{"none"} (default) uses a fixed slope (\code{limpaQuantArgs$dpc.slope},
-#'   default \code{0.8}) and lets limpa estimate the intercept internally.
-#'   \code{"dpc"} estimates both DPC parameters from the observed-normal model
-#'   via \code{limpa::dpc()}. \code{"dpcON"} estimates the DPC from the
-#'   observed-normal model via the newer \code{limpa::dpcON()} (for a robust fit,
-#'   set \code{limpaDpcArgs=list(robust=TRUE)}). \code{"dpcCN"} estimates the DPC from the
-#'   complete-normal model via \code{limpa::dpcCN()}, which can be more robust
-#'   for datasets with very large fold-changes.
-#' @param limpaDpcArgs For \code{preQuant="limpa"}, optional named list of
-#'   additional arguments forwarded to \code{limpa::dpc()}, \code{limpa::dpcON()},
-#'   or \code{limpa::dpcCN()}
-#'   when \code{limpaDpcMethod} is not \code{"none"}. Argument \code{y} is ignored.
-#'   For \code{limpaDpcMethod="dpcON"} and \code{"dpcCN"}, \code{dpc.slope.start} defaults to
-#'   \code{limpaQuantArgs$dpc.slope}.
-#' @param limpaQuantArgs For \code{preQuant="limpa"}, optional named list of
-#'   additional arguments forwarded to \code{limpa::dpcQuant()} /
-#'   \code{limpa::dpcQuantByRow()}. Use this to set \code{dpc.slope} (default
-#'   \code{0.8}), \code{chunk} (default \code{1000L}), and \code{verbose} (default
-#'   \code{FALSE}), plus any additional \code{...} arguments supported by limpa.
-#'   Arguments \code{y}, \code{protein.id}, and \code{dpc} are ignored.
+#'   \code{\link{normalyzerDE}} via \code{limpaOptions(quantifiedRds = ...)}.
+#'   Reuse is explicit: \code{\link{normalyzerDE}} does not pick up nearby
+#'   quantified caches automatically. The saved \code{EList} can also be
+#'   filtered after quantification using
+#'   \code{y$other$n.observations} and normalized in a study-specific way before
+#'   differential testing.
 #'
 #' @return None
 #' @export
@@ -133,6 +104,7 @@ normalyzer <- function(
   dataPath = NULL,
   experimentObj = NULL,
   outputDir = ".",
+  reuseOutputDir = FALSE,
   forceAllMethods = FALSE,
   omitLowAbundSamples = FALSE,
   sampleAbundThres = 5,
@@ -157,12 +129,7 @@ normalyzer <- function(
   rtWindowMergeMethod = "mean",
 
   preQuant = c("none", "limpa"),
-  limpaProteinIdCol = "auto",
-  limpaByRow = FALSE,
-  limpaDpc = NULL,
-  limpaDpcMethod = c("none", "dpc", "dpcON", "dpcCN"),
-  limpaDpcArgs = NULL,
-  limpaQuantArgs = NULL
+  limpaOptions = NULL
 ) {
   if (!quiet) {
     version <- utils::packageVersion("NormalyzerDE")
@@ -246,7 +213,7 @@ normalyzer <- function(
     tinyRunThres = tinyRunThres
   )
 
-  jobDir <- setupJobDir(jobName, outputDir)
+  jobDir <- setupJobDir(jobName, outputDir, reuseOutputDir = reuseOutputDir)
   if (!quiet) {
     cli::cli_alert_success(
       "{.strong {stepTag(1)}} Input verified; output directory prepared at {.path {jobDir}}"
@@ -255,6 +222,14 @@ normalyzer <- function(
 
   noLogTransformUse <- noLogTransform
   if (identical(preQuantUse, "limpa")) {
+    limpaOptions <- resolveLimpaOptions(limpaOptions)
+    limpaProteinIdCol <- limpaOptions$proteinIdCol
+    limpaByRow <- limpaOptions$byRow
+    limpaDpc <- limpaOptions$dpc
+    limpaDpcMethod <- limpaOptions$dpcMethod
+    limpaDpcArgs <- limpaOptions$dpcArgs
+    limpaQuantArgs <- limpaOptions$quantArgs
+
     if (!quiet) {
       cli::cli_alert_info(
         "{.strong {stepTag(2)}} Running limpa pre-quantification"
@@ -262,8 +237,12 @@ normalyzer <- function(
     }
 
     requireLimpaPackageInternal("preQuant='limpa'")
+    limpaQuantByRow <- resolveLimpaQuantByRowFn()
 
-    limpaDpcMethod <- match.arg(limpaDpcMethod)
+    limpaDpcMethod <- match.arg(
+      limpaDpcMethod,
+      c("none", "dpc", "dpcON", "dpcCN")
+    )
     validateLimpaDpc(limpaDpc)
 
     dpcArgsUse <- sanitizeLimpaDpcArgs(limpaDpcArgs)
@@ -320,7 +299,7 @@ normalyzer <- function(
     limpaDpcUse <- if (!is.null(limpaDpc)) {
       if (!quiet && limpaDpcMethod != "none" && isTRUE(verboseUse)) {
         cli::cli_alert_info(
-          "{.arg limpaDpc} was supplied; ignoring {.arg limpaDpcMethod}={.val {limpaDpcMethod}}."
+          "{.arg dpc} was supplied; ignoring {.arg dpcMethod}={.val {limpaDpcMethod}}."
         )
       }
       limpaDpc
@@ -335,83 +314,23 @@ normalyzer <- function(
     }
 
     quantifyByRow <- function(mat, genesDf) {
-      y <- methods::new("EList", list(E = mat, genes = genesDf))
-      do.call(
-        limpa::dpcQuantByRow,
-        c(list(y = y, dpc = limpaDpcUse), quantArgsUse)
+      quantifyLimpaByRowInternal(
+        dataMat = mat,
+        genesDf = genesDf,
+        dpc = limpaDpcUse,
+        quantArgs = quantArgsUse,
+        limpaQuantByRow = limpaQuantByRow
       )
     }
 
     quantifyByProtein <- function(mat, genesDf, proteinIdCol) {
-      proteinId <- genesDf[[proteinIdCol]]
-      proteinId <- as.character(proteinId)
-
-      if (length(proteinId) != nrow(mat)) {
-        cli::cli_abort(
-          "Row annotation column {.val {proteinIdCol}} does not match the number of rows in the data matrix.",
-          class = "normalyzerde_error",
-          call = NULL
-        )
-      }
-
-      if (anyNA(proteinId) || any(proteinId == "")) {
-        cli::cli_abort(
-          "Row annotation column {.val {proteinIdCol}} contains missing or empty protein identifiers. Remove these rows or choose another column.",
-          class = "normalyzerde_error",
-          call = NULL
-        )
-      }
-
-      stableCols <- inferStableProteinAnnotationCols(
+      quantifyLimpaByProteinInternal(
+        dataMat = mat,
         genesDf = genesDf,
-        proteinId = proteinId,
-        proteinIdCol = proteinIdCol
+        proteinIdCol = proteinIdCol,
+        dpc = limpaDpcUse,
+        quantArgs = quantArgsUse
       )
-      genesForQuant <- genesDf[,
-        unique(c(proteinIdCol, stableCols)),
-        drop = FALSE
-      ]
-
-      yPeptide <- methods::new("EList", list(E = mat, genes = genesForQuant))
-      yProtein <- do.call(
-        limpa::dpcQuant,
-        c(
-          list(
-            y = yPeptide,
-            protein.id = proteinIdCol,
-            dpc = limpaDpcUse
-          ),
-          quantArgsUse
-        )
-      )
-
-      proteinIds <- rownames(yProtein$E)
-      rowIds <- as.character(seq_len(nrow(yProtein$E)))
-
-      rownames(yProtein$E) <- rowIds
-      if (!is.null(yProtein$other$n.observations)) {
-        rownames(yProtein$other$n.observations) <- rowIds
-      }
-      if (!is.null(yProtein$other$standard.error)) {
-        rownames(yProtein$other$standard.error) <- rowIds
-      }
-
-      genes <- if (!is.null(yProtein$genes)) {
-        as.data.frame(yProtein$genes, check.names = FALSE)
-      } else {
-        data.frame(check.names = FALSE)
-      }
-      if (!(proteinIdCol %in% colnames(genes))) {
-        genes[[proteinIdCol]] <- proteinIds
-      }
-      genes <- genes[,
-        c(proteinIdCol, setdiff(names(genes), proteinIdCol)),
-        drop = FALSE
-      ]
-      rownames(genes) <- rowIds
-      yProtein$genes <- genes
-
-      yProtein
     }
 
     yQuant <- NULL
@@ -426,7 +345,7 @@ normalyzer <- function(
       } else {
         if (!quiet) {
           cli::cli_alert_info(
-            "{.arg limpaProteinIdCol} {.val {limpaProteinIdColUsed}} contains no duplicated identifiers; skipping peptide/precursor-to-protein summarization."
+            "{.arg proteinIdCol} {.val {limpaProteinIdColUsed}} contains no duplicated identifiers; skipping peptide/precursor-to-protein summarization."
           )
         }
         yQuant <- quantifyByRow(log2Mat, genesDf = genesInputAll)
@@ -435,17 +354,7 @@ normalyzer <- function(
       yQuant <- quantifyByRow(log2Mat, genesDf = genesInputAll)
     }
 
-    rowIds <- as.character(seq_len(nrow(yQuant$E)))
-    rownames(yQuant$E) <- rowIds
-    if (!is.null(yQuant$other$n.observations)) {
-      rownames(yQuant$other$n.observations) <- rowIds
-    }
-    if (!is.null(yQuant$other$standard.error)) {
-      rownames(yQuant$other$standard.error) <- rowIds
-    }
-    if (!is.null(yQuant$genes)) {
-      rownames(yQuant$genes) <- rowIds
-    }
+    yQuant <- normalizeLimpaQuantifiedEList(yQuant)
 
     safeJobName <- basename(jobDir)
     quantifiedRds <- file.path(
@@ -613,36 +522,60 @@ normalyzer <- function(
 #' missing values encoded as \code{NA}. Between-sample normalization (if desired)
 #' can be performed upstream (for example by the quantification tool or via
 #' \code{\link{normalyzer}}) or after \code{limpa::dpcQuant()} using
-#' \code{limpaPostQuantNorm}. Avoid applying multiple normalizations
-#' unintentionally. For \code{type="limpa"} with \code{inputFormat="diann"},
+#' \code{limpaOptions(postQuantNorm = ...)}. Whether normalization is appropriate is
+#' dataset-dependent; for studies with expected global shifts between groups,
+#' extra normalization can remove the biological signal of interest. Avoid
+#' applying multiple normalizations unintentionally. For \code{type="limpa"}
+#' with \code{inputFormat="diann"},
 #' ambiguous DIA-NN reports default to precursor-level input unless
 #' \code{inputOptions} explicitly sets the level or columns.
+#' In \code{limpaOptions()}, \code{postQuantNorm} accepts \code{"none"},
+#' \code{"GI"}, \code{"median"}, \code{"mean"}, \code{"Quantile"} (or
+#' \code{"quantile"}), \code{"CycLoess"}, and \code{"RLR"}.
+#'
+#' A common \pkg{limpa} workflow is to keep all samples through
+#' \code{dpcQuant()}, then filter sparse proteins using
+#' \code{y$other$n.observations} before differential testing (or, within
+#' NormalyzerDE, use \code{leastRepCount} or pass a filtered quantified object
+#' via \code{limpaOptions(quantifiedRds = ...)}). Reuse is explicit:
+#' \code{\link{normalyzerDE}} does not auto-detect nearby quantified caches.
+#' Outlier samples are often
+#' better assessed with sample-specific
+#' weights and QC/MDS plots than with density plots alone. To estimate sample
+#' weights in NormalyzerDE, set
+#' \code{limpaOptions(deArgs = list(sample.weights = TRUE))} and extract them with
+#' \code{\link{getLimpaSampleWeights}} or from the sample-weights TSV written by
+#' \code{\link{normalyzerDE}}.
 #'
 #' For PTM-level data (e.g., phosphoproteomics) where each row corresponds to a
-#' modified site, set \code{limpaByRow=TRUE} (or \code{limpaProteinIdCol=NULL})
-#' to keep each row separate rather than summarizing to protein-level.
+#' modified site, set \code{limpaOptions(byRow = TRUE)} (or
+#' \code{limpaOptions(proteinIdCol = NULL)}) to keep each row separate rather
+#' than summarizing to protein-level.
 #'
 #' By default, NormalyzerDE uses a fixed DPC slope
-#' (\code{limpaQuantArgs$dpc.slope}, default \code{0.8}) and lets limpa estimate
-#' the intercept. To estimate both DPC parameters from your data, set
-#' \code{limpaDpcMethod="dpc"} (or \code{"dpcON"} / \code{"dpcCN"} for more robust estimates,
-#' especially in datasets with very large fold-changes).
+#' (\code{limpaOptions(quantArgs = list(dpc.slope = 0.8))}) and lets limpa
+#' estimate the intercept. To estimate both DPC parameters from your data, set
+#' \code{limpaOptions(dpcMethod = "dpc")} (or \code{"dpcON"} /
+#' \code{"dpcCN"} for more robust estimates, especially in datasets with very
+#' large fold-changes).
 #'
 #' @param jobName Name of job
 #' @param designPath File path to design matrix
-#' @param dataPath File path to normalized matrix
+#' @param dataPath File path to normalized matrix or completed log2 matrix.
 #' @param experimentObj SummarizedExperiment object, can be provided as input
 #'  as alternative to 'designPath' and 'dataPath'
 #' @param comparisons Character vector containing target contrasts.
 #'   If comparing condA with condB, then the vector would be c("condA-condB").
 #'   Ignored if \code{oneVsRest=TRUE}.
 #' @param outputDir Path to output directory
+#' @param reuseOutputDir Reuse an existing non-empty output directory. By default,
+#'   NormalyzerDE errors to avoid mixing outputs from different runs.
 #' @param logTrans Log2-transform the input (needed if providing non-log2
 #'   input).
 #' @param type Type of statistical comparison, "limma", "limma_intensity" or
 #'  "welch" or "limpa", where "limma_intensity" allows the prior to be fit
 #'  according to intensity rather than using a flat prior. "limpa" uses the
-#'  optional Bioconductor package \pkg{limpa} to handle missing values via a
+#'  Bioconductor package \pkg{limpa} to handle missing values via a
 #'  detection probability curve (DPC) model.
 #' @param sampleCol Design matrix column header for column containing sample IDs
 #' @param condCol Design matrix column header for column containing sample
@@ -666,73 +599,14 @@ normalyzer <- function(
 #'   \code{oneVsRestGroups}).
 #' @param oneVsRestGroups Optional character vector specifying which groups in
 #'   \code{condCol} to compare against all other samples.
-#' @param limpaProteinIdCol For \code{type="limpa"}, optionally summarize
-#'   peptide/precursor rows to protein-level using \code{limpa::dpcQuant()}.
-#'   Set to a column name in the row annotation (for example \code{"Protein.Group"})
-#'   to use as the protein identifier. Use \code{"auto"} (default) to try common
-#'   identifiers. If the chosen column contains duplicate identifiers, the data
-#'   are summarized once across all samples and the output rows correspond to
-#'   proteins. Set to \code{NULL} to disable protein summarization and treat each
-#'   row as one feature (recommended for PTM-level data such as phosphoproteomics
-#'   where each row corresponds to a modified site).
-#' @param limpaByRow For \code{type="limpa"}, treat each input row as a separate
-#'   feature and always use \code{limpa::dpcQuantByRow()} instead of summarizing
-#'   via \code{limpa::dpcQuant()}. This is recommended for PTM-level matrices
-#'   (e.g., phosphosites). Equivalent to setting \code{limpaProteinIdCol=NULL}.
-#' @param limpaDpc For \code{type="limpa"}, optional DPC parameters to pass to
-#'   \code{limpa::dpcQuant()} / \code{limpa::dpcQuantByRow()}. Can be a list as
-#'   returned by \code{limpa::dpc()}/\code{limpa::dpcON()}/\code{limpa::dpcCN()},
-#'   or a numeric vector \code{c(beta0, beta1)}.
-#' @param limpaDpcMethod For \code{type="limpa"}, optional method to estimate the
-#'   DPC parameters from the data when \code{limpaDpc} is not supplied.
-#'   \code{"none"} (default) uses a fixed slope (\code{limpaQuantArgs$dpc.slope},
-#'   default \code{0.8}) and lets limpa estimate the intercept internally.
-#'   \code{"dpc"} estimates both DPC parameters from the observed-normal model
-#'   via \code{limpa::dpc()}. \code{"dpcON"} estimates the DPC from the
-#'   observed-normal model via the newer \code{limpa::dpcON()} (for a robust fit,
-#'   set \code{limpaDpcArgs=list(robust=TRUE)}). \code{"dpcCN"} estimates the DPC from the
-#'   complete-normal model via \code{limpa::dpcCN()}, which can be more robust
-#'   for datasets with very large fold-changes.
-#' @param limpaDpcArgs For \code{type="limpa"}, optional named list of additional
-#'   arguments forwarded to \code{limpa::dpc()}, \code{limpa::dpcON()}, or \code{limpa::dpcCN()} when
-#'   \code{limpaDpcMethod} is not \code{"none"}. Argument \code{y} is ignored.
-#'   For \code{limpaDpcMethod="dpcON"} and \code{"dpcCN"}, \code{dpc.slope.start} defaults to
-#'   \code{limpaQuantArgs$dpc.slope}.
-#' @param limpaQuantArgs For \code{type="limpa"}, optional named list of
-#'   additional arguments forwarded to \code{limpa::dpcQuant()} /
-#'   \code{limpa::dpcQuantByRow()}. Use this to set \code{dpc.slope} (default
-#'   \code{0.8}), \code{chunk} (default \code{1000L}), and \code{verbose} (default
-#'   \code{FALSE}), plus any additional \code{...} arguments supported by limpa.
-#'   Arguments \code{y}, \code{protein.id}, and \code{dpc} are ignored.
-#' @param limpaQuantifiedRds For \code{type="limpa"}, optional path to an RDS
-#'   file containing a quantified \code{EList} object (as returned by
-#'   \code{limpa::dpcQuant()} or \code{limpa::dpcQuantByRow()}). When provided,
-#'   NormalyzerDE skips the internal \code{dpcQuant*()} step and reuses the
-#'   cached quantification (including \code{standard.error} and
-#'   \code{n.observations}) for differential expression. This is required to
-#'   preserve quantification uncertainty when you first ran \code{dpcQuant*()}
-#'   upstream (for example via \code{normalyzer(preQuant=\"limpa\")}).
-#'   If \code{NULL}, NormalyzerDE first looks for a canonical cache file named
-#'   \code{"<basename(dataDir)>_limpa_quantified.rds"} next to \code{dataPath}.
-#'   If that canonical file is not present and multiple cache candidates match
-#'   \code{"*_limpa_quantified.rds"}, specify \code{limpaQuantifiedRds}
-#'   explicitly.
-#' @param limpaPostQuantNorm For \code{type="limpa"}, optional between-sample
-#'   normalization applied to the quantified expression matrix after
-#'   \code{limpa::dpcQuant()} / \code{limpa::dpcQuantByRow()} and before
-#'   \code{limpa::dpcDE()}. One of \code{"none"} (default), \code{"GI"},
-#'   \code{"median"}, \code{"mean"}, \code{"Quantile"} (or \code{"quantile"}),
-#'   \code{"CycLoess"}, or \code{"RLR"}.
-#'   Avoid double-normalization if your input was already normalized upstream.
-#' @param limpaDEArgs For \code{type="limpa"}, optional named list of additional
-#'   arguments forwarded to \code{limpa::dpcDE()} (and then to
-#'   \code{limpa::voomaLmFitWithImputation()}). To enable limma sample weights,
-#'   set \code{limpaDEArgs = list(sample.weights = TRUE)}.
-#' @param limpaKeep For \code{type="limpa"}, optionally store intermediate limpa
-#'   objects in \code{backendData(nst)$limpa} for reuse/debugging. Set to
-#'   \code{"elist"} to keep the \code{EList} object (completed expression matrix
-#'   plus uncertainty estimates), \code{"fit"} to keep the fitted \code{MArrayLM}
-#'   object(s), or \code{"all"} to keep both. Default is \code{"none"}.
+#' @param limpaOptions Optional helper created by \code{\link{limpaOptions}}.
+#'   For \code{type = "limpa"}, use this to configure protein-level
+#'   summarization (\code{proteinIdCol}, \code{byRow}), DPC estimation
+#'   (\code{dpc}, \code{dpcMethod}, \code{dpcArgs}), quantification
+#'   (\code{quantArgs}, \code{quantifiedRds}), differential expression
+#'   (\code{deArgs}), optional post-quantification normalization
+#'   (\code{postQuantNorm}), and retained backend objects (\code{keep}).
+#'   See \code{\link{limpaOptions}} for the available fields.
 #' @param quiet Omit status messages printed during run
 #'
 #' @param sigThres Significance threshold use for illustrating significant hits
@@ -741,7 +615,7 @@ normalyzer <- function(
 #'   strongly recommended (Benjamini-Hochberg corrected p-values)
 #' @param log2FoldThres Fold-size cutoff for being considered significant in
 #'   diagnostic plots
-#' @param writeReportAsPngs Output report as separate PNG files instead of a
+#' @param writeReportAsPngs Write the report as separate PNG files instead of a
 #'   single PDF
 #' @param inputFormat Type of input format for \code{dataPath} when reading from
 #'   files. Supports \code{"default"} and \code{"diann"}.
@@ -771,6 +645,7 @@ normalyzerDE <- function(
   dataPath = NULL,
   experimentObj = NULL,
   outputDir = ".",
+  reuseOutputDir = FALSE,
   logTrans = FALSE,
   type = "limma",
   sampleCol = "sample",
@@ -788,27 +663,9 @@ normalyzerDE <- function(
   sigThresType = "fdr",
   log2FoldThres = 0,
   writeReportAsPngs = FALSE,
-  limpaProteinIdCol = "auto",
-  limpaDpc = NULL,
-  limpaDpcMethod = c("none", "dpc", "dpcON", "dpcCN"),
-  limpaDpcArgs = NULL,
-  limpaQuantArgs = NULL,
-  limpaQuantifiedRds = NULL,
-  limpaDEArgs = NULL,
-  limpaKeep = c("none", "elist", "fit", "all"),
+  limpaOptions = NULL,
   inputFormat = "default",
-  inputOptions = NULL,
-  limpaByRow = FALSE,
-  limpaPostQuantNorm = c(
-    "none",
-    "GI",
-    "median",
-    "mean",
-    "Quantile",
-    "CycLoess",
-    "RLR",
-    "quantile"
-  )
+  inputOptions = NULL
 ) {
   if (!quiet) {
     version <- utils::packageVersion("NormalyzerDE")
@@ -823,10 +680,68 @@ normalyzerDE <- function(
     )
   }
 
+  isLimpa <- identical(as.character(type)[1], "limpa")
+
+  limpaOptions <- if (isLimpa) {
+    resolveLimpaOptions(limpaOptions)
+  } else {
+    limpaOptions
+  }
+  limpaProteinIdCol <- if (isLimpa) {
+    limpaOptions$proteinIdCol
+  } else {
+    NULL
+  }
+  limpaByRow <- if (isLimpa) {
+    limpaOptions$byRow
+  } else {
+    FALSE
+  }
+  limpaDpc <- if (isLimpa) {
+    limpaOptions$dpc
+  } else {
+    NULL
+  }
+  limpaDpcMethod <- if (isLimpa) {
+    limpaOptions$dpcMethod
+  } else {
+    "none"
+  }
+  limpaDpcArgs <- if (isLimpa) {
+    limpaOptions$dpcArgs
+  } else {
+    list()
+  }
+  limpaQuantArgs <- if (isLimpa) {
+    limpaOptions$quantArgs
+  } else {
+    list()
+  }
+  limpaQuantifiedRds <- if (isLimpa) {
+    limpaOptions$quantifiedRds
+  } else {
+    NULL
+  }
+  limpaDEArgs <- if (isLimpa) {
+    limpaOptions$deArgs
+  } else {
+    list()
+  }
+  limpaKeep <- if (isLimpa) {
+    limpaOptions$keep
+  } else {
+    "none"
+  }
+  limpaPostQuantNorm <- if (isLimpa) {
+    limpaOptions$postQuantNorm
+  } else {
+    "none"
+  }
+
   if (!oneVsRest && is.null(comparisons)) {
     cli::cli_abort(
       c(
-        "Argument {.arg comparisons} must be provided (unless {.arg oneVsRest}=TRUE).",
+        "Provide {.arg comparisons}, or set {.arg oneVsRest}={.val TRUE}.",
         i = "Example (one comparison): {.code comparisons = c('1-2')}",
         i = "Example (two comparisons): {.code comparisons = c('1-2', '2-3')}"
       ),
@@ -835,19 +750,24 @@ normalyzerDE <- function(
     )
   }
 
-  if (
-    identical(as.character(type)[1], "limpa") && is.null(limpaQuantifiedRds)
-  ) {
-    limpaQuantifiedRds <- autoDetectLimpaQuantifiedRds(dataPath)
-    if (!quiet && !is.null(limpaQuantifiedRds)) {
-      cli::cli_alert_info(
-        "Auto-detected {.arg limpaQuantifiedRds}: {.path {limpaQuantifiedRds}}"
-      )
-    }
+  if (isLimpa) {
+    limpaOptions$quantifiedRds <- limpaQuantifiedRds
   }
 
-  if (identical(as.character(type)[1], "limpa")) {
-    limpaPostQuantNormUse <- match.arg(limpaPostQuantNorm)
+  if (isLimpa) {
+    limpaPostQuantNormUse <- match.arg(
+      limpaPostQuantNorm,
+      c(
+        "none",
+        "GI",
+        "median",
+        "mean",
+        "Quantile",
+        "CycLoess",
+        "RLR",
+        "quantile"
+      )
+    )
 
     if (
       !identical(limpaPostQuantNormUse, "none") &&
@@ -868,9 +788,9 @@ normalyzerDE <- function(
           if (identical(prefixLower, normLower)) {
             cli::cli_abort(
               c(
-                "The input file {.path {base}} appears to already be normalized with {.val {normPrefix}}, but {.arg limpaPostQuantNorm}={.val {limpaPostQuantNormUse}} would apply the same normalization again.",
-                i = "Use {.arg limpaPostQuantNorm}={.val none} when supplying a pre-normalized matrix.",
-                i = "Or use the {.val log2-normalized} matrix and set {.arg limpaPostQuantNorm} to the desired method."
+                "Input file {.path {base}} appears to be already normalized ({.val {normPrefix}}). Applying {.arg postQuantNorm}={.val {limpaPostQuantNormUse}} would repeat the same normalization step.",
+                i = "Use {.arg postQuantNorm}={.val none} when supplying a pre-normalized matrix.",
+                i = "Or use the completed log2 matrix ({.file log2-normalized.txt}) and set {.arg postQuantNorm} to the desired method."
               ),
               class = "normalyzerde_error",
               call = NULL
@@ -879,7 +799,7 @@ normalyzerDE <- function(
 
           cli::cli_warn(
             c(
-              "The input file {.path {base}} appears to already be normalized with {.val {normPrefix}}, but {.arg limpaPostQuantNorm}={.val {limpaPostQuantNormUse}} will apply an additional normalization.",
+              "Input file {.path {base}} appears to be already normalized ({.val {normPrefix}}). Applying {.arg postQuantNorm}={.val {limpaPostQuantNormUse}} would add another normalization step.",
               i = "This may be unintended double-normalization."
             ),
             class = "normalyzerde_warning",
@@ -900,7 +820,7 @@ normalyzerDE <- function(
   if (!quiet) {
     cli::cli_alert_info("{.strong {stepTag(1)}} Load data and verify input")
   }
-  jobDir <- setupJobDir(jobName, outputDir)
+  jobDir <- setupJobDir(jobName, outputDir, reuseOutputDir = reuseOutputDir)
   safeJobName <- basename(jobDir)
 
   if (is.null(experimentObj)) {
@@ -998,16 +918,7 @@ normalyzerDE <- function(
     subsetByComparison = subsetByComparison,
     oneVsRest = oneVsRest,
     oneVsRestGroups = oneVsRestGroups,
-    limpaProteinIdCol = limpaProteinIdCol,
-    limpaByRow = limpaByRow,
-    limpaDpc = limpaDpc,
-    limpaDpcMethod = limpaDpcMethod,
-    limpaDpcArgs = limpaDpcArgs,
-    limpaQuantArgs = limpaQuantArgs,
-    limpaQuantifiedRds = limpaQuantifiedRds,
-    limpaPostQuantNorm = limpaPostQuantNorm,
-    limpaDEArgs = limpaDEArgs,
-    limpaKeep = limpaKeep
+    limpaOptions = limpaOptions
   )
   if (!quiet) {
     cli::cli_alert_success(
@@ -1032,6 +943,22 @@ normalyzerDE <- function(
   )
   if (!quiet) {
     cli::cli_alert_success("{.strong {stepTag(5)}} Annotated matrix written")
+  }
+
+  sampleWeightsDf <- collectLimpaSampleWeights(nst)
+  if (!is.null(sampleWeightsDf) && nrow(sampleWeightsDf) > 0) {
+    sampleWeightsPath <- paste0(jobDir, "/", safeJobName, "_sample_weights.tsv")
+    if (!quiet) {
+      cli::cli_alert_info(
+        "{.strong {stepTag(5)}} Writing {nrow(sampleWeightsDf)} limpa sample-weight rows to {.path {sampleWeightsPath}}"
+      )
+    }
+    writeLimpaSampleWeights(sampleWeightsDf, sampleWeightsPath)
+    if (!quiet) {
+      cli::cli_alert_success(
+        "{.strong {stepTag(5)}} Sample weights written"
+      )
+    }
   }
 
   if (!quiet) {

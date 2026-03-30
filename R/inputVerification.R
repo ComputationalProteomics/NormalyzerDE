@@ -574,11 +574,11 @@ verifyValidNumbers <- function(
       cli::cli_abort(
         c(
           "Encountered below-one values in raw data.",
-          x = "NormalyzerDE log2-transforms input by default; below-one values can yield negative values and may crash downstream processing.",
+          x = "NormalyzerDE log2-transforms raw input by default; values below 1 suggest the matrix is already transformed or on an unexpected scale.",
           x = "Rows with issues (showing up to 10): {.val {rowsPreview}}",
           i = "Content of the first row with issues (row {.val {rowsWithIssues[1]}}): {.val {firstIssueRow}}",
           i = "If your input is already on the log2 scale, set {.arg noLogTransform}={.val TRUE}.",
-          i = "Otherwise, consider scaling values upstream if appropriate."
+          i = "Otherwise, confirm the expected raw-value scale before continuing."
         ),
         class = "normalyzerde_error",
         call = NULL
@@ -597,7 +597,7 @@ verifyValidNumbers <- function(
         maxValDisp <- signif(maxVal, 4)
         cli::cli_warn(
           c(
-            "Input values look small for linear-scale intensity data (max finite value = {.val {maxValDisp}}).",
+            "Input values may already be on the log2 scale (max finite value = {.val {maxValDisp}}).",
             i = "NormalyzerDE will log2-transform input by default.",
             i = "If your input is already on the log2 scale, set {.arg noLogTransform}={.val TRUE}."
           ),
@@ -856,7 +856,7 @@ validateSampleReplication <- function(
         c(
           "Some group conditions have no replicates.",
           x = "Group conditions without replicates: {.val {nonReplicatedSamples}}",
-          i = "Set {.arg requireReplicates}={.val FALSE} to continue with limited processing."
+          i = "Set {.arg requireReplicates}={.val FALSE} to continue, but replicate-dependent metrics and downstream steps may be unavailable."
         ),
         class = "normalyzerde_error",
         call = NULL
@@ -866,7 +866,7 @@ validateSampleReplication <- function(
         c(
           "Some group conditions have no replicates.",
           "!" = "Group conditions without replicates: {.val {nonReplicatedSamples}}",
-          i = "Continuing with limited processing because {.arg requireReplicates}={.val FALSE}."
+          i = "Continuing because {.arg requireReplicates}={.val FALSE}; replicate-dependent metrics and downstream steps may be unavailable."
         ),
         class = "normalyzerde_warning",
         call = NULL
@@ -917,7 +917,7 @@ verifyMultipleSamplesPresent <- function(
           "Less than two distinct sample groups found.",
           x = "Found group: {.val {distinctSamples}}.",
           i = "For full processing, two or more sample groups are required.",
-          i = "Set {.arg requireReplicates}={.val FALSE} to continue with limited processing."
+          i = "Set {.arg requireReplicates}={.val FALSE} to continue, but condition-comparison steps will be unavailable."
         ),
         class = "normalyzerde_error",
         call = NULL
@@ -927,7 +927,7 @@ verifyMultipleSamplesPresent <- function(
         c(
           "Less than two distinct sample groups found.",
           "!" = "Found group: {.val {distinctSamples}}.",
-          i = "Continuing with limited processing because {.arg requireReplicates}={.val FALSE}."
+          i = "Continuing because {.arg requireReplicates}={.val FALSE}; condition-comparison steps will be unavailable."
         ),
         class = "normalyzerde_warning",
         call = NULL

@@ -37,7 +37,7 @@ NormalyzerStatistics <- setClass(
 
     comparisons = "character",
     condCol = "character",
-    batchCol = "numeric",
+    batchCol = "character",
     splitter = "character"
   )
 )
@@ -125,6 +125,11 @@ setReplaceMethod(
   "batchCol",
   signature(object = "NormalyzerStatistics"),
   function(object, value) {
+    if (is.null(value) || length(value) == 0) {
+      value <- character()
+    } else {
+      value <- as.character(value)
+    }
     slot(object, "batchCol") <- value
     validObject(object)
     object
@@ -215,8 +220,8 @@ setReplaceMethod(
 #'
 #' Some backends can optionally store intermediate objects for reuse or
 #' debugging. For example, \code{calculateContrasts(..., type="limpa")} can keep
-#' the completed expression matrix (as a limma \code{EList}) and/or the fitted
-#' \code{MArrayLM} object(s) when \code{limpaKeep} is enabled.
+#' the completed expression matrix (as a limma \code{EList}), fitted
+#' \code{MArrayLM} object(s), and estimated sample weights when available.
 #'
 #' @param object A \code{NormalyzerStatistics} object.
 #' @return Named list of backend-specific objects.
@@ -405,7 +410,7 @@ setReplaceMethod(
 #' @param batchCol Column name in design matrix containing batch information.
 #' @param splitter Delimiter used to separate contrast groups.
 #' @param type Type of statistical test ("limma", "limma_intensity", "welch" or
-#'   "limpa"). "limpa" uses the optional Bioconductor package \pkg{limpa} to
+#'   "limpa"). "limpa" uses the Bioconductor package \pkg{limpa} to
 #'   handle missing values via a detection probability curve (DPC) model.
 #' @param leastRepCount Minimum number of replicates required in each group for
 #'   contrast calculations. For \code{type="limpa"}, a feature is retained if at
@@ -423,68 +428,14 @@ setReplaceMethod(
 #'   \code{oneVsRestGroups}).
 #' @param oneVsRestGroups Optional character vector specifying which groups in
 #'   \code{condCol} to compare against all other samples.
-#' @param limpaProteinIdCol For \code{type="limpa"}, optionally summarize
-#'   peptide/precursor rows to protein-level using \code{limpa::dpcQuant()}.
-#'   Set to a column name in the row annotation (for example \code{"Protein.Group"})
-#'   to use as the protein identifier. Use \code{"auto"} (default) to try common
-#'   identifiers. If the chosen column contains duplicate identifiers, the data
-#'   are summarized once across all samples and the output rows correspond to
-#'   proteins. Set to \code{NULL} to disable protein summarization and treat each
-#'   row as one feature (recommended for PTM-level data such as phosphoproteomics
-#'   where each row corresponds to a modified site).
-#' @param limpaByRow For \code{type="limpa"}, treat each input row as a separate
-#'   feature and always use \code{limpa::dpcQuantByRow()} instead of summarizing
-#'   via \code{limpa::dpcQuant()}. This is recommended for PTM-level matrices
-#'   (e.g., phosphosites). Equivalent to setting \code{limpaProteinIdCol=NULL}.
-#' @param limpaDpc For \code{type="limpa"}, optional DPC parameters to pass to
-#'   \code{limpa::dpcQuant()} / \code{limpa::dpcQuantByRow()}. Can be a list as
-#'   returned by \code{limpa::dpc()}/\code{limpa::dpcON()}/\code{limpa::dpcCN()},
-#'   or a numeric vector \code{c(beta0, beta1)}.
-#' @param limpaDpcMethod For \code{type="limpa"}, optional method to estimate the
-#'   DPC parameters from the data when \code{limpaDpc} is not supplied.
-#'   \code{"none"} (default) uses a fixed slope (\code{limpaQuantArgs$dpc.slope},
-#'   default \code{0.8}) and lets limpa estimate the intercept internally.
-#'   \code{"dpc"} estimates both DPC parameters from the observed-normal model
-#'   via \code{limpa::dpc()}. \code{"dpcON"} estimates the DPC from the
-#'   observed-normal model via the newer \code{limpa::dpcON()} (for a robust fit,
-#'   set \code{limpaDpcArgs=list(robust=TRUE)}). \code{"dpcCN"} estimates the DPC from the
-#'   complete-normal model via \code{limpa::dpcCN()}, which can be more robust
-#'   for datasets with very large fold-changes.
-#' @param limpaDpcArgs For \code{type="limpa"}, optional named list of additional
-#'   arguments forwarded to \code{limpa::dpc()}, \code{limpa::dpcON()}, or \code{limpa::dpcCN()} when
-#'   \code{limpaDpcMethod} is not \code{"none"}. Argument \code{y} is ignored.
-#'   For \code{limpaDpcMethod="dpcON"} and \code{"dpcCN"}, \code{dpc.slope.start} defaults to
-#'   \code{limpaQuantArgs$dpc.slope}.
-#' @param limpaQuantArgs For \code{type="limpa"}, optional named list of
-#'   additional arguments forwarded to \code{limpa::dpcQuant()} /
-#'   \code{limpa::dpcQuantByRow()}. Use this to set \code{dpc.slope} (default
-#'   \code{0.8}), \code{chunk} (default \code{1000L}), and \code{verbose} (default
-#'   \code{FALSE}), plus any additional \code{...} arguments supported by limpa.
-#'   Arguments \code{y}, \code{protein.id}, and \code{dpc} are ignored.
-#' @param limpaQuantifiedRds For \code{type="limpa"}, optional path to an RDS
-#'   file containing a quantified \code{EList} object (as returned by
-#'   \code{limpa::dpcQuant()} or \code{limpa::dpcQuantByRow()}). When provided,
-#'   NormalyzerDE skips the internal \code{dpcQuant*()} step and reuses the
-#'   cached quantification (including \code{standard.error} and
-#'   \code{n.observations}) for differential expression. This is required to
-#'   preserve quantification uncertainty when you first ran \code{dpcQuant*()}
-#'   upstream (for example via \code{normalyzer(preQuant=\"limpa\")}).
-#' @param limpaPostQuantNorm For \code{type="limpa"}, optional between-sample
-#'   normalization applied to the quantified expression matrix after
-#'   \code{limpa::dpcQuant()} / \code{limpa::dpcQuantByRow()} and before
-#'   \code{limpa::dpcDE()}. One of \code{"none"} (default), \code{"GI"},
-#'   \code{"median"}, \code{"mean"}, \code{"Quantile"} (or \code{"quantile"}),
-#'   \code{"CycLoess"}, or \code{"RLR"}.
-#'   Avoid double-normalization if your input was already normalized upstream.
-#' @param limpaDEArgs For \code{type="limpa"}, optional named list of additional
-#'   arguments forwarded to \code{limpa::dpcDE()} (and then to
-#'   \code{limpa::voomaLmFitWithImputation()}). To enable limma sample weights,
-#'   set \code{limpaDEArgs = list(sample.weights = TRUE)}.
-#' @param limpaKeep For \code{type="limpa"}, optionally store intermediate limpa
-#'   objects in \code{backendData(nst)$limpa} for reuse/debugging. Set to
-#'   \code{"elist"} to keep the \code{EList} object (completed expression matrix
-#'   plus uncertainty estimates), \code{"fit"} to keep the fitted \code{MArrayLM}
-#'   object(s), or \code{"all"} to keep both. Default is \code{"none"}.
+#' @param limpaOptions Optional helper created by \code{\link{limpaOptions}}.
+#'   For \code{type = "limpa"}, use this to configure protein-level
+#'   summarization (\code{proteinIdCol}, \code{byRow}), DPC estimation
+#'   (\code{dpc}, \code{dpcMethod}, \code{dpcArgs}), quantification
+#'   (\code{quantArgs}, \code{quantifiedRds}), differential expression
+#'   (\code{deArgs}), optional post-quantification normalization
+#'   (\code{postQuantNorm}), and retained backend objects (\code{keep}).
+#'   See \code{\link{limpaOptions}} for the available fields.
 #' @return nst Statistics object with statistical measures calculated
 #' @rdname calculateContrasts
 #' @export
@@ -509,25 +460,7 @@ setGeneric(
     subsetByComparison = FALSE,
     oneVsRest = FALSE,
     oneVsRestGroups = NULL,
-    limpaProteinIdCol = "auto",
-    limpaDpc = NULL,
-    limpaDpcMethod = c("none", "dpc", "dpcON", "dpcCN"),
-    limpaDpcArgs = NULL,
-    limpaQuantArgs = NULL,
-    limpaQuantifiedRds = NULL,
-    limpaDEArgs = NULL,
-    limpaKeep = c("none", "elist", "fit", "all"),
-    limpaByRow = FALSE,
-    limpaPostQuantNorm = c(
-      "none",
-      "GI",
-      "median",
-      "mean",
-      "Quantile",
-      "CycLoess",
-      "RLR",
-      "quantile"
-    )
+    limpaOptions = NULL
   ) {
     standardGeneric("calculateContrasts")
   }
@@ -550,25 +483,7 @@ setMethod(
     subsetByComparison = FALSE,
     oneVsRest = FALSE,
     oneVsRestGroups = NULL,
-    limpaProteinIdCol = "auto",
-    limpaDpc = NULL,
-    limpaDpcMethod = c("none", "dpc", "dpcON", "dpcCN"),
-    limpaDpcArgs = NULL,
-    limpaQuantArgs = NULL,
-    limpaQuantifiedRds = NULL,
-    limpaDEArgs = NULL,
-    limpaKeep = c("none", "elist", "fit", "all"),
-    limpaByRow = FALSE,
-    limpaPostQuantNorm = c(
-      "none",
-      "GI",
-      "median",
-      "mean",
-      "Quantile",
-      "CycLoess",
-      "RLR",
-      "quantile"
-    )
+    limpaOptions = NULL
   ) {
     dataMat <- dataMat(nst)
     dataMatOriginalRowNames <- rownames(dataMat)
@@ -593,40 +508,17 @@ setMethod(
         designDf[, batchCol],
         sep = "_"
       )
-      batchCol(nst) <- as.factor(designDf[, batchCol])
+      batchCol(nst) <- designDf[, batchCol]
     } else {
       conditionCombs <- designDf[, condCol]
-      batchCol(nst) <- numeric()
+      batchCol(nst) <- character()
     }
 
     rownames(dataMat) <- seq_len(nrow(dataMat))
 
     sampleReplicateGroupsStrings <- as.character(designDf[, condCol])
     statMeasures <- c("P", "FDR", "Ave", "Fold")
-
-    setupModelFromDesign <- function(
-      designDf,
-      condCol,
-      batchCol = NULL,
-      type = "limma"
-    ) {
-      if (is.null(batchCol)) {
-        Variable <- as.factor(designDf[, condCol])
-        model <- ~ 0 + Variable
-      } else {
-        if (!(type %in% c("limma", "limma_intensity", "limpa"))) {
-          cli::cli_abort(
-            "Batch compensation is only compatible with {.val limma} and {.val limpa}, got {.val {type}}.",
-            class = "normalyzerde_error",
-            call = NULL
-          )
-        }
-        Variable <- as.factor(designDf[, condCol])
-        Batch <- as.factor(designDf[, batchCol])
-        model <- ~ 0 + Variable + Batch
-      }
-      model
-    }
+    isLimpa <- identical(type, "limpa")
 
     warnIfLimpaInputLooksNotLog2 <- function(dataMat, threshold = 50) {
       finiteVals <- dataMat[is.finite(dataMat)]
@@ -640,7 +532,7 @@ setMethod(
         cli::cli_warn(
           c(
             "For {.arg type}={.val limpa}, the input data should be on the log2 scale (missing values as NA).",
-            i = "The values look large for log2 data (max finite value = {.val {maxValDisp}}).",
+            i = "These values are larger than typical log2 intensities (max finite value = {.val {maxValDisp}}).",
             i = "If your matrix is on the linear scale, set {.arg logTrans}={.val TRUE} in {.fn normalyzerDE} (or log2-transform upstream before calling {.fn calculateContrasts})."
           ),
           class = "normalyzerde_warning",
@@ -651,14 +543,46 @@ setMethod(
       invisible(NULL)
     }
 
+    limpaOptions <- if (isLimpa) {
+      resolveLimpaOptions(limpaOptions)
+    } else {
+      limpaOptions
+    }
+    limpaProteinIdCol <- if (isLimpa) limpaOptions$proteinIdCol else NULL
+    limpaByRow <- if (isLimpa) limpaOptions$byRow else FALSE
+    limpaDpc <- if (isLimpa) limpaOptions$dpc else NULL
+    limpaDpcMethod <- if (isLimpa) limpaOptions$dpcMethod else "none"
+    limpaDpcArgs <- if (isLimpa) limpaOptions$dpcArgs else list()
+    limpaQuantArgs <- if (isLimpa) limpaOptions$quantArgs else list()
+    limpaQuantifiedRds <- if (isLimpa) limpaOptions$quantifiedRds else NULL
+    limpaDEArgs <- if (isLimpa) limpaOptions$deArgs else list()
+    limpaKeep <- if (isLimpa) limpaOptions$keep else "none"
+    limpaPostQuantNorm <- if (isLimpa) limpaOptions$postQuantNorm else "none"
+
     limpaPostQuantNormUse <- "none"
-    if (type == "limpa") {
+    if (isLimpa) {
       requireLimpaPackageInternal("Statistics type 'limpa'")
+      limpaQuantByRow <- resolveLimpaQuantByRowFn()
       warnIfLimpaInputLooksNotLog2(dataMat)
 
-      limpaDpcMethod <- match.arg(limpaDpcMethod)
-      limpaKeep <- match.arg(limpaKeep)
-      limpaPostQuantNormUse <- match.arg(limpaPostQuantNorm)
+      limpaDpcMethod <- match.arg(
+        limpaDpcMethod,
+        c("none", "dpc", "dpcON", "dpcCN")
+      )
+      limpaKeep <- match.arg(limpaKeep, c("none", "elist", "fit", "all"))
+      limpaPostQuantNormUse <- match.arg(
+        limpaPostQuantNorm,
+        c(
+          "none",
+          "GI",
+          "median",
+          "mean",
+          "Quantile",
+          "CycLoess",
+          "RLR",
+          "quantile"
+        )
+      )
 
       byRowConfig <- normalizeLimpaByRowConfig(
         limpaByRow = limpaByRow,
@@ -672,7 +596,7 @@ setMethod(
           !is.character(limpaQuantifiedRds) || length(limpaQuantifiedRds) != 1
         ) {
           cli::cli_abort(
-            "{.arg limpaQuantifiedRds} must be a length-1 character file path (or {.val NULL}).",
+            "{.arg quantifiedRds} must be a length-1 character file path (or {.val NULL}).",
             class = "normalyzerde_error",
             call = NULL
           )
@@ -680,14 +604,14 @@ setMethod(
         limpaQuantifiedRds <- as.character(limpaQuantifiedRds)[1]
         if (is.na(limpaQuantifiedRds) || !nzchar(limpaQuantifiedRds)) {
           cli::cli_abort(
-            "{.arg limpaQuantifiedRds} must be a non-empty file path (or {.val NULL}).",
+            "{.arg quantifiedRds} must be a non-empty file path (or {.val NULL}).",
             class = "normalyzerde_error",
             call = NULL
           )
         }
         if (!file.exists(limpaQuantifiedRds)) {
           cli::cli_abort(
-            "{.arg limpaQuantifiedRds} file does not exist: {.path {limpaQuantifiedRds}}.",
+            "{.arg quantifiedRds} file does not exist: {.path {limpaQuantifiedRds}}.",
             class = "normalyzerde_error",
             call = NULL
           )
@@ -697,38 +621,48 @@ setMethod(
       validateLimpaDpc(limpaDpc)
     }
 
-    if (type != "limpa" && !is.null(limpaQuantifiedRds)) {
+    if (!isLimpa && !is.null(limpaQuantifiedRds)) {
       cli::cli_abort(
-        "{.arg limpaQuantifiedRds} is only supported for {.arg type}={.val limpa}.",
+        "{.arg quantifiedRds} is only supported for {.arg type}={.val limpa}.",
         class = "normalyzerde_error",
         call = NULL
       )
     }
 
-    limpaDpcArgsUse <- if (type == "limpa") {
+    limpaDpcArgsUse <- if (isLimpa) {
       sanitizeLimpaDpcArgs(limpaDpcArgs)
     } else {
       list()
     }
 
-    limpaQuantArgsUse <- if (type == "limpa") {
+    limpaQuantArgsUse <- if (isLimpa) {
       applyLimpaQuantDefaultsAndValidate(sanitizeLimpaQuantArgs(limpaQuantArgs))
     } else {
       list()
     }
+    limpaDEArgsUse <- if (isLimpa) {
+      applyLimpaDEDefaultsAndValidate(sanitizeLimpaDEArgs(limpaDEArgs))
+    } else {
+      list()
+    }
+    limpaStoreSampleWeights <- if (isLimpa) {
+      isTRUE(limpaDEArgsUse[["sample.weights"]])
+    } else {
+      FALSE
+    }
 
-    limpaVerboseUse <- if (type == "limpa") {
+    limpaVerboseUse <- if (isLimpa) {
       isTRUE(limpaQuantArgsUse[["verbose"]])
     } else {
       FALSE
     }
-    limpaDpcSlopeUse <- if (type == "limpa") {
+    limpaDpcSlopeUse <- if (isLimpa) {
       as.numeric(limpaQuantArgsUse[["dpc.slope"]])
     } else {
       0.8
     }
 
-    if (type == "limpa" && leastRepCount > 1 && isTRUE(limpaVerboseUse)) {
+    if (isLimpa && leastRepCount > 1 && isTRUE(limpaVerboseUse)) {
       cli::cli_inform(
         c(
           "!" = "For {.arg type}={.val limpa}, {.arg leastRepCount}>1 can drop informative sparse features.",
@@ -737,12 +671,12 @@ setMethod(
       )
     }
 
-    limpaDpcUse <- if (type == "limpa") {
+    limpaDpcUse <- if (isLimpa) {
       if (!is.null(limpaDpc)) {
         if (limpaDpcMethod != "none" && isTRUE(limpaVerboseUse)) {
           cli::cli_inform(
             c(
-              i = "{.arg limpaDpc} was supplied; ignoring {.arg limpaDpcMethod}={.val {limpaDpcMethod}}."
+              i = "{.arg dpc} was supplied; ignoring {.arg dpcMethod}={.val {limpaDpcMethod}}."
             )
           )
         }
@@ -765,7 +699,7 @@ setMethod(
       invisible(NULL)
     }
 
-    if (type == "limpa" && limpaKeep != "none") {
+    if (isLimpa && (limpaKeep != "none" || limpaStoreSampleWeights)) {
       dpcVec <- if (is.null(limpaDpcUse)) {
         NULL
       } else if (is.list(limpaDpcUse)) {
@@ -792,7 +726,8 @@ setMethod(
         postQuantNorm = limpaPostQuantNormUse,
         fits = list(),
         designs = list(),
-        elists = list()
+        elists = list(),
+        sampleWeights = list()
       )
 
       if (length(limpaDpcArgsUse) > 0) {
@@ -815,6 +750,12 @@ setMethod(
         if (limpaKeep %in% c("elist", "all") && !is.null(y)) {
           limpaBackend$elists[[key]] <<- y
         }
+        if (limpaStoreSampleWeights && !is.null(fit)) {
+          sampleWeights <- extractLimpaSampleWeightsFromFit(fit)
+          if (!is.null(sampleWeights)) {
+            limpaBackend$sampleWeights[[key]] <<- sampleWeights
+          }
+        }
 
         invisible(NULL)
       }
@@ -832,25 +773,6 @@ setMethod(
       proteinId <- annotationMat[, proteinIdCol]
       proteinId <- as.character(proteinId)
 
-      if (length(proteinId) != nrow(dataMat)) {
-        cli::cli_abort(
-          "Row annotation column {.val {proteinIdCol}} does not match the number of rows in the data matrix.",
-          class = "normalyzerde_error",
-          call = NULL
-        )
-      }
-
-      if (anyNA(proteinId) || any(proteinId == "")) {
-        cli::cli_abort(
-          c(
-            "Row annotation column {.val {proteinIdCol}} contains missing or empty protein identifiers.",
-            i = "Remove these rows or choose another column."
-          ),
-          class = "normalyzerde_error",
-          call = NULL
-        )
-      }
-
       if (anyDuplicated(proteinId) == 0) {
         return(NULL)
       }
@@ -865,56 +787,14 @@ setMethod(
         check.names = FALSE
       )
       genesInput[[proteinIdCol]] <- proteinId
-      stableCols <- inferStableProteinAnnotationCols(
+
+      quantifyLimpaByProteinInternal(
+        dataMat = dataMat,
         genesDf = genesInput,
-        proteinId = proteinId,
-        proteinIdCol = proteinIdCol
+        proteinIdCol = proteinIdCol,
+        dpc = limpaDpcUse,
+        quantArgs = limpaQuantArgsUse
       )
-      genesInput <- genesInput[,
-        unique(c(proteinIdCol, stableCols)),
-        drop = FALSE
-      ]
-      yPeptide <- methods::new("EList", list(E = dataMat, genes = genesInput))
-      yProtein <- do.call(
-        limpa::dpcQuant,
-        c(
-          list(
-            y = yPeptide,
-            protein.id = proteinIdCol,
-            dpc = limpaDpcUse
-          ),
-          limpaQuantArgsUse
-        )
-      )
-
-      proteinIds <- rownames(yProtein$E)
-      rowIds <- as.character(seq_len(nrow(yProtein$E)))
-
-      rownames(yProtein$E) <- rowIds
-
-      if (!is.null(yProtein$other$n.observations)) {
-        rownames(yProtein$other$n.observations) <- rowIds
-      }
-      if (!is.null(yProtein$other$standard.error)) {
-        rownames(yProtein$other$standard.error) <- rowIds
-      }
-
-      genes <- if (!is.null(yProtein$genes)) {
-        as.data.frame(yProtein$genes, check.names = FALSE)
-      } else {
-        data.frame(check.names = FALSE)
-      }
-      if (!(proteinIdCol %in% colnames(genes))) {
-        genes[[proteinIdCol]] <- proteinIds
-      }
-      genes <- genes[,
-        c(proteinIdCol, setdiff(names(genes), proteinIdCol)),
-        drop = FALSE
-      ]
-      rownames(genes) <- rowIds
-      yProtein$genes <- genes
-
-      yProtein
     }
 
     filterLowRepLimpa <- function(
@@ -985,7 +865,7 @@ setMethod(
       if (anyDuplicated(proteinId) == 0) {
         cli::cli_warn(
           c(
-            "{.arg limpaProteinIdCol}={.val {proteinIdCol}} contains no duplicated identifiers, so no peptide/precursor-to-protein summarization will be performed.",
+            "{.arg proteinIdCol}={.val {proteinIdCol}} contains no duplicated identifiers, so no peptide/precursor-to-protein summarization will be performed.",
             i = "The analysis will proceed with input rows as features (this may indicate the input is already protein-level)."
           ),
           class = "normalyzerde_warning",
@@ -1037,7 +917,7 @@ setMethod(
       if (!inherits(limpaQuantifiedCached, "EList")) {
         cli::cli_abort(
           c(
-            "{.arg limpaQuantifiedRds} must contain a limma {.code EList} object.",
+            "{.arg quantifiedRds} must contain a limma {.code EList} object.",
             i = "Got class(es): {.val {paste(class(limpaQuantifiedCached), collapse = \", \")}}."
           ),
           class = "normalyzerde_error",
@@ -1048,14 +928,14 @@ setMethod(
         is.null(limpaQuantifiedCached$E) || !is.matrix(limpaQuantifiedCached$E)
       ) {
         cli::cli_abort(
-          "{.arg limpaQuantifiedRds} {.code EList} must contain a matrix element {.code E}.",
+          "{.arg quantifiedRds} {.code EList} must contain a matrix element {.code E}.",
           class = "normalyzerde_error",
           call = NULL
         )
       }
       if (is.null(colnames(limpaQuantifiedCached$E))) {
         cli::cli_abort(
-          "{.arg limpaQuantifiedRds} {.code EList$E} must contain sample column names.",
+          "{.arg quantifiedRds} {.code EList$E} must contain sample column names.",
           class = "normalyzerde_error",
           call = NULL
         )
@@ -1072,7 +952,7 @@ setMethod(
           anyDuplicated(cachedRowIds) > 0
       ) {
         cli::cli_abort(
-          "{.arg limpaQuantifiedRds} {.code EList$E} must have unique, non-empty row names.",
+          "{.arg quantifiedRds} {.code EList$E} must have unique, non-empty row names.",
           class = "normalyzerde_error",
           call = NULL
         )
@@ -1085,7 +965,7 @@ setMethod(
       ) {
         cli::cli_abort(
           c(
-            "{.arg limpaQuantifiedRds} {.code EList} must contain {.code other$n.observations} (a matrix).",
+            "{.arg quantifiedRds} {.code EList} must contain {.code other$n.observations} (a matrix).",
             i = "Use an {.code EList} returned by {.code limpa::dpcQuant()} or {.code limpa::dpcQuantByRow()}."
           ),
           class = "normalyzerde_error",
@@ -1099,7 +979,7 @@ setMethod(
         )
       ) {
         cli::cli_abort(
-          "{.arg limpaQuantifiedRds} {.code other$n.observations} must have the same dimensions as {.code EList$E}.",
+          "{.arg quantifiedRds} {.code other$n.observations} must have the same dimensions as {.code EList$E}.",
           class = "normalyzerde_error",
           call = NULL
         )
@@ -1117,7 +997,7 @@ setMethod(
       ) {
         cli::cli_abort(
           c(
-            "{.arg limpaQuantifiedRds} {.code EList} must contain {.code other$standard.error} (a matrix).",
+            "{.arg quantifiedRds} {.code EList} must contain {.code other$standard.error} (a matrix).",
             i = "Use an {.code EList} returned by {.code limpa::dpcQuant()} or {.code limpa::dpcQuantByRow()}."
           ),
           class = "normalyzerde_error",
@@ -1131,7 +1011,7 @@ setMethod(
         )
       ) {
         cli::cli_abort(
-          "{.arg limpaQuantifiedRds} {.code other$standard.error} must have the same dimensions as {.code EList$E}.",
+          "{.arg quantifiedRds} {.code other$standard.error} must have the same dimensions as {.code EList$E}.",
           class = "normalyzerde_error",
           call = NULL
         )
@@ -1146,7 +1026,7 @@ setMethod(
       if (anyNA(dataMat)) {
         cli::cli_abort(
           c(
-            "{.arg limpaQuantifiedRds} requires a completed expression matrix without NA values.",
+            "{.arg quantifiedRds} requires a completed expression matrix without NA values.",
             i = "Use the post-quant matrix (for example the {.val log2} output from {.code normalyzer(preQuant = 'limpa')})."
           ),
           class = "normalyzerde_error",
@@ -1184,7 +1064,7 @@ setMethod(
       missingCols <- setdiff(colnames(dataMat), colnames(limpaQuantified$E))
       if (length(missingCols) > 0) {
         cli::cli_abort(
-          "{.arg limpaQuantifiedRds} is missing sample columns required by the data matrix: {.val {paste(missingCols, collapse = \", \")}}.",
+          "{.arg quantifiedRds} is missing sample columns required by the data matrix: {.val {paste(missingCols, collapse = \", \")}}.",
           class = "normalyzerde_error",
           call = NULL
         )
@@ -1222,7 +1102,7 @@ setMethod(
 
       if (!is.null(y$E) && anyNA(y$E)) {
         cli::cli_abort(
-          "{.arg limpaPostQuantNorm}={.val {limpaPostQuantNormUse}} requires a completed expression matrix without NA values.",
+          "{.arg postQuantNorm}={.val {limpaPostQuantNormUse}} requires a completed expression matrix without NA values.",
           class = "normalyzerde_error",
           call = NULL
         )
@@ -1242,7 +1122,7 @@ setMethod(
         y$E <- performGlobalRLRNormalization(y$E, noLogTransform = TRUE)
       } else {
         cli::cli_abort(
-          "Unknown {.arg limpaPostQuantNorm} value: {.val {limpaPostQuantNormUse}}.",
+          "Unknown {.arg postQuantNorm} value: {.val {limpaPostQuantNormUse}}.",
           class = "normalyzerde_error",
           call = NULL
         )
@@ -1258,7 +1138,7 @@ setMethod(
     ) {
       if (is.null(limpaQuantified)) {
         yImputed <- do.call(
-          limpa::dpcQuantByRow,
+          limpaQuantByRow,
           c(
             list(
               y = dataMat,
@@ -1269,8 +1149,6 @@ setMethod(
         )
         yImputed <- applyLimpaPostQuantNorm(yImputed)
 
-        limpaDEArgsUse <-
-          applyLimpaDEDefaultsAndValidate(sanitizeLimpaDEArgs(limpaDEArgs))
         fit <- do.call(
           limpa::dpcDE,
           c(
@@ -1314,7 +1192,7 @@ setMethod(
       if (anyNA(rowsInQuant)) {
         cli::cli_abort(
           c(
-            "Failed to map data matrix rows to {.arg limpaQuantifiedRds} rows.",
+            "Failed to map data matrix rows to {.arg quantifiedRds} rows.",
             i = "Please ensure both inputs come from the same quantified matrix."
           ),
           class = "normalyzerde_error",
@@ -1354,7 +1232,7 @@ setMethod(
           ]
         } else {
           cli::cli_abort(
-            "{.arg limpaQuantifiedRds} genes rows could not be aligned to {.code EList} rows.",
+            "{.arg quantifiedRds} genes rows could not be aligned to {.code EList} rows.",
             class = "normalyzerde_error",
             call = NULL
           )
@@ -1367,7 +1245,7 @@ setMethod(
         if (anyNA(dataMat)) {
           cli::cli_abort(
             c(
-              "{.arg limpaQuantifiedRds} requires a completed expression matrix without NA values.",
+              "{.arg quantifiedRds} requires a completed expression matrix without NA values.",
               i = "Use the post-quant matrix (for example the {.val log2} output from {.code normalyzer(preQuant = 'limpa')})."
             ),
             class = "normalyzerde_error",
@@ -1379,8 +1257,6 @@ setMethod(
 
       yUse <- applyLimpaPostQuantNorm(yUse)
 
-      limpaDEArgsUse <-
-        applyLimpaDEDefaultsAndValidate(sanitizeLimpaDEArgs(limpaDEArgs))
       fit <- do.call(
         limpa::dpcDE,
         c(list(y = yUse, design = limmaDesign, plot = FALSE), limpaDEArgsUse)
@@ -1403,7 +1279,7 @@ setMethod(
       }
       if (anyNA(rowIds)) {
         cli::cli_abort(
-          "Failed to map filtered data rows to {.arg limpaQuantifiedRds} {.code n.observations} rows.",
+          "Failed to map filtered data rows to {.arg quantifiedRds} {.code n.observations} rows.",
           class = "normalyzerde_error",
           call = NULL
         )
@@ -1418,10 +1294,106 @@ setMethod(
       obs
     }
 
-    compLists <- list()
-    for (statMeasure in statMeasures) {
-      compLists[[statMeasure]] <- list()
+    filterContrastData <- function(
+      dataMatCurrent,
+      conditionHeaders,
+      nObservations = NULL
+    ) {
+      dataMatNAFiltered <- if (type == "limpa") {
+        filterLowRepLimpa(
+          dataMatCurrent,
+          conditionHeaders,
+          leastRep = leastRepCount,
+          nObservations = nObservations
+        )
+      } else {
+        filterLowRep(
+          dataMatCurrent,
+          conditionHeaders,
+          leastRep = leastRepCount
+        )
+      }
+
+      if (type != "limpa" && leastRepCount == 0 && impute) {
+        dataMatNAFiltered <- imputeGroupValues(
+          dataMatNAFiltered,
+          conditionHeaders,
+          minFraction = imputeMinFraction
+        )
+      }
+
+      dataMatNAFiltered
     }
+
+    prepareLimmaContrastState <- function(
+      dataMatFiltered,
+      designDfCurrent,
+      backendKey = ".global"
+    ) {
+      model <- setupModelFromDesign(
+        designDfCurrent,
+        condCol,
+        batchCol = batchCol,
+        type = type
+      )
+      limmaDesignRaw <- stats::model.matrix(model)
+      limmaPrepared <- sanitizeLimmaDesign(limmaDesignRaw)
+      limmaFit <- if (type == "limpa") {
+        calculateLimpaFit(
+          dataMatFiltered,
+          limmaPrepared$design,
+          backendKey = backendKey
+        )
+      } else {
+        limma::lmFit(dataMatFiltered, limmaPrepared$design)
+      }
+
+      list(
+        design = limmaPrepared$design,
+        fit = limmaFit,
+        coefMap = limmaPrepared$coefMap
+      )
+    }
+
+    calculateContrastStatistics <- function(
+      dataMatFiltered,
+      groupHeader,
+      levels,
+      designDfCurrent = NULL,
+      backendKey = ".global",
+      limmaState = NULL
+    ) {
+      if (type == "welch") {
+        return(calculateWelch(dataMatFiltered, groupHeader, levels))
+      }
+
+      if (type %in% c("limma", "limma_intensity", "limpa")) {
+        if (is.null(limmaState)) {
+          limmaState <- prepareLimmaContrastState(
+            dataMatFiltered,
+            designDfCurrent,
+            backendKey = backendKey
+          )
+        }
+
+        return(calculateLimmaContrast(
+          dataMatFiltered,
+          limmaState$design,
+          limmaState$fit,
+          levels,
+          useIntensityTrend = type == "limma_intensity",
+          coefMap = limmaState$coefMap
+        ))
+      }
+
+      cli::cli_abort(
+        "Unknown statistics {.arg type}: {.val {type}}.",
+        class = "normalyzerde_error",
+        call = NULL
+      )
+    }
+
+    compLists <- initializeContrastResultLists(statMeasures)
 
     if (oneVsRest) {
       restLabel <- chooseOneVsRestLabel(sampleReplicateGroupsStrings)
@@ -1475,20 +1447,11 @@ setMethod(
           groupHeader
         }
 
-        dataMatNAFiltered <- if (type == "limpa") {
-          filterLowRepLimpa(
-            dataMat,
-            conditionCombsOVR,
-            leastRep = leastRepCount,
-            nObservations = subsetLimpaNObservations(dataMat)
-          )
-        } else {
-          filterLowRep(
-            dataMat,
-            conditionCombsOVR,
-            leastRep = leastRepCount
-          )
-        }
+        dataMatNAFiltered <- filterContrastData(
+          dataMat,
+          conditionCombsOVR,
+          nObservations = subsetLimpaNObservations(dataMat)
+        )
 
         if (nrow(dataMatNAFiltered) == 0) {
           cli::cli_abort(
@@ -1505,68 +1468,25 @@ setMethod(
 
         naFilterContrast <- rownames(dataMat) %in% rownames(dataMatNAFiltered)
 
-        if (type != "limpa" && leastRepCount == 0 && impute) {
-          dataMatNAFiltered <- imputeGroupValues(
-            dataMatNAFiltered,
-            conditionCombsOVR,
-            minFraction = imputeMinFraction
-          )
-        }
+        statResults <- calculateContrastStatistics(
+          dataMatNAFiltered,
+          groupHeader,
+          c(groupLabel, restLabel),
+          designDfCurrent = designDfOVR,
+          backendKey = compName
+        )
 
-        if (type == "welch") {
-          statResults <- calculateWelch(
-            dataMatNAFiltered,
-            groupHeader,
-            c(groupLabel, restLabel)
-          )
-        } else if (type %in% c("limma", "limma_intensity", "limpa")) {
-          model <- setupModelFromDesign(
-            designDfOVR,
-            condCol,
-            batchCol = batchCol,
-            type = type
-          )
-          limmaDesignRaw <- stats::model.matrix(model)
-          limmaPrepared <- sanitizeLimmaDesign(limmaDesignRaw)
-          limmaDesign <- limmaPrepared$design
-          limmaCoefMap <- limmaPrepared$coefMap
-          limmaFit <- if (type == "limpa") {
-            calculateLimpaFit(
-              dataMatNAFiltered,
-              limmaDesign,
-              backendKey = compName
-            )
-          } else {
-            limma::lmFit(dataMatNAFiltered, limmaDesign)
-          }
-
-          statResults <- calculateLimmaContrast(
-            dataMatNAFiltered,
-            limmaDesign,
-            limmaFit,
-            c(groupLabel, restLabel),
-            useIntensityTrend = type == "limma_intensity",
-            coefMap = limmaCoefMap
-          )
-        } else {
-          cli::cli_abort(
-            "Unknown statistics {.arg type}: {.val {type}}.",
-            class = "normalyzerde_error",
-            call = NULL
-          )
-        }
-
-        for (statMeasure in statMeasures) {
-          compLists[[statMeasure]][[compName]] <- c()
-          compLists[[statMeasure]][[compName]][
-            naFilterContrast
-          ] <- statResults[[statMeasure]]
-        }
+        compLists <- storeContrastResults(
+          compLists,
+          statResults,
+          compName,
+          naFilterContrast
+        )
       }
     } else {
       if (is.null(comparisons)) {
         cli::cli_abort(
-          "{.arg comparisons} must be provided unless {.arg oneVsRest} is {.val TRUE}.",
+            "Provide {.arg comparisons}, or set {.arg oneVsRest}={.val TRUE}.",
           class = "normalyzerde_error",
           call = NULL
         )
@@ -1581,20 +1501,11 @@ setMethod(
       )
 
       if (!subsetByComparison) {
-        dataMatNAFiltered <- if (type == "limpa") {
-          filterLowRepLimpa(
-            dataMat,
-            conditionCombs,
-            leastRep = leastRepCount,
-            nObservations = subsetLimpaNObservations(dataMat)
-          )
-        } else {
-          filterLowRep(
-            dataMat,
-            conditionCombs,
-            leastRep = leastRepCount
-          )
-        }
+        dataMatNAFiltered <- filterContrastData(
+          dataMat,
+          conditionCombs,
+          nObservations = subsetLimpaNObservations(dataMat)
+        )
 
         if (nrow(dataMatNAFiltered) == 0) {
           cli::cli_abort(
@@ -1611,114 +1522,40 @@ setMethod(
 
         naFilterContrast <- rownames(dataMat) %in% rownames(dataMatNAFiltered)
 
-        if (type != "limpa" && leastRepCount == 0 && impute) {
-          dataMatNAFiltered <- imputeGroupValues(
+        limmaState <- if (type %in% c("limma", "limma_intensity", "limpa")) {
+          prepareLimmaContrastState(
             dataMatNAFiltered,
-            conditionCombs,
-            minFraction = imputeMinFraction
+            designDf,
+            backendKey = ".global"
           )
-        }
-
-        model <- setupModel(nst, condCol, batchCol = batchCol, type = type)
-
-        if (type %in% c("limma", "limma_intensity", "limpa")) {
-          limmaDesignRaw <- stats::model.matrix(model)
-          limmaPrepared <- sanitizeLimmaDesign(limmaDesignRaw)
-          limmaDesign <- limmaPrepared$design
-          limmaCoefMap <- limmaPrepared$coefMap
-          limmaFit <- if (type == "limpa") {
-            calculateLimpaFit(dataMatNAFiltered, limmaDesign)
-          } else {
-            limma::lmFit(dataMatNAFiltered, limmaDesign)
-          }
+        } else {
+          NULL
         }
 
         for (comp in comparisons) {
-          compSplit <- unlist(strsplit(comp, splitter, fixed = TRUE))
+          compLevels <- parseContrastLevels(comp, splitter)
+          assertContrastLevelsPresent(compLevels, sampleReplicateGroupsStrings)
 
-          if (length(compSplit) != 2) {
-            cli::cli_abort(
-              c(
-                "{.arg comparisons} entries must be in format {.val cond1}{.val {splitter}}{.val cond2}.",
-                i = "Split result: {.val {paste(compSplit, collapse = \" \")}}."
-              ),
-              class = "normalyzerde_error",
-              call = NULL
-            )
-          }
+          statResults <- calculateContrastStatistics(
+            dataMatNAFiltered,
+            sampleReplicateGroupsStrings,
+            compLevels,
+            limmaState = limmaState
+          )
 
-          level1 <- compSplit[1]
-          level2 <- compSplit[2]
-
-          if (!any(sampleReplicateGroupsStrings %in% level1)) {
-            cli::cli_abort(
-              c(
-                "No samples matching condition {.val {level1}}.",
-                i = "Conditions present: {.val {paste(sampleReplicateGroupsStrings, collapse = \" \")}}."
-              ),
-              class = "normalyzerde_error",
-              call = NULL
-            )
-          }
-
-          if (!any(sampleReplicateGroupsStrings %in% level2)) {
-            cli::cli_abort(
-              c(
-                "No samples matching condition {.val {level2}}.",
-                i = "Conditions present: {.val {paste(sampleReplicateGroupsStrings, collapse = \" \")}}."
-              ),
-              class = "normalyzerde_error",
-              call = NULL
-            )
-          }
-
-          if (type == "welch") {
-            statResults <- calculateWelch(
-              dataMatNAFiltered,
-              sampleReplicateGroupsStrings,
-              c(level1, level2)
-            )
-          } else if (type %in% c("limma", "limma_intensity", "limpa")) {
-            statResults <- calculateLimmaContrast(
-              dataMatNAFiltered,
-              limmaDesign,
-              limmaFit,
-              c(level1, level2),
-              useIntensityTrend = type == "limma_intensity",
-              coefMap = limmaCoefMap
-            )
-          } else {
-            cli::cli_abort(
-              "Unknown statistics {.arg type}: {.val {type}}.",
-              class = "normalyzerde_error",
-              call = NULL
-            )
-          }
-
-          for (statMeasure in statMeasures) {
-            compLists[[statMeasure]][[comp]] <- c()
-            compLists[[statMeasure]][[comp]][naFilterContrast] <- statResults[[
-              statMeasure
-            ]]
-          }
+          compLists <- storeContrastResults(
+            compLists,
+            statResults,
+            comp,
+            naFilterContrast
+          )
         }
       } else {
-          for (comp in comparisons) {
-            compSplit <- unlist(strsplit(comp, splitter, fixed = TRUE))
-
-            if (length(compSplit) != 2) {
-              cli::cli_abort(
-                c(
-                  "{.arg comparisons} entries must be in format {.val cond1}{.val {splitter}}{.val cond2}.",
-                  i = "Split result: {.val {paste(compSplit, collapse = \" \")}}."
-                ),
-                class = "normalyzerde_error",
-                call = NULL
-              )
-            }
-
-          level1 <- compSplit[1]
-          level2 <- compSplit[2]
+        for (comp in comparisons) {
+          compLevels <- parseContrastLevels(comp, splitter)
+          assertContrastLevelsPresent(compLevels, sampleReplicateGroupsStrings)
+          level1 <- compLevels[1]
+          level2 <- compLevels[2]
 
           groupMatch <- sampleReplicateGroupsStrings %in% c(level1, level2)
           designDfComp <- designDf[groupMatch, , drop = FALSE]
@@ -1734,20 +1571,11 @@ setMethod(
             conditionCombsComp <- designDfComp[, condCol]
           }
 
-          dataMatNAFiltered <- if (type == "limpa") {
-            filterLowRepLimpa(
-              dataMatComp,
-              conditionCombsComp,
-              leastRep = leastRepCount,
-              nObservations = subsetLimpaNObservations(dataMatComp)
-            )
-          } else {
-            filterLowRep(
-              dataMatComp,
-              conditionCombsComp,
-              leastRep = leastRepCount
-            )
-          }
+          dataMatNAFiltered <- filterContrastData(
+            dataMatComp,
+            conditionCombsComp,
+            nObservations = subsetLimpaNObservations(dataMatComp)
+          )
 
           if (nrow(dataMatNAFiltered) == 0) {
             cli::cli_abort(
@@ -1764,63 +1592,20 @@ setMethod(
 
           naFilterContrast <- rownames(dataMat) %in% rownames(dataMatNAFiltered)
 
-          if (type != "limpa" && leastRepCount == 0 && impute) {
-            dataMatNAFiltered <- imputeGroupValues(
-              dataMatNAFiltered,
-              conditionCombsComp,
-              minFraction = imputeMinFraction
-            )
-          }
+          statResults <- calculateContrastStatistics(
+            dataMatNAFiltered,
+            as.character(designDfComp[, condCol]),
+            compLevels,
+            designDfCurrent = designDfComp,
+            backendKey = comp
+          )
 
-          if (type == "welch") {
-            statResults <- calculateWelch(
-              dataMatNAFiltered,
-              as.character(designDfComp[, condCol]),
-              c(level1, level2)
-            )
-          } else if (type %in% c("limma", "limma_intensity", "limpa")) {
-            model <- setupModelFromDesign(
-              designDfComp,
-              condCol,
-              batchCol = batchCol,
-              type = type
-            )
-            limmaDesignRaw <- stats::model.matrix(model)
-            limmaPrepared <- sanitizeLimmaDesign(limmaDesignRaw)
-            limmaDesign <- limmaPrepared$design
-            limmaCoefMap <- limmaPrepared$coefMap
-            limmaFit <- if (type == "limpa") {
-              calculateLimpaFit(
-                dataMatNAFiltered,
-                limmaDesign,
-                backendKey = comp
-              )
-            } else {
-              limma::lmFit(dataMatNAFiltered, limmaDesign)
-            }
-
-            statResults <- calculateLimmaContrast(
-              dataMatNAFiltered,
-              limmaDesign,
-              limmaFit,
-              c(level1, level2),
-              useIntensityTrend = type == "limma_intensity",
-              coefMap = limmaCoefMap
-            )
-          } else {
-            cli::cli_abort(
-              "Unknown statistics {.arg type}: {.val {type}}.",
-              class = "normalyzerde_error",
-              call = NULL
-            )
-          }
-
-          for (statMeasure in statMeasures) {
-            compLists[[statMeasure]][[comp]] <- c()
-            compLists[[statMeasure]][[comp]][naFilterContrast] <- statResults[[
-              statMeasure
-            ]]
-          }
+          compLists <- storeContrastResults(
+            compLists,
+            statResults,
+            comp,
+            naFilterContrast
+          )
         }
       }
     }
@@ -1895,9 +1680,14 @@ verifyContrasts <- function(designLevels, contrasts, splitter = "-") {
   sep[1]
 }
 
-setupModel <- function(nst, condCol, batchCol = NULL, type = "limma") {
+setupModelFromDesign <- function(
+  designDf,
+  condCol,
+  batchCol = NULL,
+  type = "limma"
+) {
   if (is.null(batchCol)) {
-    Variable <- as.factor(designDf(nst)[, condCol])
+    Variable <- as.factor(designDf[, condCol])
     model <- ~ 0 + Variable
   } else {
     if (!(type %in% c("limma", "limma_intensity", "limpa"))) {
@@ -1907,11 +1697,82 @@ setupModel <- function(nst, condCol, batchCol = NULL, type = "limma") {
         call = NULL
       )
     }
-    Variable <- as.factor(designDf(nst)[, condCol])
-    Batch <- as.factor(designDf(nst)[, batchCol])
+    Variable <- as.factor(designDf[, condCol])
+    Batch <- as.factor(designDf[, batchCol])
     model <- ~ 0 + Variable + Batch
   }
   model
+}
+
+parseContrastLevels <- function(comp, splitter) {
+  compSplit <- unlist(strsplit(comp, splitter, fixed = TRUE))
+
+  if (length(compSplit) != 2) {
+    cli::cli_abort(
+      c(
+        "{.arg comparisons} entries must be in format {.val cond1}{.val {splitter}}{.val cond2}.",
+        i = "Split result: {.val {paste(compSplit, collapse = ' ')}}."
+      ),
+      class = "normalyzerde_error",
+      call = NULL
+    )
+  }
+
+  compSplit
+}
+
+assertContrastLevelsPresent <- function(levels, sampleGroups) {
+  level1 <- levels[1]
+  level2 <- levels[2]
+
+  if (!any(sampleGroups %in% level1)) {
+    cli::cli_abort(
+      c(
+        "No samples matching condition {.val {level1}}.",
+        i = "Conditions present: {.val {paste(sampleGroups, collapse = ' ')}}."
+      ),
+      class = "normalyzerde_error",
+      call = NULL
+    )
+  }
+
+  if (!any(sampleGroups %in% level2)) {
+    cli::cli_abort(
+      c(
+        "No samples matching condition {.val {level2}}.",
+        i = "Conditions present: {.val {paste(sampleGroups, collapse = ' ')}}."
+      ),
+      class = "normalyzerde_error",
+      call = NULL
+    )
+  }
+
+  invisible(levels)
+}
+
+initializeContrastResultLists <- function(statMeasures) {
+  out <- stats::setNames(vector("list", length(statMeasures)), statMeasures)
+  for (statMeasure in statMeasures) {
+    out[[statMeasure]] <- list()
+  }
+  out
+}
+
+storeContrastResults <- function(
+  compLists,
+  statResults,
+  compName,
+  naFilterContrast,
+  statMeasures = names(compLists)
+) {
+  for (statMeasure in statMeasures) {
+    compLists[[statMeasure]][[compName]] <- c()
+    compLists[[statMeasure]][[compName]][naFilterContrast] <- statResults[[
+      statMeasure
+    ]]
+  }
+
+  compLists
 }
 
 sanitizeLimmaDesign <- function(limmaDesign) {
