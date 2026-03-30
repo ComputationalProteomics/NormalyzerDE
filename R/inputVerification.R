@@ -466,13 +466,18 @@ verifyValidNumbers <- function(
   noLogTransform = FALSE,
   quiet = FALSE
 ) {
+  numericPattern <- if (isTRUE(noLogTransform)) {
+    "[\\+\\-]?\\d+(\\.\\d+)?([eE][\\+\\-]?\\d+)?"
+  } else {
+    "\\d+(\\.\\d+)?([eE][\\+\\-]?\\d+)?"
+  }
+
   # Fields expected to contain numbers in decimal or scientific notation, or containing NA or null
   validPatterns <- c(
-    "\\d+(\\.\\d+)?",
+    numericPattern,
     "NA",
     "\"NA\"",
     "null",
-    "\\d+(\\.\\d+)?[eE]([\\+\\-])?\\d+$",
     ""
   )
 
@@ -529,6 +534,29 @@ verifyValidNumbers <- function(
       )
       stop(errorString)
     }
+
+    warnIfLooksAlreadyLog2 <- function(mat, threshold = 50) {
+      numericVals <- suppressWarnings(as.numeric(mat))
+      finiteVals <- numericVals[is.finite(numericVals)]
+      if (length(finiteVals) == 0) {
+        return(invisible(NULL))
+      }
+
+      maxVal <- max(finiteVals)
+      if (is.finite(maxVal) && maxVal < threshold) {
+        warning(
+          "Input values look small for linear-scale intensity data (max finite value = ",
+          format(signif(maxVal, 4), trim = TRUE),
+          "). NormalyzerDE will log2-transform input by default. ",
+          "If your input is already on the log2 scale, set `noLogTransform=TRUE`.",
+          call. = FALSE
+        )
+      }
+
+      invisible(NULL)
+    }
+
+    warnIfLooksAlreadyLog2(rawDataOnly)
   }
 
   if (!quiet) message("Input data checked. All fields are valid.")

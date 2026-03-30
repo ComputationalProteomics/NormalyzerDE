@@ -178,11 +178,13 @@ test_that("generatePlots writes a Normalyzer report", {
     omitSamples = FALSE,
     requireReplicates = TRUE,
     quiet = TRUE,
+    noLogTransform = TRUE,
     tinyRunThres = 50
   )
   tiny_nr <- suppressWarnings(normMethods(
     tiny_normObj,
     normalizeRetentionTime = FALSE,
+    noLogTransform = TRUE,
     quiet = TRUE
   ))
   tiny_nr <- suppressWarnings(analyzeNormalizations(tiny_nr))

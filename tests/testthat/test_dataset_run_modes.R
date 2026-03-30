@@ -25,6 +25,7 @@ test_that("checkSingleReplicateRun detects non-replicated groups", {
     omitSamples = FALSE,
     requireReplicates = FALSE,
     quiet = TRUE,
+    noLogTransform = TRUE,
     tinyRunThres = 50
   )
 
@@ -56,6 +57,7 @@ test_that("checkSingleReplicateRun detects singleton sample groups", {
     omitSamples = FALSE,
     requireReplicates = FALSE,
     quiet = TRUE,
+    noLogTransform = TRUE,
     tinyRunThres = 50
   )
 

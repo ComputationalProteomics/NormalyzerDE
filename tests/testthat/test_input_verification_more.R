@@ -73,6 +73,55 @@ test_that("verifyValidNumbers errors for below-one values when log transforming"
   )
 })
 
+test_that("verifyValidNumbers warns when data looks already log2", {
+  mat <- matrix(c("10", "12"), nrow = 1)
+  expect_warning(
+    NormalyzerDE:::verifyValidNumbers(
+      mat,
+      groups = c("A", "B"),
+      noLogTransform = FALSE,
+      quiet = TRUE
+    ),
+    "log2|noLogTransform=TRUE"
+  )
+})
+
+test_that("verifyValidNumbers is silent for large linear-scale values", {
+  mat <- matrix(c("1000", "2000"), nrow = 1)
+  expect_silent(
+    NormalyzerDE:::verifyValidNumbers(
+      mat,
+      groups = c("A", "B"),
+      noLogTransform = FALSE,
+      quiet = TRUE
+    )
+  )
+})
+
+test_that("verifyValidNumbers is silent when noLogTransform=TRUE", {
+  mat <- matrix(c("10", "12"), nrow = 1)
+  expect_silent(
+    NormalyzerDE:::verifyValidNumbers(
+      mat,
+      groups = c("A", "B"),
+      noLogTransform = TRUE,
+      quiet = TRUE
+    )
+  )
+})
+
+test_that("verifyValidNumbers allows signed log2-scale values when noLogTransform=TRUE", {
+  mat <- matrix(c("-1", "2"), nrow = 1)
+  expect_silent(
+    NormalyzerDE:::verifyValidNumbers(
+      mat,
+      groups = c("A", "B"),
+      noLogTransform = TRUE,
+      quiet = TRUE
+    )
+  )
+})
+
 test_that("getLowCountSampleFiltered can omit low-count samples", {
   mat <- matrix(c(1, 3, NA, 2, 4, NA), nrow = 2, byrow = TRUE)
   colnames(mat) <- c("s1", "s2", "s3")

@@ -706,6 +706,50 @@ diannResolveRTCol <- function(diannRTCol, reportColumns, featureCol) {
   NULL
 }
 
+diannWarnIfAutoInferenceIsAmbiguous <- function(reportColumns, opts, spec) {
+  if (
+    is.null(opts) ||
+      is.null(spec) ||
+      !identical(opts$level, "auto") ||
+      !is.null(opts$featureCol) ||
+      !is.null(opts$quantityCol)
+  ) {
+    return(invisible(NULL))
+  }
+
+  proteinFeatureCol <- "Protein.Group"
+  precursorFeatureCol <- "Precursor.Id"
+
+  proteinQuantityCandidates <- c("PG.MaxLFQ", "PG.Normalised", "PG.Quantity")
+  precursorQuantityCandidates <- c(
+    "Precursor.Normalised",
+    "Precursor.Quantity",
+    "Precursor.Translated"
+  )
+
+  proteinPossible <- proteinFeatureCol %in% reportColumns &&
+    any(proteinQuantityCandidates %in% reportColumns)
+  precursorPossible <- precursorFeatureCol %in% reportColumns &&
+    any(precursorQuantityCandidates %in% reportColumns)
+
+  if (!proteinPossible || !precursorPossible) {
+    return(invisible(NULL))
+  }
+
+  inferred <- paste0(spec$featureCol, " + ", spec$quantityCol)
+
+  warning(
+    "DIANN report contains both protein-level and precursor-level quantities. ",
+    "Using inferred columns by default: ",
+    inferred,
+    ". If you intended precursor-level analysis, set `inputOptions=diannInputOptions(level=\"precursor\", quantityCol=\"Precursor.Quantity\")` ",
+    "(or set level/feature/quantity explicitly).",
+    call. = FALSE
+  )
+
+  invisible(NULL)
+}
+
 diannReportToWide <- function(
   reportDf,
   sampleCol,
@@ -819,6 +863,9 @@ readDiannToDataFrame <- function(
       diannFeatureCol = opts$featureCol,
       diannQuantityCol = opts$quantityCol
     )
+    if (isTRUE(getOption("NormalyzerDE.warnDiannAutoAmbiguous", FALSE))) {
+      diannWarnIfAutoInferenceIsAmbiguous(reportColumns, opts, spec)
+    }
 
     extraCols <- spec$extraCols
     if (!is.null(opts$extraCols)) {
@@ -889,6 +936,9 @@ readDiannToDataFrame <- function(
       diannFeatureCol = opts$featureCol,
       diannQuantityCol = opts$quantityCol
     )
+    if (isTRUE(getOption("NormalyzerDE.warnDiannAutoAmbiguous", FALSE))) {
+      diannWarnIfAutoInferenceIsAmbiguous(header, opts, spec)
+    }
 
     extraCols <- spec$extraCols
     if (!is.null(opts$extraCols)) {

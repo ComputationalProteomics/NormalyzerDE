@@ -470,6 +470,78 @@ test_that("readDiannToDataFrame supports empty extraCols and disabling q filteri
   expect_equal(wide$S2[1], 200)
 })
 
+test_that("readDiannToDataFrame warns about ambiguous auto inference only when enabled", {
+  tmpDir <- withr::local_tempdir(pattern = "diann_auto_ambig_")
+
+  reportPath <- file.path(tmpDir, "diann_report.tsv")
+  diannReport <- data.frame(
+    Run = c("S1", "S2"),
+    `Protein.Group` = c("P1", "P1"),
+    `PG.MaxLFQ` = c(1000, 2000),
+    `Precursor.Id` = c("pep1", "pep1"),
+    `Precursor.Quantity` = c(10000, 20000),
+    stringsAsFactors = FALSE,
+    check.names = FALSE
+  )
+  nd_write_table(diannReport, reportPath)
+
+  expect_no_warning(readDiannToDataFrame(reportPath, inputOptions = NULL))
+
+  withr::local_options(list(NormalyzerDE.warnDiannAutoAmbiguous = TRUE))
+  expect_warning(
+    readDiannToDataFrame(reportPath, inputOptions = NULL),
+    "both protein-level and precursor-level"
+  )
+})
+
+test_that("normalyzer preQuant=limpa warns when DIANN auto inference is ambiguous", {
+  tmpDir <- withr::local_tempdir(pattern = "normalyzer_limpa_diann_auto_ambig_")
+
+  reportPath <- file.path(tmpDir, "diann_report.tsv")
+  designPath <- file.path(tmpDir, "design.tsv")
+
+  diannReport <- data.frame(
+    Run = c("S1", "S2"),
+    `Protein.Group` = c("P1", "P1"),
+    `PG.MaxLFQ` = c(1000, 2000),
+    `Precursor.Id` = c("pep1", "pep1"),
+    `Precursor.Quantity` = c(10000, 20000),
+    stringsAsFactors = FALSE,
+    check.names = FALSE
+  )
+  nd_write_table(diannReport, reportPath)
+
+  design <- data.frame(
+    sample = c("S1", "S2"),
+    group = c("A", "B"),
+    stringsAsFactors = FALSE
+  )
+  nd_write_table(design, designPath)
+
+  warnings <- character()
+  err <- tryCatch(
+    withCallingHandlers(
+      normalyzer(
+        jobName = "diann_auto_ambig",
+        designPath = designPath,
+        dataPath = reportPath,
+        outputDir = tmpDir,
+        inputFormat = "diann",
+        preQuant = "limpa",
+        quiet = TRUE
+      ),
+      warning = function(w) {
+        warnings <<- c(warnings, conditionMessage(w))
+        invokeRestart("muffleWarning")
+      }
+    ),
+    error = identity
+  )
+
+  expect_true(inherits(err, "error"))
+  expect_true(any(grepl("both protein-level and precursor-level", warnings)))
+})
+
 test_that("diannReadReportParquet errors when requested columns are missing", {
   testthat::skip_if_not_installed("arrow")
 

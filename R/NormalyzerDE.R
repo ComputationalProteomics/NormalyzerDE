@@ -184,6 +184,14 @@ normalyzer <- function(
   }
 
   if (is.null(experimentObj)) {
+    if (identical(preQuantUse, "limpa") && identical(inputFormat, "diann")) {
+      oldWarn <- getOption("NormalyzerDE.warnDiannAutoAmbiguous")
+      options(NormalyzerDE.warnDiannAutoAmbiguous = TRUE)
+      on.exit(
+        options(NormalyzerDE.warnDiannAutoAmbiguous = oldWarn),
+        add = TRUE
+      )
+    }
     experimentObj <- setupRawDataObject(
       dataPath = dataPath,
       designPath = designPath,
