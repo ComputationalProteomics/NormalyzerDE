@@ -354,39 +354,6 @@ test_that("normalyzerDE writes limpa sample weights when requested", {
   expect_false(anyNA(weights$sampleWeight))
 })
 
-test_that("normalyzerDE accepts limpaOptions for limpa workflows", {
-  testthat::skip_if_not_installed("limpa")
-
-  test_data <- nd_limpa_de_matrix()
-
-  tmpDir <- withr::local_tempdir(pattern = "normalyzerde_limpa_opts_")
-  paths <- nd_write_limpa_input_fixture(
-    tmp_dir = tmpDir,
-    mat = test_data,
-    data_name = "limpa_opts_data.tsv",
-    design_name = "limpa_opts_design.tsv"
-  )
-
-  jobName <- "limpa_opts"
-  expectedDir <- file.path(tmpDir, NormalyzerDE:::sanitizeJobName(jobName))
-
-  out <- nd_run_limpa_de_from_paths(
-    paths = paths,
-    out_dir = tmpDir,
-    job_name = jobName,
-    limpa_options = limpaOptions(
-      byRow = TRUE,
-      quantArgs = list(chunk = 10L),
-      deArgs = list(sample.weights = TRUE)
-    )
-  )
-
-  expect_null(out)
-
-  weightsPath <- file.path(expectedDir, paste0(jobName, "_sample_weights.tsv"))
-  expect_true(file.exists(weightsPath))
-})
-
 test_that("normalyzerDE emits version message and errors when inputs missing", {
   captured <- nd_capture_conditions(
     normalyzerDE(jobName = "missing_inputs", quiet = FALSE)

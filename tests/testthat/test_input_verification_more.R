@@ -213,92 +213,81 @@ test_that("setupRawContrastObject ignores blank Excel-export design columns", {
   )
 })
 
-test_that("verifyValidNumbers errors for below-one values when log transforming", {
-  mat <- matrix(c("2", "0.5"), nrow = 1)
-  expect_error(
-    NormalyzerDE:::verifyValidNumbers(
-      mat,
-      groups = c("A", "B"),
+test_that("verifyValidNumbers handles representative value-scale edge cases", {
+  cases <- list(
+    list(
+      name = "errors for below-one decimal values",
+      mat = matrix(c("2", "0.5"), nrow = 1),
       noLogTransform = FALSE,
-      quiet = TRUE
+      expectation = "error"
     ),
-    class = "normalyzerde_error"
-  )
-})
-
-test_that("verifyValidNumbers errors for below-one scientific notation", {
-  mat <- matrix(c("2", "1e-3"), nrow = 1)
-  expect_error(
-    NormalyzerDE:::verifyValidNumbers(
-      mat,
-      groups = c("A", "B"),
+    list(
+      name = "errors for below-one scientific notation",
+      mat = matrix(c("2", "1e-3"), nrow = 1),
       noLogTransform = FALSE,
-      quiet = TRUE
+      expectation = "error"
     ),
-    class = "normalyzerde_error"
-  )
-})
-
-test_that("verifyValidNumbers warns when data looks already log2", {
-  mat <- matrix(c("10", "12"), nrow = 1)
-  expect_warning(
-    NormalyzerDE:::verifyValidNumbers(
-      mat,
-      groups = c("A", "B"),
+    list(
+      name = "warns when data looks already log2",
+      mat = matrix(c("10", "12"), nrow = 1),
       noLogTransform = FALSE,
-      quiet = TRUE
+      expectation = "warning"
     ),
-    class = "normalyzerde_warning"
-  )
-})
-
-test_that("verifyValidNumbers is silent for large linear-scale values", {
-  mat <- matrix(c("1000", "2000"), nrow = 1)
-  expect_silent(
-    NormalyzerDE:::verifyValidNumbers(
-      mat,
-      groups = c("A", "B"),
+    list(
+      name = "is silent for large linear-scale values",
+      mat = matrix(c("1000", "2000"), nrow = 1),
       noLogTransform = FALSE,
-      quiet = TRUE
+      expectation = "silent"
+    ),
+    list(
+      name = "is silent when noLogTransform is enabled",
+      mat = matrix(c("10", "12"), nrow = 1),
+      noLogTransform = TRUE,
+      expectation = "silent"
+    ),
+    list(
+      name = "allows signed log2-scale values when noLogTransform is enabled",
+      mat = matrix(c("-1", "2"), nrow = 1),
+      noLogTransform = TRUE,
+      expectation = "silent"
+    ),
+    list(
+      name = "rejects comma decimals from locale-specific input",
+      mat = matrix(c("1,23", "4"), nrow = 1),
+      noLogTransform = TRUE,
+      expectation = "error"
     )
   )
-})
 
-test_that("verifyValidNumbers is silent when noLogTransform=TRUE", {
-  mat <- matrix(c("10", "12"), nrow = 1)
-  expect_silent(
+  run_case <- function(case) {
     NormalyzerDE:::verifyValidNumbers(
-      mat,
+      case$mat,
       groups = c("A", "B"),
-      noLogTransform = TRUE,
+      noLogTransform = case$noLogTransform,
       quiet = TRUE
     )
-  )
-})
+  }
 
-test_that("verifyValidNumbers allows signed log2-scale values when noLogTransform=TRUE", {
-  mat <- matrix(c("-1", "2"), nrow = 1)
-  expect_silent(
-    NormalyzerDE:::verifyValidNumbers(
-      mat,
-      groups = c("A", "B"),
-      noLogTransform = TRUE,
-      quiet = TRUE
-    )
-  )
-})
-
-test_that("verifyValidNumbers rejects comma decimals from locale-specific input", {
-  mat <- matrix(c("1,23", "4"), nrow = 1)
-  expect_error(
-    NormalyzerDE:::verifyValidNumbers(
-      mat,
-      groups = c("A", "B"),
-      noLogTransform = TRUE,
-      quiet = TRUE
-    ),
-    class = "normalyzerde_error"
-  )
+  for (case in cases) {
+    if (identical(case$expectation, "error")) {
+      expect_error(
+        run_case(case),
+        class = "normalyzerde_error",
+        info = case$name
+      )
+    } else if (identical(case$expectation, "warning")) {
+      expect_warning(
+        run_case(case),
+        class = "normalyzerde_warning",
+        info = case$name
+      )
+    } else {
+      captured <- nd_capture_conditions(run_case(case))
+      expect_null(captured$error)
+      expect_length(captured$warnings, 0)
+      expect_length(captured$messages, 0)
+    }
+  }
 })
 
 test_that("getLowCountSampleFiltered can omit low-count samples", {

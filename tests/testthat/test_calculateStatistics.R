@@ -476,9 +476,17 @@ test_that("generateAnnotatedMatrix keeps comparison-specific averages", {
   annot_multi <- generateAnnotatedMatrix(out_multi)
 
   expect_false("featureAvg" %in% colnames(annot_multi))
-  expect_true(all(c("A-B_featureAvg", "B-C_featureAvg") %in% colnames(annot_multi)))
-  expect_equal(annot_multi[["A-B_featureAvg"]], pairwiseCompsAve(out_multi)[["A-B"]])
-  expect_equal(annot_multi[["B-C_featureAvg"]], pairwiseCompsAve(out_multi)[["B-C"]])
+  expect_true(all(
+    c("A-B_featureAvg", "B-C_featureAvg") %in% colnames(annot_multi)
+  ))
+  expect_equal(
+    annot_multi[["A-B_featureAvg"]],
+    pairwiseCompsAve(out_multi)[["A-B"]]
+  )
+  expect_equal(
+    annot_multi[["B-C_featureAvg"]],
+    pairwiseCompsAve(out_multi)[["B-C"]]
+  )
 
   nst_single <- NormalyzerStatistics(se)
   out_single <- calculateContrasts(
@@ -494,7 +502,10 @@ test_that("generateAnnotatedMatrix keeps comparison-specific averages", {
   annot_single <- generateAnnotatedMatrix(out_single)
 
   expect_true("featureAvg" %in% colnames(annot_single))
-  expect_equal(annot_single[["featureAvg"]], pairwiseCompsAve(out_single)[["A-B"]])
+  expect_equal(
+    annot_single[["featureAvg"]],
+    pairwiseCompsAve(out_single)[["A-B"]]
+  )
 })
 
 test_that("generateAnnotatedMatrix validates and applies custom comparison labels", {
@@ -548,8 +559,30 @@ test_that("generateAnnotatedMatrix validates and applies custom comparison label
   )
 
   expect_true(all(c("first.PValue", "second.PValue") %in% colnames(annot)))
-  expect_true(all(c("first.featureAvg", "second.featureAvg") %in% colnames(annot)))
+  expect_true(all(
+    c("first.featureAvg", "second.featureAvg") %in% colnames(annot)
+  ))
 })
+
+nd_make_one_vs_rest_se <- function(test_data, groups, batch = NULL) {
+  design <- data.frame(
+    sample = colnames(test_data),
+    group = groups,
+    stringsAsFactors = FALSE
+  )
+
+  if (!is.null(batch)) {
+    design$batch <- batch
+  }
+
+  rownames(design) <- design$sample
+
+  SummarizedExperiment::SummarizedExperiment(
+    assay = test_data,
+    colData = design,
+    rowData = data.frame(annot = paste0("Pep", seq_len(nrow(test_data))))
+  )
+}
 
 test_that("calculateContrasts_oneVsRest_welch", {
   test_data <- matrix(
@@ -572,16 +605,9 @@ test_that("calculateContrasts_oneVsRest_welch", {
   )
   colnames(test_data) <- c("A1", "A2", "B1", "B2", "C1", "C2")
 
-  test_df <- data.frame(
-    sample = colnames(test_data),
-    group = c(rep("A", 2), rep("B", 2), rep("C", 2))
-  )
-  rownames(test_df) <- test_df$sample
-
-  se <- SummarizedExperiment::SummarizedExperiment(
-    assay = test_data,
-    colData = test_df,
-    rowData = data.frame(annot = paste0("Pep", seq_len(2)))
+  se <- nd_make_one_vs_rest_se(
+    test_data = test_data,
+    groups = c(rep("A", 2), rep("B", 2), rep("C", 2))
   )
 
   nst <- NormalyzerStatistics(se)
@@ -617,18 +643,10 @@ test_that("calculateContrasts_oneVsRest_welch_rejects_batch", {
   )
   colnames(test_data) <- c("A1", "A2", "B1", "B2")
 
-  test_df <- data.frame(
-    sample = colnames(test_data),
-    group = c(rep("A", 2), rep("B", 2)),
-    batch = c("b1", "b2", "b1", "b2"),
-    stringsAsFactors = FALSE
-  )
-  rownames(test_df) <- test_df$sample
-
-  se <- SummarizedExperiment::SummarizedExperiment(
-    assay = test_data,
-    colData = test_df,
-    rowData = data.frame(annot = "Pep1")
+  se <- nd_make_one_vs_rest_se(
+    test_data = test_data,
+    groups = c(rep("A", 2), rep("B", 2)),
+    batch = c("b1", "b2", "b1", "b2")
   )
 
   nst <- NormalyzerStatistics(se)
@@ -659,16 +677,9 @@ test_that("calculateContrasts_oneVsRestGroups", {
   )
   colnames(test_data) <- c("A1", "A2", "B1", "B2", "C1", "C2")
 
-  test_df <- data.frame(
-    sample = colnames(test_data),
-    group = c(rep("A", 2), rep("B", 2), rep("C", 2))
-  )
-  rownames(test_df) <- test_df$sample
-
-  se <- SummarizedExperiment::SummarizedExperiment(
-    assay = test_data,
-    colData = test_df,
-    rowData = data.frame(annot = "Pep1")
+  se <- nd_make_one_vs_rest_se(
+    test_data = test_data,
+    groups = c(rep("A", 2), rep("B", 2), rep("C", 2))
   )
 
   nst <- NormalyzerStatistics(se)
@@ -698,17 +709,9 @@ test_that("calculateContrasts errors when oneVsRestGroups is empty", {
   )
   colnames(test_data) <- c("A1", "A2", "B1", "B2")
 
-  test_df <- data.frame(
-    sample = colnames(test_data),
-    group = c(rep("A", 2), rep("B", 2)),
-    stringsAsFactors = FALSE
-  )
-  rownames(test_df) <- test_df$sample
-
-  se <- SummarizedExperiment::SummarizedExperiment(
-    assay = test_data,
-    colData = test_df,
-    rowData = data.frame(annot = "Pep1")
+  se <- nd_make_one_vs_rest_se(
+    test_data = test_data,
+    groups = c(rep("A", 2), rep("B", 2))
   )
 
   nst <- NormalyzerStatistics(se)

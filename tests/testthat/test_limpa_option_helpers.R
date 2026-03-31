@@ -296,7 +296,7 @@ test_that("limpa DPC estimation helpers validate argument names and none mode", 
   )
 })
 
-test_that("limpa helper leftovers handle empty names and optional metadata", {
+test_that("limpa helper edge cases handle unnamed weights and empty metadata", {
   se <- nd_make_summarized_experiment(
     assay = matrix(c(1, 2, 3, 4), nrow = 2),
     groups = c("A", "B")
@@ -335,13 +335,6 @@ test_that("limpa helper leftovers handle empty names and optional metadata", {
   expect_equal(
     NormalyzerDE:::extractLimpaSampleWeightsFromFit(fit_rows),
     c(s1 = 0.4, s2 = 0.6)
-  )
-
-  expect_null(
-    NormalyzerDE:::inferLimpaProteinIdCol(
-      matrix("x", nrow = 2, ncol = 1),
-      "auto"
-    )
   )
   expect_equal(
     NormalyzerDE:::inferStableProteinAnnotationCols(

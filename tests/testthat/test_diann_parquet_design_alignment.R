@@ -1,5 +1,28 @@
 context("DIANN parquet design alignment")
 
+nd_run_diann_order_pair <- function(type) {
+  tmp_dir <- withr::local_tempdir(pattern = paste0("diann_", type, "_order_"))
+  data_path <- nd_write_diann_parquet_fixture(tmp_dir)
+
+  design <- nd_balanced_diann_design()
+  reversed_design <- design[rev(seq_len(nrow(design))), , drop = FALSE]
+
+  list(
+    design = design,
+    reversed_design = reversed_design,
+    out_default = nd_run_diann_contrast(data_path, design, type = type),
+    out_reversed = nd_run_diann_contrast(
+      data_path,
+      reversed_design,
+      type = type
+    )
+  )
+}
+
+nd_expect_output_design_order <- function(out, design) {
+  expect_identical(colnames(dataMat(out)), design$sample)
+}
+
 test_that("DIANN parquet setup respects design subsets and order", {
   testthat::skip_if_not_installed("arrow")
 
@@ -40,31 +63,14 @@ test_that("DIANN parquet retains samples whose rows are fully removed by q filte
 test_that("limma route is invariant to DIANN parquet design row order", {
   testthat::skip_if_not_installed("arrow")
 
-  tmp_dir <- withr::local_tempdir(pattern = "diann_limma_order_")
-  data_path <- nd_write_diann_parquet_fixture(tmp_dir)
+  pair <- nd_run_diann_order_pair("limma")
 
-  design <- nd_balanced_diann_design()
-  reversed_design <- design[rev(seq_len(nrow(design))), , drop = FALSE]
-
-  out_default <- nd_run_diann_contrast(data_path, design, type = "limma")
-  out_reversed <- nd_run_diann_contrast(
-    data_path,
-    reversed_design,
-    type = "limma"
-  )
-
-  expect_identical(
-    colnames(dataMat(out_default)),
-    design$sample
-  )
-  expect_identical(
-    colnames(dataMat(out_reversed)),
-    reversed_design$sample
-  )
+  nd_expect_output_design_order(pair$out_default, pair$design)
+  nd_expect_output_design_order(pair$out_reversed, pair$reversed_design)
 
   expect_equal(
-    nd_extract_contrast_table(out_default, "A-B", "Precursor.Id"),
-    nd_extract_contrast_table(out_reversed, "A-B", "Precursor.Id")
+    nd_extract_contrast_table(pair$out_default, "A-B", "Precursor.Id"),
+    nd_extract_contrast_table(pair$out_reversed, "A-B", "Precursor.Id")
   )
 })
 
@@ -72,34 +78,17 @@ test_that("limpa route is invariant to DIANN parquet design row order", {
   testthat::skip_if_not_installed("arrow")
   testthat::skip_if_not_installed("limpa")
 
-  tmp_dir <- withr::local_tempdir(pattern = "diann_limpa_order_")
-  data_path <- nd_write_diann_parquet_fixture(tmp_dir)
+  pair <- nd_run_diann_order_pair("limpa")
 
-  design <- nd_balanced_diann_design()
-  reversed_design <- design[rev(seq_len(nrow(design))), , drop = FALSE]
-
-  out_default <- nd_run_diann_contrast(data_path, design, type = "limpa")
-  out_reversed <- nd_run_diann_contrast(
-    data_path,
-    reversed_design,
-    type = "limpa"
-  )
-
-  expect_identical(
-    colnames(dataMat(out_default)),
-    design$sample
-  )
-  expect_identical(
-    colnames(dataMat(out_reversed)),
-    reversed_design$sample
-  )
+  nd_expect_output_design_order(pair$out_default, pair$design)
+  nd_expect_output_design_order(pair$out_reversed, pair$reversed_design)
 
   expect_equal(
-    nd_extract_contrast_table(out_default, "A-B", "Protein.Group"),
-    nd_extract_contrast_table(out_reversed, "A-B", "Protein.Group")
+    nd_extract_contrast_table(pair$out_default, "A-B", "Protein.Group"),
+    nd_extract_contrast_table(pair$out_reversed, "A-B", "Protein.Group")
   )
   expect_equal(
-    nd_extract_limpa_elist_matrix(out_default),
-    nd_extract_limpa_elist_matrix(out_reversed)
+    nd_extract_limpa_elist_matrix(pair$out_default),
+    nd_extract_limpa_elist_matrix(pair$out_reversed)
   )
 })
