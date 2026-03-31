@@ -46,6 +46,35 @@ loadData <- function(dataPath, inputFormat = "default", inputOptions = NULL) {
   rawData
 }
 
+dropEmptyUnnamedDesignColumns <- function(designMatrix) {
+  if (ncol(designMatrix) == 0) {
+    return(designMatrix)
+  }
+
+  colNames <- colnames(designMatrix)
+  unnamed <- is.na(colNames) | trimws(colNames) == ""
+  if (!any(unnamed)) {
+    return(designMatrix)
+  }
+
+  unnamedDf <- designMatrix[, unnamed, drop = FALSE]
+  emptyUnnamed <- vapply(
+    unnamedDf,
+    function(col) {
+      values <- as.character(col)
+      all(is.na(values) | trimws(values) == "")
+    },
+    logical(1)
+  )
+
+  if (any(emptyUnnamed)) {
+    dropIdx <- which(unnamed)[emptyUnnamed]
+    designMatrix <- designMatrix[, -dropIdx, drop = FALSE]
+  }
+
+  designMatrix
+}
+
 #' Create input options for default (delimited) matrices
 #'
 #' Helper to construct an \code{inputOptions} list for \code{inputFormat =
@@ -101,6 +130,7 @@ loadDesign <- function(designPath, sampleCol = "sample", groupCol = "group") {
     comment.char = "",
     check.names = FALSE
   )
+  designMatrix <- dropEmptyUnnamedDesignColumns(designMatrix)
 
   if (
     !(sampleCol %in% colnames(designMatrix)) ||
@@ -239,6 +269,7 @@ setupRawContrastObject <- function(
       )
     }
   )
+  designDf <- dropEmptyUnnamedDesignColumns(designDf)
 
   if (identical(inputFormat, "diann")) {
     fullDf <- tryCatch(
@@ -388,18 +419,19 @@ getVerifiedNormalyzerObject <- function(
   designMatrix <- designMatrix[
     designMatrix[[sampleCol]] %in% colnames(lowCountSampleFiltered),
   ]
+  filteredGroups <- designMatrix[[groupCol]]
 
   # If no samples left after omitting, stop
   verifyMultipleSamplesPresent(
     lowCountSampleFiltered,
-    groups,
+    filteredGroups,
     requireReplicates = requireReplicates,
     quiet = quiet
   )
 
   validateSampleReplication(
     lowCountSampleFiltered,
-    groups,
+    filteredGroups,
     requireReplicates = requireReplicates,
     quiet = quiet
   )

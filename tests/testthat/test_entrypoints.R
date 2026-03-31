@@ -482,3 +482,87 @@ test_that("normalyzerDE stays quiet when inputs missing and quiet=TRUE", {
     class = "normalyzerde_error"
   )
 })
+
+test_that("normalyzer emits step messages during a successful quiet=FALSE run", {
+  dataPath <- system.file(package = "NormalyzerDE", "extdata", "tiny_data.tsv")
+  designPath <- system.file(
+    package = "NormalyzerDE",
+    "extdata",
+    "tiny_design.tsv"
+  )
+
+  tmpDir <- withr::local_tempdir(pattern = "normalyzer_messages_")
+  jobName <- "entry_messages"
+  expectedDir <- file.path(tmpDir, NormalyzerDE:::sanitizeJobName(jobName))
+
+  msgs <- character()
+  out <- withCallingHandlers(
+    suppressWarnings(normalyzer(
+      jobName = jobName,
+      designPath = designPath,
+      dataPath = dataPath,
+      outputDir = tmpDir,
+      normalizeRetentionTime = FALSE,
+      skipAnalysis = FALSE,
+      quiet = FALSE,
+      writeReportAsPngs = TRUE
+    )),
+    message = function(m) {
+      msgs <<- c(msgs, conditionMessage(m))
+      invokeRestart("muffleMessage")
+    }
+  )
+
+  expect_null(out)
+  expect_true(any(grepl("\\[Step 1/5\\].*Load data and verify input", msgs)))
+  expect_true(any(grepl("\\[Step 2/5\\].*Performing normalizations", msgs)))
+  expect_true(any(grepl("\\[Step 3/5\\].*Generating evaluation measures", msgs)))
+  expect_true(any(grepl("\\[Step 4/5\\].*Matrices successfully written", msgs)))
+  expect_true(any(grepl("\\[Step 5/5\\].*Plots successfully generated", msgs)))
+
+  pngDir <- file.path(expectedDir, "pngs")
+  expect_true(dir.exists(pngDir))
+  expect_true(file.exists(file.path(pngDir, "1_front_page.png")))
+})
+
+test_that("normalyzerDE emits step messages during a successful quiet=FALSE run", {
+  dataPath <- system.file(package = "NormalyzerDE", "extdata", "tiny_data.tsv")
+  designPath <- system.file(
+    package = "NormalyzerDE",
+    "extdata",
+    "tiny_design.tsv"
+  )
+
+  tmpDir <- withr::local_tempdir(pattern = "normalyzerde_messages_")
+  jobName <- "entry_de_messages"
+  expectedDir <- file.path(tmpDir, NormalyzerDE:::sanitizeJobName(jobName))
+
+  msgs <- character()
+  out <- withCallingHandlers(
+    suppressWarnings(normalyzerDE(
+      jobName = jobName,
+      comparisons = "4-5",
+      designPath = designPath,
+      dataPath = dataPath,
+      outputDir = tmpDir,
+      condCol = "group",
+      quiet = FALSE,
+      writeReportAsPngs = TRUE
+    )),
+    message = function(m) {
+      msgs <<- c(msgs, conditionMessage(m))
+      invokeRestart("muffleMessage")
+    }
+  )
+
+  expect_null(out)
+  expect_true(any(grepl("\\[Step 1/6\\].*Load data and verify input", msgs)))
+  expect_true(any(grepl("\\[Step 2/6\\].*Skipped technical replicate reduction", msgs)))
+  expect_true(any(grepl("\\[Step 3/6\\].*Statistics object prepared", msgs)))
+  expect_true(any(grepl("\\[Step 4/6\\].*Contrast calculations done", msgs)))
+  expect_true(any(grepl("\\[Step 6/6\\].*Statistics report written", msgs)))
+
+  pngDir <- file.path(expectedDir, "de_pngs")
+  expect_true(dir.exists(pngDir))
+  expect_true(file.exists(file.path(pngDir, "1_front.png")))
+})

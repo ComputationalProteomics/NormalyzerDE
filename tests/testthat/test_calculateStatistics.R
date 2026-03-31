@@ -497,6 +497,60 @@ test_that("generateAnnotatedMatrix keeps comparison-specific averages", {
   expect_equal(annot_single[["featureAvg"]], pairwiseCompsAve(out_single)[["A-B"]])
 })
 
+test_that("generateAnnotatedMatrix validates and applies custom comparison labels", {
+  test_data <- matrix(
+    c(
+      10,
+      11,
+      NA,
+      NA,
+      NA,
+      NA
+    ),
+    nrow = 1,
+    byrow = TRUE
+  )
+  colnames(test_data) <- c("A1", "A2", "B1", "B2", "C1", "C2")
+
+  test_df <- data.frame(
+    sample = colnames(test_data),
+    group = c(rep("A", 2), rep("B", 2), rep("C", 2))
+  )
+  rownames(test_df) <- test_df$sample
+
+  se <- SummarizedExperiment::SummarizedExperiment(
+    assay = test_data,
+    colData = test_df,
+    rowData = data.frame(annot = "Pep1")
+  )
+
+  nst <- NormalyzerStatistics(se)
+  out <- calculateContrasts(
+    nst,
+    comparisons = c("A-B", "B-C"),
+    condCol = "group",
+    type = "welch",
+    leastRepCount = 0,
+    impute = TRUE,
+    imputeMinFraction = 1,
+    subsetByComparison = TRUE
+  )
+
+  expect_error(
+    generateAnnotatedMatrix(out, compLabels = "only_one"),
+    class = "normalyzerde_error"
+  )
+
+  annot <- generateAnnotatedMatrix(
+    out,
+    prefixSep = ".",
+    compLabels = c("first", "second")
+  )
+
+  expect_true(all(c("first.PValue", "second.PValue") %in% colnames(annot)))
+  expect_true(all(c("first.featureAvg", "second.featureAvg") %in% colnames(annot)))
+})
+
 test_that("calculateContrasts_oneVsRest_welch", {
   test_data <- matrix(
     c(
@@ -629,6 +683,163 @@ test_that("calculateContrasts_oneVsRestGroups", {
   folds <- pairwiseCompsFold(out)
   expect_true(all(c("B-rest", "C-rest") %in% names(folds)))
   expect_true(!("A-rest" %in% names(folds)))
+})
+
+test_that("calculateContrasts errors when oneVsRestGroups is empty", {
+  test_data <- matrix(
+    c(
+      1,
+      1,
+      2,
+      2
+    ),
+    nrow = 1,
+    byrow = TRUE
+  )
+  colnames(test_data) <- c("A1", "A2", "B1", "B2")
+
+  test_df <- data.frame(
+    sample = colnames(test_data),
+    group = c(rep("A", 2), rep("B", 2)),
+    stringsAsFactors = FALSE
+  )
+  rownames(test_df) <- test_df$sample
+
+  se <- SummarizedExperiment::SummarizedExperiment(
+    assay = test_data,
+    colData = test_df,
+    rowData = data.frame(annot = "Pep1")
+  )
+
+  nst <- NormalyzerStatistics(se)
+  expect_error(
+    calculateContrasts(
+      nst,
+      condCol = "group",
+      type = "welch",
+      oneVsRest = TRUE,
+      oneVsRestGroups = character()
+    ),
+    class = "normalyzerde_error"
+  )
+})
+
+test_that("calculateContrasts errors for unknown statistics type", {
+  test_data <- matrix(
+    c(
+      1,
+      1,
+      2,
+      2
+    ),
+    nrow = 1,
+    byrow = TRUE
+  )
+  colnames(test_data) <- c("A1", "A2", "B1", "B2")
+
+  test_df <- data.frame(
+    sample = colnames(test_data),
+    group = c(rep("A", 2), rep("B", 2)),
+    stringsAsFactors = FALSE
+  )
+  rownames(test_df) <- test_df$sample
+
+  se <- SummarizedExperiment::SummarizedExperiment(
+    assay = test_data,
+    colData = test_df,
+    rowData = data.frame(annot = "Pep1")
+  )
+
+  nst <- NormalyzerStatistics(se)
+  expect_error(
+    calculateContrasts(
+      nst,
+      comparisons = "A-B",
+      condCol = "group",
+      type = "mystery"
+    ),
+    class = "normalyzerde_error"
+  )
+})
+
+test_that("calculateContrasts one-vs-rest errors when filtering removes all rows", {
+  test_data <- matrix(
+    c(
+      NA,
+      NA,
+      2,
+      2
+    ),
+    nrow = 1,
+    byrow = TRUE
+  )
+  colnames(test_data) <- c("A1", "A2", "B1", "B2")
+
+  test_df <- data.frame(
+    sample = colnames(test_data),
+    group = c(rep("A", 2), rep("B", 2)),
+    stringsAsFactors = FALSE
+  )
+  rownames(test_df) <- test_df$sample
+
+  se <- SummarizedExperiment::SummarizedExperiment(
+    assay = test_data,
+    colData = test_df,
+    rowData = data.frame(annot = "Pep1")
+  )
+
+  nst <- NormalyzerStatistics(se)
+  expect_error(
+    calculateContrasts(
+      nst,
+      condCol = "group",
+      type = "welch",
+      leastRepCount = 1,
+      oneVsRest = TRUE,
+      oneVsRestGroups = "A"
+    ),
+    class = "normalyzerde_error"
+  )
+})
+
+test_that("calculateContrasts subsetByComparison errors when filtering removes all rows", {
+  test_data <- matrix(
+    c(
+      NA,
+      NA,
+      2,
+      2
+    ),
+    nrow = 1,
+    byrow = TRUE
+  )
+  colnames(test_data) <- c("A1", "A2", "B1", "B2")
+
+  test_df <- data.frame(
+    sample = colnames(test_data),
+    group = c(rep("A", 2), rep("B", 2)),
+    stringsAsFactors = FALSE
+  )
+  rownames(test_df) <- test_df$sample
+
+  se <- SummarizedExperiment::SummarizedExperiment(
+    assay = test_data,
+    colData = test_df,
+    rowData = data.frame(annot = "Pep1")
+  )
+
+  nst <- NormalyzerStatistics(se)
+  expect_error(
+    calculateContrasts(
+      nst,
+      comparisons = "A-B",
+      condCol = "group",
+      type = "welch",
+      leastRepCount = 1,
+      subsetByComparison = TRUE
+    ),
+    class = "normalyzerde_error"
+  )
 })
 
 test_that("calculateContrasts_oneVsRest_impute_limma", {

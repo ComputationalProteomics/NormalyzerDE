@@ -60,6 +60,150 @@ test_that("loadDesign errors when sample/group columns are missing", {
   )
 })
 
+test_that("loadDesign coerces numeric-like sample IDs and groups for user files", {
+  fp <- withr::local_tempfile(pattern = "design_numeric_", fileext = ".tsv")
+
+  utils::write.table(
+    data.frame(
+      `Sample ID` = c(101, 102),
+      `Group ID` = c(1, 1),
+      check.names = FALSE
+    ),
+    file = fp,
+    sep = "\t",
+    row.names = FALSE,
+    quote = FALSE
+  )
+
+  design <- loadDesign(fp, sampleCol = "Sample ID", groupCol = "Group ID")
+
+  expect_type(design[["Sample ID"]], "character")
+  expect_equal(design[["Sample ID"]], c("101", "102"))
+  expect_true(is.factor(design[["Group ID"]]))
+  expect_equal(as.character(design[["Group ID"]]), c("1", "1"))
+})
+
+test_that("loadDesign drops blank Excel-export columns made only of tabs", {
+  fp <- withr::local_tempfile(pattern = "design_excel_", fileext = ".tsv")
+  writeLines(
+    c(
+      "sample\tgroup\tbatch\t\t",
+      "S1\tA\tb1\t\t",
+      "S2\tB\tb2\t\t"
+    ),
+    fp
+  )
+
+  design <- loadDesign(fp, sampleCol = "sample", groupCol = "group")
+
+  expect_equal(colnames(design), c("sample", "group", "batch"))
+  expect_equal(design$batch, c("b1", "b2"))
+})
+
+test_that("setupRawDataObject follows design order and treats non-design columns as annotation", {
+  tmpDir <- withr::local_tempdir(pattern = "setup_raw_data_reorder_")
+  dataPath <- file.path(tmpDir, "reordered_data.tsv")
+  designPath <- file.path(tmpDir, "reordered_design.tsv")
+
+  rawDf <- data.frame(
+    feature = c("f1", "f2"),
+    note = c("pep1", "pep2"),
+    s2 = c(20, 40),
+    s1 = c(10, 30),
+    extra = c("x", "y"),
+    check.names = FALSE
+  )
+  designDf <- data.frame(
+    sample = c("s1", "s2"),
+    group = c("A", "B"),
+    stringsAsFactors = FALSE,
+    check.names = FALSE
+  )
+
+  nd_write_table(rawDf, dataPath)
+  nd_write_table(designDf, designPath)
+
+  se <- setupRawDataObject(
+    dataPath = dataPath,
+    designPath = designPath,
+    inputFormat = "default"
+  )
+
+  assayMat <- SummarizedExperiment::assay(se)
+  expect_equal(colnames(assayMat), c("s1", "s2"))
+  expect_equal(unname(as.numeric(assayMat[1, ])), c(10, 20))
+  expect_true(all(c("feature", "note", "extra") %in% colnames(SummarizedExperiment::rowData(se))))
+})
+
+test_that("setupRawContrastObject follows design order for user-supplied matrices", {
+  tmpDir <- withr::local_tempdir(pattern = "setup_raw_contrast_reorder_")
+  dataPath <- file.path(tmpDir, "reordered_contrast.tsv")
+  designPath <- file.path(tmpDir, "reordered_design.tsv")
+
+  fullDf <- data.frame(
+    feature = c("f1", "f2"),
+    note = c("pep1", "pep2"),
+    s2 = c(20, 40),
+    s1 = c(10, 30),
+    extra = c("x", "y"),
+    check.names = FALSE
+  )
+  designDf <- data.frame(
+    sample = c("s1", "s2"),
+    group = c("A", "B"),
+    stringsAsFactors = FALSE,
+    check.names = FALSE
+  )
+
+  nd_write_table(fullDf, dataPath)
+  nd_write_table(designDf, designPath)
+
+  se <- setupRawContrastObject(
+    dataPath = dataPath,
+    designPath = designPath,
+    sampleColName = "sample"
+  )
+
+  assayMat <- SummarizedExperiment::assay(se)
+  expect_equal(colnames(assayMat), c("s1", "s2"))
+  expect_equal(unname(as.numeric(assayMat[1, ])), c(10, 20))
+  expect_true(all(c("feature", "note", "extra") %in% colnames(SummarizedExperiment::rowData(se))))
+})
+
+test_that("setupRawContrastObject ignores blank Excel-export design columns", {
+  tmpDir <- withr::local_tempdir(pattern = "setup_raw_contrast_excel_")
+  dataPath <- file.path(tmpDir, "contrast.tsv")
+  designPath <- file.path(tmpDir, "design.tsv")
+
+  fullDf <- data.frame(
+    feature = c("f1", "f2"),
+    s1 = c(10, 30),
+    s2 = c(20, 40),
+    check.names = FALSE
+  )
+  nd_write_table(fullDf, dataPath)
+
+  writeLines(
+    c(
+      "sample\tgroup\tbatch\t\t",
+      "s1\tA\tb1\t\t",
+      "s2\tB\tb2\t\t"
+    ),
+    designPath
+  )
+
+  se <- setupRawContrastObject(
+    dataPath = dataPath,
+    designPath = designPath,
+    sampleColName = "sample"
+  )
+
+  expect_equal(
+    colnames(as.data.frame(SummarizedExperiment::colData(se))),
+    c("sample", "group", "batch")
+  )
+})
+
 test_that("verifyValidNumbers errors for below-one values when log transforming", {
   mat <- matrix(c("2", "0.5"), nrow = 1)
   expect_error(
@@ -132,6 +276,19 @@ test_that("verifyValidNumbers allows signed log2-scale values when noLogTransfor
       noLogTransform = TRUE,
       quiet = TRUE
     )
+  )
+})
+
+test_that("verifyValidNumbers rejects comma decimals from locale-specific input", {
+  mat <- matrix(c("1,23", "4"), nrow = 1)
+  expect_error(
+    NormalyzerDE:::verifyValidNumbers(
+      mat,
+      groups = c("A", "B"),
+      noLogTransform = TRUE,
+      quiet = TRUE
+    ),
+    class = "normalyzerde_error"
   )
 })
 
@@ -246,6 +403,69 @@ test_that("loadRawDataFromFile errors for missing file and for parse warnings", 
   )
 })
 
+test_that("filterOnlyNARows drops fully missing features and preserves alignment", {
+  se <- SummarizedExperiment::SummarizedExperiment(
+    assay = matrix(
+      c(
+        1, 2,
+        NA, NA,
+        3, 4
+      ),
+      nrow = 3,
+      byrow = TRUE,
+      dimnames = list(c("keep1", "drop", "keep2"), c("s1", "s2"))
+    ),
+    rowData = data.frame(
+      feature = c("keep1", "drop", "keep2"),
+      label = c("A", "B", "C"),
+      stringsAsFactors = FALSE,
+      row.names = c("keep1", "drop", "keep2"),
+      check.names = FALSE
+    ),
+    colData = data.frame(
+      sample = c("s1", "s2"),
+      group = c("A", "B"),
+      stringsAsFactors = FALSE
+    )
+  )
+
+  msgs <- character()
+  out <- withCallingHandlers(
+    NormalyzerDE:::filterOnlyNARows(se),
+    message = function(m) {
+      msgs <<- c(msgs, conditionMessage(m))
+      invokeRestart("muffleMessage")
+    }
+  )
+
+  expect_equal(nrow(out), 2)
+  expect_equal(rownames(SummarizedExperiment::assay(out)), c("keep1", "keep2"))
+  expect_equal(as.character(SummarizedExperiment::rowData(out)$feature), c("keep1", "keep2"))
+  expect_equal(as.character(SummarizedExperiment::rowData(out)$label), c("A", "C"))
+  expect_true(any(grepl("entries with only NA values omitted", msgs)))
+})
+
+test_that("verifySummarizedExperiment errors when sample metadata does not match assay columns", {
+  se <- SummarizedExperiment::SummarizedExperiment(
+    assay = matrix(
+      c(1, 2, 3, 4),
+      nrow = 2,
+      dimnames = list(c("f1", "f2"), c("s1", "s2"))
+    ),
+    colData = data.frame(
+      sample = c("s1", "s3"),
+      group = c("A", "B"),
+      stringsAsFactors = FALSE
+    ),
+    rowData = data.frame(feature = c("f1", "f2"))
+  )
+
+  expect_error(
+    NormalyzerDE:::verifySummarizedExperiment(se, sampleCol = "sample"),
+    class = "normalyzerde_error"
+  )
+})
+
 test_that("verifyMultipleSamplesPresent errors/warns/messages appropriately", {
   mat <- matrix(1, nrow = 1, ncol = 1)
 
@@ -287,4 +507,50 @@ test_that("verifyMultipleSamplesPresent errors/warns/messages appropriately", {
       quiet = FALSE
     )
   )
+})
+
+test_that("getVerifiedNormalyzerObject re-checks groups after omitting low-count samples", {
+  mat <- matrix(
+    c(
+      NA, 10, 11,
+      NA, 12, 13
+    ),
+    nrow = 2,
+    byrow = TRUE,
+    dimnames = list(c("f1", "f2"), c("s1", "s2", "s3"))
+  )
+
+  se <- SummarizedExperiment::SummarizedExperiment(
+    assay = mat,
+    colData = data.frame(
+      sample = c("s1", "s2", "s3"),
+      group = c("A", "B", "B"),
+      stringsAsFactors = FALSE
+    ),
+    rowData = data.frame(feature = c("f1", "f2"), stringsAsFactors = FALSE)
+  )
+  S4Vectors::metadata(se) <- list(sample = "sample", group = "group")
+
+  warnings <- character()
+  nds <- withCallingHandlers(
+    getVerifiedNormalyzerObject(
+      jobName = "omit_low_count_groups",
+      summarizedExp = se,
+      threshold = 1,
+      omitSamples = TRUE,
+      requireReplicates = FALSE,
+      quiet = FALSE,
+      noLogTransform = TRUE,
+      tinyRunThres = 50
+    ),
+    warning = function(w) {
+      warnings <<- c(warnings, conditionMessage(w))
+      invokeRestart("muffleWarning")
+    }
+  )
+
+  expect_equal(as.character(designMatrix(nds)$sample), c("s2", "s3"))
+  expect_equal(colnames(filterrawdata(nds)), c("s2", "s3"))
+  expect_true(any(grepl("Less than two distinct sample groups found", warnings)))
+  expect_false(any(grepl("Some group conditions have no replicates", warnings)))
 })

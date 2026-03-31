@@ -102,6 +102,7 @@ NormalyzerDataset <- function(
     rawData = rawData,
     sampleNameCol = sampleNameCol,
     groupNameCol = groupNameCol,
+    sampleNames = sampleNames,
     filterrawdata = filterrawdata,
     sampleReplicateGroups = sampleReplicateGroups,
     samplesGroupsWithReplicates = samplesGroupsWithReplicates,

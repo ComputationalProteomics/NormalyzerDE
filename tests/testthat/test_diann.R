@@ -535,6 +535,88 @@ test_that("diannChooseReportSpec validates and infers sample/feature/quantity co
   )
 })
 
+test_that("diannChooseReportSpec handles fallback sample columns and explicit level inference", {
+  inferredFileName <- NormalyzerDE:::diannChooseReportSpec(
+    c("File.Name", "Protein.Group", "PG.MaxLFQ", "Genes"),
+    diannLevel = "protein"
+  )
+  expect_equal(inferredFileName$sampleCol, "File.Name")
+  expect_equal(inferredFileName$featureCol, "Protein.Group")
+  expect_equal(inferredFileName$quantityCol, "PG.MaxLFQ")
+
+  inferredCustomPrec <- NormalyzerDE:::diannChooseReportSpec(
+    c("Run", "Precursor.Id", "CustomQuantity", "Protein.Group"),
+    diannLevel = "precursor",
+    diannQuantityCol = "CustomQuantity"
+  )
+  expect_equal(inferredCustomPrec$featureCol, "Precursor.Id")
+  expect_equal(inferredCustomPrec$quantityCol, "CustomQuantity")
+
+  expect_error(
+    NormalyzerDE:::diannChooseReportSpec(
+      c("Run", "Protein.Group", "PG.Quantity"),
+      diannLevel = "precursor",
+      diannQuantityCol = "PG.Quantity"
+    ),
+    class = "normalyzerde_error"
+  )
+
+  expect_error(
+    NormalyzerDE:::diannChooseReportSpec(
+      c("Run", "Precursor.Id", "CustomQuantity"),
+      diannLevel = "protein",
+      diannQuantityCol = "CustomQuantity"
+    ),
+    class = "normalyzerde_error"
+  )
+})
+
+test_that("diannChooseReportSpec infers fallback feature levels for custom quantities", {
+  inferredAutoProtein <- NormalyzerDE:::diannChooseReportSpec(
+    c("Run", "Protein.Group", "CustomQuantity"),
+    diannLevel = "auto",
+    diannQuantityCol = "CustomQuantity"
+  )
+  expect_equal(inferredAutoProtein$featureCol, "Protein.Group")
+  expect_equal(inferredAutoProtein$quantityCol, "CustomQuantity")
+
+  inferredAutoPrecursor <- NormalyzerDE:::diannChooseReportSpec(
+    c("Run", "Precursor.Id", "CustomQuantity"),
+    diannLevel = "auto",
+    diannQuantityCol = "CustomQuantity"
+  )
+  expect_equal(inferredAutoPrecursor$featureCol, "Precursor.Id")
+  expect_equal(inferredAutoPrecursor$quantityCol, "CustomQuantity")
+
+  inferredProteinLevel <- NormalyzerDE:::diannChooseReportSpec(
+    c("Run", "Protein.Group", "CustomQuantity"),
+    diannLevel = "protein",
+    diannQuantityCol = "CustomQuantity"
+  )
+  expect_equal(inferredProteinLevel$featureCol, "Protein.Group")
+
+  inferredPrecursorLevel <- NormalyzerDE:::diannChooseReportSpec(
+    c("Run", "Precursor.Id", "CustomQuantity"),
+    diannLevel = "precursor",
+    diannQuantityCol = "CustomQuantity"
+  )
+  expect_equal(inferredPrecursorLevel$featureCol, "Precursor.Id")
+})
+
+test_that("diannChooseReportSpec prefers the first known quantity candidate for explicit features", {
+  inferredProtein <- NormalyzerDE:::diannChooseReportSpec(
+    c("Run", "Protein.Group", "PG.MaxLFQ", "PG.Quantity"),
+    diannFeatureCol = "Protein.Group"
+  )
+  expect_equal(inferredProtein$quantityCol, "PG.MaxLFQ")
+
+  inferredPrecursor <- NormalyzerDE:::diannChooseReportSpec(
+    c("Run", "Precursor.Id", "Precursor.Normalised", "Precursor.Quantity"),
+    diannFeatureCol = "Precursor.Id"
+  )
+  expect_equal(inferredPrecursor$quantityCol, "Precursor.Normalised")
+})
+
 test_that("readDiannToDataFrame warns when requested extra columns are missing", {
   tmpDir <- withr::local_tempdir(pattern = "diann_missing_extra_")
 
@@ -1078,6 +1160,38 @@ test_that("readDiannToDataFrame maps File.Name paths to design sample names", {
   expect_true(all(c("S1", "S2") %in% colnames(wide)))
   expect_equal(wide$S1[1], 100)
   expect_equal(wide$S2[1], 200)
+})
+
+test_that("DIANN sample-name helpers handle raw paths, cleaned names, and partial mismatches", {
+  rawNames <- c("/data/S1.raw", "/data/S2.raw")
+  expect_equal(
+    NormalyzerDE:::diannMaybeMapSamplesToDesign(rawNames, rawNames),
+    rawNames
+  )
+
+  matrixDf <- data.frame(
+    feature = "P1",
+    `C:\\runs\\S1.MZML` = 100,
+    `C:\\runs\\S2.RAW` = 200,
+    check.names = FALSE
+  )
+  renamed <- NormalyzerDE:::diannRenameSampleColumnsForDesign(
+    matrixDf,
+    designSampleNames = c("S1", "S2")
+  )
+  expect_equal(colnames(renamed)[2:3], c("S1", "S2"))
+
+  partialDf <- data.frame(
+    feature = "P1",
+    `dir/S1.raw` = 100,
+    `dir/S2.raw` = 200,
+    check.names = FALSE
+  )
+  unchanged <- NormalyzerDE:::diannRenameSampleColumnsForDesign(
+    partialDf,
+    designSampleNames = c("S1", "S3")
+  )
+  expect_equal(colnames(unchanged), colnames(partialDf))
 })
 
 test_that("diannFilterDecoys supports logical, numeric and string decoy columns", {

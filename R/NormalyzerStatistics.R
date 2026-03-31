@@ -26,8 +26,10 @@ NormalyzerStatistics <- setClass(
   slots = c(
     annotMat = "matrix",
     dataMat = "matrix",
+    filteredDataMat = "matrix",
     designDf = "data.frame",
     backendData = "list",
+    filteringContrast = "logical",
 
     pairwiseCompsP = "list",
     pairwiseCompsFdr = "list",
@@ -78,8 +80,10 @@ NormalyzerStatistics <- function(experimentObj, logTrans = FALSE) {
     "NormalyzerStatistics",
     annotMat = as.matrix(annotMat),
     dataMat = dataMat,
+    filteredDataMat = dataMat,
     designDf = as.data.frame(designDf),
-    backendData = list()
+    backendData = list(),
+    filteringContrast = rep(TRUE, nrow(dataMat))
   )
 
   nst

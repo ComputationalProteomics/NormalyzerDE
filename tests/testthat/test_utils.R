@@ -259,6 +259,60 @@ test_that("setupJobDir sanitizes jobName", {
   expect_false(grepl("\\.\\.", basename(jobDir)))
 })
 
+test_that("sanitizeJobName rejects invalid names before and after sanitization", {
+  expect_error(sanitizeJobName(character()), class = "normalyzerde_error")
+  expect_error(sanitizeJobName(NA_character_), class = "normalyzerde_error")
+  expect_error(sanitizeJobName("..."), class = "normalyzerde_error")
+  expect_equal(sanitizeJobName("analysis_run"), "analysis_run")
+})
+
+test_that("createDirectory errors for files and impossible nested paths", {
+  parentDir <- withr::local_tempdir(pattern = "create_dir_")
+
+  existingFile <- file.path(parentDir, "existing.txt")
+  writeLines("x", existingFile)
+  expect_error(createDirectory(existingFile), class = "normalyzerde_error")
+
+  blockingFile <- file.path(parentDir, "blocking")
+  writeLines("x", blockingFile)
+  expect_error(
+    createDirectory(file.path(blockingFile, "child")),
+    class = "normalyzerde_error"
+  )
+
+  existingDir <- file.path(parentDir, "already_there")
+  dir.create(existingDir)
+  expect_no_error(createDirectory(existingDir))
+})
+
+test_that("elapsedSecondsBetweenSystimes returns a difftime", {
+  start <- as.POSIXct("2024-01-01 00:00:00", tz = "UTC")
+  end <- as.POSIXct("2024-01-01 00:00:42", tz = "UTC")
+
+  elapsed <- elapsedSecondsBetweenSystimes(start, end)
+
+  expect_s3_class(elapsed, "difftime")
+  expect_equal(as.numeric(elapsed, units = "secs"), 42)
+})
+
+test_that("setupTestData returns named columns and bounded RT values", {
+  set.seed(1)
+  out <- setupTestData(
+    nSamples = 3,
+    nFeatures = 4,
+    rtMin = 10,
+    rtMax = 20,
+    mean = 5,
+    sd = 0
+  )
+
+  expect_equal(dim(out), c(4L, 5L))
+  expect_equal(colnames(out), c("feature", "RT", "S1", "S2", "S3"))
+  expect_equal(out$feature, paste0("feature_", seq_len(4)))
+  expect_true(all(out$RT >= 10 & out$RT <= 20))
+  expect_true(all(as.matrix(out[, c("S1", "S2", "S3")]) == 5))
+})
+
 test_that("setupJobDir reuses an existing empty directory", {
   parentDir <- tempfile()
   dir.create(parentDir)
@@ -304,4 +358,16 @@ test_that("setupJobDir can reuse a non-empty directory when explicitly requested
   )
 
   expect_identical(normalizePath(jobDir), normalizePath(existingDir))
+})
+
+test_that("setupJobDir defaults to the working directory when outputDir is NULL", {
+  workDir <- withr::local_tempdir(pattern = "setup_job_dir_")
+
+  withr::with_dir(workDir, {
+    jobDir <- expect_no_error(setupJobDir("default_dir_job", NULL))
+    expect_identical(
+      normalizePath(jobDir),
+      normalizePath(file.path(workDir, "default_dir_job"))
+    )
+  })
 })

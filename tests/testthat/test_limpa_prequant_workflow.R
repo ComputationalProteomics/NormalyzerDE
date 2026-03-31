@@ -161,6 +161,159 @@ test_that("normalyzer preQuant='limpa' can summarize peptides to proteins", {
   expect_true("Protein.Group" %in% colnames(y$genes))
 })
 
+test_that("normalyzer preQuant='limpa' emits step messages during a successful quiet=FALSE run", {
+  testthat::skip_if_not_installed("limpa")
+
+  set.seed(1)
+  mat <- matrix(stats::rnorm(20 * 4, mean = 10, sd = 1), nrow = 20)
+  colnames(mat) <- paste0("s", seq_len(ncol(mat)))
+  mat[sample.int(length(mat), 8)] <- NA_real_
+
+  se <- nd_make_summarized_experiment(
+    assay = mat,
+    groups = c("A", "A", "B", "B"),
+    row_data = data.frame(`Protein.Group` = paste0("P", seq_len(nrow(mat))))
+  )
+
+  outDir <- withr::local_tempdir(pattern = "prequant_messages_")
+  jobName <- "prequant_messages"
+
+  msgs <- character()
+  out <- withCallingHandlers(
+    suppressWarnings(normalyzer(
+      jobName = jobName,
+      experimentObj = se,
+      outputDir = outDir,
+      preQuant = "limpa",
+      limpaOptions = limpaOptions(
+        byRow = TRUE,
+        quantArgs = list(chunk = 10L, verbose = FALSE)
+      ),
+      noLogTransform = TRUE,
+      normalizeRetentionTime = FALSE,
+      skipAnalysis = TRUE,
+      quiet = FALSE,
+      sampleAbundThres = 1,
+      requireReplicates = FALSE
+    )),
+    message = function(m) {
+      msgs <<- c(msgs, conditionMessage(m))
+      invokeRestart("muffleMessage")
+    }
+  )
+
+  expect_null(out)
+  expect_true(any(grepl("\\[Step 1/6\\].*Load data and verify input", msgs)))
+  expect_true(any(grepl("\\[Step 2/6\\].*Running limpa pre-quantification", msgs)))
+  expect_true(any(grepl("\\[Step 2/6\\].*limpa quantification completed", msgs)))
+  expect_true(any(grepl("\\[Step 3/6\\].*Performing normalizations", msgs)))
+  expect_true(any(grepl("\\[Step 4/6\\].*Skipped evaluation measures", msgs)))
+  expect_true(any(grepl("\\[Step 6/6\\].*Skipped plot generation", msgs)))
+})
+
+test_that("normalyzer preQuant='limpa' reports when unique protein IDs skip summarization", {
+  testthat::skip_if_not_installed("limpa")
+
+  set.seed(1)
+  mat <- matrix(stats::rnorm(12 * 4, mean = 10, sd = 1), nrow = 12)
+  colnames(mat) <- paste0("s", seq_len(ncol(mat)))
+  mat[sample.int(length(mat), 6)] <- NA_real_
+
+  se <- nd_make_summarized_experiment(
+    assay = mat,
+    groups = c("A", "A", "B", "B"),
+    row_data = data.frame(
+      `Protein.Group` = paste0("P", seq_len(nrow(mat))),
+      check.names = FALSE
+    )
+  )
+
+  outDir <- withr::local_tempdir(pattern = "prequant_unique_protein_ids_")
+  jobName <- "prequant_unique_protein_ids"
+
+  msgs <- character()
+  out <- withCallingHandlers(
+    suppressWarnings(normalyzer(
+      jobName = jobName,
+      experimentObj = se,
+      outputDir = outDir,
+      preQuant = "limpa",
+      limpaOptions = limpaOptions(
+        proteinIdCol = "Protein.Group",
+        quantArgs = list(chunk = 10L, verbose = FALSE)
+      ),
+      noLogTransform = TRUE,
+      normalizeRetentionTime = FALSE,
+      skipAnalysis = TRUE,
+      quiet = FALSE,
+      sampleAbundThres = 1,
+      requireReplicates = FALSE
+    )),
+    message = function(m) {
+      msgs <<- c(msgs, conditionMessage(m))
+      invokeRestart("muffleMessage")
+    }
+  )
+
+  expect_null(out)
+  expect_true(any(grepl("contains no duplicated identifiers", msgs)))
+
+  rdsPath <- file.path(
+    outDir,
+    jobName,
+    paste0(jobName, "_limpa_quantified.rds")
+  )
+  y <- readRDS(rdsPath)
+  expect_equal(nrow(y$E), sum(rowSums(!is.na(mat)) > 0))
+})
+
+test_that("normalyzer preQuant='limpa' informs when supplied dpc overrides dpcMethod", {
+  testthat::skip_if_not_installed("limpa")
+
+  set.seed(1)
+  mat <- matrix(stats::rnorm(12 * 4, mean = 10, sd = 1), nrow = 12)
+  colnames(mat) <- paste0("s", seq_len(ncol(mat)))
+  mat[sample.int(length(mat), 6)] <- NA_real_
+
+  se <- nd_make_summarized_experiment(
+    assay = mat,
+    groups = c("A", "A", "B", "B"),
+    row_data = data.frame(`Protein.Group` = paste0("P", seq_len(nrow(mat))))
+  )
+
+  outDir <- withr::local_tempdir(pattern = "prequant_dpc_override_")
+
+  msgs <- character()
+  out <- withCallingHandlers(
+    suppressWarnings(normalyzer(
+      jobName = "prequant_dpc_override",
+      experimentObj = se,
+      outputDir = outDir,
+      preQuant = "limpa",
+      limpaOptions = limpaOptions(
+        byRow = TRUE,
+        dpc = c(0, 1),
+        dpcMethod = "dpc",
+        quantArgs = list(chunk = 10L, verbose = TRUE)
+      ),
+      noLogTransform = TRUE,
+      normalizeRetentionTime = FALSE,
+      skipAnalysis = TRUE,
+      quiet = FALSE,
+      sampleAbundThres = 1,
+      requireReplicates = FALSE
+    )),
+    message = function(m) {
+      msgs <<- c(msgs, conditionMessage(m))
+      invokeRestart("muffleMessage")
+    }
+  )
+
+  expect_null(out)
+  expect_true(any(grepl("ignoring .*dpcMethod", msgs)))
+  expect_true(any(grepl("Saved quantified EList", msgs)))
+})
+
 test_that("calculateContrasts can reuse quantified EList from limpaOptions(quantifiedRds)", {
   testthat::skip_if_not_installed("limpa")
 

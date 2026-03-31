@@ -259,3 +259,71 @@ test_that("generateStatsReport handles missing PC3/PC4", {
     writeAsPngs = TRUE
   )))
 })
+
+test_that("plotContrastPCA handles sparse or degenerate input gracefully", {
+  make_layout <- function() {
+    grid::grid.layout(
+      nrow = 4,
+      ncol = 5,
+      heights = c(0.1, 1, 1, 0.1),
+      widths = c(0.1, 1, 1, 1, 0.1),
+      default.units = c("null", "null")
+    )
+  }
+
+  sparse_mat <- matrix(
+    c(
+      1, NA, 2,
+      NA, 3, NA
+    ),
+    nrow = 2,
+    byrow = TRUE,
+    dimnames = list(c("f1", "f2"), c("s1", "s2", "s3"))
+  )
+  sparse_se <- nd_make_summarized_experiment(
+    assay = sparse_mat,
+    groups = c("A", "B", "B")
+  )
+  sparse_nst <- NormalyzerStatistics(sparse_se, logTrans = FALSE)
+  comparisons(sparse_nst) <- "A-B"
+  condCol(sparse_nst) <- c("A", "B", "B")
+
+  sparse_pdf <- withr::local_tempfile(pattern = "contrast_pca_sparse_", fileext = ".pdf")
+  grDevices::pdf(sparse_pdf)
+  expect_silent(
+    NormalyzerDE:::plotContrastPCA(
+      sparse_nst,
+      jobName = "sparse_pca",
+      currentLayout = make_layout(),
+      pageno = 1
+    )
+  )
+  grDevices::dev.off()
+
+  onepc_mat <- matrix(
+    c(
+      1, 2, 3
+    ),
+    nrow = 1,
+    dimnames = list("f1", c("s1", "s2", "s3"))
+  )
+  onepc_se <- nd_make_summarized_experiment(
+    assay = onepc_mat,
+    groups = c("A", "B", "B")
+  )
+  onepc_nst <- NormalyzerStatistics(onepc_se, logTrans = FALSE)
+  comparisons(onepc_nst) <- "A-B"
+  condCol(onepc_nst) <- c("A", "B", "B")
+
+  onepc_pdf <- withr::local_tempfile(pattern = "contrast_pca_onepc_", fileext = ".pdf")
+  grDevices::pdf(onepc_pdf)
+  expect_silent(
+    NormalyzerDE:::plotContrastPCA(
+      onepc_nst,
+      jobName = "onepc_pca",
+      currentLayout = make_layout(),
+      pageno = 1
+    )
+  )
+  grDevices::dev.off()
+})

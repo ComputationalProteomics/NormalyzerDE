@@ -491,6 +491,8 @@ normalyzer <- function(
       "All done! Results are saved in {.path {jobDir}}; processing time was {round(totTime, 1)} minutes"
     )
   }
+
+  invisible(NULL)
 }
 
 #' NormalyzerDE differential expression
@@ -982,4 +984,6 @@ normalyzerDE <- function(
       "All done! Results are saved in {.path {jobDir}}; processing time was {round(totTime, 1)} minutes"
     )
   }
+
+  invisible(NULL)
 }
