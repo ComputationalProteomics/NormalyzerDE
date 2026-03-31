@@ -134,23 +134,29 @@ test_that("normalyzer supports DIANN report precursors with RT normalization", {
 })
 
 test_that("normalyzer emits version message and errors when inputs missing", {
-  expect_error(
+  captured <- nd_capture_conditions(
     normalyzer(
       jobName = "missing_inputs",
       quiet = FALSE
-    ),
-    class = "normalyzerde_error"
+    )
   )
+
+  expect_s3_class(captured$error, "normalyzerde_error")
+  expect_gt(length(captured$messages), 0)
+  expect_true(any(grepl("NormalyzerDE", captured$messages, fixed = TRUE)))
+  expect_true(any(grepl("version", captured$messages, ignore.case = TRUE)))
 })
 
 test_that("normalyzer stays quiet when inputs missing and quiet=TRUE", {
-  expect_error(
+  captured <- nd_capture_conditions(
     normalyzer(
       jobName = "missing_inputs",
       quiet = TRUE
-    ),
-    class = "normalyzerde_error"
+    )
   )
+
+  expect_s3_class(captured$error, "normalyzerde_error")
+  expect_length(captured$messages, 0)
 })
 
 test_that("normalyzer errors on non-empty output directories unless reuseOutputDir=TRUE", {
@@ -309,50 +315,12 @@ test_that("normalyzerDE errors on non-empty output directories unless reuseOutpu
 test_that("normalyzerDE writes limpa sample weights when requested", {
   testthat::skip_if_not_installed("limpa")
 
-  test_data <- matrix(
-    c(
-      10,
-      11,
-      10,
-      13,
-      12,
-      11,
-      NA,
-      NA,
-      NA,
-      9,
-      9,
-      10,
-      5,
-      5,
-      5,
-      NA,
-      NA,
-      NA,
-      7,
-      8,
-      7,
-      7,
-      7,
-      7
-    ),
-    nrow = 4,
-    byrow = TRUE
-  )
-  colnames(test_data) <- paste0("s", seq_len(ncol(test_data)))
-
-  design <- nd_make_design(c("A", "A", "A", "B", "B", "B"))
-  data_df <- data.frame(
-    feature = paste0("f", seq_len(nrow(test_data))),
-    as.data.frame(test_data, check.names = FALSE),
-    check.names = FALSE
-  )
+  test_data <- nd_limpa_de_matrix()
 
   tmpDir <- withr::local_tempdir(pattern = "normalyzerde_limpa_weights_")
-  paths <- nd_write_data_and_design(
+  paths <- nd_write_limpa_input_fixture(
     tmp_dir = tmpDir,
-    data = data_df,
-    design = design,
+    mat = test_data,
     data_name = "limpa_weights_data.tsv",
     design_name = "limpa_weights_design.tsv"
   )
@@ -360,21 +328,15 @@ test_that("normalyzerDE writes limpa sample weights when requested", {
   jobName <- "limpa_weights"
   expectedDir <- file.path(tmpDir, NormalyzerDE:::sanitizeJobName(jobName))
 
-  out <- suppressWarnings(normalyzerDE(
-    jobName = jobName,
-    comparisons = "A-B",
-    designPath = paths$designPath,
-    dataPath = paths$dataPath,
-    outputDir = tmpDir,
-    type = "limpa",
-    logTrans = FALSE,
-    leastRepCount = 1,
-    limpaOptions = limpaOptions(
+  out <- nd_run_limpa_de_from_paths(
+    paths = paths,
+    out_dir = tmpDir,
+    job_name = jobName,
+    limpa_options = limpaOptions(
       deArgs = list(sample.weights = TRUE),
       quantArgs = list(chunk = 10L)
-    ),
-    quiet = TRUE
-  ))
+    )
+  )
 
   expect_null(out)
 
@@ -395,50 +357,12 @@ test_that("normalyzerDE writes limpa sample weights when requested", {
 test_that("normalyzerDE accepts limpaOptions for limpa workflows", {
   testthat::skip_if_not_installed("limpa")
 
-  test_data <- matrix(
-    c(
-      10,
-      11,
-      10,
-      13,
-      12,
-      11,
-      NA,
-      NA,
-      NA,
-      9,
-      9,
-      10,
-      5,
-      5,
-      5,
-      NA,
-      NA,
-      NA,
-      7,
-      8,
-      7,
-      7,
-      7,
-      7
-    ),
-    nrow = 4,
-    byrow = TRUE
-  )
-  colnames(test_data) <- paste0("s", seq_len(ncol(test_data)))
-
-  design <- nd_make_design(c("A", "A", "A", "B", "B", "B"))
-  data_df <- data.frame(
-    feature = paste0("f", seq_len(nrow(test_data))),
-    as.data.frame(test_data, check.names = FALSE),
-    check.names = FALSE
-  )
+  test_data <- nd_limpa_de_matrix()
 
   tmpDir <- withr::local_tempdir(pattern = "normalyzerde_limpa_opts_")
-  paths <- nd_write_data_and_design(
+  paths <- nd_write_limpa_input_fixture(
     tmp_dir = tmpDir,
-    data = data_df,
-    design = design,
+    mat = test_data,
     data_name = "limpa_opts_data.tsv",
     design_name = "limpa_opts_design.tsv"
   )
@@ -446,22 +370,16 @@ test_that("normalyzerDE accepts limpaOptions for limpa workflows", {
   jobName <- "limpa_opts"
   expectedDir <- file.path(tmpDir, NormalyzerDE:::sanitizeJobName(jobName))
 
-  out <- suppressWarnings(normalyzerDE(
-    jobName = jobName,
-    comparisons = "A-B",
-    designPath = paths$designPath,
-    dataPath = paths$dataPath,
-    outputDir = tmpDir,
-    type = "limpa",
-    logTrans = FALSE,
-    leastRepCount = 1,
-    limpaOptions = limpaOptions(
+  out <- nd_run_limpa_de_from_paths(
+    paths = paths,
+    out_dir = tmpDir,
+    job_name = jobName,
+    limpa_options = limpaOptions(
       byRow = TRUE,
       quantArgs = list(chunk = 10L),
       deArgs = list(sample.weights = TRUE)
-    ),
-    quiet = TRUE
-  ))
+    )
+  )
 
   expect_null(out)
 
@@ -470,17 +388,23 @@ test_that("normalyzerDE accepts limpaOptions for limpa workflows", {
 })
 
 test_that("normalyzerDE emits version message and errors when inputs missing", {
-  expect_error(
-    normalyzerDE(jobName = "missing_inputs", quiet = FALSE),
-    class = "normalyzerde_error"
+  captured <- nd_capture_conditions(
+    normalyzerDE(jobName = "missing_inputs", quiet = FALSE)
   )
+
+  expect_s3_class(captured$error, "normalyzerde_error")
+  expect_gt(length(captured$messages), 0)
+  expect_true(any(grepl("NormalyzerDE", captured$messages, fixed = TRUE)))
+  expect_true(any(grepl("version", captured$messages, ignore.case = TRUE)))
 })
 
 test_that("normalyzerDE stays quiet when inputs missing and quiet=TRUE", {
-  expect_error(
-    normalyzerDE(jobName = "missing_inputs", quiet = TRUE),
-    class = "normalyzerde_error"
+  captured <- nd_capture_conditions(
+    normalyzerDE(jobName = "missing_inputs", quiet = TRUE)
   )
+
+  expect_s3_class(captured$error, "normalyzerde_error")
+  expect_length(captured$messages, 0)
 })
 
 test_that("normalyzer emits step messages during a successful quiet=FALSE run", {
@@ -495,8 +419,7 @@ test_that("normalyzer emits step messages during a successful quiet=FALSE run", 
   jobName <- "entry_messages"
   expectedDir <- file.path(tmpDir, NormalyzerDE:::sanitizeJobName(jobName))
 
-  msgs <- character()
-  out <- withCallingHandlers(
+  captured <- nd_capture_conditions(
     suppressWarnings(normalyzer(
       jobName = jobName,
       designPath = designPath,
@@ -506,19 +429,21 @@ test_that("normalyzer emits step messages during a successful quiet=FALSE run", 
       skipAnalysis = FALSE,
       quiet = FALSE,
       writeReportAsPngs = TRUE
-    )),
-    message = function(m) {
-      msgs <<- c(msgs, conditionMessage(m))
-      invokeRestart("muffleMessage")
-    }
+    ))
   )
 
-  expect_null(out)
-  expect_true(any(grepl("\\[Step 1/5\\].*Load data and verify input", msgs)))
-  expect_true(any(grepl("\\[Step 2/5\\].*Performing normalizations", msgs)))
-  expect_true(any(grepl("\\[Step 3/5\\].*Generating evaluation measures", msgs)))
-  expect_true(any(grepl("\\[Step 4/5\\].*Matrices successfully written", msgs)))
-  expect_true(any(grepl("\\[Step 5/5\\].*Plots successfully generated", msgs)))
+  expect_null(captured$error)
+  expect_null(captured$value)
+  nd_expect_messages(
+    captured$messages,
+    c(
+      "\\[Step 1/5\\].*Load data",
+      "\\[Step 2/5\\].*Performing normalizations",
+      "\\[Step 3/5\\].*Generating evaluation measures",
+      "\\[Step 4/5\\].*written",
+      "\\[Step 5/5\\].*generated"
+    )
+  )
 
   pngDir <- file.path(expectedDir, "pngs")
   expect_true(dir.exists(pngDir))
@@ -537,8 +462,7 @@ test_that("normalyzerDE emits step messages during a successful quiet=FALSE run"
   jobName <- "entry_de_messages"
   expectedDir <- file.path(tmpDir, NormalyzerDE:::sanitizeJobName(jobName))
 
-  msgs <- character()
-  out <- withCallingHandlers(
+  captured <- nd_capture_conditions(
     suppressWarnings(normalyzerDE(
       jobName = jobName,
       comparisons = "4-5",
@@ -548,19 +472,21 @@ test_that("normalyzerDE emits step messages during a successful quiet=FALSE run"
       condCol = "group",
       quiet = FALSE,
       writeReportAsPngs = TRUE
-    )),
-    message = function(m) {
-      msgs <<- c(msgs, conditionMessage(m))
-      invokeRestart("muffleMessage")
-    }
+    ))
   )
 
-  expect_null(out)
-  expect_true(any(grepl("\\[Step 1/6\\].*Load data and verify input", msgs)))
-  expect_true(any(grepl("\\[Step 2/6\\].*Skipped technical replicate reduction", msgs)))
-  expect_true(any(grepl("\\[Step 3/6\\].*Statistics object prepared", msgs)))
-  expect_true(any(grepl("\\[Step 4/6\\].*Contrast calculations done", msgs)))
-  expect_true(any(grepl("\\[Step 6/6\\].*Statistics report written", msgs)))
+  expect_null(captured$error)
+  expect_null(captured$value)
+  nd_expect_messages(
+    captured$messages,
+    c(
+      "\\[Step 1/6\\].*Load data",
+      "\\[Step 2/6\\].*technical replicate reduction",
+      "\\[Step 3/6\\].*Statistics object prepared",
+      "\\[Step 4/6\\].*Contrast calculations done",
+      "\\[Step 6/6\\].*Statistics report written"
+    )
+  )
 
   pngDir <- file.path(expectedDir, "de_pngs")
   expect_true(dir.exists(pngDir))

@@ -29,7 +29,20 @@ test_that("resolveLimpaQuantByRowFn supports old and new limpa APIs", {
   )
 })
 
+test_that("requireLimpaPackageInternal errors when limpa is unavailable", {
+  expect_error(
+    NormalyzerDE:::requireLimpaPackageInternal(
+      "type='limpa'",
+      require_namespace = function(...) FALSE
+    ),
+    regexp = "requires the Bioconductor package",
+    class = "normalyzerde_error"
+  )
+})
+
 test_that("calculateContrasts supports type='limpa'", {
+  testthat::skip_if_not_installed("limpa")
+
   test_data <- matrix(
     c(
       10,
@@ -74,19 +87,6 @@ test_that("calculateContrasts supports type='limpa'", {
   )
 
   nst <- NormalyzerStatistics(se, logTrans = FALSE)
-
-  if (!requireNamespace("limpa", quietly = TRUE)) {
-    expect_error(
-      calculateContrasts(
-        nst,
-        comparisons = "A-B",
-        condCol = "group",
-        type = "limpa"
-      ),
-      class = "normalyzerde_error"
-    )
-    return()
-  }
 
   out <- calculateContrasts(
     nst,

@@ -1,39 +1,23 @@
 context("limpa pre-quant workflow")
 
-test_that("normalyzer preQuant='limpa' writes quantified RDS (by-row)", {
+test_that("normalyzer preQuant='limpa' writes quantified RDS from limpaOptions helper (by-row)", {
   testthat::skip_if_not_installed("limpa")
 
-  set.seed(1)
-  mat <- matrix(stats::rnorm(20 * 4, mean = 10, sd = 1), nrow = 20)
-  colnames(mat) <- paste0("s", seq_len(ncol(mat)))
-  mat[sample.int(length(mat), 8)] <- NA_real_
-
-  se <- nd_make_summarized_experiment(
-    assay = mat,
-    groups = c("A", "A", "B", "B"),
-    row_data = data.frame(`Protein.Group` = paste0("P", seq_len(nrow(mat))))
-  )
+  fixture <- nd_make_limpa_prequant_fixture()
 
   outDir <- withr::local_tempdir(pattern = "prequant_byrow_")
   jobName <- "prequant_byrow"
   expectedDir <- file.path(outDir, NormalyzerDE:::sanitizeJobName(jobName))
 
-  out <- suppressWarnings(normalyzer(
-    jobName = jobName,
-    experimentObj = se,
-    outputDir = outDir,
-    preQuant = "limpa",
-    limpaOptions = limpaOptions(
+  out <- nd_run_prequant_limpa(
+    se = fixture$se,
+    out_dir = outDir,
+    job_name = jobName,
+    limpa_options = limpaOptions(
       byRow = TRUE,
       quantArgs = list(chunk = 10L, verbose = FALSE)
-    ),
-    noLogTransform = TRUE,
-    normalizeRetentionTime = FALSE,
-    skipAnalysis = TRUE,
-    quiet = TRUE,
-    sampleAbundThres = 1,
-    requireReplicates = FALSE
-  ))
+    )
+  )
 
   expect_null(out)
   expect_true(file.exists(file.path(expectedDir, "log2-normalized.txt")))
@@ -46,72 +30,20 @@ test_that("normalyzer preQuant='limpa' writes quantified RDS (by-row)", {
 
   y <- readRDS(rdsPath)
   expect_true(inherits(y, "EList"))
-  keepRows <- rowSums(!is.na(mat)) > 0
+  keepRows <- rowSums(!is.na(fixture$mat)) > 0
   expect_equal(nrow(y$E), sum(keepRows))
-  expect_equal(ncol(y$E), ncol(mat))
+  expect_equal(ncol(y$E), ncol(fixture$mat))
   expect_false(anyNA(y$E))
-})
-
-test_that("normalyzer preQuant='limpa' accepts limpaOptions helper", {
-  testthat::skip_if_not_installed("limpa")
-
-  set.seed(1)
-  mat <- matrix(stats::rnorm(20 * 4, mean = 10, sd = 1), nrow = 20)
-  colnames(mat) <- paste0("s", seq_len(ncol(mat)))
-  mat[sample.int(length(mat), 8)] <- NA_real_
-
-  se <- nd_make_summarized_experiment(
-    assay = mat,
-    groups = c("A", "A", "B", "B"),
-    row_data = data.frame(`Protein.Group` = paste0("P", seq_len(nrow(mat))))
-  )
-
-  outDir <- withr::local_tempdir(pattern = "prequant_opts_")
-  jobName <- "prequant_opts"
-  expectedDir <- file.path(outDir, NormalyzerDE:::sanitizeJobName(jobName))
-
-  out <- suppressWarnings(normalyzer(
-    jobName = jobName,
-    experimentObj = se,
-    outputDir = outDir,
-    preQuant = "limpa",
-    limpaOptions = limpaOptions(
-      byRow = TRUE,
-      quantArgs = list(chunk = 10L, verbose = FALSE)
-    ),
-    noLogTransform = TRUE,
-    normalizeRetentionTime = FALSE,
-    skipAnalysis = TRUE,
-    quiet = TRUE,
-    sampleAbundThres = 1,
-    requireReplicates = FALSE
-  ))
-
-  expect_null(out)
-  expect_true(file.exists(file.path(expectedDir, "log2-normalized.txt")))
-  expect_true(file.exists(file.path(
-    expectedDir,
-    paste0(basename(expectedDir), "_limpa_quantified.rds")
-  )))
 })
 
 test_that("normalyzer preQuant='limpa' can summarize peptides to proteins", {
   testthat::skip_if_not_installed("limpa")
 
-  set.seed(1)
   n_proteins <- 5
   peptides_per_protein <- 2
-  n_samples <- 4
 
   protein_ids <- paste0("P", seq_len(n_proteins))
   peptide_protein <- rep(protein_ids, each = peptides_per_protein)
-
-  mat <- matrix(
-    stats::rnorm(length(peptide_protein) * n_samples, mean = 10, sd = 0.5),
-    nrow = length(peptide_protein)
-  )
-  colnames(mat) <- paste0("s", seq_len(ncol(mat)))
-  mat[sample.int(length(mat), 6)] <- NA_real_
 
   rowAnno <- data.frame(
     `Protein.Group` = peptide_protein,
@@ -122,32 +54,26 @@ test_that("normalyzer preQuant='limpa' can summarize peptides to proteins", {
     check.names = FALSE
   )
 
-  se <- nd_make_summarized_experiment(
-    assay = mat,
-    groups = c("A", "A", "B", "B"),
-    row_data = rowAnno
+  fixture <- nd_make_limpa_prequant_fixture(
+    n_features = length(peptide_protein),
+    row_data = rowAnno,
+    missing_count = 6L,
+    sd = 0.5
   )
 
   outDir <- withr::local_tempdir(pattern = "prequant_protein_")
   jobName <- "prequant_protein"
   expectedDir <- file.path(outDir, NormalyzerDE:::sanitizeJobName(jobName))
 
-  out <- suppressWarnings(normalyzer(
-    jobName = jobName,
-    experimentObj = se,
-    outputDir = outDir,
-    preQuant = "limpa",
-    limpaOptions = limpaOptions(
+  out <- nd_run_prequant_limpa(
+    se = fixture$se,
+    out_dir = outDir,
+    job_name = jobName,
+    limpa_options = limpaOptions(
       proteinIdCol = "Protein.Group",
       quantArgs = list(chunk = 10L, verbose = FALSE)
-    ),
-    noLogTransform = TRUE,
-    normalizeRetentionTime = FALSE,
-    skipAnalysis = TRUE,
-    quiet = TRUE,
-    sampleAbundThres = 1,
-    requireReplicates = FALSE
-  ))
+    )
+  )
 
   expect_null(out)
 
@@ -164,99 +90,69 @@ test_that("normalyzer preQuant='limpa' can summarize peptides to proteins", {
 test_that("normalyzer preQuant='limpa' emits step messages during a successful quiet=FALSE run", {
   testthat::skip_if_not_installed("limpa")
 
-  set.seed(1)
-  mat <- matrix(stats::rnorm(20 * 4, mean = 10, sd = 1), nrow = 20)
-  colnames(mat) <- paste0("s", seq_len(ncol(mat)))
-  mat[sample.int(length(mat), 8)] <- NA_real_
-
-  se <- nd_make_summarized_experiment(
-    assay = mat,
-    groups = c("A", "A", "B", "B"),
-    row_data = data.frame(`Protein.Group` = paste0("P", seq_len(nrow(mat))))
-  )
+  fixture <- nd_make_limpa_prequant_fixture()
 
   outDir <- withr::local_tempdir(pattern = "prequant_messages_")
   jobName <- "prequant_messages"
 
-  msgs <- character()
-  out <- withCallingHandlers(
-    suppressWarnings(normalyzer(
-      jobName = jobName,
-      experimentObj = se,
-      outputDir = outDir,
-      preQuant = "limpa",
-      limpaOptions = limpaOptions(
+  captured <- nd_capture_conditions(
+    nd_run_prequant_limpa(
+      se = fixture$se,
+      out_dir = outDir,
+      job_name = jobName,
+      quiet = FALSE,
+      limpa_options = limpaOptions(
         byRow = TRUE,
         quantArgs = list(chunk = 10L, verbose = FALSE)
-      ),
-      noLogTransform = TRUE,
-      normalizeRetentionTime = FALSE,
-      skipAnalysis = TRUE,
-      quiet = FALSE,
-      sampleAbundThres = 1,
-      requireReplicates = FALSE
-    )),
-    message = function(m) {
-      msgs <<- c(msgs, conditionMessage(m))
-      invokeRestart("muffleMessage")
-    }
+      )
+    )
   )
 
-  expect_null(out)
-  expect_true(any(grepl("\\[Step 1/6\\].*Load data and verify input", msgs)))
-  expect_true(any(grepl("\\[Step 2/6\\].*Running limpa pre-quantification", msgs)))
-  expect_true(any(grepl("\\[Step 2/6\\].*limpa quantification completed", msgs)))
-  expect_true(any(grepl("\\[Step 3/6\\].*Performing normalizations", msgs)))
-  expect_true(any(grepl("\\[Step 4/6\\].*Skipped evaluation measures", msgs)))
-  expect_true(any(grepl("\\[Step 6/6\\].*Skipped plot generation", msgs)))
+  expect_null(captured$error)
+  expect_null(captured$value)
+  nd_expect_messages(
+    captured$messages,
+    c(
+      "\\[Step 1/6\\].*Load data",
+      "\\[Step 2/6\\].*Running limpa pre-quantification",
+      "\\[Step 2/6\\].*limpa quantification completed",
+      "\\[Step 3/6\\].*Performing normalizations",
+      "\\[Step 4/6\\].*Skipped evaluation measures",
+      "\\[Step 6/6\\].*Skipped plot generation"
+    )
+  )
 })
 
 test_that("normalyzer preQuant='limpa' reports when unique protein IDs skip summarization", {
   testthat::skip_if_not_installed("limpa")
 
-  set.seed(1)
-  mat <- matrix(stats::rnorm(12 * 4, mean = 10, sd = 1), nrow = 12)
-  colnames(mat) <- paste0("s", seq_len(ncol(mat)))
-  mat[sample.int(length(mat), 6)] <- NA_real_
-
-  se <- nd_make_summarized_experiment(
-    assay = mat,
-    groups = c("A", "A", "B", "B"),
-    row_data = data.frame(
-      `Protein.Group` = paste0("P", seq_len(nrow(mat))),
-      check.names = FALSE
-    )
+  fixture <- nd_make_limpa_prequant_fixture(
+    n_features = 12L,
+    missing_count = 6L
   )
 
   outDir <- withr::local_tempdir(pattern = "prequant_unique_protein_ids_")
   jobName <- "prequant_unique_protein_ids"
 
-  msgs <- character()
-  out <- withCallingHandlers(
-    suppressWarnings(normalyzer(
-      jobName = jobName,
-      experimentObj = se,
-      outputDir = outDir,
-      preQuant = "limpa",
-      limpaOptions = limpaOptions(
+  captured <- nd_capture_conditions(
+    nd_run_prequant_limpa(
+      se = fixture$se,
+      out_dir = outDir,
+      job_name = jobName,
+      quiet = FALSE,
+      limpa_options = limpaOptions(
         proteinIdCol = "Protein.Group",
         quantArgs = list(chunk = 10L, verbose = FALSE)
-      ),
-      noLogTransform = TRUE,
-      normalizeRetentionTime = FALSE,
-      skipAnalysis = TRUE,
-      quiet = FALSE,
-      sampleAbundThres = 1,
-      requireReplicates = FALSE
-    )),
-    message = function(m) {
-      msgs <<- c(msgs, conditionMessage(m))
-      invokeRestart("muffleMessage")
-    }
+      )
+    )
   )
 
-  expect_null(out)
-  expect_true(any(grepl("contains no duplicated identifiers", msgs)))
+  expect_null(captured$error)
+  expect_null(captured$value)
+  nd_expect_messages(
+    captured$messages,
+    "contains no duplicated identifiers"
+  )
 
   rdsPath <- file.path(
     outDir,
@@ -264,54 +160,43 @@ test_that("normalyzer preQuant='limpa' reports when unique protein IDs skip summ
     paste0(jobName, "_limpa_quantified.rds")
   )
   y <- readRDS(rdsPath)
-  expect_equal(nrow(y$E), sum(rowSums(!is.na(mat)) > 0))
+  expect_equal(nrow(y$E), sum(rowSums(!is.na(fixture$mat)) > 0))
 })
 
 test_that("normalyzer preQuant='limpa' informs when supplied dpc overrides dpcMethod", {
   testthat::skip_if_not_installed("limpa")
 
-  set.seed(1)
-  mat <- matrix(stats::rnorm(12 * 4, mean = 10, sd = 1), nrow = 12)
-  colnames(mat) <- paste0("s", seq_len(ncol(mat)))
-  mat[sample.int(length(mat), 6)] <- NA_real_
-
-  se <- nd_make_summarized_experiment(
-    assay = mat,
-    groups = c("A", "A", "B", "B"),
-    row_data = data.frame(`Protein.Group` = paste0("P", seq_len(nrow(mat))))
+  fixture <- nd_make_limpa_prequant_fixture(
+    n_features = 12L,
+    missing_count = 6L
   )
 
   outDir <- withr::local_tempdir(pattern = "prequant_dpc_override_")
 
-  msgs <- character()
-  out <- withCallingHandlers(
-    suppressWarnings(normalyzer(
-      jobName = "prequant_dpc_override",
-      experimentObj = se,
-      outputDir = outDir,
-      preQuant = "limpa",
-      limpaOptions = limpaOptions(
+  captured <- nd_capture_conditions(
+    nd_run_prequant_limpa(
+      se = fixture$se,
+      out_dir = outDir,
+      job_name = "prequant_dpc_override",
+      quiet = FALSE,
+      limpa_options = limpaOptions(
         byRow = TRUE,
         dpc = c(0, 1),
         dpcMethod = "dpc",
         quantArgs = list(chunk = 10L, verbose = TRUE)
-      ),
-      noLogTransform = TRUE,
-      normalizeRetentionTime = FALSE,
-      skipAnalysis = TRUE,
-      quiet = FALSE,
-      sampleAbundThres = 1,
-      requireReplicates = FALSE
-    )),
-    message = function(m) {
-      msgs <<- c(msgs, conditionMessage(m))
-      invokeRestart("muffleMessage")
-    }
+      )
+    )
   )
 
-  expect_null(out)
-  expect_true(any(grepl("ignoring .*dpcMethod", msgs)))
-  expect_true(any(grepl("Saved quantified EList", msgs)))
+  expect_null(captured$error)
+  expect_null(captured$value)
+  nd_expect_messages(
+    captured$messages,
+    c(
+      "ignoring .*dpcMethod",
+      "Saved quantified EList"
+    )
+  )
 })
 
 test_that("calculateContrasts can reuse quantified EList from limpaOptions(quantifiedRds)", {
@@ -404,12 +289,42 @@ test_that("calculateContrasts errors when quantifiedRds rows cannot be matched s
 
   raw <- matrix(
     c(
-      10, NA, NA, 10, NA, NA,
-      10, 10, 10, 11, 11, 11,
-      9, 9, NA, 9, 9, NA,
-      NA, NA, NA, 8, 8, 8,
-      7, 7, 7, 7, 7, 7,
-      6, 6, 6, 6, 6, 6
+      10,
+      NA,
+      NA,
+      10,
+      NA,
+      NA,
+      10,
+      10,
+      10,
+      11,
+      11,
+      11,
+      9,
+      9,
+      NA,
+      9,
+      9,
+      NA,
+      NA,
+      NA,
+      NA,
+      8,
+      8,
+      8,
+      7,
+      7,
+      7,
+      7,
+      7,
+      7,
+      6,
+      6,
+      6,
+      6,
+      6,
+      6
     ),
     nrow = 6,
     byrow = TRUE,

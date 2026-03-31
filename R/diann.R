@@ -32,7 +32,7 @@ diannResolveMinPositive <- function(diannMinPositive) {
     return(0)
   }
 
-  diannMinPositive <- as.numeric(diannMinPositive)[1]
+  diannMinPositive <- suppressWarnings(as.numeric(diannMinPositive))[1]
   if (is.na(diannMinPositive) || diannMinPositive < 0) {
     cli::cli_abort(
       "{.arg diannMinPositive} must be a single non-negative numeric value.",
@@ -440,7 +440,7 @@ diannInputOptions <- function(
   }
   qCutoffs <- diannValidateQCutoffs(qCutoffs)
 
-  minPositive <- as.numeric(minPositive)[1]
+  minPositive <- suppressWarnings(as.numeric(minPositive))[1]
   if (is.na(minPositive) || minPositive < 0) {
     cli::cli_abort(
       "{.arg minPositive} must be a single non-negative numeric value.",
@@ -894,8 +894,12 @@ diannReadReportTSV <- function(filePath, sep = "\t", selectCols) {
   }
 }
 
-diannReadReportParquet <- function(filePath, selectCols) {
-  if (!requireNamespace("arrow", quietly = TRUE)) {
+diannReadReportParquet <- function(
+  filePath,
+  selectCols,
+  require_namespace = requireNamespace
+) {
+  if (!require_namespace("arrow", quietly = TRUE)) {
     cli::cli_abort(
       c(
         "Reading DIA-NN parquet files requires the optional {.pkg arrow} package.",

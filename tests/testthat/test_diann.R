@@ -363,6 +363,18 @@ test_that("DIANN level option selects precursor vs protein", {
   expect_equal(as.numeric(precMat[pep2, "S2"]), 30)
 })
 
+test_that("diannReadReportParquet errors when arrow is unavailable", {
+  expect_error(
+    NormalyzerDE:::diannReadReportParquet(
+      "dummy.parquet",
+      selectCols = c("Run", "Protein.Group"),
+      require_namespace = function(...) FALSE
+    ),
+    regexp = "requires the optional .*arrow",
+    class = "normalyzerde_error"
+  )
+})
+
 test_that("setupRawContrastObject reads DIANN report.parquet", {
   testthat::skip_if_not_installed("arrow")
 

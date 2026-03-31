@@ -1,5 +1,8 @@
-requireLimpaPackageInternal <- function(context = "type='limpa'") {
-  if (!requireNamespace("limpa", quietly = TRUE)) {
+requireLimpaPackageInternal <- function(
+  context = "type='limpa'",
+  require_namespace = requireNamespace
+) {
+  if (!require_namespace("limpa", quietly = TRUE)) {
     cli::cli_abort(
       c(
         "NormalyzerDE requires the Bioconductor package {.pkg limpa}, but it is not available for {context}.",
@@ -186,7 +189,11 @@ normalizeLimpaOptionsInput <- function(limpaOptions) {
   if (length(limpaOptions) == 0) {
     return(buildLimpaOptionsInternal())
   }
-  if (is.null(names(limpaOptions)) || anyNA(names(limpaOptions)) || any(names(limpaOptions) == "")) {
+  if (
+    is.null(names(limpaOptions)) ||
+      anyNA(names(limpaOptions)) ||
+      any(names(limpaOptions) == "")
+  ) {
     cli::cli_abort(
       "{.arg limpaOptions} must be a named list.",
       class = "normalyzerde_error",

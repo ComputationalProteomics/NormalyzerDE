@@ -40,7 +40,10 @@ test_that("loadData supports Proteios input format", {
 })
 
 test_that("loadData errors for unknown input formats", {
-  expect_error(loadData("dummy", inputFormat = "bad"), class = "normalyzerde_error")
+  expect_error(
+    loadData("dummy", inputFormat = "bad"),
+    class = "normalyzerde_error"
+  )
 })
 
 test_that("loadDesign errors when sample/group columns are missing", {
@@ -132,7 +135,10 @@ test_that("setupRawDataObject follows design order and treats non-design columns
   assayMat <- SummarizedExperiment::assay(se)
   expect_equal(colnames(assayMat), c("s1", "s2"))
   expect_equal(unname(as.numeric(assayMat[1, ])), c(10, 20))
-  expect_true(all(c("feature", "note", "extra") %in% colnames(SummarizedExperiment::rowData(se))))
+  expect_true(all(
+    c("feature", "note", "extra") %in%
+      colnames(SummarizedExperiment::rowData(se))
+  ))
 })
 
 test_that("setupRawContrastObject follows design order for user-supplied matrices", {
@@ -167,7 +173,10 @@ test_that("setupRawContrastObject follows design order for user-supplied matrice
   assayMat <- SummarizedExperiment::assay(se)
   expect_equal(colnames(assayMat), c("s1", "s2"))
   expect_equal(unname(as.numeric(assayMat[1, ])), c(10, 20))
-  expect_true(all(c("feature", "note", "extra") %in% colnames(SummarizedExperiment::rowData(se))))
+  expect_true(all(
+    c("feature", "note", "extra") %in%
+      colnames(SummarizedExperiment::rowData(se))
+  ))
 })
 
 test_that("setupRawContrastObject ignores blank Excel-export design columns", {
@@ -330,40 +339,37 @@ test_that("verifyDesignMatrix errors for missing/mismatched/duplicate samples", 
     check.names = FALSE
   )
 
-  expect_error(
-    NormalyzerDE:::verifyDesignMatrix(
-      full,
-      data.frame(group = c("A", "B"), stringsAsFactors = FALSE),
-      sampleCol = "sample"
-    ),
-    class = "normalyzerde_error"
-  )
-
-  expect_error(
-    NormalyzerDE:::verifyDesignMatrix(
-      full,
-      data.frame(
-        sample = c("S1", "S3"),
-        group = c("A", "B"),
-        stringsAsFactors = FALSE
-      ),
-      sampleCol = "sample"
-    ),
-    class = "normalyzerde_error"
-  )
-
-  expect_error(
-    NormalyzerDE:::verifyDesignMatrix(
-      full,
-      data.frame(
-        sample = c("S1", "S1"),
-        group = c("A", "B"),
-        stringsAsFactors = FALSE
-      ),
-      sampleCol = "sample"
-    ),
-    class = "normalyzerde_error"
-  )
+  nd_expect_error_cases(list(
+    "missing sample column" = function() {
+      NormalyzerDE:::verifyDesignMatrix(
+        full,
+        data.frame(group = c("A", "B"), stringsAsFactors = FALSE),
+        sampleCol = "sample"
+      )
+    },
+    "mismatched sample ids" = function() {
+      NormalyzerDE:::verifyDesignMatrix(
+        full,
+        data.frame(
+          sample = c("S1", "S3"),
+          group = c("A", "B"),
+          stringsAsFactors = FALSE
+        ),
+        sampleCol = "sample"
+      )
+    },
+    "duplicate sample ids" = function() {
+      NormalyzerDE:::verifyDesignMatrix(
+        full,
+        data.frame(
+          sample = c("S1", "S1"),
+          group = c("A", "B"),
+          stringsAsFactors = FALSE
+        ),
+        sampleCol = "sample"
+      )
+    }
+  ))
 })
 
 test_that("preprocessData replaces 0/empty/null and emits messages", {
@@ -382,7 +388,10 @@ test_that("preprocessData replaces 0/empty/null and emits messages", {
 
 test_that("loadRawDataFromFile errors for missing file and for parse warnings", {
   expect_error(
-    NormalyzerDE:::loadRawDataFromFile(file.path(tempdir(), "no_such_file.tsv")),
+    NormalyzerDE:::loadRawDataFromFile(file.path(
+      tempdir(),
+      "no_such_file.tsv"
+    )),
     class = "normalyzerde_error"
   )
 
@@ -407,9 +416,12 @@ test_that("filterOnlyNARows drops fully missing features and preserves alignment
   se <- SummarizedExperiment::SummarizedExperiment(
     assay = matrix(
       c(
-        1, 2,
-        NA, NA,
-        3, 4
+        1,
+        2,
+        NA,
+        NA,
+        3,
+        4
       ),
       nrow = 3,
       byrow = TRUE,
@@ -440,8 +452,14 @@ test_that("filterOnlyNARows drops fully missing features and preserves alignment
 
   expect_equal(nrow(out), 2)
   expect_equal(rownames(SummarizedExperiment::assay(out)), c("keep1", "keep2"))
-  expect_equal(as.character(SummarizedExperiment::rowData(out)$feature), c("keep1", "keep2"))
-  expect_equal(as.character(SummarizedExperiment::rowData(out)$label), c("A", "C"))
+  expect_equal(
+    as.character(SummarizedExperiment::rowData(out)$feature),
+    c("keep1", "keep2")
+  )
+  expect_equal(
+    as.character(SummarizedExperiment::rowData(out)$label),
+    c("A", "C")
+  )
   expect_true(any(grepl("entries with only NA values omitted", msgs)))
 })
 
@@ -512,8 +530,12 @@ test_that("verifyMultipleSamplesPresent errors/warns/messages appropriately", {
 test_that("getVerifiedNormalyzerObject re-checks groups after omitting low-count samples", {
   mat <- matrix(
     c(
-      NA, 10, 11,
-      NA, 12, 13
+      NA,
+      10,
+      11,
+      NA,
+      12,
+      13
     ),
     nrow = 2,
     byrow = TRUE,
@@ -551,6 +573,9 @@ test_that("getVerifiedNormalyzerObject re-checks groups after omitting low-count
 
   expect_equal(as.character(designMatrix(nds)$sample), c("s2", "s3"))
   expect_equal(colnames(filterrawdata(nds)), c("s2", "s3"))
-  expect_true(any(grepl("Less than two distinct sample groups found", warnings)))
+  expect_true(any(grepl(
+    "Less than two distinct sample groups found",
+    warnings
+  )))
   expect_false(any(grepl("Some group conditions have no replicates", warnings)))
 })

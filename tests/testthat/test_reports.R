@@ -273,8 +273,12 @@ test_that("plotContrastPCA handles sparse or degenerate input gracefully", {
 
   sparse_mat <- matrix(
     c(
-      1, NA, 2,
-      NA, 3, NA
+      1,
+      NA,
+      2,
+      NA,
+      3,
+      NA
     ),
     nrow = 2,
     byrow = TRUE,
@@ -288,21 +292,27 @@ test_that("plotContrastPCA handles sparse or degenerate input gracefully", {
   comparisons(sparse_nst) <- "A-B"
   condCol(sparse_nst) <- c("A", "B", "B")
 
-  sparse_pdf <- withr::local_tempfile(pattern = "contrast_pca_sparse_", fileext = ".pdf")
-  grDevices::pdf(sparse_pdf)
-  expect_silent(
-    NormalyzerDE:::plotContrastPCA(
-      sparse_nst,
-      jobName = "sparse_pca",
-      currentLayout = make_layout(),
-      pageno = 1
+  sparse_pdf <- withr::local_tempfile(
+    pattern = "contrast_pca_sparse_",
+    fileext = ".pdf"
+  )
+  nd_with_pdf(
+    sparse_pdf,
+    expect_silent(
+      NormalyzerDE:::plotContrastPCA(
+        sparse_nst,
+        jobName = "sparse_pca",
+        currentLayout = make_layout(),
+        pageno = 1
+      )
     )
   )
-  grDevices::dev.off()
 
   onepc_mat <- matrix(
     c(
-      1, 2, 3
+      1,
+      2,
+      3
     ),
     nrow = 1,
     dimnames = list("f1", c("s1", "s2", "s3"))
@@ -315,15 +325,19 @@ test_that("plotContrastPCA handles sparse or degenerate input gracefully", {
   comparisons(onepc_nst) <- "A-B"
   condCol(onepc_nst) <- c("A", "B", "B")
 
-  onepc_pdf <- withr::local_tempfile(pattern = "contrast_pca_onepc_", fileext = ".pdf")
-  grDevices::pdf(onepc_pdf)
-  expect_silent(
-    NormalyzerDE:::plotContrastPCA(
-      onepc_nst,
-      jobName = "onepc_pca",
-      currentLayout = make_layout(),
-      pageno = 1
+  onepc_pdf <- withr::local_tempfile(
+    pattern = "contrast_pca_onepc_",
+    fileext = ".pdf"
+  )
+  nd_with_pdf(
+    onepc_pdf,
+    expect_silent(
+      NormalyzerDE:::plotContrastPCA(
+        onepc_nst,
+        jobName = "onepc_pca",
+        currentLayout = make_layout(),
+        pageno = 1
+      )
     )
   )
-  grDevices::dev.off()
 })

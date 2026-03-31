@@ -13,62 +13,54 @@ test_that("limpaOptions and normalizeLimpaOptionsInput validate structure", {
   expect_equal(opts$keep, "elist")
 
   expect_error(limpaOptions(unknown = TRUE), "unused argument")
-  expect_error(
-    NormalyzerDE:::normalizeLimpaOptionsInput("bad"),
-    class = "normalyzerde_error"
-  )
-  expect_error(
-    NormalyzerDE:::normalizeLimpaOptionsInput(list(TRUE)),
-    class = "normalyzerde_error"
-  )
-  expect_error(
-    NormalyzerDE:::normalizeLimpaOptionsInput(list(unknown = TRUE)),
-    class = "normalyzerde_error"
-  )
+  nd_expect_error_cases(list(
+    "non-list options" = function() {
+      NormalyzerDE:::normalizeLimpaOptionsInput("bad")
+    },
+    "unnamed list options" = function() {
+      NormalyzerDE:::normalizeLimpaOptionsInput(list(TRUE))
+    },
+    "unknown list field" = function() {
+      NormalyzerDE:::normalizeLimpaOptionsInput(list(unknown = TRUE))
+    }
+  ))
 
   empty_opts <- NormalyzerDE:::normalizeLimpaOptionsInput(list())
   expect_s3_class(empty_opts, "normalyzerde_limpa_options")
 })
 
 test_that("limpa option builders validate scalar inputs", {
-  expect_error(
-    NormalyzerDE:::buildLimpaOptionsInternal(proteinIdCol = ""),
-    class = "normalyzerde_error"
-  )
-  expect_error(
-    NormalyzerDE:::buildLimpaOptionsInternal(byRow = NA),
-    class = "normalyzerde_error"
-  )
-  expect_error(
-    NormalyzerDE:::buildLimpaOptionsInternal(quantifiedRds = ""),
-    class = "normalyzerde_error"
-  )
+  nd_expect_error_cases(list(
+    "blank proteinIdCol" = function() {
+      NormalyzerDE:::buildLimpaOptionsInternal(proteinIdCol = "")
+    },
+    "missing byRow logical" = function() {
+      NormalyzerDE:::buildLimpaOptionsInternal(byRow = NA)
+    },
+    "blank quantifiedRds path" = function() {
+      NormalyzerDE:::buildLimpaOptionsInternal(quantifiedRds = "")
+    }
+  ))
 })
 
 test_that("limpa arg sanitizers require named lists and drop forbidden args", {
   expect_equal(NormalyzerDE:::sanitizeLimpaDpcArgs(NULL), list())
-  expect_error(
-    NormalyzerDE:::sanitizeLimpaDpcArgs(1),
-    class = "normalyzerde_error"
-  )
-  expect_error(
-    NormalyzerDE:::sanitizeLimpaDpcArgs(list(1)),
-    class = "normalyzerde_error"
-  )
+  nd_expect_error_cases(list(
+    "non-list dpc args" = function() NormalyzerDE:::sanitizeLimpaDpcArgs(1),
+    "unnamed dpc args" = function() NormalyzerDE:::sanitizeLimpaDpcArgs(list(1))
+  ))
   expect_equal(
     NormalyzerDE:::sanitizeLimpaDpcArgs(list(y = 1, keep = "x")),
     list(keep = "x")
   )
 
   expect_equal(NormalyzerDE:::sanitizeLimpaQuantArgs(NULL), list())
-  expect_error(
-    NormalyzerDE:::sanitizeLimpaQuantArgs(1),
-    class = "normalyzerde_error"
-  )
-  expect_error(
-    NormalyzerDE:::sanitizeLimpaQuantArgs(list(1)),
-    class = "normalyzerde_error"
-  )
+  nd_expect_error_cases(list(
+    "non-list quant args" = function() NormalyzerDE:::sanitizeLimpaQuantArgs(1),
+    "unnamed quant args" = function() {
+      NormalyzerDE:::sanitizeLimpaQuantArgs(list(1))
+    }
+  ))
   expect_equal(
     NormalyzerDE:::sanitizeLimpaQuantArgs(
       list(y = 1, protein.id = "p", dpc = c(0, 1), chunk = 10L)
@@ -77,14 +69,10 @@ test_that("limpa arg sanitizers require named lists and drop forbidden args", {
   )
 
   expect_equal(NormalyzerDE:::sanitizeLimpaDEArgs(NULL), list())
-  expect_error(
-    NormalyzerDE:::sanitizeLimpaDEArgs(1),
-    class = "normalyzerde_error"
-  )
-  expect_error(
-    NormalyzerDE:::sanitizeLimpaDEArgs(list(1)),
-    class = "normalyzerde_error"
-  )
+  nd_expect_error_cases(list(
+    "non-list DE args" = function() NormalyzerDE:::sanitizeLimpaDEArgs(1),
+    "unnamed DE args" = function() NormalyzerDE:::sanitizeLimpaDEArgs(list(1))
+  ))
   expect_equal(
     NormalyzerDE:::sanitizeLimpaDEArgs(
       list(y = 1, design = "x", plot = TRUE, robust = TRUE)
@@ -99,18 +87,17 @@ test_that("limpa quant and DE defaults are applied and validated", {
   expect_equal(quant_defaults[["chunk"]], 1000L)
   expect_false(quant_defaults[["verbose"]])
 
-  expect_error(
-    NormalyzerDE:::applyLimpaQuantDefaultsAndValidate(list("dpc.slope" = 0)),
-    class = "normalyzerde_error"
-  )
-  expect_error(
-    NormalyzerDE:::applyLimpaQuantDefaultsAndValidate(list(chunk = 0L)),
-    class = "normalyzerde_error"
-  )
-  expect_error(
-    NormalyzerDE:::applyLimpaQuantDefaultsAndValidate(list(verbose = NA)),
-    class = "normalyzerde_error"
-  )
+  nd_expect_error_cases(list(
+    "non-positive dpc slope" = function() {
+      NormalyzerDE:::applyLimpaQuantDefaultsAndValidate(list("dpc.slope" = 0))
+    },
+    "non-positive chunk" = function() {
+      NormalyzerDE:::applyLimpaQuantDefaultsAndValidate(list(chunk = 0L))
+    },
+    "missing verbose flag" = function() {
+      NormalyzerDE:::applyLimpaQuantDefaultsAndValidate(list(verbose = NA))
+    }
+  ))
 
   de_defaults <- NormalyzerDE:::applyLimpaDEDefaultsAndValidate(list())
   expect_false(de_defaults[["sample.weights"]])
@@ -188,7 +175,10 @@ test_that("limpa sample weight helpers collect stored and derived weights", {
   expect_equal(stored$sample, c("s1", "s2"))
   expect_equal(stored$sampleWeight, c(0.5, 0.8))
 
-  filtered <- NormalyzerDE:::collectLimpaSampleWeights(nst, comparison = "missing")
+  filtered <- NormalyzerDE:::collectLimpaSampleWeights(
+    nst,
+    comparison = "missing"
+  )
   expect_s3_class(filtered, "data.frame")
   expect_equal(nrow(filtered), 0)
 
@@ -198,7 +188,9 @@ test_that("limpa sample weight helpers collect stored and derived weights", {
       row.names = c("s1", "s2"),
       check.names = FALSE
     ),
-    EList = list(E = matrix(c(1, 2), nrow = 1, dimnames = list(NULL, c("s1", "s2"))))
+    EList = list(
+      E = matrix(c(1, 2), nrow = 1, dimnames = list(NULL, c("s1", "s2")))
+    )
   )
 
   backendData(nst) <- list(

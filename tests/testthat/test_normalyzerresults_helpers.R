@@ -3,11 +3,26 @@ context("NormalyzerResults helpers")
 nd_make_results_dataset <- function(include_rt = FALSE, tiny_run_thres = 50) {
   raw <- matrix(
     c(
-      10, 11, 12, 13,
-      11, 12, 13, 14,
-      12, 13, 14, 15,
-      13, 14, 15, 16,
-      14, 15, 16, 17
+      10,
+      11,
+      12,
+      13,
+      11,
+      12,
+      13,
+      14,
+      12,
+      13,
+      14,
+      15,
+      13,
+      14,
+      15,
+      16,
+      14,
+      15,
+      16,
+      17
     ),
     nrow = 5,
     byrow = TRUE
@@ -52,7 +67,7 @@ test_that("NormalyzerResults constructor and nds setter round-trip", {
   expect_identical(nds(nr), nds_b)
 })
 
-test_that("performNormalizations reports skipped VSN and RT warnings for tiny runs", {
+test_that("performNormalizations skips VSN for tiny runs", {
   nr <- NormalyzerResults(nd_make_results_dataset(include_rt = FALSE))
 
   out <- expect_no_error(
@@ -65,8 +80,11 @@ test_that("performNormalizations reports skipped VSN and RT warnings for tiny ru
   expect_false("VSN" %in% names(normalizations(out)))
 })
 
-test_that("performNormalizations reports log-scale and missing-RT skips", {
-  nr <- NormalyzerResults(nd_make_results_dataset(include_rt = FALSE, tiny_run_thres = 1))
+test_that("performNormalizations skips VSN on no-log workflows without RT normalization", {
+  nr <- NormalyzerResults(nd_make_results_dataset(
+    include_rt = FALSE,
+    tiny_run_thres = 1
+  ))
 
   out <- expect_no_error(
     suppressMessages(suppressWarnings(
@@ -80,12 +98,18 @@ test_that("performNormalizations reports log-scale and missing-RT skips", {
     ))
   )
 
-  expect_true(all(c("GI", "median", "mean", "Quantile", "CycLoess", "RLR") %in% names(normalizations(out))))
+  expect_true(all(
+    c("GI", "median", "mean", "Quantile", "CycLoess", "RLR") %in%
+      names(normalizations(out))
+  ))
   expect_false("VSN" %in% names(normalizations(out)))
 })
 
 test_that("performNormalizations skips RT-VSN for log-scale RT workflows", {
-  nr <- NormalyzerResults(nd_make_results_dataset(include_rt = TRUE, tiny_run_thres = 1))
+  nr <- NormalyzerResults(nd_make_results_dataset(
+    include_rt = TRUE,
+    tiny_run_thres = 1
+  ))
 
   out <- expect_no_error(
     suppressMessages(suppressWarnings(
@@ -99,6 +123,8 @@ test_that("performNormalizations skips RT-VSN for log-scale RT workflows", {
     ))
   )
 
-  expect_true(all(c("RT-median", "RT-mean", "RT-Loess") %in% names(normalizations(out))))
+  expect_true(all(
+    c("RT-median", "RT-mean", "RT-Loess") %in% names(normalizations(out))
+  ))
   expect_false("RT-VSN" %in% names(normalizations(out)))
 })

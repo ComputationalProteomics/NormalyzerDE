@@ -22,120 +22,92 @@ test_that("diannInputOptions returns a validated inputOptions list", {
 
 test_that("diannInputOptions validates arguments and blocks typos", {
   expect_error(diannInputOptions(level = "bad"))
-  expect_error(diannInputOptions(sep = ""), class = "normalyzerde_error")
-  expect_error(
-    diannInputOptions(minPositive = -1),
-    class = "normalyzerde_error"
+  nd_expect_error_cases(list(
+    "empty sep" = function() diannInputOptions(sep = ""),
+    "negative minPositive" = function() diannInputOptions(minPositive = -1),
+    "invalid rt list" = function() diannInputOptions(rt = list(column = "RT")),
+    "unknown qCutoff typo" = function() diannInputOptions(qCutoff = 0.01)
+  ))
+
+  expect_no_warning(
+    expect_error(
+      diannInputOptions(minPositive = "bad"),
+      class = "normalyzerde_error"
+    )
   )
-  expect_error(
-    diannInputOptions(rt = list(column = "RT")),
-    class = "normalyzerde_error"
-  )
-  expect_error(diannInputOptions(qCutoff = 0.01), class = "normalyzerde_error")
 })
 
 test_that("diannInputOptions validates edge cases for columns/filters/rt", {
-  expect_error(
-    diannInputOptions(sampleCol = c("Run", "File.Name")),
-    class = "normalyzerde_error"
-  )
-  expect_error(
-    diannInputOptions(extraCols = c("Protein.Group", "")),
-    class = "normalyzerde_error"
-  )
-  expect_error(diannInputOptions(decoy = NA), class = "normalyzerde_error")
-  expect_error(diannInputOptions(qEnable = NA), class = "normalyzerde_error")
-  expect_error(
-    diannInputOptions(qCols = c("Q.Value", "")),
-    class = "normalyzerde_error"
-  )
-  expect_error(
-    diannInputOptions(qCutoffs = "0.01"),
-    class = "normalyzerde_error"
-  )
-  expect_error(
-    diannInputOptions(qCutoffs = c(0.01, NA_real_)),
-    class = "normalyzerde_error"
-  )
-  expect_error(
-    diannInputOptions(qCutoffs = -0.01),
-    class = "normalyzerde_error"
-  )
-  expect_error(
-    diannInputOptions(qCutoffs = 1.01),
-    class = "normalyzerde_error"
-  )
-
-  expect_error(
-    diannInputOptions(rt = c(TRUE, FALSE)),
-    class = "normalyzerde_error"
-  )
-  expect_error(
-    diannInputOptions(rt = list(col = "")),
-    class = "normalyzerde_error"
-  )
-  expect_error(diannInputOptions(rt = 1), class = "normalyzerde_error")
+  nd_expect_error_cases(list(
+    "multiple sample columns" = function() {
+      diannInputOptions(sampleCol = c("Run", "File.Name"))
+    },
+    "blank extra column" = function() {
+      diannInputOptions(extraCols = c("Protein.Group", ""))
+    },
+    "missing decoy logical" = function() diannInputOptions(decoy = NA),
+    "missing qEnable logical" = function() diannInputOptions(qEnable = NA),
+    "blank q column" = function() diannInputOptions(qCols = c("Q.Value", "")),
+    "character qCutoffs" = function() diannInputOptions(qCutoffs = "0.01"),
+    "NA qCutoffs" = function() diannInputOptions(qCutoffs = c(0.01, NA_real_)),
+    "negative qCutoffs" = function() diannInputOptions(qCutoffs = -0.01),
+    "qCutoffs above one" = function() diannInputOptions(qCutoffs = 1.01),
+    "vector rt logical" = function() diannInputOptions(rt = c(TRUE, FALSE)),
+    "blank rt column" = function() diannInputOptions(rt = list(col = "")),
+    "numeric rt" = function() diannInputOptions(rt = 1)
+  ))
 })
 
 test_that("diannNormalizeInputOptions validates nested list structure", {
-  expect_error(
-    NormalyzerDE:::diannNormalizeInputOptions("not_a_list"),
-    class = "normalyzerde_error"
-  )
-
-  expect_error(
-    NormalyzerDE:::diannNormalizeInputOptions(list(columns = "oops")),
-    class = "normalyzerde_error"
-  )
-
-  expect_error(
-    NormalyzerDE:::diannNormalizeInputOptions(list(filters = "oops")),
-    class = "normalyzerde_error"
-  )
-
-  expect_error(
-    NormalyzerDE:::diannNormalizeInputOptions(list(filters = list(q = 1))),
-    class = "normalyzerde_error"
-  )
-  expect_error(
-    NormalyzerDE:::diannNormalizeInputOptions(
-      list(filters = list(decoy = "yes"))
-    ),
-    class = "normalyzerde_error"
-  )
-  expect_error(
-    NormalyzerDE:::diannNormalizeInputOptions(
-      list(filters = list(q = list(enable = "yes")))
-    ),
-    class = "normalyzerde_error"
-  )
-  expect_error(
-    NormalyzerDE:::diannNormalizeInputOptions(
-      list(filters = list(q = list(cols = c("Q.Value", ""))))
-    ),
-    class = "normalyzerde_error"
-  )
-  expect_error(
-    NormalyzerDE:::diannNormalizeInputOptions(
-      list(filters = list(q = list(cutoffs = c(0.01, NA_real_))))
-    ),
-    class = "normalyzerde_error"
-  )
-  expect_error(
-    NormalyzerDE:::diannNormalizeInputOptions(
-      list(filters = list(q = list(cutoffs = -0.01)))
-    ),
-    class = "normalyzerde_error"
-  )
-
-  expect_error(
-    NormalyzerDE:::diannNormalizeInputOptions(list(rt = 1)),
-    class = "normalyzerde_error"
-  )
+  nd_expect_error_cases(list(
+    "non-list input" = function() {
+      NormalyzerDE:::diannNormalizeInputOptions("not_a_list")
+    },
+    "non-list columns branch" = function() {
+      NormalyzerDE:::diannNormalizeInputOptions(list(columns = "oops"))
+    },
+    "non-list filters branch" = function() {
+      NormalyzerDE:::diannNormalizeInputOptions(list(filters = "oops"))
+    },
+    "non-list q filter" = function() {
+      NormalyzerDE:::diannNormalizeInputOptions(list(filters = list(q = 1)))
+    },
+    "non-logical decoy filter" = function() {
+      NormalyzerDE:::diannNormalizeInputOptions(list(
+        filters = list(decoy = "yes")
+      ))
+    },
+    "non-logical q enable" = function() {
+      NormalyzerDE:::diannNormalizeInputOptions(
+        list(filters = list(q = list(enable = "yes")))
+      )
+    },
+    "blank q column" = function() {
+      NormalyzerDE:::diannNormalizeInputOptions(
+        list(filters = list(q = list(cols = c("Q.Value", ""))))
+      )
+    },
+    "NA q cutoff" = function() {
+      NormalyzerDE:::diannNormalizeInputOptions(
+        list(filters = list(q = list(cutoffs = c(0.01, NA_real_))))
+      )
+    },
+    "negative q cutoff" = function() {
+      NormalyzerDE:::diannNormalizeInputOptions(
+        list(filters = list(q = list(cutoffs = -0.01)))
+      )
+    },
+    "numeric rt branch" = function() {
+      NormalyzerDE:::diannNormalizeInputOptions(list(rt = 1))
+    }
+  ))
 })
 
 test_that("diann helper functions normalize option branches and file headers", {
-  headerPath <- withr::local_tempfile(pattern = "diann_header_", fileext = ".tsv")
+  headerPath <- withr::local_tempfile(
+    pattern = "diann_header_",
+    fileext = ".tsv"
+  )
   writeLines("Run\tQ.Value\tRT", headerPath)
   expect_equal(
     NormalyzerDE:::diannReadHeader(headerPath),
@@ -150,11 +122,17 @@ test_that("diann helper functions normalize option branches and file headers", {
   )
 
   expect_equal(
-    NormalyzerDE:::diannSelectFirstPresent(c("Missing", "Q.Value"), c("Run", "Q.Value")),
+    NormalyzerDE:::diannSelectFirstPresent(
+      c("Missing", "Q.Value"),
+      c("Run", "Q.Value")
+    ),
     "Q.Value"
   )
   expect_null(
-    NormalyzerDE:::diannSelectFirstPresent(c("Missing", "Absent"), c("Run", "Q.Value"))
+    NormalyzerDE:::diannSelectFirstPresent(
+      c("Missing", "Absent"),
+      c("Run", "Q.Value")
+    )
   )
 
   expect_equal(NormalyzerDE:::diannResolveMinPositive(NULL), 0)
@@ -163,9 +141,11 @@ test_that("diann helper functions normalize option branches and file headers", {
     NormalyzerDE:::diannResolveMinPositive(-1),
     class = "normalyzerde_error"
   )
-  expect_error(
-    NormalyzerDE:::diannResolveMinPositive("bad"),
-    class = "normalyzerde_error"
+  expect_no_warning(
+    expect_error(
+      NormalyzerDE:::diannResolveMinPositive("bad"),
+      class = "normalyzerde_error"
+    )
   )
 
   expect_null(NormalyzerDE:::diannValidateQCutoffs(NULL))
@@ -198,17 +178,25 @@ test_that("diann helper functions normalize option branches and file headers", {
   )
   expect_equal(opts_list$rtCol, "Aligned.RT")
 
-  opts_list_default <- NormalyzerDE:::diannNormalizeInputOptions(list(rt = list()))
+  opts_list_default <- NormalyzerDE:::diannNormalizeInputOptions(list(
+    rt = list()
+  ))
   expect_equal(opts_list_default$rtCol, "RT")
 
-  opts_true_default <- NormalyzerDE:::diannNormalizeInputOptions(list(rt = TRUE))
+  opts_true_default <- NormalyzerDE:::diannNormalizeInputOptions(list(
+    rt = TRUE
+  ))
   expect_equal(opts_true_default$rtCol, "RT")
 
-  opts_char <- NormalyzerDE:::diannNormalizeInputOptions(list(rt = "Observed.RT"))
+  opts_char <- NormalyzerDE:::diannNormalizeInputOptions(list(
+    rt = "Observed.RT"
+  ))
   expect_equal(opts_char$rtCol, "Observed.RT")
 
   expect_error(
-    NormalyzerDE:::diannNormalizeInputOptions(list(filters = list(q = c(TRUE, FALSE)))),
+    NormalyzerDE:::diannNormalizeInputOptions(list(
+      filters = list(q = c(TRUE, FALSE))
+    )),
     class = "normalyzerde_error"
   )
 })
@@ -260,7 +248,10 @@ test_that("diann precursor preference and default tracking cover early-return ca
     bad_columns
   )
 
-  feature_cols <- list(level = "auto", columns = list(feature = "Protein.Group"))
+  feature_cols <- list(
+    level = "auto",
+    columns = list(feature = "Protein.Group")
+  )
   expect_identical(
     NormalyzerDE:::diannPreferPrecursorInputOptionsForLimpa(feature_cols),
     feature_cols
@@ -302,9 +293,17 @@ test_that("diann precursor preference and default tracking cover early-return ca
   )
   expect_identical(
     NormalyzerDE:::diannPreferPrecursorInputOptionsForLimpa(
-      list(level = "auto", columns = "oops", ._normalyzerde_explicit_level = FALSE)
+      list(
+        level = "auto",
+        columns = "oops",
+        ._normalyzerde_explicit_level = FALSE
+      )
     ),
-    list(level = "auto", columns = "oops", ._normalyzerde_explicit_level = FALSE)
+    list(
+      level = "auto",
+      columns = "oops",
+      ._normalyzerde_explicit_level = FALSE
+    )
   )
   expect_identical(
     NormalyzerDE:::diannPreferPrecursorInputOptionsForLimpa(
