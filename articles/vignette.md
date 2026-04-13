@@ -90,7 +90,7 @@ normalyzer(jobName="vignette_run", designPath=designFp, dataPath=dataFp,
 
     ## RT annotation column found (5)
 
-    ## [Step 1/5] Input verified, job directory prepared at:/tmp/Rtmpd0kTr1/vignette_run
+    ## [Step 1/5] Input verified, job directory prepared at:/tmp/RtmpjWZ8Ok/vignette_run
 
     ## [Step 2/5] Performing normalizations
 
@@ -117,7 +117,7 @@ normalyzer(jobName="vignette_run", designPath=designFp, dataPath=dataFp,
 
     ## [Step 5/5] Plots successfully generated
 
-    ## All done! Results are stored in: /tmp/Rtmpd0kTr1/vignette_run, processing time was 0.2 minutes
+    ## All done! Results are stored in: /tmp/RtmpjWZ8Ok/vignette_run, processing time was 0.2 minutes
 
 ### Running NormalyzerDE statistical comparisons
 
@@ -150,10 +150,10 @@ normalyzerDE("vignette_run",
     ## [1] "Setting up statistics object"
     ## [1] "Calculating statistical contrasts..."
     ## [1] "Contrast calculations done!"
-    ## [1] "Writing 100 annotated rows to /tmp/Rtmpd0kTr1/vignette_run/vignette_run_stats.tsv"
+    ## [1] "Writing 100 annotated rows to /tmp/RtmpjWZ8Ok/vignette_run/vignette_run_stats.tsv"
     ## [1] "Writing statistics report"
 
-    ## [1] "All done! Results are stored in: /tmp/Rtmpd0kTr1/vignette_run, processing time was 0 minutes"
+    ## [1] "All done! Results are stored in: /tmp/RtmpjWZ8Ok/vignette_run, processing time was 0 minutes"
 
 ### Running NormalyzerDE using a SummarizedExperiment object as input
 
@@ -194,7 +194,7 @@ normalyzer(jobName="sumExpRun", experimentObj = sumExpObj, outputDir=outDir)
 
     ## RT annotation column found (5)
 
-    ## [Step 1/5] Input verified, job directory prepared at:/tmp/Rtmpd0kTr1/sumExpRun
+    ## [Step 1/5] Input verified, job directory prepared at:/tmp/RtmpjWZ8Ok/sumExpRun
 
     ## [Step 2/5] Performing normalizations
 
@@ -212,7 +212,7 @@ normalyzer(jobName="sumExpRun", experimentObj = sumExpObj, outputDir=outDir)
 
     ## [Step 5/5] Plots successfully generated
 
-    ## All done! Results are stored in: /tmp/Rtmpd0kTr1/sumExpRun, processing time was 0.1 minutes
+    ## All done! Results are stored in: /tmp/RtmpjWZ8Ok/sumExpRun, processing time was 0.1 minutes
 
 ## Retention time normalization
 
