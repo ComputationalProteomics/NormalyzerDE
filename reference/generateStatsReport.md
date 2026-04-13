@@ -75,6 +75,6 @@ generateStatsReport(statObj, "jobName", outputDir)
 #> ℹ Please use `linewidth` instead.
 #> ℹ The deprecated feature was likely used in the NormalyzerDE package.
 #>   Please report the issue to the authors.
-#> agg_record_787139172 
-#>                    2 
+#> agg_record_288826ed677d 
+#>                       2 
 ```

@@ -90,7 +90,7 @@ normalyzer(jobName="vignette_run", designPath=designFp, dataPath=dataFp,
 
     ## RT annotation column found (5)
 
-    ## [Step 1/5] Input verified, job directory prepared at:/tmp/RtmpVA6fHb/vignette_run
+    ## [Step 1/5] Input verified, job directory prepared at:/tmp/Rtmpd0kTr1/vignette_run
 
     ## [Step 2/5] Performing normalizations
 
@@ -117,7 +117,7 @@ normalyzer(jobName="vignette_run", designPath=designFp, dataPath=dataFp,
 
     ## [Step 5/5] Plots successfully generated
 
-    ## All done! Results are stored in: /tmp/RtmpVA6fHb/vignette_run, processing time was 0.2 minutes
+    ## All done! Results are stored in: /tmp/Rtmpd0kTr1/vignette_run, processing time was 0.2 minutes
 
 ### Running NormalyzerDE statistical comparisons
 
@@ -150,10 +150,10 @@ normalyzerDE("vignette_run",
     ## [1] "Setting up statistics object"
     ## [1] "Calculating statistical contrasts..."
     ## [1] "Contrast calculations done!"
-    ## [1] "Writing 100 annotated rows to /tmp/RtmpVA6fHb/vignette_run/vignette_run_stats.tsv"
+    ## [1] "Writing 100 annotated rows to /tmp/Rtmpd0kTr1/vignette_run/vignette_run_stats.tsv"
     ## [1] "Writing statistics report"
 
-    ## [1] "All done! Results are stored in: /tmp/RtmpVA6fHb/vignette_run, processing time was 0 minutes"
+    ## [1] "All done! Results are stored in: /tmp/Rtmpd0kTr1/vignette_run, processing time was 0 minutes"
 
 ### Running NormalyzerDE using a SummarizedExperiment object as input
 
@@ -194,7 +194,7 @@ normalyzer(jobName="sumExpRun", experimentObj = sumExpObj, outputDir=outDir)
 
     ## RT annotation column found (5)
 
-    ## [Step 1/5] Input verified, job directory prepared at:/tmp/RtmpVA6fHb/sumExpRun
+    ## [Step 1/5] Input verified, job directory prepared at:/tmp/Rtmpd0kTr1/sumExpRun
 
     ## [Step 2/5] Performing normalizations
 
@@ -212,7 +212,7 @@ normalyzer(jobName="sumExpRun", experimentObj = sumExpObj, outputDir=outDir)
 
     ## [Step 5/5] Plots successfully generated
 
-    ## All done! Results are stored in: /tmp/RtmpVA6fHb/sumExpRun, processing time was 0.1 minutes
+    ## All done! Results are stored in: /tmp/Rtmpd0kTr1/sumExpRun, processing time was 0.1 minutes
 
 ## Retention time normalization
 
@@ -577,9 +577,9 @@ statistical analysis.
 sessionInfo()
 ```
 
-    ## R version 4.5.2 (2025-10-31)
+    ## R version 4.5.3 (2026-03-11)
     ## Platform: x86_64-pc-linux-gnu
-    ## Running under: Ubuntu 24.04.3 LTS
+    ## Running under: Ubuntu 24.04.4 LTS
     ## 
     ## Matrix products: default
     ## BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
@@ -602,41 +602,41 @@ sessionInfo()
     ## 
     ## loaded via a namespace (and not attached):
     ##  [1] SummarizedExperiment_1.40.0 gtable_0.3.6               
-    ##  [3] xfun_0.56                   bslib_0.10.0               
-    ##  [5] ggplot2_4.0.1               Biobase_2.70.0             
-    ##  [7] lattice_0.22-7              vctrs_0.7.1                
-    ##  [9] tools_4.5.2                 generics_0.1.4             
-    ## [11] parallel_4.5.2              stats4_4.5.2               
+    ##  [3] xfun_0.57                   bslib_0.10.0               
+    ##  [5] ggplot2_4.0.2               Biobase_2.70.0             
+    ##  [7] lattice_0.22-9              vctrs_0.7.3                
+    ##  [9] tools_4.5.3                 generics_0.1.4             
+    ## [11] parallel_4.5.3              stats4_4.5.3               
     ## [13] tibble_3.3.1                vsn_3.78.1                 
     ## [15] pkgconfig_2.0.3             Matrix_1.7-4               
     ## [17] RColorBrewer_1.1-3          S7_0.2.1                   
-    ## [19] desc_1.4.3                  S4Vectors_0.48.0           
-    ## [21] lifecycle_1.0.5             compiler_4.5.2             
-    ## [23] farver_2.1.2                textshaping_1.0.4          
+    ## [19] desc_1.4.3                  S4Vectors_0.48.1           
+    ## [21] lifecycle_1.0.5             compiler_4.5.3             
+    ## [23] farver_2.1.2                textshaping_1.0.5          
     ## [25] statmod_1.5.1               Seqinfo_1.0.0              
     ## [27] carData_3.0-6               htmltools_0.5.9            
     ## [29] sass_0.4.10                 yaml_2.3.12                
     ## [31] preprocessCore_1.72.0       Formula_1.2-5              
     ## [33] hexbin_1.28.5               pkgdown_2.2.0              
-    ## [35] pillar_1.11.1               car_3.1-3                  
+    ## [35] pillar_1.11.1               car_3.1-5                  
     ## [37] jquerylib_0.1.4             MASS_7.3-65                
-    ## [39] affy_1.88.0                 DelayedArray_0.36.0        
+    ## [39] affy_1.88.0                 DelayedArray_0.36.1        
     ## [41] cachem_1.1.0                limma_3.66.0               
     ## [43] abind_1.4-8                 nlme_3.1-168               
     ## [45] tidyselect_1.2.1            digest_0.6.39              
-    ## [47] dplyr_1.1.4                 labeling_0.4.3             
-    ## [49] splines_4.5.2               fastmap_1.2.0              
-    ## [51] grid_4.5.2                  cli_3.6.5                  
-    ## [53] SparseArray_1.10.8          magrittr_2.0.4             
+    ## [47] dplyr_1.2.1                 labeling_0.4.3             
+    ## [49] splines_4.5.3               fastmap_1.2.0              
+    ## [51] grid_4.5.3                  cli_3.6.6                  
+    ## [53] SparseArray_1.10.10         magrittr_2.0.5             
     ## [55] S4Arrays_1.10.1             ape_5.8-1                  
     ## [57] withr_3.0.2                 scales_1.4.0               
-    ## [59] rmarkdown_2.30              XVector_0.50.0             
+    ## [59] rmarkdown_2.31              XVector_0.50.0             
     ## [61] affyio_1.80.0               matrixStats_1.5.0          
-    ## [63] ragg_1.5.0                  evaluate_1.0.5             
+    ## [63] ragg_1.5.2                  evaluate_1.0.5             
     ## [65] knitr_1.51                  GenomicRanges_1.62.1       
-    ## [67] IRanges_2.44.0              mgcv_1.9-3                 
-    ## [69] rlang_1.1.7                 Rcpp_1.1.1                 
+    ## [67] IRanges_2.44.0              mgcv_1.9-4                 
+    ## [69] rlang_1.2.0                 Rcpp_1.1.1                 
     ## [71] glue_1.8.0                  BiocManager_1.30.27        
     ## [73] BiocGenerics_0.56.0         jsonlite_2.0.0             
     ## [75] R6_2.6.1                    MatrixGenerics_1.22.0      
-    ## [77] systemfonts_1.3.1           fs_1.6.6
+    ## [77] systemfonts_1.3.2           fs_2.0.1
