@@ -240,7 +240,11 @@ performCyclicLoessNormalization <- function(rawMatrix, noLogTransform=FALSE) {
         log2Matrix <- rawMatrix
     }
     
-    normMatrix <- limma::normalizeCyclicLoess(log2Matrix, method="fast")
+    normMatrix <- limma::normalizeCyclicLoess(
+        log2Matrix,
+        method="fast",
+        adaptive.span=FALSE
+    )
     colnames(normMatrix) <- colnames(rawMatrix)
     
     normMatrix
