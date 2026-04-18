@@ -141,11 +141,11 @@ normalyzerDE(
   dataPath=data_path,
   outputDir=out_dir,
   condCol="group")
-#> You are running version 1.23.5 of NormalyzerDE
+#> You are running version 1.29.1 of NormalyzerDE
 #> [1] "Setting up statistics object"
 #> [1] "Calculating statistical contrasts..."
 #> [1] "Contrast calculations done!"
-#> [1] "Writing 100 annotated rows to /tmp/RtmpG3wAf0/my_jobname/my_jobname_stats.tsv"
+#> [1] "Writing 100 annotated rows to /tmp/RtmpOleAtL/my_jobname/my_jobname_stats.tsv"
 #> [1] "Writing statistics report"
-#> [1] "All done! Results are stored in: /tmp/RtmpG3wAf0/my_jobname, processing time was 0 minutes"
+#> [1] "All done! Results are stored in: /tmp/RtmpOleAtL/my_jobname, processing time was 0 minutes"
 ```

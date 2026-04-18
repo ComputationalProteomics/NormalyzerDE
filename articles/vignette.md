@@ -17,7 +17,7 @@ provides means to easily perform differential expression statistics
 using either the empirical Bayes Limma approach or ANOVA. Evaluation
 visualizations are available for both normalization performance measures
 and as P-value histograms for the subsequent differential expression
-analysis comparisons. NormalyzerDE package version: 1.23.5
+analysis comparisons. NormalyzerDE package version: 1.29.1
 
 ## Installation
 
@@ -78,7 +78,7 @@ normalyzer(jobName="vignette_run", designPath=designFp, dataPath=dataFp,
            outputDir=outDir)
 ```
 
-    ## You are running version 1.23.5 of NormalyzerDE
+    ## You are running version 1.29.1 of NormalyzerDE
 
     ## [Step 1/5] Load data and verify input
 
@@ -90,7 +90,7 @@ normalyzer(jobName="vignette_run", designPath=designFp, dataPath=dataFp,
 
     ## RT annotation column found (5)
 
-    ## [Step 1/5] Input verified, job directory prepared at:/tmp/RtmpjWZ8Ok/vignette_run
+    ## [Step 1/5] Input verified, job directory prepared at:/tmp/RtmplNlLwH/vignette_run
 
     ## [Step 2/5] Performing normalizations
 
@@ -117,7 +117,7 @@ normalyzer(jobName="vignette_run", designPath=designFp, dataPath=dataFp,
 
     ## [Step 5/5] Plots successfully generated
 
-    ## All done! Results are stored in: /tmp/RtmpjWZ8Ok/vignette_run, processing time was 0.2 minutes
+    ## All done! Results are stored in: /tmp/RtmplNlLwH/vignette_run, processing time was 0.2 minutes
 
 ### Running NormalyzerDE statistical comparisons
 
@@ -145,15 +145,15 @@ normalyzerDE("vignette_run",
              condCol="group")
 ```
 
-    ## You are running version 1.23.5 of NormalyzerDE
+    ## You are running version 1.29.1 of NormalyzerDE
 
     ## [1] "Setting up statistics object"
     ## [1] "Calculating statistical contrasts..."
     ## [1] "Contrast calculations done!"
-    ## [1] "Writing 100 annotated rows to /tmp/RtmpjWZ8Ok/vignette_run/vignette_run_stats.tsv"
+    ## [1] "Writing 100 annotated rows to /tmp/RtmplNlLwH/vignette_run/vignette_run_stats.tsv"
     ## [1] "Writing statistics report"
 
-    ## [1] "All done! Results are stored in: /tmp/RtmpjWZ8Ok/vignette_run, processing time was 0 minutes"
+    ## [1] "All done! Results are stored in: /tmp/RtmplNlLwH/vignette_run, processing time was 0 minutes"
 
 ### Running NormalyzerDE using a SummarizedExperiment object as input
 
@@ -182,7 +182,7 @@ sumExpObj <- SummarizedExperiment::SummarizedExperiment(
 normalyzer(jobName="sumExpRun", experimentObj = sumExpObj, outputDir=outDir)
 ```
 
-    ## You are running version 1.23.5 of NormalyzerDE
+    ## You are running version 1.29.1 of NormalyzerDE
 
     ## [Step 1/5] Load data and verify input
 
@@ -194,7 +194,7 @@ normalyzer(jobName="sumExpRun", experimentObj = sumExpObj, outputDir=outDir)
 
     ## RT annotation column found (5)
 
-    ## [Step 1/5] Input verified, job directory prepared at:/tmp/RtmpjWZ8Ok/sumExpRun
+    ## [Step 1/5] Input verified, job directory prepared at:/tmp/RtmplNlLwH/sumExpRun
 
     ## [Step 2/5] Performing normalizations
 
@@ -212,7 +212,7 @@ normalyzer(jobName="sumExpRun", experimentObj = sumExpObj, outputDir=outDir)
 
     ## [Step 5/5] Plots successfully generated
 
-    ## All done! Results are stored in: /tmp/RtmpjWZ8Ok/sumExpRun, processing time was 0.1 minutes
+    ## All done! Results are stored in: /tmp/RtmplNlLwH/sumExpRun, processing time was 0.1 minutes
 
 ## Retention time normalization
 
@@ -598,7 +598,7 @@ sessionInfo()
     ## [1] stats     graphics  grDevices utils     datasets  methods   base     
     ## 
     ## other attached packages:
-    ## [1] NormalyzerDE_1.23.5
+    ## [1] NormalyzerDE_1.29.1
     ## 
     ## loaded via a namespace (and not attached):
     ##  [1] SummarizedExperiment_1.40.0 gtable_0.3.6               
@@ -609,7 +609,7 @@ sessionInfo()
     ## [11] parallel_4.5.3              stats4_4.5.3               
     ## [13] tibble_3.3.1                vsn_3.78.1                 
     ## [15] pkgconfig_2.0.3             Matrix_1.7-4               
-    ## [17] RColorBrewer_1.1-3          S7_0.2.1                   
+    ## [17] RColorBrewer_1.1-3          S7_0.2.1-1                 
     ## [19] desc_1.4.3                  S4Vectors_0.48.1           
     ## [21] lifecycle_1.0.5             compiler_4.5.3             
     ## [23] farver_2.1.2                textshaping_1.0.5          
@@ -635,8 +635,8 @@ sessionInfo()
     ## [63] ragg_1.5.2                  evaluate_1.0.5             
     ## [65] knitr_1.51                  GenomicRanges_1.62.1       
     ## [67] IRanges_2.44.0              mgcv_1.9-4                 
-    ## [69] rlang_1.2.0                 Rcpp_1.1.1                 
-    ## [71] glue_1.8.0                  BiocManager_1.30.27        
+    ## [69] rlang_1.2.0                 Rcpp_1.1.1-1               
+    ## [71] glue_1.8.1                  BiocManager_1.30.27        
     ## [73] BiocGenerics_0.56.0         jsonlite_2.0.0             
     ## [75] R6_2.6.1                    MatrixGenerics_1.22.0      
     ## [77] systemfonts_1.3.2           fs_2.0.1
