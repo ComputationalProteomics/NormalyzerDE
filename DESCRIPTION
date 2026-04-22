@@ -6,9 +6,7 @@ Authors@R: c(
     person("Jakob", "Willforss", email="jakob.willforss@hotmail.com", role=c("aut", "cre")),
     person("Aakash", "Chawade", role="aut"),
     person("Fredrik", "Levander", email="fredrik.levander@immun.lth.se", role=c("aut", "ths")),
-    person("Måns", "Zamore", email="mans.bioc@zamore.se", role=c("aut")),
-    person("Fredrik", "Levander", email="fredrik.levander@immun.lth.se", role=c("aut")),
-    person("Aakash", "Chawade", role="aut"))
+    person("Måns", "Zamore", email="mans.bioc@zamore.se", role=c("aut")))
 Description: NormalyzerDE provides screening of normalization methods for 
     LC-MS based expression data. It calculates a range of normalized matrices 
     using both existing approaches and a novel time-segmented approach, 
