@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">NormalyzerDE</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.29.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.29.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -59,7 +59,7 @@
                         <h4 data-toc-skip class="author">Jakob
 Willforss, Aakash Chawade and Fredrik Levander</h4>
             
-            <h4 data-toc-skip class="date">04/18/2026</h4>
+            <h4 data-toc-skip class="date">04/22/2026</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ComputationalProteomics/NormalyzerDE/blob/devel/vignettes/vignette.Rmd" class="external-link"><code>vignettes/vignette.Rmd</code></a></small>
       <div class="d-none name"><code>vignette.Rmd</code></div>
@@ -85,7 +85,7 @@ Willforss, Aakash Chawade and Fredrik Levander</h4>
       visualizations are available for both normalization performance
       measures and as P-value histograms for the subsequent differential
       expression analysis comparisons. NormalyzerDE package version:
-      1.29.1</p>
+      1.29.2</p>
     </div>
     
 <div class="section level2">
@@ -145,13 +145,13 @@ where the first assay should contain the data matrix of interest, the
 <span><span class="va">dataFp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span>package<span class="op">=</span><span class="st">"NormalyzerDE"</span>, <span class="st">"extdata"</span>, <span class="st">"tiny_data.tsv"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/normalyzer.html">normalyzer</a></span><span class="op">(</span>jobName<span class="op">=</span><span class="st">"vignette_run"</span>, designPath<span class="op">=</span><span class="va">designFp</span>, dataPath<span class="op">=</span><span class="va">dataFp</span>, </span>
 <span>           outputDir<span class="op">=</span><span class="va">outDir</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## You are running version 1.29.1 of NormalyzerDE</span></span></code></pre>
+<pre><code><span><span class="co">## You are running version 1.29.2 of NormalyzerDE</span></span></code></pre>
 <pre><code><span><span class="co">## [Step 1/5] Load data and verify input</span></span></code></pre>
 <pre><code><span><span class="co">## Input data checked. All fields are valid.</span></span></code></pre>
 <pre><code><span><span class="co">## Sample check: More than one sample group found</span></span></code></pre>
 <pre><code><span><span class="co">## Sample replication check: All samples have replicates</span></span></code></pre>
 <pre><code><span><span class="co">## RT annotation column found (5)</span></span></code></pre>
-<pre><code><span><span class="co">## [Step 1/5] Input verified, job directory prepared at:/tmp/RtmplNlLwH/vignette_run</span></span></code></pre>
+<pre><code><span><span class="co">## [Step 1/5] Input verified, job directory prepared at:/tmp/RtmpQomp9N/vignette_run</span></span></code></pre>
 <pre><code><span><span class="co">## [Step 2/5] Performing normalizations</span></span></code></pre>
 <pre><code><span><span class="co">## [Step 2/5] Done!</span></span></code></pre>
 <pre><code><span><span class="co">## [Step 3/5] Generating evaluation measures...</span></span></code></pre>
@@ -168,7 +168,7 @@ where the first assay should contain the data matrix of interest, the
 <span><span class="co">## <span style="color: #555555;">Call `lifecycle::last_lifecycle_warnings()` to see where this warning was</span></span></span>
 <span><span class="co">## <span style="color: #555555;">generated.</span></span></span></code></pre>
 <pre><code><span><span class="co">## [Step 5/5] Plots successfully generated</span></span></code></pre>
-<pre><code><span><span class="co">## All done! Results are stored in: /tmp/RtmplNlLwH/vignette_run, processing time was 0.2 minutes</span></span></code></pre>
+<pre><code><span><span class="co">## All done! Results are stored in: /tmp/RtmpQomp9N/vignette_run, processing time was 0.2 minutes</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="running-normalyzerde-statistical-comparisons">Running NormalyzerDE statistical comparisons<a class="anchor" aria-label="anchor" href="#running-normalyzerde-statistical-comparisons"></a>
@@ -194,13 +194,13 @@ argument.</p>
 <span>             dataPath<span class="op">=</span><span class="va">normMatrixPath</span>,</span>
 <span>             outputDir<span class="op">=</span><span class="va">outDir</span>, </span>
 <span>             condCol<span class="op">=</span><span class="st">"group"</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## You are running version 1.29.1 of NormalyzerDE</span></span></code></pre>
+<pre><code><span><span class="co">## You are running version 1.29.2 of NormalyzerDE</span></span></code></pre>
 <pre><code><span><span class="co">## [1] "Setting up statistics object"</span></span>
 <span><span class="co">## [1] "Calculating statistical contrasts..."</span></span>
 <span><span class="co">## [1] "Contrast calculations done!"</span></span>
-<span><span class="co">## [1] "Writing 100 annotated rows to /tmp/RtmplNlLwH/vignette_run/vignette_run_stats.tsv"</span></span>
+<span><span class="co">## [1] "Writing 100 annotated rows to /tmp/RtmpQomp9N/vignette_run/vignette_run_stats.tsv"</span></span>
 <span><span class="co">## [1] "Writing statistics report"</span></span></code></pre>
-<pre><code><span><span class="co">## [1] "All done! Results are stored in: /tmp/RtmplNlLwH/vignette_run, processing time was 0 minutes"</span></span></code></pre>
+<pre><code><span><span class="co">## [1] "All done! Results are stored in: /tmp/RtmpQomp9N/vignette_run, processing time was 0 minutes"</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="running-normalyzerde-using-a-summarizedexperiment-object-as-input">Running NormalyzerDE using a SummarizedExperiment object as
@@ -228,13 +228,13 @@ from the <code>readr</code> package instead of
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="../reference/normalyzer.html">normalyzer</a></span><span class="op">(</span>jobName<span class="op">=</span><span class="st">"sumExpRun"</span>, experimentObj <span class="op">=</span> <span class="va">sumExpObj</span>, outputDir<span class="op">=</span><span class="va">outDir</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## You are running version 1.29.1 of NormalyzerDE</span></span></code></pre>
+<pre><code><span><span class="co">## You are running version 1.29.2 of NormalyzerDE</span></span></code></pre>
 <pre><code><span><span class="co">## [Step 1/5] Load data and verify input</span></span></code></pre>
 <pre><code><span><span class="co">## Input data checked. All fields are valid.</span></span></code></pre>
 <pre><code><span><span class="co">## Sample check: More than one sample group found</span></span></code></pre>
 <pre><code><span><span class="co">## Sample replication check: All samples have replicates</span></span></code></pre>
 <pre><code><span><span class="co">## RT annotation column found (5)</span></span></code></pre>
-<pre><code><span><span class="co">## [Step 1/5] Input verified, job directory prepared at:/tmp/RtmplNlLwH/sumExpRun</span></span></code></pre>
+<pre><code><span><span class="co">## [Step 1/5] Input verified, job directory prepared at:/tmp/RtmpQomp9N/sumExpRun</span></span></code></pre>
 <pre><code><span><span class="co">## [Step 2/5] Performing normalizations</span></span></code></pre>
 <pre><code><span><span class="co">## [Step 2/5] Done!</span></span></code></pre>
 <pre><code><span><span class="co">## [Step 3/5] Generating evaluation measures...</span></span></code></pre>
@@ -243,7 +243,7 @@ from the <code>readr</code> package instead of
 <pre><code><span><span class="co">## [Step 4/5] Matrices successfully written</span></span></code></pre>
 <pre><code><span><span class="co">## [Step 5/5] Generating plots...</span></span></code></pre>
 <pre><code><span><span class="co">## [Step 5/5] Plots successfully generated</span></span></code></pre>
-<pre><code><span><span class="co">## All done! Results are stored in: /tmp/RtmplNlLwH/sumExpRun, processing time was 0.1 minutes</span></span></code></pre>
+<pre><code><span><span class="co">## All done! Results are stored in: /tmp/RtmpQomp9N/sumExpRun, processing time was 0.1 minutes</span></span></code></pre>
 </div>
 </div>
 <div class="section level2">
@@ -571,7 +571,7 @@ the original matrix.</li>
 <span><span class="co">## [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## other attached packages:</span></span>
-<span><span class="co">## [1] NormalyzerDE_1.29.1</span></span>
+<span><span class="co">## [1] NormalyzerDE_1.29.2</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## loaded via a namespace (and not attached):</span></span>
 <span><span class="co">##  [1] SummarizedExperiment_1.40.0 gtable_0.3.6               </span></span>
@@ -612,7 +612,7 @@ the original matrix.</li>
 <span><span class="co">## [71] glue_1.8.1                  BiocManager_1.30.27        </span></span>
 <span><span class="co">## [73] BiocGenerics_0.56.0         jsonlite_2.0.0             </span></span>
 <span><span class="co">## [75] R6_2.6.1                    MatrixGenerics_1.22.0      </span></span>
-<span><span class="co">## [77] systemfonts_1.3.2           fs_2.0.1</span></span></code></pre>
+<span><span class="co">## [77] systemfonts_1.3.2           fs_2.1.0</span></span></code></pre>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
@@ -621,7 +621,7 @@ the original matrix.</li>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Jakob Willforss, Aakash Chawade, Fredrik Levander.</p>
+  <p>Developed by Jakob Willforss, Aakash Chawade, Fredrik Levander, Måns Zamore.</p>
 </div>
 
 <div class="pkgdown-footer-right">

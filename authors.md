@@ -8,6 +8,8 @@
 
 - **Fredrik Levander**. Author, thesis advisor.
 
+- **Måns Zamore**. Author.
+
 ## Citation
 
 Source:
